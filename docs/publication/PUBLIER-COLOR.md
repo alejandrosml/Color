@@ -14,7 +14,7 @@ Les boutiques demandent une adresse web pour la politique de confidentialité et
 
 1. Sur [github.com/new](https://github.com/new), avec ton compte `alejandrosml` : nom du dépôt **`Color`**, **Public**, sans README ni licence (le code les apporte). « Create repository ». *Fait le 27 octobre.*
 2. Dis-le-moi : j'y publie le code de Color, sous licence MIT, avec son README, sans l'historique de travail ni les journaux. *Fait le 27 octobre.*
-3. Puis, dans le dépôt : **Settings → Pages → Source : « Deploy from a branch » → `main`, dossier `/docs` → Save**. Une minute plus tard, `https://alejandrosml.github.io/Color/` et `https://alejandrosml.github.io/Color/confidentialite.html` répondent.
+3. Activer GitHub Pages. *Fait le 27 octobre* : la source choisie dans Settings → Pages est « GitHub Actions », et le flux `.github/workflows/pages.yml` du dépôt publie le dossier `docs/` à chaque envoi. Les pages répondent : [alejandrosml.github.io/Color](https://alejandrosml.github.io/Color/) et [la politique de confidentialité](https://alejandrosml.github.io/Color/confidentialite.html). Ne change plus la source : avec « Deploy from a branch », le flux échouerait.
 
 ## 3. Le Mac App Store, l'iPhone et l'iPad
 
