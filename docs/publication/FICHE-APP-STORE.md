@@ -25,7 +25,7 @@ Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les tro
 
 ## Confidentialité de l'app
 
-- URL de la politique de confidentialité : `https://alejandrosml.github.io/color/confidentialite.html`
+- URL de la politique de confidentialité : `https://alejandrosml.github.io/Color/confidentialite.html`
 - Collecte de données : **« Nous ne collectons pas de données de cette app »**.
 
 ## Pour chaque version (macOS, puis iOS)
@@ -34,8 +34,8 @@ Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les tro
 |---|---|
 | Texte promotionnel (170) | Dessine, colorie, tamponne, puis regarde ton dessin se refaire tout seul. Sans publicité, sans compte, sans Internet. |
 | Mots-clés (100 octets) | dessin,enfant,coloriage,peinture,pinceau,tampon,colorier,atelier,crayon,maternelle,art |
-| URL d'assistance | `https://alejandrosml.github.io/color/` |
-| URL marketing | `https://alejandrosml.github.io/color/` |
+| URL d'assistance | `https://alejandrosml.github.io/Color/` |
+| URL marketing | `https://alejandrosml.github.io/Color/` |
 | Copyright | 2026 Alejandro San Martin Lamas |
 | Version | 1.0.0 |
 

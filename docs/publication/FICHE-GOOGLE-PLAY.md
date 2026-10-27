@@ -13,8 +13,8 @@
 | Captures de tablette 10 pouces | `captures/tablette.png` du même journal |
 | Catégorie | Éducation |
 | Adresse e-mail de contact | **À choisir par toi** : Google l'affiche sur la fiche. Une adresse réservée à Color évite de montrer ton adresse personnelle |
-| Site web | `https://alejandrosml.github.io/color/` |
-| Règles de confidentialité | `https://alejandrosml.github.io/color/confidentialite.html` |
+| Site web | `https://alejandrosml.github.io/Color/` |
+| Règles de confidentialité | `https://alejandrosml.github.io/Color/confidentialite.html` |
 | Prix | Gratuite |
 
 ## « Contenu de l'application » (Règles et programmes)

@@ -12,9 +12,9 @@
 
 Les boutiques demandent une adresse web pour la politique de confidentialité et une pour l'aide. Elles seront sur GitHub, avec le code :
 
-1. Sur [github.com/new](https://github.com/new), avec ton compte `alejandrosml` : nom du dépôt **`color`**, **Public**, sans README ni licence (le code les apporte). « Create repository ». *Fait le 27 octobre.*
+1. Sur [github.com/new](https://github.com/new), avec ton compte `alejandrosml` : nom du dépôt **`Color`**, **Public**, sans README ni licence (le code les apporte). « Create repository ». *Fait le 27 octobre.*
 2. Dis-le-moi : j'y publie le code de Color, sous licence MIT, avec son README, sans l'historique de travail ni les journaux. *Fait le 27 octobre.*
-3. Puis, dans le dépôt : **Settings → Pages → Source : « Deploy from a branch » → `main`, dossier `/docs` → Save**. Une minute plus tard, `https://alejandrosml.github.io/color/` et `https://alejandrosml.github.io/color/confidentialite.html` répondent.
+3. Puis, dans le dépôt : **Settings → Pages → Source : « Deploy from a branch » → `main`, dossier `/docs` → Save**. Une minute plus tard, `https://alejandrosml.github.io/Color/` et `https://alejandrosml.github.io/Color/confidentialite.html` répondent.
 
 ## 3. Le Mac App Store, l'iPhone et l'iPad
 
