@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « Le bateau ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>Le bateau</title>
+  <desc>Un voilier aux voiles rayées qui navigue sur les vagues, près d’une île et de son phare, avec une mouette, un poisson qui saute et le soleil.</desc>
+  <!-- Le soleil -->
+  <path d="M999 100 L1008 55 Q1020 36 1032 55 L1041 100 L1079 74 Q1101 69 1096 91 L1070 129 L1115 138 Q1134 150 1115 162 L1070 171 L1096 209 Q1101 231 1079 226 L1041 200 L1032 245 Q1020 264 1008 245 L999 200 L961 226 Q939 231 944 209 L970 171 L925 162 Q906 150 925 138 L970 129 L944 91 Q939 69 961 74 L999 100 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1020" cy="150" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le nuage et les mouettes -->
+  <path d="M362 150 C328 150 332 104 380 108 C383 70 431 66 437 95 C452 68 500 78 494 112 C542 112 542 150 512 150 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M560 230 Q574 214 588 230 Q602 214 616 230" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M640 280 Q652 266 664 280 Q676 266 688 280" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M766 268 Q800 206 846 236 Q862 246 870 260 Q878 246 894 236 Q940 206 974 268 Q932 254 900 272 Q882 284 870 302 Q858 284 840 272 Q808 254 766 268 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- L’île et le phare -->
+  <path d="M70 470 C110 410 170 392 230 392 C290 392 340 420 370 470 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M174 226 L242 226 L247 290 L169 290 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M169 290 L247 290 L251 354 L165 354 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M165 354 L251 354 L256 418 L160 418 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="176" y="160" width="64" height="66" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M166 162 Q172 120 208 94 Q244 120 250 162 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="162" y1="226" x2="254" y2="226" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <path d="M194 418 L194 392 Q208 372 222 392 L222 418" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="140" y1="178" x2="100" y2="168" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="140" y1="204" x2="100" y2="214" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="276" y1="178" x2="316" y2="168" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="276" y1="204" x2="316" y2="214" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- La mer -->
+  <rect x="60" y="440" width="1080" height="310" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M110 510 Q125 496 140 510 Q155 524 170 510" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M290 566 Q305 552 320 566 Q335 580 350 566" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M900 486 Q915 472 930 486 Q945 500 960 486" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Les voiles et le drapeau -->
+  <path d="M592 88 Q537 140 497 200 L592 200 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M592 200 L497 200 Q460 256 436 320 L592 320 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M592 320 L436 320 Q415 377 404 440 L592 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M608 140 Q760 280 800 440 L608 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M604 46 C632 34 660 58 690 46 L690 104 C660 116 632 92 604 104 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="600" y1="476" x2="600" y2="40" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <!-- La coque, sa bande et ses hublots -->
+  <path d="M388 466 L852 450 C830 548 776 656 690 660 L486 660 C440 660 404 600 388 466 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M388 466 L852 450 C847 474 839 499 830 522 L397 522 C393 505 390 486 388 466 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="530" cy="568" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="630" cy="568" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="730" cy="568" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les vagues devant -->
+  <path d="M60 632 Q90 608 120 632 Q150 656 180 632 Q210 608 240 632 Q270 656 300 632 Q330 608 360 632 Q390 656 420 632 Q450 608 480 632 Q510 656 540 632 Q570 608 600 632 Q630 656 660 632 Q690 608 720 632 Q750 656 780 632 Q810 608 840 632 Q870 656 900 632 Q930 608 960 632 Q990 656 1020 632 Q1050 608 1080 632 Q1110 656 1140 632 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le poisson qui saute -->
+  <path d="M1066 525 C1020 500 964 532 967 582 L917 578 L946 600 L953 635 L971 589 C1015 613 1068 578 1066 525 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="1036,530 1037,530" fill="none" stroke="#2f3d4a" stroke-width="12"/>
+  <!-- Les vagues tout devant -->
+  <path d="M60 698 Q90 722 120 698 Q150 674 180 698 Q210 722 240 698 Q270 674 300 698 Q330 722 360 698 Q390 674 420 698 Q450 722 480 698 Q510 674 540 698 Q570 722 600 698 Q630 674 660 698 Q690 722 720 698 Q750 674 780 698 Q810 722 840 698 Q870 674 900 698 Q930 722 960 698 Q990 674 1020 698 Q1050 722 1080 698 Q1110 674 1140 698 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

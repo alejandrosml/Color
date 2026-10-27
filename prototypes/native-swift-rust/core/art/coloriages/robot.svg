@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « Le robot ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>Le robot</title>
+  <desc>Un robot qui fait coucou, avec son antenne, ses grands yeux, ses boutons et ses pieds carrés, entre les étoiles.</desc>
+  <!-- Les étoiles -->
+  <line x1="170" y1="128" x2="170" y2="172" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="151" y1="139" x2="189" y2="161" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="189" y1="139" x2="151" y2="161" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="300" y1="398" x2="300" y2="442" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="281" y1="409" x2="319" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="319" y1="409" x2="281" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="150" y1="618" x2="150" y2="662" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="131" y1="629" x2="169" y2="651" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="169" y1="629" x2="131" y2="651" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1030" y1="108" x2="1030" y2="152" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1011" y1="119" x2="1049" y2="141" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1049" y1="119" x2="1011" y2="141" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="980" y1="398" x2="980" y2="442" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="961" y1="409" x2="999" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="999" y1="409" x2="961" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1060" y1="598" x2="1060" y2="642" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1041" y1="609" x2="1079" y2="631" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1079" y1="609" x2="1041" y2="631" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- L’antenne -->
+  <line x1="600" y1="124" x2="600" y2="96" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="72" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le cou et les bras -->
+  <rect x="560" y="290" width="80" height="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="358" y="380" width="72" height="150" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="394" cy="562" r="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="770" y="380" width="72" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le bras qui fait coucou -->
+  <rect x="806" y="230" width="72" height="150" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="842" cy="196" r="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les jambes et les pieds -->
+  <rect x="476" y="596" width="82" height="98" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="642" y="596" width="82" height="98" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="452" y="690" width="130" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="618" y="690" width="130" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le corps -->
+  <rect x="430" y="352" width="340" height="246" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="486" y="396" width="228" height="132" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="546" cy="462" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="654" cy="462" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La tête -->
+  <rect x="466" y="124" width="268" height="170" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="466" cy="210" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="734" cy="210" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="546" cy="196" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="552,196 553,196" fill="none" stroke="#2f3d4a" stroke-width="18"/>
+  <circle cx="654" cy="196" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="660,196 661,196" fill="none" stroke="#2f3d4a" stroke-width="18"/>
+  <polyline points="635,250 628,258 620,265 610,269 600,270 590,269 580,265 572,258 565,250" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

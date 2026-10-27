@@ -1,0 +1,57 @@
+Color pour Linux
+================
+
+Color est un petit atelier de dessin pour enfants : pinceau, formes, texte,
+tampons, calques, pot de peinture, gomme, pipette et la galerie « Mes dessins ».
+Le bouton « Options », gardé par un calcul pour adultes, choisit entre trois
+interfaces — très simplifiée, moyenne, complète —, retire « Imprimer », coupe
+les sons et règle l'accessibilité.
+Cette archive est une version d'essai.
+
+Lancer Color
+------------
+Ouvre ce dossier et lance le programme « color » (double-clic, ou ./color
+dans un terminal). Rien n'est à installer et aucun droit d'administrateur
+n'est demandé.
+
+Pour le trouver dans le menu des applications de ton compte :
+
+    ./installer-dans-le-menu.sh
+
+et pour l'en retirer :
+
+    ./installer-dans-le-menu.sh --retirer
+
+Si tu déplaces ce dossier, relance le premier script : l'entrée du menu
+contient le chemin du programme.
+
+Ce qu'il faut sur l'ordinateur
+------------------------------
+Un Linux de bureau récent avec GTK 3, comme Ubuntu 24.04 ou plus récent.
+Le fichier VERSION.txt indique l'architecture (x64 ou arm64), le système
+sur lequel cette archive a été construite et la version minimale de la
+bibliothèque C (glibc) qu'elle demande.
+
+Les sons passent par ALSA (libasound.so.2), présente sur presque tous les
+bureaux. Sans elle, ou sans carte son, Color marche pareil, en silence.
+
+Où Color range ses fichiers
+---------------------------
+Tes dessins sont enregistrés là où tu le choisis (fichiers .edupaint).
+Color garde en plus, dans le dossier de ton compte
+~/.local/share/com.example.edupaint_flutter_study/ :
+
+  recovery/     la copie de récupération d'un dessin pas encore enregistré ;
+  gallery/      les cartes de la galerie « Mes dessins » ;
+  options.json  les choix faits dans « Options ».
+
+Supprimer ce dossier ne supprime aucun dessin enregistré ailleurs.
+
+Licence
+-------
+Color est un logiciel libre distribué selon la licence GNU GPL, version 2
+ou ultérieure, sans aucune garantie : voir LICENCE-GPL-2.txt. Les notices
+des composants embarqués (moteur Flutter, police DejaVu, bibliothèques du
+cœur Rust et autres) sont dans LICENCES-COMPOSANTS.txt ; Color les montre
+aussi dans « À propos », bouton « Licences ». Le code source correspondant doit pouvoir
+accompagner toute copie transmise à quelqu'un d'autre.

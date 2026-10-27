@@ -1,0 +1,4 @@
+module EduPaintCore {
+    header "edupaint_core.h"
+    export *
+}

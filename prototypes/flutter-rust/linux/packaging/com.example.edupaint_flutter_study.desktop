@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Color
+GenericName=Atelier de dessin pour enfants
+GenericName[en]=Drawing studio for children
+Comment=Un petit atelier pour les grandes idées
+Comment[en]=A small studio for big ideas
+Exec=edupaint-color
+Icon=com.example.edupaint_flutter_study
+Terminal=false
+Categories=Education;Art;
+Keywords=dessin;dessiner;peinture;coloriage;enfant;école;
+StartupNotify=true
+StartupWMClass=com.example.edupaint_flutter_study

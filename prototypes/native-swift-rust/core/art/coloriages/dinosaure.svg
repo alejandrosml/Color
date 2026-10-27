@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « Le dinosaure ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>Le dinosaure</title>
+  <desc>Un gentil dinosaure à long cou, avec les plaques de son dos et ses taches, qui se promène entre un volcan qui fume et un palmier, près d’un nid plein d’œufs.</desc>
+  <!-- Le soleil -->
+  <path d="M629 92 L638 47 Q650 28 662 47 L671 92 L709 66 Q731 61 726 83 L700 121 L745 130 Q764 142 745 154 L700 163 L726 201 Q731 223 709 218 L671 192 L662 237 Q650 256 638 237 L629 192 L591 218 Q569 223 574 201 L600 163 L555 154 Q536 142 555 130 L600 121 L574 83 Q569 61 591 66 L629 92 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="650" cy="142" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="630,130 631,130" fill="none" stroke="#2f3d4a" stroke-width="12"/>
+  <polyline points="670,130 671,130" fill="none" stroke="#2f3d4a" stroke-width="12"/>
+  <path d="M624 156 Q650 178 676 156" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le volcan et sa lave -->
+  <path d="M770 660 C830 520 870 380 896 272 Q900 258 914 258 L986 258 Q1000 258 1004 272 C1030 380 1070 520 1130 660 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M879 340 C885 316 891 293 896 272 C902 238 930 224 950 226 C972 224 1000 238 1004 272 C1010 296 1017 323 1024 350 C1022 358 1018 394 1012 396 C1006 398 996 358 988 364 C980 370 971 429 962 430 C953 431 945 373 936 368 C927 363 916 405 906 400 C896 395 883 350 879 340 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La fumée -->
+  <circle cx="944" cy="200" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="990" cy="152" r="40" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1050" cy="104" r="44" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le sol -->
+  <path d="M60 612 C200 584 340 606 480 598 C620 590 760 574 900 598 C1000 614 1080 590 1140 600 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le palmier et ses noix de coco -->
+  <path d="M127 678 C127 670 125 647 125 627 C124 608 123 582 123 560 C124 538 125 518 127 497 C129 477 131 456 134 437 C136 418 140 400 143 383 C146 366 150 350 154 334 C158 319 163 301 167 288 C171 275 176 261 178 256 L222 268 C221 274 216 289 213 301 C209 314 205 330 202 346 C199 361 196 376 193 392 C191 408 188 425 186 443 C184 461 183 481 182 501 C181 520 180 540 181 560 C181 581 183 605 184 624 C186 643 188 666 189 674 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M128 600 Q153 614 178 596" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M132 500 Q156 514 180 496" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M144 400 Q167 414 190 400" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M226 234 C222 238 210 252 203 256 C196 261 190 261 184 263 C178 265 173 266 168 268 C162 270 157 272 152 273 C146 275 141 276 135 278 C129 280 123 282 117 284 C110 286 104 288 96 291 C89 294 76 299 72 300 C73 296 75 282 78 273 C81 265 85 258 90 251 C95 244 101 237 107 232 C113 226 120 221 128 217 C135 214 143 211 151 209 C159 207 168 206 177 206 C185 206 194 204 202 209 C211 213 222 230 226 234 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M223 260 C217 263 201 274 192 276 C183 277 175 273 167 270 C158 268 151 264 143 260 C136 256 129 251 123 245 C117 239 111 233 106 226 C101 219 97 212 93 204 C90 196 87 188 86 179 C84 171 84 157 84 152 C88 154 100 161 107 165 C114 169 120 173 126 177 C132 181 138 184 144 187 C149 191 155 194 160 197 C165 201 170 204 176 207 C181 211 186 215 191 219 C197 222 203 224 208 231 C213 238 220 255 223 260 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M201 270 C196 267 178 260 172 253 C165 246 165 238 162 230 C160 221 158 213 157 205 C156 197 156 188 157 180 C158 172 160 163 162 155 C165 147 168 139 172 132 C176 124 181 117 186 110 C192 104 203 95 206 92 C207 96 209 110 211 118 C212 126 213 133 213 140 C214 148 215 155 216 161 C217 168 217 175 218 181 C218 188 219 194 219 201 C219 207 219 214 219 221 C219 228 221 234 218 242 C215 250 204 265 201 270 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M183 262 C185 257 190 239 195 231 C199 224 205 222 210 218 C215 214 220 210 224 206 C229 202 234 198 239 195 C244 191 249 187 254 184 C259 180 265 176 271 172 C276 168 282 163 289 159 C295 154 306 146 310 144 C310 148 312 162 311 171 C310 180 308 188 305 196 C303 204 299 212 295 219 C291 226 286 233 280 239 C274 245 268 251 261 255 C254 260 247 264 239 267 C231 271 224 276 214 275 C205 274 188 264 183 262 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M178 234 C181 230 191 214 198 209 C205 204 214 206 221 205 C229 205 237 206 244 207 C251 209 259 212 265 215 C272 218 278 223 284 228 C290 233 295 239 299 245 C303 251 307 258 309 266 C312 273 313 286 314 290 C310 289 298 286 291 284 C285 282 279 280 273 278 C267 277 262 276 257 275 C252 273 247 272 242 271 C238 270 233 269 229 267 C224 266 220 264 214 262 C209 261 205 261 199 257 C192 252 181 238 178 234 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="184" cy="264" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="228" cy="268" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le nid et les œufs -->
+  <ellipse cx="328" cy="608" rx="30" ry="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="378" cy="606" rx="30" ry="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M260 618 C268 706 446 706 454 618 Q428 630 402 624 Q356 632 312 624 Q286 630 260 618 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M296 670 Q358 684 418 668" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Les rochers -->
+  <path d="M1010 716 C1007 707 1011 685 1020 676 C1029 667 1047 661 1062 660 C1077 659 1098 663 1108 672 C1118 681 1123 703 1122 712 C1121 721 1114 725 1100 728 C1086 731 1055 732 1040 730 C1025 728 1013 725 1010 716 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M852 716 C845 709 852 692 860 684 C868 676 887 667 900 666 C913 665 932 672 940 680 C948 688 955 706 948 714 C941 722 916 726 900 726 C884 726 859 723 852 716 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le dinosaure : la queue, les pattes, les plaques du dos -->
+  <path d="M814 454 C821 457 838 463 853 470 C869 477 891 486 907 496 C923 506 936 519 948 529 C959 539 966 548 976 555 C985 563 994 569 1002 575 C1011 580 1018 585 1027 589 C1036 593 1046 597 1055 600 C1064 602 1075 605 1079 606 C1088 608 1093 616 1092 625 C1090 634 1082 639 1073 638 C1069 637 1058 637 1048 636 C1038 635 1024 633 1013 631 C1001 628 991 624 980 620 C968 616 957 611 944 605 C932 598 918 588 906 581 C894 574 886 569 873 564 C860 559 843 557 828 554 C813 551 793 547 786 546 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M582 530 L582 632 Q582 646 596 646 L634 646 Q648 646 648 632 L648 530 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M766 530 L766 632 Q766 646 780 646 L818 646 Q832 646 832 632 L832 530 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M538 530 L538 646 Q538 660 552 660 L600 660 Q614 660 614 646 L614 530 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M722 530 L722 646 Q722 660 736 660 L784 660 Q798 660 798 646 L798 530 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M552 660 Q561 646 570 660 Q579 646 588 660 Q597 646 606 660" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M736 660 Q745 646 754 660 Q763 646 772 660 Q781 646 790 660" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M600 430 C606 382 624 354 636 352 C648 354 666 382 672 430 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M678 418 C684 370 706 338 718 336 C730 338 752 370 758 418 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M762 436 C768 388 788 358 800 356 C812 358 832 388 838 436 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le corps, le cou et la tête -->
+  <path d="M888 520 C886 497 870 452 850 430 C830 408 800 396 770 388 C740 380 698 381 670 384 C642 387 617 411 600 404 C583 397 579 362 570 340 C561 318 555 292 546 270 C537 248 526 223 514 206 C502 189 492 175 476 166 C460 157 438 153 420 152 C402 151 381 153 366 158 C351 163 338 173 330 182 C322 191 318 204 318 214 C318 224 323 236 332 244 C341 252 357 257 372 260 C387 263 409 257 424 262 C439 267 452 270 462 288 C472 306 478 341 484 370 C490 399 489 428 500 460 C511 492 525 536 552 560 C579 584 622 596 660 602 C698 608 747 604 780 598 C813 592 842 579 860 566 C878 553 890 543 888 520 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les taches -->
+  <ellipse cx="680" cy="470" rx="42" ry="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="788" cy="486" rx="34" ry="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="600" cy="520" rx="32" ry="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- L’œil, la narine et le sourire -->
+  <circle cx="414" cy="200" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="406,206 407,206" fill="none" stroke="#2f3d4a" stroke-width="22"/>
+  <polyline points="338,202 339,202" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <path d="M340 228 Q370 246 406 236" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

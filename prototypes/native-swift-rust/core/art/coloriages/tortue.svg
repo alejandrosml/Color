@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « La tortue ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>La tortue</title>
+  <desc>Une tortue souriante avec sa carapace à écailles, qui se promène dans le pré fleuri avec un petit escargot, sous l’arc-en-ciel et le soleil.</desc>
+  <!-- L’arc-en-ciel et son nuage -->
+  <path d="M66 430 C66 278 190 154 342 154 C494 154 618 278 618 430 L582 430 C582 297 475 190 342 190 C209 190 102 297 102 430 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M102 430 C102 297 209 190 342 190 C475 190 582 297 582 430 L546 430 C546 317 455 226 342 226 C229 226 138 317 138 430 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M138 430 C138 317 229 226 342 226 C455 226 546 317 546 430 L510 430 C510 337 435 262 342 262 C249 262 174 337 174 430 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M72 462 C27 462 32 402 96 407 C100 357 164 352 172 390 C192 354 256 367 248 412 C312 412 312 462 272 462 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le soleil et un petit nuage -->
+  <path d="M989 100 L998 55 Q1010 36 1022 55 L1031 100 L1069 74 Q1091 69 1086 91 L1060 129 L1105 138 Q1124 150 1105 162 L1060 171 L1086 209 Q1091 231 1069 226 L1031 200 L1022 245 Q1010 264 998 245 L989 200 L951 226 Q929 231 934 209 L960 171 L915 162 Q896 150 915 138 L960 129 L934 91 Q929 69 951 74 L989 100 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1010" cy="150" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M760 160 C728 160 732 118 774 122 C777 86 815 83 820 110 C832 84 870 94 866 125 C908 125 908 160 880 160 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le pré -->
+  <path d="M60 520 C200 494 330 520 470 508 C620 496 760 518 900 506 C1000 498 1080 512 1140 504 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les fleurs -->
+  <path d="M150 662 L150 736" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M150 718 C149 714 143 702 142 696 C142 690 146 687 149 682 C151 678 154 673 158 670 C161 666 165 662 169 660 C173 657 178 654 183 653 C187 651 193 649 198 649 C203 648 208 648 213 648 C219 649 227 651 230 652 C228 654 224 661 221 665 C218 669 215 673 212 676 C210 680 207 683 205 686 C203 689 200 692 198 694 C195 697 193 699 190 702 C187 704 185 707 182 709 C179 711 177 715 172 716 C167 718 154 718 150 718 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M134 572 C101 525 199 525 166 572 C190 520 240 605 182 600 C240 595 190 680 166 628 C199 675 101 675 134 628 C110 680 60 595 118 600 C60 605 110 520 134 572 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="150" cy="600" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1052 658 L1052 736" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1052 716 C1048 716 1035 716 1030 714 C1025 713 1023 709 1020 707 C1017 705 1015 702 1012 700 C1009 697 1007 695 1004 692 C1002 690 999 687 997 684 C995 681 992 678 990 674 C987 671 984 667 981 663 C978 659 974 652 972 650 C975 649 983 647 989 646 C994 646 999 646 1004 647 C1009 647 1015 649 1019 651 C1024 652 1029 655 1033 658 C1037 660 1041 664 1044 668 C1048 671 1051 676 1053 680 C1056 685 1060 688 1060 694 C1059 700 1053 712 1052 716 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1036 568 C1003 521 1101 521 1068 568 C1092 516 1142 601 1084 596 C1142 591 1092 676 1068 624 C1101 671 1003 671 1036 624 C1012 676 962 591 1020 596 C962 601 1012 516 1036 568 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1052" cy="596" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- L’escargot -->
+  <path d="M400 734 C399 730 435 725 452 722 C469 719 487 721 500 716 C513 711 520 699 528 690 C536 681 539 669 546 664 C553 659 566 658 572 662 C578 666 580 680 580 690 C580 700 577 714 572 722 C567 730 567 736 548 740 C529 744 485 745 460 744 C435 743 401 738 400 734 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="482" cy="684" r="46" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M482 684 Q496 672 504 688 Q510 708 482 710 Q454 708 456 680 Q460 652 494 652 Q524 656 526 686" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M554 668 Q546 646 546 628" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M568 668 Q574 648 584 632" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <polyline points="546,626 547,626" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <polyline points="585,630 586,630" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <path d="M560 700 Q568 708 577 700" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- La tortue : la queue, les pattes et la tête -->
+  <path d="M336 482 Q282 504 226 566 Q290 566 342 534 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M402 500 L402 590 Q402 606 418 606 L452 606 Q468 606 468 590 L468 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M712 500 L712 590 Q712 606 728 606 L762 606 Q778 606 778 590 L778 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M344 500 L344 606 Q344 622 360 622 L406 622 Q422 622 422 606 L422 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M650 500 L650 606 Q650 622 666 622 L712 622 Q728 622 728 606 L728 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M359 622 Q368 608 377 622 Q386 608 395 622 Q404 608 413 622" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M665 622 Q674 608 683 622 Q692 608 701 622 Q710 608 719 622" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M744 500 C739 486 762 455 776 438 C790 421 813 414 826 400 C839 386 843 364 856 352 C869 340 889 332 906 330 C923 328 943 334 956 342 C969 350 980 366 984 380 C988 394 985 412 978 424 C971 436 955 445 940 450 C925 455 904 452 888 456 C872 460 860 465 846 476 C832 487 823 520 806 524 C789 528 749 514 744 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="904" cy="382" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="912,386 913,386" fill="none" stroke="#2f3d4a" stroke-width="20"/>
+  <polyline points="970,386 971,386" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <path d="M930 424 Q952 434 972 414" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La carapace -->
+  <path d="M500 300 L490 240 C512 232 536 228 560 228 C584 228 608 232 630 240 L620 300 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M500 300 L450 370 L361 359 C389 300 436 259 490 240 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M620 300 L630 240 C684 259 731 300 759 359 L670 370 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M450 370 L500 436 L500 500 L330 500 C330 446 341 398 361 359 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M670 370 L759 359 C779 398 790 446 790 500 L620 500 L620 436 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M500 436 L620 436 L620 500 L500 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M500 300 L620 300 L670 370 L620 436 L500 436 L450 370 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le bord de la carapace -->
+  <path d="M298 470 Q351 476 404 480 L404 547 Q355 544 306 538 Q274 504 298 470 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M404 480 Q456 483 508 484 L508 552 Q456 551 404 547 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M508 484 Q560 486 612 484 L612 552 Q560 554 508 552 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M612 484 Q664 483 716 480 L716 547 Q664 551 612 552 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M716 480 Q769 476 822 470 Q846 504 814 538 Q765 544 716 547 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

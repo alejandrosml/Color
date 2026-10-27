@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « La maison ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>La maison</title>
+  <desc>Une maison avec sa cheminée qui fume, deux fenêtres et une porte, un buisson, un pommier, un nuage et le soleil qui sourit.</desc>
+  <!-- Le sol -->
+  <rect x="60" y="632" width="1080" height="118" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le soleil -->
+  <circle cx="185" cy="165" r="62" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="269" y1="165" x2="301" y2="165" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="244" y1="224" x2="267" y2="247" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="185" y1="249" x2="185" y2="281" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="126" y1="224" x2="103" y2="247" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="101" y1="165" x2="69" y2="165" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="126" y1="106" x2="103" y2="83" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="185" y1="81" x2="185" y2="49" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="244" y1="106" x2="267" y2="83" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="165,152 166,152" fill="none" stroke="#2f3d4a" stroke-width="12"/>
+  <polyline points="205,152 206,152" fill="none" stroke="#2f3d4a" stroke-width="12"/>
+  <polyline points="211,180 206,186 200,191 193,194 185,195 177,194 170,191 164,186 159,180" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le nuage -->
+  <circle cx="985" cy="130" r="44" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1075" cy="134" r="40" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1030" cy="104" r="54" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La fumée de la cheminée -->
+  <circle cx="706" cy="204" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="750" cy="150" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="804" cy="94" r="38" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La cheminée -->
+  <rect x="664" y="240" width="64" height="110" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le toit -->
+  <rect x="380" y="300" width="440" height="86" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les murs -->
+  <rect x="420" y="386" width="360" height="246" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La porte -->
+  <rect x="558" y="494" width="86" height="138" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="626,568 627,568" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <!-- Les fenêtres -->
+  <rect x="452" y="424" width="86" height="86" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="495" y1="424" x2="495" y2="510" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="452" y1="467" x2="538" y2="467" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="664" y="424" width="86" height="86" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="707" y1="424" x2="707" y2="510" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="664" y1="467" x2="750" y2="467" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le pommier -->
+  <rect x="944" y="456" width="64" height="176" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="976" cy="372" r="104" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="928" cy="344" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1022" cy="396" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="956" cy="426" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le buisson -->
+  <circle cx="188" cy="594" r="50" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="346" cy="598" r="46" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="266" cy="566" r="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

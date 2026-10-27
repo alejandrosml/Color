@@ -1,0 +1,11 @@
+# The sources of every library the core depends on are kept in vendor/:
+# building Color never downloads anything. `cargo vendor vendor` wrote that
+# folder; see ../../../docs/BIBLIOTHEQUES-TIERCES.md before changing a version.
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+
+[net]
+offline = true

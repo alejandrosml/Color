@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « La chenille ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>La chenille</title>
+  <desc>Une chenille souriante qui se promène sur une grande feuille, sous le soleil et un nuage.</desc>
+  <!-- Le soleil -->
+  <circle cx="180" cy="160" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="260" y1="160" x2="290" y2="160" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="237" y1="217" x2="258" y2="238" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="180" y1="240" x2="180" y2="270" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="123" y1="217" x2="102" y2="238" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="100" y1="160" x2="70" y2="160" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="123" y1="103" x2="102" y2="82" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="180" y1="80" x2="180" y2="50" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="237" y1="103" x2="258" y2="82" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le nuage -->
+  <circle cx="540" cy="150" r="44" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="640" cy="154" r="40" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="590" cy="122" r="54" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La feuille -->
+  <line x1="124" y1="610" x2="76" y2="650" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="600" cy="610" rx="480" ry="112" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="150" y1="610" x2="1050" y2="610" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="300" y1="610" x2="370" y2="540" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="300" y1="610" x2="370" y2="680" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="480" y1="610" x2="550" y2="540" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="480" y1="610" x2="550" y2="680" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="660" y1="610" x2="730" y2="540" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="660" y1="610" x2="730" y2="680" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="840" y1="610" x2="910" y2="540" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="840" y1="610" x2="910" y2="680" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les pattes -->
+  <line x1="268" y1="520" x2="260" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="312" y1="520" x2="320" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="383" y1="520" x2="375" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="427" y1="520" x2="435" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="498" y1="520" x2="490" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="542" y1="520" x2="550" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="613" y1="520" x2="605" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="657" y1="520" x2="665" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="728" y1="520" x2="720" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="772" y1="520" x2="780" y2="556" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <!-- Le corps -->
+  <circle cx="290" cy="470" r="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="405" cy="448" r="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="520" cy="470" r="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="635" cy="448" r="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="750" cy="470" r="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les antennes -->
+  <polyline points="870,300 868,281 862,265 854,251 842,243 830,240" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="830,240 831,240" fill="none" stroke="#2f3d4a" stroke-width="22"/>
+  <polyline points="930,300 932,281 938,265 946,251 958,243 970,240" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="970,240 971,240" fill="none" stroke="#2f3d4a" stroke-width="22"/>
+  <!-- La tête -->
+  <circle cx="900" cy="404" r="96" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="866" cy="380" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="872,384 873,384" fill="none" stroke="#2f3d4a" stroke-width="16"/>
+  <circle cx="936" cy="380" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="942,384 943,384" fill="none" stroke="#2f3d4a" stroke-width="16"/>
+  <polyline points="938,440 931,449 922,456 911,461 900,462 889,461 878,456 869,449 862,440" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « La fleur ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>La fleur</title>
+  <desc>Une grande fleur qui sourit dans son pot, avec ses deux feuilles, une coccinelle et un papillon qui viennent la voir.</desc>
+  <!-- La tige -->
+  <polyline points="600,440 592,480 588,520 592,560 600,600" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les feuilles -->
+  <ellipse cx="518" cy="520" rx="72" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="462" y1="520" x2="584" y2="520" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="684" cy="562" rx="72" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="618" y1="562" x2="740" y2="562" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le pot -->
+  <rect x="500" y="640" width="200" height="112" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="468" y="596" width="264" height="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les pétales -->
+  <circle cx="600" cy="188" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="672" cy="218" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="702" cy="290" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="672" cy="362" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="392" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="528" cy="362" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="498" cy="290" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="528" cy="218" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le cœur de la fleur -->
+  <circle cx="600" cy="290" r="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="578,274 579,274" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <polyline points="622,274 623,274" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <polyline points="626,303 621,309 615,314 608,317 600,318 592,317 585,314 579,309 574,303" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le papillon -->
+  <ellipse cx="924" cy="168" rx="54" ry="44" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="1012" cy="168" rx="54" ry="44" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="932" cy="240" rx="42" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="1004" cy="240" rx="42" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="968" y1="146" x2="968" y2="270" fill="none" stroke="#2f3d4a" stroke-width="18"/>
+  <polyline points="964,140 963,130 959,120 954,112 947,105" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="972,140 973,130 977,120 982,112 989,105" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La coccinelle -->
+  <line x1="180" y1="444" x2="154" y2="434" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="180" y1="474" x2="154" y2="464" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="180" y1="504" x2="154" y2="494" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="280" y1="444" x2="306" y2="434" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="280" y1="474" x2="306" y2="464" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="280" y1="504" x2="306" y2="494" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="236,386 235,376 231,366 224,359 216,354" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="224,386 225,376 229,366 236,359 244,354" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="230" cy="404" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="230" cy="480" r="62" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="230" y1="420" x2="230" y2="540" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="200,456 201,456" fill="none" stroke="#2f3d4a" stroke-width="20"/>
+  <polyline points="262,456 263,456" fill="none" stroke="#2f3d4a" stroke-width="20"/>
+  <polyline points="196,506 197,506" fill="none" stroke="#2f3d4a" stroke-width="20"/>
+  <polyline points="264,506 265,506" fill="none" stroke="#2f3d4a" stroke-width="20"/>
+</svg>

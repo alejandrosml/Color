@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Options ». Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Options</title>
+  <path d="M 27.37 14.09 L 27.87 7.34 L 36.13 7.34 L 36.63 14.09 L 41.39 16.06 L 46.52 11.65 L 52.35 17.48 L 47.94 22.61 L 49.91 27.37 L 56.66 27.87 L 56.66 36.13 L 49.91 36.63 L 47.94 41.39 L 52.35 46.52 L 46.52 52.35 L 41.39 47.94 L 36.63 49.91 L 36.13 56.66 L 27.87 56.66 L 27.37 49.91 L 22.61 47.94 L 17.48 52.35 L 11.65 46.52 L 16.06 41.39 L 14.09 36.63 L 7.34 36.13 L 7.34 27.87 L 14.09 27.37 L 16.06 22.61 L 11.65 17.48 L 17.48 11.65 L 22.61 16.06 Z" fill="#9a82c9" stroke="#293d4b" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="8" fill="#fffcf0" stroke="#293d4b" stroke-width="2.5"/>
+</svg>

@@ -1,0 +1,273 @@
+{
+  "generator": "Python stdlib struct/zlib; created before native evaluation",
+  "cases": [
+    {
+      "file": "legacy-v1.edupaint",
+      "bytes": 72,
+      "sha256": "bb0b28272f70548241016acff19a2d4c3917bc5285a936991a294574906b49bf",
+      "native_accept": true,
+      "note": "Legacy freehand normalizes to v2.",
+      "expected_project": "legacy-v1.edupaint.normalized",
+      "expected_bytes": 84,
+      "expected_sha256": "19d4b0c528f872967c950796ede5d74e1a4ffc21f4ef0e23bded52aede4c0d66"
+    },
+    {
+      "file": "portrait-v2.edupaint",
+      "bytes": 156,
+      "sha256": "eb1212d518d598a0b912537159948e0bd9c7cdef8dc87fa2249470f84963d7f9",
+      "native_accept": true,
+      "note": "",
+      "expected_project": "portrait-v2.edupaint.normalized",
+      "expected_bytes": 156,
+      "expected_sha256": "eb1212d518d598a0b912537159948e0bd9c7cdef8dc87fa2249470f84963d7f9"
+    },
+    {
+      "file": "empty-square-v2.edupaint",
+      "bytes": 36,
+      "sha256": "9e941d46a64d7f11ce27658509e0916ce7ffccad635a6b032cf80dbbc58ee24e",
+      "native_accept": true,
+      "note": "",
+      "expected_project": "empty-square-v2.edupaint.normalized",
+      "expected_bytes": 36,
+      "expected_sha256": "9e941d46a64d7f11ce27658509e0916ce7ffccad635a6b032cf80dbbc58ee24e"
+    },
+    {
+      "file": "rgb-v3.edupaint",
+      "bytes": 2119,
+      "sha256": "6b939d0699e317ddb60fb2108e3543c0b92c5f66e95bab24f2cd4c4704c71d50",
+      "native_accept": true,
+      "note": "Synthetic filter-0 PNG, independent Python zlib/struct.",
+      "expected_project": "rgb-v3.edupaint.normalized",
+      "expected_bytes": 2119,
+      "expected_sha256": "6b939d0699e317ddb60fb2108e3543c0b92c5f66e95bab24f2cd4c4704c71d50",
+      "pixel_decode_expected": true
+    },
+    {
+      "file": "bad-project-crc.edupaint",
+      "bytes": 2119,
+      "sha256": "a4f7eef3c9a6ec04a8e225ea60a512c5fb5b6fa4d5beb2195135e42ad35a4f2a",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "bad-png-crc.edupaint",
+      "bytes": 2119,
+      "sha256": "abcf2e5b9374848917c59c42f690662ffa37e82c66a692320cbc23bba5524191",
+      "native_accept": false,
+      "note": "Outer project CRC valid; inner PNG CRC corrupt."
+    },
+    {
+      "file": "rgba-v3.edupaint",
+      "bytes": 2525,
+      "sha256": "dda03456e807a9e9abd43d1426945cd61f75bf32908c3270a418753c1fb3f269",
+      "native_accept": true,
+      "note": "Synthetic filter-0 PNG, independent Python zlib/struct.",
+      "expected_project": "rgba-v3.edupaint.normalized",
+      "expected_bytes": 2525,
+      "expected_sha256": "dda03456e807a9e9abd43d1426945cd61f75bf32908c3270a418753c1fb3f269",
+      "pixel_decode_expected": true
+    },
+    {
+      "file": "structural-png-undecodable.edupaint",
+      "bytes": 192,
+      "sha256": "9ff6c23e486381bc38c3ec4471ed1b92ae0645208feef23de71b47d01d01086f",
+      "native_accept": true,
+      "note": "Native structure/CRC passes, invalid DEFLATE must prevent UI adoption.",
+      "expected_project": "structural-png-undecodable.edupaint.normalized",
+      "expected_bytes": 192,
+      "expected_sha256": "9ff6c23e486381bc38c3ec4471ed1b92ae0645208feef23de71b47d01d01086f",
+      "pixel_decode_expected": false
+    },
+    {
+      "file": "truncated.edupaint",
+      "bytes": 155,
+      "sha256": "76fd317704c2ac9a2a84dd00f0c224a73a58d39935858bfb60a1515b16758d3b",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "unknown-version.edupaint",
+      "bytes": 156,
+      "sha256": "e21f9a2a1ca4b185dd512fc4eeb23179fac4761479c5a04aa6b589b42e0792fd",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "declared-length.edupaint",
+      "bytes": 156,
+      "sha256": "7155c3967a56ece5f04132f8d7c4b7df4f629bb3bb024aac70aa549c9d6902f2",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "point-nan.edupaint",
+      "bytes": 156,
+      "sha256": "3760daac5e36b1763532b4c249ccdbc3937e21e319d05499b61bfd25a7ee3483",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "zero-rectangle.edupaint",
+      "bytes": 76,
+      "sha256": "7e259b11edf9b3df165b85129ce39c7e9ec744b1f80bd5bce05eafd9c398b21e",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "unknown-style.edupaint",
+      "bytes": 156,
+      "sha256": "1d458ecc9000b4ac7af1d28cc891d46a9babbb866c61cdb165e7319764913199",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "background-dimensions.edupaint",
+      "bytes": 2119,
+      "sha256": "b48a7e544b24dcd9675caf9c1185ee381621916f62af0b9dc915275fb977059e",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "declared-point-count.edupaint",
+      "bytes": 156,
+      "sha256": "3a5f300d890a41fa1fa27ee1c2f45a00f89f0b42bef024d0889b6bae94c9f7ef",
+      "native_accept": false,
+      "note": ""
+    },
+    {
+      "file": "layers-text-stamp-v4.edupaint",
+      "bytes": 372,
+      "sha256": "7a6db69e61f26b43ec88852b09ce2344d5c7752291ebff63bfaf5e1328323cc0",
+      "native_accept": true,
+      "note": "Three layers in stack order 0, 2 (hidden), 1; active layer 1; freehand, filled rectangle, two-line text with escapes and an emoji, stamp 8, ellipse.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core",
+      "expected_project": "layers-text-stamp-v4.edupaint.normalized",
+      "expected_bytes": 372,
+      "expected_sha256": "7a6db69e61f26b43ec88852b09ce2344d5c7752291ebff63bfaf5e1328323cc0"
+    },
+    {
+      "file": "text-on-image-v4.edupaint",
+      "bytes": 2141,
+      "sha256": "abad9474dbcd503812acd3a626684231767f07e57641187cd066308ad39154f0",
+      "native_accept": true,
+      "note": "One text over the rgb.png background.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core",
+      "expected_project": "text-on-image-v4.edupaint.normalized",
+      "expected_bytes": 2141,
+      "expected_sha256": "abad9474dbcd503812acd3a626684231767f07e57641187cd066308ad39154f0"
+    },
+    {
+      "file": "unknown-stamp-v4.edupaint",
+      "bytes": 120,
+      "sha256": "d623889f15e1693dfc1d60c43b6f32d82296f3ac495c11c8b1e6a5ae671cb779",
+      "native_accept": false,
+      "note": "Stamp identifier 60000 is not in any catalogue.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "duplicate-layers-v4.edupaint",
+      "bytes": 120,
+      "sha256": "8013faceb4d57b266976108abfc25d105b494fa7019168153b0ba4440942460e",
+      "native_accept": false,
+      "note": "The layer table names identifier 0 twice.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "control-text-v4.edupaint",
+      "bytes": 128,
+      "sha256": "6ef44a620a7ce47e8419c80d0b0f694bb70fca8264a918c5f84abf8d905d46e2",
+      "native_accept": false,
+      "note": "A tabulation inside the characters of a text.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "unknown-version-5.edupaint",
+      "bytes": 156,
+      "sha256": "19a59884352abe92e1a2a7fdeb1bd231c4c614ef7ec6a3f50559e9c85334e22e",
+      "native_accept": false,
+      "note": "Valid checksum and version 2 body announced as version 5. The historic unknown-version file announces version 4, which now exists and rejects it as a malformed version 4 file.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "locked-page-v5.edupaint",
+      "bytes": 648,
+      "sha256": "8b8f07dd1811e3d94277d37446aa20184556bee49c236e79cef04d365f9584a7",
+      "native_accept": true,
+      "note": "A colouring page with a drawing: layers 1 (zones, locked), 0 (active), 3 (hidden), 4 (hidden and locked), 2 (lines, locked); a filled contour and a rectangle as zones, a freehand stroke and a filled contour drawn on layer 0, a stamp, an ellipse, the contour and the rectangle again as lines, a freehand detail.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core",
+      "expected_project": "locked-page-v5.edupaint.normalized",
+      "expected_bytes": 648,
+      "expected_sha256": "8b8f07dd1811e3d94277d37446aa20184556bee49c236e79cef04d365f9584a7"
+    },
+    {
+      "file": "layers-only-v5.edupaint",
+      "bytes": 184,
+      "sha256": "dd41fa96c58be3c58f00948e5291d5e7605262de94f1211a6ff8eb9b00f1aa3f",
+      "native_accept": true,
+      "note": "Version 5 without a locked layer or a contour: accepted and written back as version 4.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core",
+      "expected_project": "layers-only-v5.edupaint.normalized",
+      "expected_bytes": 184,
+      "expected_sha256": "5d5b5de4c73bdcf61a0f70347adfabda96b654f7233d88cb2721e9b59a4ebec4"
+    },
+    {
+      "file": "locked-active-v5.edupaint",
+      "bytes": 648,
+      "sha256": "3925f24c16d68d1ef829a15cd532816d2cc61a551e49ede7c4f8428f6abac80f",
+      "native_accept": false,
+      "note": "The page of locked-page-v5 with the locked layer 1 as active layer.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "layer-flags-v5.edupaint",
+      "bytes": 120,
+      "sha256": "3881d6cba0e260f0097fe8cde13aef0712c58ce9c64f0a87997eff3ef0a64648",
+      "native_accept": false,
+      "note": "Layer flags 5: bit 2 is unknown.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "flat-contour-v5.edupaint",
+      "bytes": 128,
+      "sha256": "d76da85abbca0491acd00217f95ccdbd0629d3cf4ac9f57d1e60476ca15846c8",
+      "native_accept": false,
+      "note": "A contour whose three points lie on one horizontal line.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "short-contour-v5.edupaint",
+      "bytes": 120,
+      "sha256": "b0f26dbadb4b330b896b3d5de39c0018d48187e6a556774dbf6f4743de3d6a92",
+      "native_accept": false,
+      "note": "A contour of two points.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "contour-in-v4.edupaint",
+      "bytes": 152,
+      "sha256": "17f82fe80d785a97cdd217658475dbd6b00749091df8c57e9ae2a1d0aa52244e",
+      "native_accept": false,
+      "note": "A valid filled contour in a version 4 file, which knows no contour.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "locked-in-v4.edupaint",
+      "bytes": 128,
+      "sha256": "059f0f8565313d8d414e8a97c3dc3aa5323374ea1eb3b2e5aae9bba185438c78",
+      "native_accept": false,
+      "note": "Layer flags 3 (visible, locked) in a version 4 file, which knows the visibility bit only.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "unknown-version-6.edupaint",
+      "bytes": 156,
+      "sha256": "be53f1c74d4ddeb28be7889f7d06848bbfafd229e1dbe8f7365ae65054f29110",
+      "native_accept": false,
+      "note": "Valid checksum and version 2 body announced as version 6. Version 5 exists now: unknown-version-5 is rejected as a malformed version 5 file.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    }
+  ],
+  "native_accept_count": 10,
+  "native_reject_count": 21,
+  "total_case_bytes": 17789
+}

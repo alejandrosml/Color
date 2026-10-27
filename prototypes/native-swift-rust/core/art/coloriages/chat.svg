@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « Le chat ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>Le chat</title>
+  <desc>Un chat assis sur son coussin, avec ses moustaches et sa longue queue, qui regarde sa pelote de laine pendant qu’une petite souris sort de son trou.</desc>
+  <!-- Le sol -->
+  <rect x="60" y="600" width="1080" height="150" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La fenêtre et la lune -->
+  <rect x="86" y="64" width="300" height="272" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="116" y="94" width="105" height="91" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="251" y="94" width="105" height="91" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="116" y="215" width="105" height="91" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="251" y="215" width="105" height="91" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M211 104 C127 96 127 184 211 176 C177 160 177 120 211 104 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M304 118 L309 132 L324 133 L312 142 L316 157 L304 148 L291 157 L295 142 L283 133 L298 132 Z" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M300 242 L304 254 L317 255 L307 263 L310 275 L300 268 L289 275 L292 263 L282 255 L295 254 Z" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M178 248 L182 259 L194 260 L185 267 L188 277 L178 271 L169 277 L172 267 L163 260 L175 259 Z" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Les rideaux -->
+  <path d="M52 58 L126 58 C127 70 134 103 134 128 C134 153 123 181 124 208 C125 235 137 261 138 288 C139 315 133 356 132 370 Q92 384 52 370 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M420 58 L346 58 C345 70 338 103 338 128 C338 153 349 181 348 208 C347 235 335 261 334 288 C333 315 339 356 340 370 Q380 384 420 370 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="36" y1="58" x2="436" y2="58" fill="none" stroke="#2f3d4a" stroke-width="8"/>
+  <!-- L’horloge -->
+  <circle cx="1010" cy="170" r="76" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1010" cy="170" r="46" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="1010,140 1010,170 1034,182" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le trou de la souris -->
+  <path d="M950 600 L950 520 C950 470 990 440 1035 440 C1080 440 1120 470 1120 520 L1120 600 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La souris -->
+  <circle cx="1000" cy="522" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1052" cy="518" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M936 576 C939 567 954 554 968 546 C982 538 1003 531 1020 530 C1037 529 1057 535 1068 542 C1079 549 1086 564 1086 574 C1086 584 1078 598 1066 604 C1054 610 1032 610 1012 610 C992 610 961 608 948 602 C935 596 933 585 936 576 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="990,560 991,560" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <polyline points="936,576 937,576" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <!-- Le tapis -->
+  <ellipse cx="600" cy="694" rx="340" ry="40" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La pelote de laine et son fil -->
+  <path d="M200 704 C210 707 243 722 262 722 C281 722 295 705 312 706 C329 707 345 727 362 728 C379 729 398 720 412 714 C426 708 440 694 446 690" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <circle cx="160" cy="664" r="72" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M107 627 Q168 660 149 728" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M138 603 Q196 658 190 721" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M99 686 Q154 620 223 648" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Le coussin -->
+  <path d="M334 552 C430 532 770 532 866 552 C850 600 850 648 872 698 C770 716 430 716 328 698 C350 648 350 600 334 552 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La queue -->
+  <path d="M490 576 C484 576 468 577 454 576 C440 576 422 576 408 574 C394 573 383 572 372 568 C360 565 347 561 338 554 C328 546 319 535 313 525 C308 515 303 504 302 494 C300 483 301 471 304 461 C306 451 310 442 316 434 C322 427 334 421 341 417 C347 413 353 412 356 411 C366 406 377 411 381 420 C386 430 381 441 372 445 C369 446 360 450 356 452 C352 454 350 454 348 458 C346 461 344 466 343 471 C342 476 341 481 342 486 C343 492 346 499 350 504 C353 510 357 515 362 518 C368 522 373 524 382 525 C390 527 400 529 412 530 C424 530 440 530 453 530 C466 529 484 528 490 528 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le corps -->
+  <path d="M600 330 C678 330 734 392 752 470 C772 552 734 604 600 604 C466 604 428 552 448 470 C466 392 522 330 600 330 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les pattes de derrière -->
+  <path d="M450 520 C456 500 469 474 482 468 C495 462 519 473 530 486 C541 499 543 528 548 548 C553 568 570 594 560 604 C550 614 509 612 490 610 C471 608 455 605 448 590 C441 575 444 540 450 520 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M750 520 C756 540 759 575 752 590 C745 605 729 608 710 610 C691 612 650 614 640 604 C630 594 647 568 652 548 C657 528 659 499 670 486 C681 473 705 462 718 468 C731 474 744 500 750 520 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les pattes de devant -->
+  <path d="M600 440 L600 610 L566 610 C546 610 536 600 536 584 L536 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M558 610 L558 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M578 610 L578 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M600 440 L600 610 L634 610 C654 610 664 600 664 584 L664 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M622 610 L622 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M642 610 L642 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Le plastron -->
+  <path d="M514 338 C508 400 520 460 550 482 Q575 468 600 490 Q625 468 650 482 C680 460 692 400 686 338 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les oreilles -->
+  <path d="M466 228 L476 76 Q480 54 499 64 L582 150 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M734 228 L724 76 Q720 54 701 64 L618 150 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M494 100 Q496 160 512 200" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M706 100 Q704 160 688 200" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- La tête -->
+  <path d="M600 140 C690 140 748 190 748 258 C748 324 686 366 600 366 C514 366 452 324 452 258 C452 190 510 140 600 140 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les yeux, le museau, le nez et les moustaches -->
+  <ellipse cx="550" cy="246" rx="32" ry="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="540,256 541,256" fill="none" stroke="#2f3d4a" stroke-width="28"/>
+  <ellipse cx="650" cy="246" rx="32" ry="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="640,256 641,256" fill="none" stroke="#2f3d4a" stroke-width="28"/>
+  <path d="M600 298 C580 272 538 276 536 310 C534 344 576 354 600 334 C624 354 666 344 664 310 C662 276 620 272 600 298 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M586 288 L614 288 Q616 292 600 306 Q584 292 586 288 Z" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="600" y1="306" x2="600" y2="322" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M534 300 Q480 287 432 286" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M534 314 Q480 308 432 314" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M534 328 Q480 330 432 344" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M666 300 Q720 287 768 286" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M666 314 Q720 308 768 314" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M666 328 Q720 330 768 344" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+</svg>

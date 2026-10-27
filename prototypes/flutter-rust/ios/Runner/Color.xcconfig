@@ -1,0 +1,25 @@
+// Color on iPhone and iPad: what Flutter's own settings do not say.
+//
+// The core in Rust is linked into the application: one static library for
+// the devices, one for the simulator, built by the launcher on the Mac into
+// ios/rust/. Dart finds its functions by name, in the program itself
+// (DynamicLibrary.process()); no code of the program calls them. So:
+//   - -force_load takes every object of the library into the program;
+//   - dead-code stripping is off: in a program, unlike in a library, the
+//     linker counts a global function that nothing calls as dead, and would
+//     remove all of the core;
+//   - Strip Style « non-global » keeps the names of those functions in the
+//     copy for the App Store, where Dart looks them up.
+OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load $(PROJECT_DIR)/rust/iphoneos/libedupaint_core.a
+OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load $(PROJECT_DIR)/rust/iphonesimulator/libedupaint_core.a
+DEAD_CODE_STRIPPING = NO
+STRIP_STYLE = non-global
+
+// The simulator of a Mac with Apple silicon, for which the core is built:
+// not the Intel one. Generated.xcconfig, included before this file, leaves
+// out only i386; this line replaces it.
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = i386 x86_64
+
+// The Apple Developer team of the author, written there by the launcher of
+// the App Store once Xcode knows it. Without it, the simulator still works.
+#include? "Equipe.xcconfig"

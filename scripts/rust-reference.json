@@ -1,0 +1,19 @@
+{
+  "policy": "Color is built with the Rust that Homebrew provides (formula 'rust', stable). On the owner's Mac that is the rustc of Homebrew, whatever its release; Linux and Windows are built with the same release, named here.",
+  "rust_version": "1.99.0",
+  "rust_commit": "b940084d7eb6a299eb4bfeb8e34901bc051e7ac4",
+  "observed_on": "2026-10-04",
+  "observed_from": [
+    "rustc --version of Homebrew's Rust in the build journals of the owner's Mac: rustc 1.99.0 (b940084d7 2026-09-28) (Homebrew)",
+    "https://formulae.brew.sh/api/formula/rust.json: versions.stable = 1.99.0",
+    "https://static.rust-lang.org/dist/channel-rust-1.99.0.toml: date 2026-10-01, the full commit hash and the archives below"
+  ],
+  "official_archives": {
+    "dist_date": "2026-10-01",
+    "aarch64-unknown-linux-gnu": {
+      "rustc-1.99.0-aarch64-unknown-linux-gnu.tar.xz": "89c0f1a3a44df63c95e5d5f2ba093d0a12c5f5f57f8635f8a7a0ce50cf86600e",
+      "rust-std-1.99.0-aarch64-unknown-linux-gnu.tar.xz": "1cf7e2ef58ed1cfa6f1adea18e155cbf254c1951f39e5f5e3376879f55fd64a4",
+      "cargo-1.99.0-aarch64-unknown-linux-gnu.tar.xz": "113229fcc16cc1ba004923a4cc275fbf3281dafaaf8b97269f9c00189d497fd4"
+    }
+  }
+}

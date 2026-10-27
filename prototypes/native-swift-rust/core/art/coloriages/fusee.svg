@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « La fusée ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>La fusée</title>
+  <desc>Une fusée qui s’envole vers les étoiles, avec son hublot et ses flammes, entre une planète à anneau et la lune.</desc>
+  <!-- Les étoiles -->
+  <line x1="420" y1="88" x2="420" y2="132" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="401" y1="99" x2="439" y2="121" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="439" y1="99" x2="401" y2="121" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="820" y1="278" x2="820" y2="322" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="801" y1="289" x2="839" y2="311" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="839" y1="289" x2="801" y2="311" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="160" y1="538" x2="160" y2="582" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="141" y1="549" x2="179" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="179" y1="549" x2="141" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1040" y1="538" x2="1040" y2="582" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1021" y1="549" x2="1059" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1059" y1="549" x2="1021" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="330" y1="678" x2="330" y2="722" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="311" y1="689" x2="349" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="349" y1="689" x2="311" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="900" y1="678" x2="900" y2="722" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="881" y1="689" x2="919" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="919" y1="689" x2="881" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- La lune -->
+  <circle cx="990" cy="160" r="74" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="984,140 982,149 975,156 966,158 957,156 950,149 948,140 950,131 957,124 966,122 975,124 982,131 984,140" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <polyline points="1030,188 1028,195 1022,199 1014,199 1008,195 1006,188 1008,181 1014,177 1022,177 1028,181 1030,188" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- La planète et son anneau -->
+  <ellipse cx="230" cy="300" rx="160" ry="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="230" cy="300" r="92" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="140,335 155,337 170,339 185,340 200,341 215,342 230,342 245,342 260,341 275,340 290,339 305,337 320,335" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les flammes -->
+  <ellipse cx="600" cy="668" rx="62" ry="72" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="600" cy="650" rx="32" ry="46" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les ailerons -->
+  <circle cx="516" cy="500" r="76" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="684" cy="500" r="76" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La fusée -->
+  <ellipse cx="600" cy="252" rx="84" ry="150" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="516" y="252" width="168" height="300" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="516" y="430" width="168" height="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="330" r="50" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="330" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="550" y="552" width="100" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

@@ -1,0 +1,2719 @@
+{
+  "schema": 1,
+  "source": "generated test data; no external photo, artwork, or Tux Paint save",
+  "license": "CC0-1.0 for generated fixture pixels and generated synthetic metadata",
+  "not_claimed": [
+    "real Tux Paint export",
+    "Flutter import implementation or test pass",
+    "cross-platform ICC qualification"
+  ],
+  "generator": "scripts/generate-import-fixtures.py",
+  "generator_sha256": "73e4c6aa720f091800547c0323c02ecbfc68ead45fd529ee803fb934e4dfa018",
+  "toolchain": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "littlecms": "2.19",
+    "jpeg": "6.2",
+    "libjpeg_turbo": "3.1.4.1",
+    "zlib": "1.2.12"
+  },
+  "reproducibility": "Byte deterministic with the recorded generator and encoder versions; no wall-clock metadata. Different codec versions may encode different bytes.",
+  "pixel_policy": "RGBA probes use straight alpha; rgb_on_white uses integer source-over. Native premultiplied round trips may need the declared tolerance; ignore RGB under alpha=0. JPEG permits codec rounding.",
+  "icc_policy": "Color probes are expected after actual profile-to-sRGB conversion, not after merely relabelling RGB samples.",
+  "fixtures": [
+    {
+      "file": "rgb-asymmetric.png",
+      "sha256": "28a67dd5f302fd20b5d7a89859b7701d9195d5f6349c4d17aecd9b79b9fb3f66",
+      "bytes": 130,
+      "category": "valid",
+      "expectation": "accept",
+      "source_size": [
+        32,
+        24
+      ],
+      "png_color_type": 2,
+      "bit_depth": 8,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 0
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "rgba-asymmetric.png",
+      "sha256": "3da3d71a6b1301f87679e870e6f972d901005aec23cbbdb480473d2e99efdd4c",
+      "bytes": 154,
+      "category": "valid",
+      "expectation": "accept",
+      "source_size": [
+        32,
+        24
+      ],
+      "png_color_type": 6,
+      "bit_depth": 8,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            128
+          ],
+          "rgb_on_white": [
+            217,
+            177,
+            167
+          ],
+          "tolerance_per_channel": 0
+        }
+      ],
+      "generated_reference_rgba_sha256": "75e589768b62ba9ad8dbfcb7175087e52cc8c36a2caddf798a82e7b88e7cef76",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "gray-8.png",
+      "sha256": "7d4a843de8a964b17e261cde18e98575b0bd323f1259e3ee975f39cfc0a647c4",
+      "bytes": 418,
+      "category": "valid",
+      "expectation": "accept",
+      "source_size": [
+        32,
+        24
+      ],
+      "png_color_type": 0,
+      "bit_depth": 8,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            40,
+            40,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            40,
+            40
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            201,
+            201,
+            201,
+            255
+          ],
+          "rgb_on_white": [
+            201,
+            201,
+            201
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            85,
+            85,
+            85,
+            255
+          ],
+          "rgb_on_white": [
+            85,
+            85,
+            85
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            246,
+            246,
+            246,
+            255
+          ],
+          "rgb_on_white": [
+            246,
+            246,
+            246
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            148,
+            148,
+            148,
+            255
+          ],
+          "rgb_on_white": [
+            148,
+            148,
+            148
+          ],
+          "tolerance_per_channel": 0
+        }
+      ],
+      "generated_reference_rgba_sha256": "107d7e53a2846dc20bb4a2bbd3b686d859cc2a647058c3b565f57a8a520368d3",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "gray-alpha-8.png",
+      "sha256": "3b16c9a53027c945311c4252d769ee49fc1152ee9d26d7b3b1398ce4ff8f5ce3",
+      "bytes": 829,
+      "category": "valid",
+      "expectation": "accept",
+      "source_size": [
+        32,
+        24
+      ],
+      "png_color_type": 4,
+      "bit_depth": 8,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            40,
+            40,
+            40,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            201,
+            201,
+            201,
+            255
+          ],
+          "rgb_on_white": [
+            201,
+            201,
+            201
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            85,
+            85,
+            85,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            246,
+            246,
+            246,
+            255
+          ],
+          "rgb_on_white": [
+            246,
+            246,
+            246
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            148,
+            148,
+            148,
+            128
+          ],
+          "rgb_on_white": [
+            201,
+            201,
+            201
+          ],
+          "tolerance_per_channel": 0
+        }
+      ],
+      "generated_reference_rgba_sha256": "2430fdb12a25993b0180d895326b839aa3a0efcb0fb458f738dc8796a01bc40e",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "palette-alpha.png",
+      "sha256": "e9eee50bd5b469b23d7479a55b11b43044d270df8fe06c3bb08961f82aad23ad",
+      "bytes": 126,
+      "category": "valid",
+      "expectation": "accept",
+      "source_size": [
+        32,
+        24
+      ],
+      "png_color_type": 3,
+      "bit_depth": 8,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            128
+          ],
+          "rgb_on_white": [
+            147,
+            217,
+            162
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            64
+          ],
+          "rgb_on_white": [
+            201,
+            211,
+            246
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 0
+        }
+      ],
+      "generated_reference_rgba_sha256": "6450db51285673074c6b0e220c2b0b7c951a6bc5d67862bb11b4338f30b6e8f5",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "gray-16-qualification.png",
+      "sha256": "77c3746aec7a061e92ffd947204f71eb4c2b2681608ec01db1c0a22c31133842",
+      "bytes": 344,
+      "category": "qualification",
+      "expectation": "accept_after_color_depth_policy_is_qualified_or_reject_explicitly",
+      "source_size": [
+        32,
+        24
+      ],
+      "display_size": [
+        32,
+        24
+      ],
+      "png_color_type": 0,
+      "bit_depth": 16,
+      "note": "No silent claim of preserving 16-bit precision."
+    },
+    {
+      "file": "jpeg-baseline.jpg",
+      "sha256": "82dc4386de47d47780dfaca8225a205e1d348affb930b1ef099cf90512f15c83",
+      "bytes": 1285,
+      "category": "valid",
+      "expectation": "accept",
+      "source_size": [
+        32,
+        24
+      ],
+      "progressive": false,
+      "exif_orientation": 1,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-progressive.jpg",
+      "sha256": "19ccd242f58f44127678e12f6f8246639742bc01a81edbef147be30c10b5d937",
+      "bytes": 1054,
+      "category": "valid",
+      "expectation": "accept",
+      "source_size": [
+        32,
+        24
+      ],
+      "progressive": true,
+      "exif_orientation": 1,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-1.jpg",
+      "sha256": "cd52359c266424fdfd41da6a7c259457fe105017c2d2d4ae59cd141f6f6faec9",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 1,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-2.jpg",
+      "sha256": "da1228e590e0dac639c6c16f9b7a0db7bf46cc0f923125493ccf1edd8250527c",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 2,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "80387f334bcc8e34f73a15ec1efe2bdb2cdb0448611cc94fd82b8390faf90604",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-3.jpg",
+      "sha256": "75edba7c74e685f32b4c3fcfba266ea0ad255f3acd437f9bb11c6bfd020e9f41",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 3,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "5e22693be5a7b0be453f3db0583a8b12f4d60e0a18320199d68f41a59481209b",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-4.jpg",
+      "sha256": "65ec259dab40c53f3eaa4de7e9e473cbdf10c9057b85499c5e104b634b936754",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 4,
+      "pillow_verify": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "18dfa152628ffe0c4170e7253ebdd3ac3158f3027046d9b0c560f30cded69eff",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-5.jpg",
+      "sha256": "2308e4cd63491e5aea27fafed479c307dd099d7389cd8506e36e86743649c6d2",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 5,
+      "pillow_verify": true,
+      "display_size": [
+        24,
+        32
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            4
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            27
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            27
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            12,
+            16
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "37b7cd4076c26a9490974b8d6533e16255fe30e7d1a40b705eacd5bfd17fb2a3",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-6.jpg",
+      "sha256": "348502467e73df44ae59ce3931f3e78a2ee83b8a1dcfea5947196e6d046571be",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 6,
+      "pillow_verify": true,
+      "display_size": [
+        24,
+        32
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            27
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            27
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            12,
+            16
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "0da33ae71a19cb4590b6e69ea04f3a17b9a8227b6678e46c3a768f69d217bc6a",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-7.jpg",
+      "sha256": "9f2568738c86f7cc508a751a44046d535333589a0fbbd41946699379bcc34eef",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 7,
+      "pillow_verify": true,
+      "display_size": [
+        24,
+        32
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            27
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            27
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            12,
+            16
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "bfc3012d364d85b2c914551d6322702c105adf799a6cf62fa53b7a1eb412dfb4",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "jpeg-exif-orientation-8.jpg",
+      "sha256": "86d87b9ea7ddfe4ebbfce335d9cd4282894c39765eb40d32ed61dd3d9a8d6ddc",
+      "bytes": 1321,
+      "category": "valid",
+      "expectation": "accept_and_orient_once",
+      "source_size": [
+        32,
+        24
+      ],
+      "exif_orientation": 8,
+      "pillow_verify": true,
+      "display_size": [
+        24,
+        32
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            4
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            27
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            19,
+            27
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            12,
+            16
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "f4fb156f8025d70ae8b1c02343913be0ac1c096789e72e57ac96e08a1ca3bf3b",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "generated-srgb.icc",
+      "sha256": "6f6fe5cc53cd24ceeb7997fb24ce2889fdfb88d88ce4fdc5f8e25e0481294953",
+      "bytes": 588,
+      "category": "profile",
+      "expectation": "bounded_valid_profile",
+      "note": "Generated locally with LittleCMS; timestamp fixed to 2000-01-01; no vendor ICC copied."
+    },
+    {
+      "file": "generated-p3-d65-tabulated-srgb.icc",
+      "sha256": "772f1974a19b0181ac22ab320eaf844125d4e65b3dfad627c00ef49ebdb46bad",
+      "bytes": 8756,
+      "category": "profile",
+      "expectation": "bounded_valid_profile",
+      "note": "Generated locally with LittleCMS; timestamp fixed to 2000-01-01; no vendor ICC copied."
+    },
+    {
+      "file": "icc-srgb.png",
+      "sha256": "066cd748d7ee2e0696fa06efa02903a773fe2e5a2b485c7c67aa896a58768f41",
+      "bytes": 515,
+      "category": "color_profile",
+      "expectation": "accept_with_bounded_profile_and_real_color_conversion",
+      "source_size": [
+        32,
+        24
+      ],
+      "profile_bytes": 588,
+      "profile_sha256": "6f6fe5cc53cd24ceeb7997fb24ce2889fdfb88d88ce4fdc5f8e25e0481294953",
+      "icc_expected_destination": "sRGB",
+      "icc_reference": "LittleCMS relative colorimetric; 4096-entry TRC for generated P3; allow backend rounding.",
+      "icc_reference_rendering_intent": 1,
+      "pillow_verify": true,
+      "verify_color_management": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "icc-srgb.jpg",
+      "sha256": "5a911192f233b0917107165dde6410fabdbb459ff4f6b866c75c884388121346",
+      "bytes": 1891,
+      "category": "color_profile",
+      "expectation": "accept_with_bounded_profile_and_real_color_conversion",
+      "source_size": [
+        32,
+        24
+      ],
+      "profile_bytes": 588,
+      "profile_sha256": "6f6fe5cc53cd24ceeb7997fb24ce2889fdfb88d88ce4fdc5f8e25e0481294953",
+      "icc_expected_destination": "sRGB",
+      "icc_reference": "LittleCMS relative colorimetric; 4096-entry TRC for generated P3; allow backend rounding.",
+      "icc_reference_rendering_intent": 1,
+      "pillow_verify": true,
+      "verify_color_management": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement.",
+      "jpeg_tolerance": 4
+    },
+    {
+      "file": "icc-p3-d65-tabulated-srgb.png",
+      "sha256": "2cfe3e4e32a5064701560b31ed181c6b346e8f13942ccc61bc198893c07d6fcd",
+      "bytes": 8636,
+      "category": "color_profile",
+      "expectation": "accept_with_bounded_profile_and_real_color_conversion",
+      "source_size": [
+        32,
+        24
+      ],
+      "profile_bytes": 8756,
+      "profile_sha256": "772f1974a19b0181ac22ab320eaf844125d4e65b3dfad627c00ef49ebdb46bad",
+      "icc_expected_destination": "sRGB",
+      "icc_reference": "LittleCMS relative colorimetric; 4096-entry TRC for generated P3; allow backend rounding.",
+      "icc_reference_rendering_intent": 1,
+      "pillow_verify": true,
+      "verify_color_management": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            251,
+            0,
+            19,
+            255
+          ],
+          "rgb_on_white": [
+            251,
+            0,
+            19
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            0,
+            183,
+            49,
+            255
+          ],
+          "rgb_on_white": [
+            0,
+            183,
+            49
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            22,
+            81,
+            228,
+            255
+          ],
+          "rgb_on_white": [
+            22,
+            81,
+            228
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            249,
+            193,
+            0,
+            255
+          ],
+          "rgb_on_white": [
+            249,
+            193,
+            0
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            193,
+            95,
+            74,
+            255
+          ],
+          "rgb_on_white": [
+            193,
+            95,
+            74
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "c78097f5dd971134d76e98d91186c073a243dcc11a7fc5f0625c2419f940d58b",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "icc-p3-d65-tabulated-srgb.jpg",
+      "sha256": "25e754f12a4e914a05d37adb53bb92d03b98398041e71e54ad7a7eb9c7181d98",
+      "bytes": 10059,
+      "category": "color_profile",
+      "expectation": "accept_with_bounded_profile_and_real_color_conversion",
+      "source_size": [
+        32,
+        24
+      ],
+      "profile_bytes": 8756,
+      "profile_sha256": "772f1974a19b0181ac22ab320eaf844125d4e65b3dfad627c00ef49ebdb46bad",
+      "icc_expected_destination": "sRGB",
+      "icc_reference": "LittleCMS relative colorimetric; 4096-entry TRC for generated P3; allow backend rounding.",
+      "icc_reference_rendering_intent": 1,
+      "pillow_verify": true,
+      "verify_color_management": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            251,
+            0,
+            19,
+            255
+          ],
+          "rgb_on_white": [
+            251,
+            0,
+            19
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            0,
+            183,
+            49,
+            255
+          ],
+          "rgb_on_white": [
+            0,
+            183,
+            49
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            22,
+            81,
+            228,
+            255
+          ],
+          "rgb_on_white": [
+            22,
+            81,
+            228
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            249,
+            193,
+            0,
+            255
+          ],
+          "rgb_on_white": [
+            249,
+            193,
+            0
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            193,
+            95,
+            74,
+            255
+          ],
+          "rgb_on_white": [
+            193,
+            95,
+            74
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "c78097f5dd971134d76e98d91186c073a243dcc11a7fc5f0625c2419f940d58b",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement.",
+      "jpeg_tolerance": 4
+    },
+    {
+      "file": "icc-p3-alpha.png",
+      "sha256": "c2de59664a2b14ade787b8b935e0e5bb08290f0ffa185c185ba8cd7d76c5c177",
+      "bytes": 8660,
+      "category": "color_profile",
+      "expectation": "convert_colors_and_preserve_alpha",
+      "source_size": [
+        32,
+        24
+      ],
+      "profile_bytes": 8756,
+      "profile_sha256": "772f1974a19b0181ac22ab320eaf844125d4e65b3dfad627c00ef49ebdb46bad",
+      "icc_expected_destination": "sRGB",
+      "icc_reference": "LittleCMS relative colorimetric; 4096-entry TRC for generated P3; allow backend rounding.",
+      "icc_reference_rendering_intent": 1,
+      "pillow_verify": true,
+      "verify_color_management": true,
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            251,
+            0,
+            19,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            0,
+            183,
+            49,
+            255
+          ],
+          "rgb_on_white": [
+            0,
+            183,
+            49
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            22,
+            81,
+            228,
+            0
+          ],
+          "rgb_on_white": [
+            255,
+            255,
+            255
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            249,
+            193,
+            0,
+            255
+          ],
+          "rgb_on_white": [
+            249,
+            193,
+            0
+          ],
+          "tolerance_per_channel": 3
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            193,
+            95,
+            74,
+            128
+          ],
+          "rgb_on_white": [
+            224,
+            175,
+            164
+          ],
+          "tolerance_per_channel": 3
+        }
+      ],
+      "generated_reference_rgba_sha256": "65f009efdee2de1d2dd84097f4077c5f001eb5062754a05ce2f189201daf8ed5",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "icc-expands-over-1mib.png",
+      "sha256": "37af15329a7df23485a8394aa96f61cb86a9f3c308869290d181dd3051a50f61",
+      "bytes": 1592,
+      "category": "resource_limit",
+      "expectation": "reject_before_full_icc_inflate_or_image_decode",
+      "source_size": [
+        32,
+        24
+      ],
+      "compressed_icc_bytes": 1421,
+      "inflated_icc_bytes": 1048577,
+      "profile_limit_under_test": 1048576,
+      "note": "Synthetic padded ICC stream; intentionally beyond the profile budget, not a supported profile."
+    },
+    {
+      "file": "icc-invalid-zlib.png",
+      "sha256": "31e80614b1712366e185bd17d3bf2b1bd8afadfc3b43ef24f7ee5530ce0b6405",
+      "bytes": 178,
+      "category": "invalid",
+      "expectation": "reject_profile_without_adopting_document",
+      "source_size": [
+        32,
+        24
+      ]
+    },
+    {
+      "file": "icc-truncated-zlib.png",
+      "sha256": "afa48e5fa4c2f4a51520f457d4c4b92c955c6bbaaaed16c2cc175f67e1d4138d",
+      "bytes": 518,
+      "category": "invalid",
+      "expectation": "reject_profile_without_adopting_document",
+      "source_size": [
+        32,
+        24
+      ]
+    },
+    {
+      "file": "icc-invalid-compression-method.png",
+      "sha256": "21354dd1849621f7fd4bbf8c327533d59726bd8d90dd3b2071f6611b4b5f5546",
+      "bytes": 518,
+      "category": "invalid",
+      "expectation": "reject_profile_without_adopting_document",
+      "source_size": [
+        32,
+        24
+      ]
+    },
+    {
+      "file": "synthetic-tuxpaint-private-chunks.png",
+      "sha256": "54013bc6739681353266e91195e5ca371e46033823e9d12e2cf0256eb5a07ebd",
+      "bytes": 403,
+      "category": "synthetic_metadata",
+      "expectation": "accept_visible_pixels_without_decoding_private_chunks",
+      "source_size": [
+        32,
+        24
+      ],
+      "pillow_verify": true,
+      "synthetic_tuxpaint": true,
+      "note": "Only chunk names resemble Tux Paint; payloads are NOT valid Tux Paint structures.",
+      "private_chunks": [
+        "tpDT",
+        "tpFG",
+        "tpBG",
+        "tpLD",
+        "tpLL"
+      ],
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 0
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "synthetic-tuxpaint-unused-large-chunk.png",
+      "sha256": "17092237e99b6fb244e2e978531267e3b140b8e3e69aff837bf3115eefbaf297",
+      "bytes": 2223,
+      "category": "synthetic_metadata",
+      "expectation": "accept_visible_pixels_without_inflating_private_chunk",
+      "source_size": [
+        32,
+        24
+      ],
+      "pillow_verify": true,
+      "synthetic_tuxpaint": true,
+      "compressed_private_bytes": 2081,
+      "inflated_private_bytes": 2097152,
+      "note": "Not a real Tux Paint asset; large expansion is unused metadata.",
+      "display_size": [
+        32,
+        24
+      ],
+      "pixel_probes": [
+        {
+          "xy": [
+            4,
+            4
+          ],
+          "rgba": [
+            230,
+            35,
+            40,
+            255
+          ],
+          "rgb_on_white": [
+            230,
+            35,
+            40
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            4
+          ],
+          "rgba": [
+            40,
+            180,
+            70,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            180,
+            70
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            4,
+            19
+          ],
+          "rgba": [
+            40,
+            80,
+            220,
+            255
+          ],
+          "rgb_on_white": [
+            40,
+            80,
+            220
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            27,
+            19
+          ],
+          "rgba": [
+            240,
+            195,
+            35,
+            255
+          ],
+          "rgb_on_white": [
+            240,
+            195,
+            35
+          ],
+          "tolerance_per_channel": 0
+        },
+        {
+          "xy": [
+            16,
+            12
+          ],
+          "rgba": [
+            180,
+            100,
+            80,
+            255
+          ],
+          "rgb_on_white": [
+            180,
+            100,
+            80
+          ],
+          "tolerance_per_channel": 0
+        }
+      ],
+      "generated_reference_rgba_sha256": "e75e79cd87241f37a5c5989795b26fc2c1b29a019b10162e722f5609ac39f528",
+      "reference_hash_note": "Exact generated reference, not a cross-decoder JPEG or color-management requirement."
+    },
+    {
+      "file": "invalid-ihdr-crc.png",
+      "sha256": "c34bebc1618a4df5dadd7f597b71bfee0d5b59903ff3f4de138309a620cce354",
+      "bytes": 130,
+      "category": "invalid",
+      "expectation": "reject_crc_before_decode"
+    },
+    {
+      "file": "invalid-idat-crc.png",
+      "sha256": "d8ea4f9b9cfe3cafb2b2586744335149c5307cc5fe614fdce5412a42ac475f69",
+      "bytes": 130,
+      "category": "invalid",
+      "expectation": "reject_crc_before_decode"
+    },
+    {
+      "file": "invalid-truncated-ihdr.png",
+      "sha256": "81e343e5d46088281cb12dcfdbbc41ea4ef3cb7e1aa866f3642027c4bc9831d4",
+      "bytes": 20,
+      "category": "invalid",
+      "expectation": "reject_truncated_structure"
+    },
+    {
+      "file": "invalid-truncated-idat.png",
+      "sha256": "c26483fb2a31c89845b6372cb591c3e23f33adae738a2612e18a54d901eb5d79",
+      "bytes": 65,
+      "category": "invalid",
+      "expectation": "reject_truncated_structure"
+    },
+    {
+      "file": "invalid-truncated-iend.png",
+      "sha256": "0f6fd30faabc8cdb5b2543c8b32139cf73270fe063091b33a55e460c67aaf077",
+      "bytes": 125,
+      "category": "invalid",
+      "expectation": "reject_truncated_structure"
+    },
+    {
+      "file": "invalid-trailing-data.png",
+      "sha256": "16878fcb989dd8a47b3d428d237340be34dfacbb152a8b4d9ab700728d82dd3a",
+      "bytes": 148,
+      "category": "invalid",
+      "expectation": "reject_exact_end_violation"
+    },
+    {
+      "file": "invalid-chunk-length.png",
+      "sha256": "1c38a13d3131dbd48b205f9eb59fa994a6fb70e5c371b601429fe27c1c1db8e0",
+      "bytes": 130,
+      "category": "invalid",
+      "expectation": "reject_chunk_length_without_allocation"
+    },
+    {
+      "file": "invalid-signature.png",
+      "sha256": "9487caab20dfb0a5ab82115f89a8768c7d431738cd36052e1ca8a9bff52ffbb3",
+      "bytes": 130,
+      "category": "invalid",
+      "expectation": "reject_signature"
+    },
+    {
+      "file": "invalid-signature-only.png",
+      "sha256": "4c4b6a3be1314ab86138bef4314dde022e600960d8689a2c8f8631802d20dab6",
+      "bytes": 8,
+      "category": "invalid",
+      "expectation": "reject_missing_ihdr"
+    },
+    {
+      "file": "giant-dimensions-header-only.png",
+      "sha256": "f1c0ddba7b38695a85c4e4069dfdae105ccf08f925e8d92be51651b39fcba263",
+      "bytes": 33,
+      "category": "resource_limit",
+      "expectation": "reject_dimensions_before_decoder",
+      "source_size": [
+        131072,
+        131072
+      ],
+      "note": "IHDR only; no giant pixel allocation or IDAT stream was generated."
+    },
+    {
+      "file": "overflow-dimensions-header-only.png",
+      "sha256": "0d743abe17769acd77c2e9cae58ec6e3f63da0db2d37a31429c2fba891efda64",
+      "bytes": 33,
+      "category": "resource_limit",
+      "expectation": "reject_dimensions_before_decoder",
+      "source_size": [
+        4294967295,
+        4294967295
+      ],
+      "note": "IHDR only; no giant pixel allocation or IDAT stream was generated."
+    },
+    {
+      "file": "zero-width-header-only.png",
+      "sha256": "14e7ca6244e27eeaf888bc9515e0906dd3948bc4e8522e1bc6a1c0615ed2342b",
+      "bytes": 33,
+      "category": "resource_limit",
+      "expectation": "reject_dimensions_before_decoder",
+      "source_size": [
+        0,
+        24
+      ],
+      "note": "IHDR only; no giant pixel allocation or IDAT stream was generated."
+    },
+    {
+      "file": "simulated-apng-marker.png",
+      "sha256": "8689367594ddcbf5fb742f25af8ce6f81e58f1881c29cef95a791bc0f82e6287",
+      "bytes": 150,
+      "category": "simulated_animation",
+      "expectation": "reject_animation_marker_before_frame_decode",
+      "source_size": [
+        32,
+        24
+      ],
+      "note": "Deliberately incomplete APNG control structure, not a valid two-frame animation."
+    },
+    {
+      "file": "invalid-jpeg-truncated.jpg",
+      "sha256": "171740c9580bd1e6e2c4dc36f75ff01041c8125d3d99085030782c872b4ce9a1",
+      "bytes": 642,
+      "category": "invalid",
+      "expectation": "reject_truncated_jpeg"
+    },
+    {
+      "file": "unsupported-gif-disguised-as-png.png",
+      "sha256": "6be57921b29200f79918e2da61edafcc5416dc8920db6db736d50a235193c464",
+      "bytes": 195,
+      "category": "unsupported",
+      "expectation": "reject_actual_format_not_extension"
+    }
+  ]
+}

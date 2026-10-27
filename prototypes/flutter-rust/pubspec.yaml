@@ -1,0 +1,28 @@
+name: edupaint_flutter_study
+description: "Color : interface Flutter et cœur Rust partagé."
+publish_to: none
+version: 1.0.0+37
+environment:
+  sdk: ^3.13.3
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  ffi: ^2.1.4
+  file_selector: 1.1.0
+  path_provider: ^2.1.6
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    # Shown with the other licences, from « À propos ».
+    - fonts/LICENCE-DejaVu.txt
+  fonts:
+    # Font 0 of text objects: every platform lays out the same glyphs.
+    - family: ColorSans
+      fonts:
+        - asset: fonts/DejaVuSans.ttf

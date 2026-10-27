@@ -1,0 +1,28 @@
+[package]
+name = "edupaint_core"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT"
+# The oldest Rust this code can be compiled with: the core itself uses the
+# standard library of 1.88 (usvg 0.48 asks for 1.85). It is a floor, not the
+# version the project is qualified with: that one is the Rust of Homebrew,
+# named in scripts/rust-reference.json.
+rust-version = "1.88"
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+# The examples in the comments are descriptions of formats, not programs.
+doctest = false
+
+[features]
+default = ["svg"]
+# Reading SVG files — the pictures of the interface, colouring pages — with
+# usvg, the reading half of resvg. It is the only dependency of the core, and
+# its sources are kept in vendor/: nothing is downloaded to build Color.
+# Without this feature the core has no dependency at all and still compiles
+# with rustc alone (src/lib.rs), as the older scripts of the project do.
+svg = ["dep:usvg"]
+
+[dependencies]
+usvg = { version = "=0.48.1", default-features = false, optional = true }

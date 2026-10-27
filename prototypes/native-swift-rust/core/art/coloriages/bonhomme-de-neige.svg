@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : page à colorier « Le bonhomme de neige ». Dessin original, feuille de 1200 × 800. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
+  <title>Le bonhomme de neige</title>
+  <desc>Un bonhomme de neige avec son bonnet à pompon, son écharpe, son nez en carotte et ses bras en branches, sous les flocons.</desc>
+  <!-- La neige au sol -->
+  <rect x="60" y="664" width="1080" height="86" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les flocons -->
+  <line x1="170" y1="148" x2="170" y2="192" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="151" y1="159" x2="189" y2="181" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="189" y1="159" x2="151" y2="181" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="330" y1="338" x2="330" y2="382" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="311" y1="349" x2="349" y2="371" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="349" y1="349" x2="311" y2="371" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="180" y1="498" x2="180" y2="542" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="161" y1="509" x2="199" y2="531" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="199" y1="509" x2="161" y2="531" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1010" y1="128" x2="1010" y2="172" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="991" y1="139" x2="1029" y2="161" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1029" y1="139" x2="991" y2="161" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="880" y1="308" x2="880" y2="352" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="861" y1="319" x2="899" y2="341" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="899" y1="319" x2="861" y2="341" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1040" y1="458" x2="1040" y2="502" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1021" y1="469" x2="1059" y2="491" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <line x1="1059" y1="469" x2="1021" y2="491" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Le corps -->
+  <circle cx="600" cy="594" r="142" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="398" r="106" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les boutons -->
+  <circle cx="600" cy="532" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="628" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les bras -->
+  <polyline points="500,380 440,340 392,292" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="440" y1="340" x2="408" y2="352" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="420" y1="320" x2="412" y2="280" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="700,380 760,340 808,292" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="760" y1="340" x2="792" y2="352" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="780" y1="320" x2="788" y2="280" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- L’écharpe -->
+  <rect x="624" y="300" width="64" height="118" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La tête -->
+  <circle cx="600" cy="214" r="80" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="512" y="282" width="176" height="62" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="572,214 573,214" fill="none" stroke="#2f3d4a" stroke-width="16"/>
+  <polyline points="628,214 629,214" fill="none" stroke="#2f3d4a" stroke-width="16"/>
+  <line x1="604" y1="230" x2="654" y2="238" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <polyline points="626,254 621,259 614,263 607,265 600,266 593,265 586,263 579,259 574,254" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le bonnet -->
+  <ellipse cx="600" cy="152" rx="88" ry="50" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="92" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+</svg>

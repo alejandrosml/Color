@@ -1,0 +1,14 @@
+[
+  {
+    "file": "rgb-asymmetric.png",
+    "source": "reports/image-import/fixtures/rgb-asymmetric.png",
+    "sha256": "28a67dd5f302fd20b5d7a89859b7701d9195d5f6349c4d17aecd9b79b9fb3f66",
+    "bytes": 130
+  },
+  {
+    "file": "rgba-asymmetric.png",
+    "source": "reports/image-import/fixtures/rgba-asymmetric.png",
+    "sha256": "3da3d71a6b1301f87679e870e6f972d901005aec23cbbdb480473d2e99efdd4c",
+    "bytes": 154
+  }
+]

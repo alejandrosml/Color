@@ -1,0 +1,7 @@
+// Color for the Mac, as the Mac App Store distributes it. The identifier is
+// the one of Color on every Apple system: once published it never changes.
+PRODUCT_NAME = Color
+PRODUCT_BUNDLE_IDENTIFIER = fr.aisml.color
+PRODUCT_COPYRIGHT = © 2026 Alejandro San Martin Lamas
+MACOSX_DEPLOYMENT_TARGET = 26.6
+ARCHS = arm64

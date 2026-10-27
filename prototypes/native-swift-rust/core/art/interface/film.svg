@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : « Le dessin qui se refait tout seul ». Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Revoir mon dessin</title>
+  <rect x="8" y="12" width="48" height="40" rx="8" fill="#fffcf0" stroke="#293d4b" stroke-width="2.5"/>
+  <path d="M 26 22 L 42 32 L 26 42 Z" fill="#43ac9c" stroke="#293d4b" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 49.00 5.50 L 51.12 10.88 L 56.50 13.00 L 51.12 15.12 L 49.00 20.50 L 46.88 15.12 L 41.50 13.00 L 46.88 10.88 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2" stroke-linejoin="round"/>
+</svg>
