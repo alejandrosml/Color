@@ -49,9 +49,8 @@ Supprimer ce dossier ne supprime aucun dessin enregistré ailleurs.
 
 Licence
 -------
-Color est un logiciel libre distribué selon la licence GNU GPL, version 2
-ou ultérieure, sans aucune garantie : voir LICENCE-GPL-2.txt. Les notices
-des composants embarqués (moteur Flutter, police DejaVu, bibliothèques du
+Color est un logiciel libre distribué selon la licence MIT, sans aucune
+garantie : voir le fichier LICENSE du code source. Les notices des
+composants embarqués (moteur Flutter, police DejaVu, bibliothèques du
 cœur Rust et autres) sont dans LICENCES-COMPOSANTS.txt ; Color les montre
-aussi dans « À propos », bouton « Licences ». Le code source correspondant doit pouvoir
-accompagner toute copie transmise à quelqu'un d'autre.
+aussi dans « À propos », bouton « Licences ».
