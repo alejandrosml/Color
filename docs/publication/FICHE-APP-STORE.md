@@ -9,7 +9,7 @@ Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les tro
 Ce qui a été rempli dans App Store Connect :
 
 - « Informations sur l'app » : nom, sous-titre, catégories, statut de non-professionnel ; droits sur le contenu (**oui**, avec les droits nécessaires) et classification par âge (**4+** dans 172 pays ou régions ; Brésil « AL », Corée du Sud « TOUS », Vietnam « 00+ »), faits par toi.
-- Les versions 1.0.0 pour iOS et pour macOS : le build 39, les textes, les adresses, le copyright, le contact et les notes pour la vérification, la **publication manuelle**.
+- Les versions 1.0.0 pour iOS et pour macOS : le build 39, les textes, les adresses, le copyright, le contact et les notes pour la vérification, et la **publication automatique dès l'accord d'Apple** (choisie par toi le 28 octobre, après la soumission).
 - « Tarifs et disponibilité » : gratuite, dans les 175 pays.
 - « Confidentialité de l'app » : l'adresse de la politique de confidentialité, et « **Données non collectées** », publiée à ta demande.
 - Les 12 captures, sur les pages produit de l'iPhone, de l'iPad 13 pouces et du Mac.
@@ -20,7 +20,7 @@ Ensuite :
 
 1. Apple répond par courriel. D'après Apple, la moitié des soumissions sont vérifiées en moins de 24 heures, 90 % en moins de 48 heures. Une [vérification accélérée](https://developer.apple.com/help/app-review/after-submitting-for-review/request-expedited-review) se demande seulement pour une urgence réelle : un bogue grave, ou une sortie liée à un évènement daté.
 2. Si Apple pose une question ou refuse, la réponse se fait dans « Vérification de l'app ».
-3. La publication est manuelle : une fois Color acceptée, « Publier cette version » sur chaque version.
+3. La publication est automatique : dès qu'Apple accepte une version, elle paraît sur l'App Store, sans autre clic.
 
 Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides que Color prend en charge. À ne remplir que pour ce qui a été essayé sur un appareil, VoiceOver par exemple.
 
