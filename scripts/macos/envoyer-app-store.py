@@ -7,9 +7,14 @@ and iPhone with iPad, under the identifier fr.aisml.color.
 
 Before the first sending, once:
   - the Apple Developer Program has accepted the author;
-  - Xcode knows the author's Apple Account (Xcode > Réglages > Comptes);
+  - Xcode knows the author's Apple Account (Xcode > Settings > Accounts);
   - the app « Color » exists in App Store Connect (Apps > + > Nouvelle app),
-    for macOS and iOS, with the identifier fr.aisml.color.
+    for macOS and iOS, with the identifier fr.aisml.color;
+  - for iPhone and iPad, one iPhone or iPad is registered to the team: Xcode
+    signs an archive for iOS with a profile of development, which needs a
+    device. Plugged into the Mac and trusted, the device is registered here.
+A system already sent in this version is not sent again: App Store Connect
+refuses the same build number twice.
 
 In order, for each system:
   1. finds the team of the author among the certificates of this Mac, or
@@ -24,6 +29,7 @@ submitting the version for review stays a click of the author's, in App
 Store Connect.
 """
 from pathlib import Path
+import json
 import os
 import plistlib
 import re
@@ -38,6 +44,19 @@ from mobiles_communs import (CARGO_TARGET, IOS_TARGETS, MOBILES, Failure, Journa
 
 TEAM_FILE = MOBILES / 'equipe-apple.txt'
 TEAM = re.compile(r'^[A-Z0-9]{10}$')
+# The last version sent for each system: App Store Connect refuses the same
+# build number twice, so a second run sends only what is left.
+SENT_FILE = MOBILES / 'app-store-envoyes.json'
+# Xcode's words when the team has no iPhone or iPad to make the profile of
+# development with which it signs an archive for iOS.
+NO_DEVICE = re.compile(r'no devices? from which to generate|has no devices', re.IGNORECASE)
+NO_DEVICE_ADVICE = (
+    'Apple demande qu’un iPhone ou un iPad soit inscrit à ton compte de développeur avant de'
+    ' signer la version iPhone et iPad. Branche ton iPhone ou ton iPad au Mac avec un câble,'
+    ' déverrouille-le et touche « Se fier » s’il le demande, puis relance ce lanceur : il'
+    ' l’inscrira, et n’enverra pas une seconde fois ce qui est déjà parti. Tu peux aussi'
+    ' l’inscrire toi-même : https://developer.apple.com/account/resources/devices/add, avec'
+    ' son identifiant (UDID), que le Finder montre en cliquant sous le nom de l’appareil.')
 
 
 def teams_of_this_mac():
@@ -58,19 +77,23 @@ def teams_of_this_mac():
 
 
 def team(journal):
+    """The team of the author: the one kept beside the build folders, or the
+    one the author confirms once. A certificate of this Mac is never taken
+    without asking: it may be of a free « Personal Team », which cannot send
+    anything to the App Store."""
     if TEAM_FILE.exists():
         kept = TEAM_FILE.read_text().strip()
         if TEAM.match(kept):
             return kept
     found = teams_of_this_mac()
-    if len(found) == 1:
-        chosen = found[0]
-    else:
-        journal.say('  Ton identifiant d’équipe Apple (Team ID) : 10 lettres et chiffres, sur'
-                    ' https://developer.apple.com/account, rubrique « Membership details ».')
-        if found:
-            journal.say('  Équipes trouvées sur ce Mac : ' + ', '.join(found))
-        chosen = input('  Team ID : ').strip().upper()
+    journal.say('  Ton identifiant d’équipe Apple (Team ID) : 10 lettres et chiffres, sur'
+                ' https://developer.apple.com/account, rubrique « Membership details ».')
+    if found:
+        journal.say('  Équipes des certificats de ce Mac : ' + ', '.join(found)
+                    + ' (une « Personal Team » gratuite ne peut rien envoyer).')
+    proposal = found[0] if len(found) == 1 else ''
+    prompt = '  Team ID%s : ' % (' (Entrée pour %s)' % proposal if proposal else '')
+    chosen = input(prompt).strip().upper() or proposal
     if not TEAM.match(chosen):
         raise Failure('« %s » n’est pas un identifiant d’équipe Apple.' % chosen)
     MOBILES.mkdir(parents=True, exist_ok=True)
@@ -151,7 +174,75 @@ def mac(journal, sources, version, team_id):
                                '--preserve-metadata=entitlements,requirements,flags,runtime', app])
     journal.say('  Envoi à App Store Connect…')
     send(journal, archive, folder, team_id, 'macos')
+    remember_sent('macos', version)
     journal.say('  Color pour le Mac : envoyée.')
+
+
+def sent_versions():
+    try:
+        return json.loads(SENT_FILE.read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return {}
+
+
+def remember_sent(platform, version):
+    sent = sent_versions()
+    sent[platform] = version
+    MOBILES.mkdir(parents=True, exist_ok=True)
+    SENT_FILE.write_text(json.dumps(sent, indent=2) + '\n', encoding='utf-8')
+
+
+def connected_ios_device(journal):
+    """(UDID, name) of an iPhone or iPad plugged into this Mac and paired
+    with it, or None."""
+    # In the journal of this run: never the answer of an earlier one.
+    listing = journal.folder / 'appareils.json'
+    code, text = output(['/usr/bin/xcrun', 'devicectl', 'list', 'devices', '--json-output',
+                         str(listing)])
+    journal.keep('devicectl list devices : code %d' % code)
+    if code != 0:
+        return None
+    try:
+        devices = json.loads(listing.read_text(encoding='utf-8'))['result']['devices']
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    for device in devices:
+        hardware = device.get('hardwareProperties', {})
+        connection = device.get('connectionProperties', {})
+        if hardware.get('platform') == 'iOS' and connection.get('pairingState') == 'paired':
+            udid = hardware.get('udid')
+            if udid:
+                return udid, device.get('deviceProperties', {}).get('name', udid)
+    return None
+
+
+def archive_ios(journal, work, team_id):
+    """The archive for iOS. A team without any iPhone or iPad cannot have the
+    profile of development that Xcode signs an archive with: the device
+    plugged into the Mac is then registered by a build for it, and the
+    archive made again."""
+    try:
+        return archive_and_send(journal, work, 'ios', team_id)
+    except Failure:
+        log = journal.folder / 'archive-ios.log'
+        text = log.read_text(encoding='utf-8', errors='replace') if log.exists() else ''
+        if not NO_DEVICE.search(text):
+            raise
+    device = connected_ios_device(journal)
+    if device is None:
+        raise Failure(NO_DEVICE_ADVICE)
+    udid, name = device
+    journal.say('  Apple demande un appareil inscrit à ton compte : j’inscris « %s »…' % name)
+    code = run(journal, 'appareil-ios',
+               ['/usr/bin/xcodebuild', '-workspace', work / 'ios' / 'Runner.xcworkspace',
+                '-scheme', 'Runner', '-configuration', 'Release', '-destination', 'id=' + udid,
+                'build', '-allowProvisioningUpdates', '-allowProvisioningDeviceRegistration',
+                'DEVELOPMENT_TEAM=' + team_id, 'CODE_SIGN_STYLE=Automatic'],
+               cwd=work, check=False)
+    if code != 0:
+        raise Failure('L’inscription de « %s » n’a pas abouti (journal : appareil-ios.log). '
+                      % name + NO_DEVICE_ADVICE)
+    return archive_and_send(journal, work, 'ios', team_id)
 
 
 def ios(journal, sources, version, team_id):
@@ -173,9 +264,10 @@ def ios(journal, sources, version, team_id):
     flutter(journal, 'flutter-config-ios', ['build', 'ios', '--release', '--no-pub',
                                             '--config-only'], work, flutter_env)
     journal.say('  Archive signée par Xcode…')
-    archive, folder = archive_and_send(journal, work, 'ios', team_id)
+    archive, folder = archive_ios(journal, work, team_id)
     journal.say('  Envoi à App Store Connect…')
     send(journal, archive, folder, team_id, 'ios')
+    remember_sent('ios', version)
     journal.say('  Color pour iPhone et iPad : envoyée.')
 
 
@@ -192,10 +284,17 @@ def main():
     team_id = team(journal)
     journal.say('  Équipe Apple : ' + team_id)
     journal.state(version=version, team=team_id, status='started')
-    if which != '--ios-seulement':
-        mac(journal, sources, version, team_id)
-    if which != '--mac-seulement':
-        ios(journal, sources, version, team_id)
+    sent = sent_versions()
+    for platform, wanted, build, label in (
+            ('macos', which != '--ios-seulement', mac, 'le Mac'),
+            ('ios', which != '--mac-seulement', ios, 'l’iPhone et l’iPad')):
+        if not wanted:
+            continue
+        if sent.get(platform) == version:
+            journal.say('\nColor %s pour %s est déjà partie : App Store Connect ne prend pas deux'
+                        ' fois la même version.' % (version, label))
+            continue
+        build(journal, sources, version, team_id)
     journal.state(status='sent')
     journal.say('\nTerminé. Dans une demi-heure environ, App Store Connect montre la version'
                 ' dans TestFlight. Installe-la avec l’app TestFlight pour l’essayer, puis soumets-la'

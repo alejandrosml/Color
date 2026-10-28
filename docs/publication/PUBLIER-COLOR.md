@@ -38,6 +38,8 @@ Le lanceur « Envoyer Color vers l'App Store » ne sert qu'à la fin : il envoie
 **Ensuite, à chaque version :**
 
 6. Double-clique **`Envoyer Color vers l'App Store.command`**. La première fois, il peut te demander ton **Team ID** : 10 lettres et chiffres, sur [ton compte de développeur](https://developer.apple.com/account), rubrique « Membership details ». Il construit Color pour le Mac puis pour l'iPhone et l'iPad, les fait signer par Xcode et les envoie. **Rien n'est publié à ce moment.**
+   - Pour signer la version iPhone et iPad, Apple veut qu'**un iPhone ou un iPad soit inscrit** à ton compte, une fois. Branche le tien au Mac avec un câble, déverrouille-le et touche « Se fier » s'il le demande : le lanceur l'inscrit. Sans appareil branché, il s'arrête après avoir envoyé la version Mac, et dit quoi faire.
+   - Relancé, il n'envoie pas une seconde fois ce qui est déjà parti dans la même version.
 7. Une demi-heure plus tard environ, les versions apparaissent dans App Store Connect → Color → **TestFlight**. Installe l'app **TestFlight** depuis le Mac App Store pour essayer la version Mac, telle qu'Apple la distribuera.
 8. Remplis la fiche avec [FICHE-APP-STORE.md](FICHE-APP-STORE.md) : textes, catégorie, âge, confidentialité (« aucune donnée collectée »), statut de **non-professionnel**, captures. Choisis la version envoyée, puis « Ajouter pour vérification ». Apple vérifie en général en un ou deux jours, et Color paraît dès que tu le décides.
 
