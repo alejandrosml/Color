@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<meta charset="utf-8">
+<title>Color — relais des captures</title>
+<!-- SPDX-License-Identifier: MIT
+     Hands the pictures of this folder to App Store Connect, which opens this
+     page in one of its frames and asks for them by name: its own service
+     worker refuses the pictures that its page fetches from another site.
+     Only the pictures of this folder, and only to App Store Connect. -->
+<p>Relais des captures de Color pour App Store Connect.</p>
+<script>
+  const storeConnect = 'https://appstoreconnect.apple.com';
+  addEventListener('message', async (event) => {
+    if (event.origin !== storeConnect) return;
+    const names = event.data && event.data.colorCaptures;
+    if (!Array.isArray(names)) return;
+    const files = [];
+    for (const name of names) {
+      if (typeof name !== 'string' || !/^(iphone|ipad|mac)-\d+-[a-z-]+\.png$/.test(name)) continue;
+      const response = await fetch(name, {cache: 'no-store'});
+      if (response.ok) files.push({name, bytes: await response.arrayBuffer()});
+    }
+    event.source.postMessage({colorCaptures: files}, storeConnect, files.map((file) => file.bytes));
+  });
+  if (parent !== window) parent.postMessage({colorCapturesReady: true}, storeConnect);
+</script>
+</html>
