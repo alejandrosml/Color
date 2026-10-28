@@ -4,20 +4,23 @@ Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les tro
 
 ## Où en est la fiche (28 octobre 2026)
 
-Rempli dans App Store Connect, dans le navigateur de Claude, avec ce qui suit :
+**Color 1.0.0 (39) est soumise à Apple** le 28 octobre à 15 h 38 pour iOS et à 15 h 39 pour macOS : « En attente de vérification ».
 
-- « Informations sur l'app » : nom, sous-titre, catégories, statut de non-professionnel.
-- Les versions 1.0.0 pour iOS et pour macOS : le build 39, les textes, les adresses, le copyright, le contact et les notes pour la vérification, la publication manuelle.
+Ce qui a été rempli dans App Store Connect :
+
+- « Informations sur l'app » : nom, sous-titre, catégories, statut de non-professionnel ; droits sur le contenu (**oui**, avec les droits nécessaires) et classification par âge (**4+** dans 172 pays ou régions ; Brésil « AL », Corée du Sud « TOUS », Vietnam « 00+ »), faits par toi.
+- Les versions 1.0.0 pour iOS et pour macOS : le build 39, les textes, les adresses, le copyright, le contact et les notes pour la vérification, la **publication manuelle**.
 - « Tarifs et disponibilité » : gratuite, dans les 175 pays.
-- « Confidentialité de l'app » : l'adresse de la politique de confidentialité.
+- « Confidentialité de l'app » : l'adresse de la politique de confidentialité, et « **Données non collectées** », publiée à ta demande.
 - Les 12 captures, sur les pages produit de l'iPhone, de l'iPad 13 pouces et du Mac.
 
-À faire par toi, parce que ce sont des déclarations faites en ton nom à Apple :
+Pour une prochaine version, les mêmes réponses : droits sur le contenu « Oui » ; âge « Non » ou « Aucun » partout, sans « Conçu pour les enfants » ; confidentialité « Non, nous ne collectons aucune donnée via cette app ».
 
-1. « Informations sur l'app » → « Droits relatifs au contenu » → **Modifier** : **Oui**, l'app contient du contenu de tiers, et coche la case qui dit que tu as les droits nécessaires → Enregistrer.
-2. « Informations sur l'app » → « Configurer les classifications par âge » : **Non** ou **Aucun** à chaque question (pas de contrôle parental ni de vérification de l'âge, pas d'accès libre au Web, pas de contenu partagé entre utilisateurs, pas de réseau social, pas de messagerie, pas de publicité, aucun thème adulte, rien de médical, aucune violence, aucun jeu de hasard). Ne coche pas « Conçu pour les enfants ». Color obtient **4+**.
-3. « Confidentialité de l'app » → **Démarrer** → « **Non**, nous ne collectons pas de données de cette app » → Enregistrer, puis **Publier**, en haut à droite.
-4. Relire les deux versions, puis **Ajouter pour vérification** sur la version iOS et sur la version macOS. App Store Connect ouvre alors la soumission ; « **Soumettre pour vérification** » l'envoie à Apple.
+Ensuite :
+
+1. Apple répond par courriel. D'après Apple, la moitié des soumissions sont vérifiées en moins de 24 heures, 90 % en moins de 48 heures. Une [vérification accélérée](https://developer.apple.com/help/app-review/after-submitting-for-review/request-expedited-review) se demande seulement pour une urgence réelle : un bogue grave, ou une sortie liée à un évènement daté.
+2. Si Apple pose une question ou refuse, la réponse se fait dans « Vérification de l'app ».
+3. La publication est manuelle : une fois Color acceptée, « Publier cette version » sur chaque version.
 
 Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides que Color prend en charge. À ne remplir que pour ce qui a été essayé sur un appareil, VoiceOver par exemple.
 
