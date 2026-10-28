@@ -70,13 +70,21 @@ Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les tro
 
 ## Les captures d'écran
 
-| Appareil | Tailles acceptées | D'où les prendre |
-|---|---|---|
-| Mac | 1280 × 800, 1440 × 900, 2560 × 1600 ou 2880 × 1800 (16:10) | Color sur ton Mac ; envoie-moi une capture de l'écran entier, je la mets au bon format |
-| iPad 13 pouces | 2732 × 2048 ou 2752 × 2064 | `captures/ipad.png` du journal de « Essayer Color sur iPhone et iPad » |
-| iPhone | 2622 × 1206 ou 2556 × 1179 | `captures/iphone.png` du même journal |
+Faites le 28 octobre 2026 par Color elle-même, avec son cœur et ses polices, aux tailles qu'App Store Connect exige (`prototypes/flutter-rust/test/store_pictures_test.dart`), sans canal alpha. Elles sont dans `docs/publication/captures/` des sources et, en ligne, sous [alejandrosml.github.io/Color/captures/](https://alejandrosml.github.io/Color/captures/iphone-1-dessin.png).
 
-De 1 à 10 captures par appareil. Une page à colorier en cours, le film, un dessin avec des tampons : ce que l'enfant voit vraiment.
+| Appareil | Taille | Captures |
+|---|---|---|
+| iPhone (Dynamic Island, taille moyenne) | 2556 × 1179 | `iphone-1-dessin`, `iphone-2-film`, `iphone-3-coloriage`, `iphone-4-tout-petits` |
+| iPad 13 pouces | 2752 × 2064 | `ipad-1-dessin` … `ipad-4-tout-petits` |
+| Mac | 2880 × 1800 (16:10) | `mac-1-dessin` … `mac-4-tout-petits` |
+
+Dans l'ordre : un dessin avec des tampons et un titre ; son film, « Revoir ton dessin », en train de se refaire ; une page à colorier, le dinosaure, coloriée au pot ; l'interface très simplifiée des tout-petits, avec un arc-en-ciel au pinceau. Sur l'iPhone, le studio du téléphone à l'horizontale ; sur l'iPad, le studio au doigt ; sur le Mac, la fenêtre. Les lettres du système y sont celles de Roboto, pas celles d'Apple.
+
+Pour les refaire, dans `prototypes/flutter-rust` :
+
+```
+COLOR_STORE_DIR=/un/dossier flutter test test/store_pictures_test.dart
+```
 
 ## Sources
 

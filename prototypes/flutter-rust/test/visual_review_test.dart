@@ -13,61 +13,13 @@ import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
 import 'support/memory_gallery.dart';
-
-Future<void> _loadFonts() async {
-  final flutterRoot = Platform.environment['FLUTTER_ROOT'];
-  if (flutterRoot == null) {
-    throw StateError('FLUTTER_ROOT is needed to find the interface fonts.');
-  }
-  final fonts = '$flutterRoot/bin/cache/artifacts/material_fonts';
-  Future<void> load(String family, List<String> paths) async {
-    final loader = FontLoader(family);
-    for (final path in paths) {
-      final bytes = await File(path).readAsBytes();
-      loader.addFont(Future.value(ByteData.sublistView(bytes)));
-    }
-    await loader.load();
-  }
-
-  await load('Roboto', [
-    '$fonts/Roboto-Regular.ttf',
-    '$fonts/Roboto-Medium.ttf',
-    '$fonts/Roboto-Bold.ttf',
-    '$fonts/Roboto-Black.ttf',
-  ]);
-  // Labels without an explicit family (the buttons of the top bar) ask the
-  // engine for the system's default families; the test engine answers any
-  // name it does not know with its box font. Give those names real glyphs,
-  // so that every label is read, and measured, as on a real system.
-  for (final family in const [
-    'FlutterTest',
-    'Ubuntu',
-    'Cantarell',
-    'DejaVu Sans',
-    'Liberation Sans',
-    'Arial',
-    'Helvetica',
-    'Helvetica Neue',
-    '.AppleSystemUIFont',
-    'Segoe UI',
-  ]) {
-    await load(family, [
-      '$fonts/Roboto-Regular.ttf',
-      '$fonts/Roboto-Medium.ttf',
-      '$fonts/Roboto-Bold.ttf',
-    ]);
-  }
-  await load('MaterialIcons', ['$fonts/MaterialIcons-Regular.otf']);
-  await load('ColorSans', ['fonts/DejaVuSans.ttf']);
-}
+import 'support/review_fonts.dart';
 
 void main() {
   final output = Platform.environment['COLOR_REVIEW_DIR'];
@@ -175,7 +127,7 @@ void main() {
   testWidgets('review pictures of text, stamps and layers', (tester) async {
     debugDisableShadows = false;
     try {
-      await tester.runAsync(_loadFonts);
+      await tester.runAsync(loadReviewFonts);
       await start(tester, const Size(1280, 820));
       await shot(tester, '01-atelier-vide');
 
@@ -257,7 +209,7 @@ void main() {
   testWidgets('review pictures of the new tools', (tester) async {
     debugDisableShadows = false;
     try {
-      await tester.runAsync(_loadFonts);
+      await tester.runAsync(loadReviewFonts);
       await start(tester, const Size(1280, 900));
       await shot(tester, '30-outils-une-colonne');
       await tap(tester, 'tool-rectangle');
@@ -313,7 +265,7 @@ void main() {
   testWidgets('review pictures of the gallery', (tester) async {
     debugDisableShadows = false;
     try {
-      await tester.runAsync(_loadFonts);
+      await tester.runAsync(loadReviewFonts);
       final gallery = MemoryGallery();
       final files = MemoryFiles();
       await start(
@@ -428,7 +380,7 @@ void main() {
   testWidgets('review pictures of window sizes', (tester) async {
     debugDisableShadows = false;
     try {
-      await tester.runAsync(_loadFonts);
+      await tester.runAsync(loadReviewFonts);
       await start(
         tester,
         const Size(1280, 820),
@@ -476,7 +428,7 @@ void main() {
   testWidgets('review pictures with enlarged text', (tester) async {
     debugDisableShadows = false;
     try {
-      await tester.runAsync(_loadFonts);
+      await tester.runAsync(loadReviewFonts);
       await start(tester, const Size(1000, 700), text: 2);
       await tap(tester, 'tool-text');
       await shot(tester, '20-texte-200-atelier');
@@ -502,7 +454,7 @@ void main() {
   ) async {
     debugDisableShadows = false;
     try {
-      await tester.runAsync(_loadFonts);
+      await tester.runAsync(loadReviewFonts);
       final store = StudioOptionsStore.memory();
       addTearDown(store.dispose);
       await start(
@@ -580,7 +532,7 @@ void main() {
     debugDisableShadows = false;
     debugTouchFirstOverride = true;
     try {
-      await tester.runAsync(_loadFonts);
+      await tester.runAsync(loadReviewFonts);
       for (final (name, size, insets) in const [
         ('iphone', Size(852, 393), EdgeInsets.fromLTRB(59, 0, 59, 21)),
         ('android', Size(915, 412), EdgeInsets.zero),
