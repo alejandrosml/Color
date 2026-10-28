@@ -37,6 +37,7 @@ import 'dart:ui' as ui show Image;
 import 'package:flutter/material.dart';
 
 import 'document_renderer.dart';
+import 'fit_to_screen.dart';
 import 'replay.dart';
 import 'rust_document.dart' show whitePaper;
 import 'studio_colors.dart';
@@ -176,8 +177,13 @@ Future<void> showReplayDialog(
   VoidCallback? onFinished,
 }) => showDialog<void>(
   context: context,
-  builder: (_) =>
-      ReplayDialog(scene: scene, onStarted: onStarted, onFinished: onFinished),
+  builder: (_) => FitDialog(
+    child: ReplayDialog(
+      scene: scene,
+      onStarted: onStarted,
+      onFinished: onFinished,
+    ),
+  ),
 );
 
 // Where the sheet lies in a box of the given size.

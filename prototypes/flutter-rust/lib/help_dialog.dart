@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'child_art.dart';
+import 'fit_to_screen.dart';
 import 'studio_colors.dart';
 import 'studio_options.dart';
 import 'studio_tool.dart';
@@ -17,7 +18,9 @@ Future<void> showHelpDialog(
   StudioOptions options = StudioOptions.defaults,
 }) => showDialog<void>(
   context: context,
-  builder: (_) => HelpDialog(hasGallery: hasGallery, options: options),
+  builder: (_) => FitDialog(
+    child: HelpDialog(hasGallery: hasGallery, options: options),
+  ),
 );
 
 class HelpDialog extends StatelessWidget {

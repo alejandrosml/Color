@@ -166,10 +166,44 @@ def trial_on(journal, environment, serial, label, trial_apk, normal_apk):
     run(journal, 'adb', adb + ['shell', 'am', 'start', '-n', BUNDLE_ID + '/.MainActivity'],
         env=environment)
     time.sleep(10)
-    with (journal.captures / ('%s.png' % label)).open('wb') as picture:
-        subprocess.call([str(ADB), '-s', serial, 'exec-out', 'screencap', '-p'], stdout=picture,
-                        env=environment)
+    capture(journal, environment, serial, label)
     return results
+
+
+PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n'
+
+
+def capture(journal, environment, serial, label):
+    """A picture of the emulator's screen, in captures/<label>.png. Android
+    sometimes gives back nothing at the first asking: the screen is woken and
+    the picture asked again, then through a file of the emulator, and only a
+    real picture is kept."""
+    adb = [str(ADB), '-s', serial]
+    quiet = dict(env=environment, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                 timeout=60)
+    for attempt in range(5):
+        if attempt:
+            time.sleep(3)
+        try:
+            subprocess.run(adb + ['shell', 'input', 'keyevent', 'KEYCODE_WAKEUP'], **quiet)
+            picture = subprocess.run(adb + ['exec-out', 'screencap', '-p'], env=environment,
+                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                     timeout=60).stdout
+            if not picture.startswith(PNG_SIGNATURE):
+                inside = '/data/local/tmp/color-capture.png'
+                subprocess.run(adb + ['shell', 'screencap', '-p', inside], **quiet)
+                picture = subprocess.run(adb + ['exec-out', 'cat', inside], env=environment,
+                                         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                         timeout=60).stdout
+        except subprocess.TimeoutExpired:
+            continue
+        if picture.startswith(PNG_SIGNATURE) and len(picture) > 1024:
+            (journal.captures / ('%s.png' % label)).write_bytes(picture)
+            journal.keep('  capture %s : %d octets, essai %d' % (label, len(picture), attempt + 1))
+            return True
+    journal.say('  (La capture de l’écran « %s » est restée vide : regarde l’émulateur lui-même.)'
+                % label)
+    return False
 
 
 def main():

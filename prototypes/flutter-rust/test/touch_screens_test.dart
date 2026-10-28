@@ -59,20 +59,26 @@ void main() {
     () {
       expect(fitScale(const Size(1180, 820)), 1);
       expect(fitScale(const Size(680, 520)), 1);
-      // A telephone on its side: the height decides.
+      // A short window on its side: the height decides.
       expect(fitScale(const Size(844, 390)), closeTo(390 / 520, 1e-9));
+      // The studio of a telephone needs less room.
+      expect(fitScale(const Size(844, 390), minimum: phoneMinimumSize), 1);
+      expect(
+        fitScale(const Size(480, 300), minimum: phoneMinimumSize),
+        closeTo(480 / 560, 1e-9),
+      );
       // A small window of an iPad: the width decides.
       expect(fitScale(const Size(340, 700)), closeTo(0.5, 1e-9));
       expect(fitScale(Size.zero), 1);
     },
   );
 
-  group('on a telephone', () {
+  group('on a tablet', () {
     setUp(() => debugTouchFirstOverride = true);
 
-    testWidgets('the whole studio is there, scaled down, and a finger draws', (
-      tester,
-    ) async {
+    // A telephone has a studio of its own: phone_layout_test.dart.
+    testWidgets('in a small window the whole studio is there, scaled down, '
+        'and a finger draws', (tester) async {
       final studio = StudioDriver(tester);
       await studio.start(size: const Size(844, 390));
       expect(tester.takeException(), isNull);

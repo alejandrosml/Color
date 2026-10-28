@@ -14,6 +14,8 @@ class StudioToolBar extends StatelessWidget {
     required this.selected,
     required this.onSelected,
     this.horizontal = false,
+    this.rail = false,
+    this.leading,
     this.tools = StudioTool.values,
     this.large = false,
   });
@@ -29,6 +31,35 @@ class StudioToolBar extends StatelessWidget {
   /// Null while the studio is busy: the buttons are then disabled.
   final ValueChanged<StudioTool>? onSelected;
   final bool horizontal;
+
+  /// The narrow rail of a telephone, beside the sheet: the pictures of the
+  /// tools without their names, in one column or two, under [leading].
+  final bool rail;
+
+  /// What the rail holds above the tools: the button of the menu.
+  final Widget? leading;
+
+  /// The side of a button of the rail.
+  static double railButton(bool large) => large ? 60.0 : 48.0;
+  static const railGap = 6.0;
+  static const railPadding = 6.0;
+
+  /// How many columns the rail needs to show every tool, under a [leading]
+  /// of the given height, in a rail of the given height.
+  static int railColumns(
+    double maxHeight, {
+    required int count,
+    required bool large,
+    double leadingHeight = 48,
+  }) {
+    final side = railButton(large);
+    final room = maxHeight - 2 * railPadding - leadingHeight - 10;
+    return room >= count * side + (count - 1) * railGap ? 1 : 2;
+  }
+
+  /// The width of the rail with that many columns.
+  static double railWidth(int columns, {required bool large}) =>
+      2 * railPadding + columns * railButton(large) + (columns - 1) * railGap;
 
   // The column beside the sheet. Tall windows keep one column of large
   // buttons; shorter ones tighten them down to a comfortable target, then
@@ -92,20 +123,26 @@ class StudioToolBar extends StatelessWidget {
   // name is then a tooltip and stays the name read by a screen reader.
   Widget _button(StudioTool tool, {double height = 80, bool label = true}) {
     final isSelected = tool == selected;
+    final side = railButton(large);
     final button = OutlinedButton(
       key: Key(tool.keyName),
       onPressed: onSelected == null ? null : () => onSelected!(tool),
       style: OutlinedButton.styleFrom(
         backgroundColor: isSelected ? studioSelected : studioSurface,
         foregroundColor: isSelected ? studioGreen : studioInk,
-        minimumSize: Size(
-          horizontal ? 48 : _columnWidth(large),
-          horizontal ? 48 : height,
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontal ? (label ? 6 : 2) : 4,
-          vertical: horizontal || height >= 76 ? 8 : 4,
-        ),
+        minimumSize: rail
+            ? Size.square(side)
+            : Size(
+                horizontal ? 48 : _columnWidth(large),
+                horizontal ? 48 : height,
+              ),
+        maximumSize: rail ? Size.square(side) : Size.infinite,
+        padding: rail
+            ? EdgeInsets.zero
+            : EdgeInsets.symmetric(
+                horizontal: horizontal ? (label ? 6 : 2) : 4,
+                vertical: horizontal || height >= 76 ? 8 : 4,
+              ),
         side: BorderSide(
           color: isSelected ? studioGreen : studioLine,
           width: isSelected ? 2 : 1,
@@ -116,7 +153,9 @@ class StudioToolBar extends StatelessWidget {
       child: Semantics(
         selected: isSelected,
         label: label ? null : tool.label,
-        child: horizontal
+        child: rail
+            ? EduIllustration(art: tool.art, size: large ? 40 : 30)
+            : horizontal
             ? label
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -174,6 +213,58 @@ class StudioToolBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (rail) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = railColumns(
+            constraints.maxHeight,
+            count: tools.length,
+            large: large,
+          );
+          final side = railButton(large);
+          final rows = (tools.length + columns - 1) ~/ columns;
+          return SizedBox(
+            width: railWidth(columns, large: large),
+            // A screen too short even for two columns makes the rail scroll.
+            child: SingleChildScrollView(
+              key: const Key('toolsRail'),
+              primary: false,
+              padding: const EdgeInsets.all(railPadding),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (leading != null) ...[
+                    leading!,
+                    const SizedBox(height: 10),
+                  ],
+                  for (var row = 0; row < rows; row++) ...[
+                    if (row != 0) const SizedBox(height: railGap),
+                    Row(
+                      children: [
+                        for (
+                          var index = row * columns;
+                          index < (row + 1) * columns;
+                          index++
+                        ) ...[
+                          if (index != row * columns)
+                            const SizedBox(width: railGap),
+                          SizedBox.square(
+                            dimension: side,
+                            child: index < tools.length
+                                ? _button(tools[index], label: false)
+                                : null,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    }
     if (horizontal) {
       return LayoutBuilder(
         builder: (context, constraints) {

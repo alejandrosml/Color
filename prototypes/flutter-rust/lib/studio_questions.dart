@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 
 import 'color_identity.dart';
+import 'fit_to_screen.dart';
 import 'french.dart';
 import 'licences.dart';
 import 'platform_words.dart';
@@ -20,32 +21,35 @@ Future<KeepChanges> showKeepChangesDialog(
 }) async =>
     await showDialog<KeepChanges>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Garder les modifications ?'),
-        // An interface without « Exporter » does not speak of exported
-        // pictures.
-        content: Text(
-          exports
-              ? 'Enregistre un projet Color pour pouvoir reprendre ce dessin. Une image exportée ne remplace pas le projet.'
-              : 'Enregistre un projet Color pour pouvoir reprendre ce dessin.',
+      builder: (dialogContext) => FitDialog(
+        child: AlertDialog(
+          title: const Text('Garder les modifications ?'),
+          // An interface without « Exporter » does not speak of exported
+          // pictures.
+          content: Text(
+            exports
+                ? 'Enregistre un projet Color pour pouvoir reprendre ce dessin. Une image exportée ne remplace pas le projet.'
+                : 'Enregistre un projet Color pour pouvoir reprendre ce dessin.',
+          ),
+          actions: [
+            TextButton(
+              key: const Key('cancelChanges'),
+              onPressed: () => Navigator.pop(dialogContext, KeepChanges.cancel),
+              child: const Text('Annuler'),
+            ),
+            TextButton(
+              key: const Key('discardChanges'),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, KeepChanges.discard),
+              child: const Text('Ne pas enregistrer'),
+            ),
+            FilledButton(
+              key: const Key('saveChanges'),
+              onPressed: () => Navigator.pop(dialogContext, KeepChanges.save),
+              child: const Text('Enregistrer'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            key: const Key('cancelChanges'),
-            onPressed: () => Navigator.pop(dialogContext, KeepChanges.cancel),
-            child: const Text('Annuler'),
-          ),
-          TextButton(
-            key: const Key('discardChanges'),
-            onPressed: () => Navigator.pop(dialogContext, KeepChanges.discard),
-            child: const Text('Ne pas enregistrer'),
-          ),
-          FilledButton(
-            key: const Key('saveChanges'),
-            onPressed: () => Navigator.pop(dialogContext, KeepChanges.save),
-            child: const Text('Enregistrer'),
-          ),
-        ],
       ),
     ) ??
     KeepChanges.cancel;
@@ -60,23 +64,25 @@ Future<bool> showRecoveryDialog(
     await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Reprendre ton dessin ?'),
-        content: Text(
-          'Une copie locale contient ${elementCount(count)}. Tu peux la reprendre et l’enregistrer dans un fichier Color.',
+      builder: (dialogContext) => FitDialog(
+        child: AlertDialog(
+          title: const Text('Reprendre ton dessin ?'),
+          content: Text(
+            'Une copie locale contient ${elementCount(count)}. Tu peux la reprendre et l’enregistrer dans un fichier Color.',
+          ),
+          actions: [
+            TextButton(
+              key: const Key('discardRecovery'),
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Supprimer cette copie'),
+            ),
+            FilledButton(
+              key: const Key('restoreRecovery'),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Reprendre le dessin'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            key: const Key('discardRecovery'),
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Supprimer cette copie'),
-          ),
-          FilledButton(
-            key: const Key('restoreRecovery'),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Reprendre le dessin'),
-          ),
-        ],
       ),
     ) ==
     true;
@@ -108,73 +114,75 @@ Future<void> showAboutColorDialog(
   final shownVersion = version ?? colorVersion;
   return showDialog<void>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      scrollable: true,
-      title: const Text('Un dessin que tu peux retrouver.'),
-      content: SizedBox(
-        width: 430,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(child: ColorLogo(key: Key('aboutLogo'))),
-            const SizedBox(height: 12),
-            Text(
-              'Les projets Color gardent les traits, les formes, les textes, les tampons, les calques, les couleurs, la taille et la couleur de la feuille et les images de fond.\n\n'
-              // What the interface of the moment does not offer is not
-              // spoken of: [exports], [layers] and [images] say what it does.
-              'Enregistrer permet de reprendre le projet. ${exports ? 'Exporter crée une image PNG ou SVG pour partager ton dessin. ' : ''}Une copie locale prépare la récupération après une interruption ; elle ne remplace pas ton fichier enregistré.\n\n'
-              '${hasGallery ? 'Mes dessins range, dans le dossier de Color sur $thisDevice, une petite image et une copie de chaque dessin enregistré. Retirer une carte les enlève ; ton fichier enregistré reste à sa place.\n\n' : ''}'
-              '${images ? 'Tu peux dessiner sur une image PNG ou JPEG. Son fond reste fixe. ' : ''}'
-              '${layers ? 'Un calque caché reste dans le projet, mais pas dans les images exportées. ' : ''}'
-              'La pression du stylet et les effets ne sont pas encore pris en charge.',
-            ),
-            if (shownVersion.isNotEmpty) ...[
-              const SizedBox(height: 14),
+    builder: (dialogContext) => FitDialog(
+      child: AlertDialog(
+        scrollable: true,
+        title: const Text('Un dessin que tu peux retrouver.'),
+        content: SizedBox(
+          width: 430,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Center(child: ColorLogo(key: Key('aboutLogo'))),
+              const SizedBox(height: 12),
               Text(
-                'Color $shownVersion',
-                key: const Key('aboutVersion'),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                'Les projets Color gardent les traits, les formes, les textes, les tampons, les calques, les couleurs, la taille et la couleur de la feuille et les images de fond.\n\n'
+                // What the interface of the moment does not offer is not
+                // spoken of: [exports], [layers] and [images] say what it does.
+                'Enregistrer permet de reprendre le projet. ${exports ? 'Exporter crée une image PNG ou SVG pour partager ton dessin. ' : ''}Une copie locale prépare la récupération après une interruption ; elle ne remplace pas ton fichier enregistré.\n\n'
+                '${hasGallery ? 'Mes dessins range, dans le dossier de Color sur $thisDevice, une petite image et une copie de chaque dessin enregistré. Retirer une carte les enlève ; ton fichier enregistré reste à sa place.\n\n' : ''}'
+                '${images ? 'Tu peux dessiner sur une image PNG ou JPEG. Son fond reste fixe. ' : ''}'
+                '${layers ? 'Un calque caché reste dans le projet, mais pas dans les images exportées. ' : ''}'
+                'La pression du stylet et les effets ne sont pas encore pris en charge.',
+              ),
+              if (shownVersion.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                Text(
+                  'Color $shownVersion',
+                  key: const Key('aboutVersion'),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
+              ],
+              if (colorCopyright.isNotEmpty) ...[
+                SizedBox(height: shownVersion.isEmpty ? 14 : 4),
+                Text(
+                  '$colorCopyright · licence MIT',
+                  key: const Key('aboutAuthor'),
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
             ],
-            if (colorCopyright.isNotEmpty) ...[
-              SizedBox(height: shownVersion.isEmpty ? 14 : 4),
-              Text(
-                '$colorCopyright · licence MIT',
-                key: const Key('aboutAuthor'),
-                style: const TextStyle(fontSize: 13),
-              ),
-            ],
-          ],
+          ),
         ),
+        actions: [
+          TextButton(
+            key: const Key('aboutPrivacy'),
+            onPressed: () => showPrivacyPolicy(dialogContext),
+            child: const Text('Confidentialité'),
+          ),
+          TextButton(
+            key: const Key('aboutLicences'),
+            onPressed: () {
+              registerColorLicences();
+              showLicensePage(
+                context: dialogContext,
+                applicationName: 'Color',
+                applicationVersion: shownVersion.isEmpty ? null : shownVersion,
+                applicationLegalese: colorLegalese,
+              );
+            },
+            child: const Text('Licences'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Revenir au dessin'),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          key: const Key('aboutPrivacy'),
-          onPressed: () => showPrivacyPolicy(dialogContext),
-          child: const Text('Confidentialité'),
-        ),
-        TextButton(
-          key: const Key('aboutLicences'),
-          onPressed: () {
-            registerColorLicences();
-            showLicensePage(
-              context: dialogContext,
-              applicationName: 'Color',
-              applicationVersion: shownVersion.isEmpty ? null : shownVersion,
-              applicationLegalese: colorLegalese,
-            );
-          },
-          child: const Text('Licences'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Revenir au dessin'),
-        ),
-      ],
     ),
   );
 }
@@ -222,29 +230,31 @@ class _PicturePainter extends CustomPainter {
 /// as the stores ask. The same text is published beside the sources.
 Future<void> showPrivacyPolicy(BuildContext context) => showDialog<void>(
   context: context,
-  builder: (dialogContext) => AlertDialog(
-    key: const Key('privacyPolicy'),
-    scrollable: true,
-    title: const Text('Confidentialité'),
-    content: SizedBox(
-      width: 470,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(colorPrivacyPolicy),
-          if (colorSupportAddress.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const SelectableText('Aide et questions : $colorSupportAddress'),
+  builder: (dialogContext) => FitDialog(
+    child: AlertDialog(
+      key: const Key('privacyPolicy'),
+      scrollable: true,
+      title: const Text('Confidentialité'),
+      content: SizedBox(
+        width: 470,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(colorPrivacyPolicy),
+            if (colorSupportAddress.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              const SelectableText('Aide et questions : $colorSupportAddress'),
+            ],
           ],
-        ],
+        ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Revenir'),
+        ),
+      ],
     ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(dialogContext),
-        child: const Text('Revenir'),
-      ),
-    ],
   ),
 );

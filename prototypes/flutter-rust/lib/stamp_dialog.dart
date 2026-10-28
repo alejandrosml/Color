@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import 'package:flutter/material.dart';
 
+import 'fit_to_screen.dart';
 import 'stamp_catalog.dart';
 import 'studio_colors.dart';
 
@@ -49,69 +50,74 @@ Future<int?> showStampDialog(
   required int rgb,
 }) => showDialog<int>(
   context: context,
-  builder: (dialogContext) => AlertDialog(
-    key: const Key('stampDialog'),
-    scrollable: true,
-    insetPadding: const EdgeInsets.all(16),
-    title: const Text('Choisis un tampon'),
-    content: SizedBox(
-      width: 560,
-      child: Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [
-          for (final stamp in catalog.stamps)
-            OutlinedButton(
-              key: Key('stamp-${stamp.key}'),
-              autofocus: stamp.id == selected,
-              onPressed: () => Navigator.pop(dialogContext, stamp.id),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size(104, 104),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                backgroundColor: stamp.id == selected
-                    ? studioSelected
-                    : Colors.white,
-                side: BorderSide(
-                  color: stamp.id == selected ? studioGreen : studioLine,
-                  width: stamp.id == selected ? 2 : 1,
+  builder: (dialogContext) => FitDialog(
+    child: AlertDialog(
+      key: const Key('stampDialog'),
+      scrollable: true,
+      insetPadding: const EdgeInsets.all(16),
+      title: const Text('Choisis un tampon'),
+      content: SizedBox(
+        width: 560,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final stamp in catalog.stamps)
+              OutlinedButton(
+                key: Key('stamp-${stamp.key}'),
+                autofocus: stamp.id == selected,
+                onPressed: () => Navigator.pop(dialogContext, stamp.id),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(104, 104),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 8,
+                  ),
+                  backgroundColor: stamp.id == selected
+                      ? studioSelected
+                      : Colors.white,
+                  side: BorderSide(
+                    color: stamp.id == selected ? studioGreen : studioLine,
+                    width: stamp.id == selected ? 2 : 1,
+                  ),
                 ),
-              ),
-              // One name on the button itself, which keeps its own action:
-              // the picture and the written name under it only decorate.
-              child: Semantics(
-                label: 'Tampon ${stamp.label}',
-                selected: stamp.id == selected,
-                excludeSemantics: true,
-                child: SizedBox(
-                  width: 92,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      StampPreview(stamp: stamp, rgb: rgb, size: 60),
-                      const SizedBox(height: 6),
-                      Text(
-                        stamp.label,
-                        maxLines: 2,
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
+                // One name on the button itself, which keeps its own action:
+                // the picture and the written name under it only decorate.
+                child: Semantics(
+                  label: 'Tampon ${stamp.label}',
+                  selected: stamp.id == selected,
+                  excludeSemantics: true,
+                  child: SizedBox(
+                    width: 92,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        StampPreview(stamp: stamp, rgb: rgb, size: 60),
+                        const SizedBox(height: 6),
+                        Text(
+                          stamp.label,
+                          maxLines: 2,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
+      actionsPadding: const EdgeInsets.all(16),
+      actions: [
+        TextButton(
+          key: const Key('cancelStamp'),
+          style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('Annuler'),
+        ),
+      ],
     ),
-    actionsPadding: const EdgeInsets.all(16),
-    actions: [
-      TextButton(
-        key: const Key('cancelStamp'),
-        style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
-        onPressed: () => Navigator.pop(dialogContext),
-        child: const Text('Annuler'),
-      ),
-    ],
   ),
 );

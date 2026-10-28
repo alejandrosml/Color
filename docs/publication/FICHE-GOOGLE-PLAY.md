@@ -31,8 +31,8 @@
 
 ## La version
 
-- Fichier : `google-play/Color-1.0.0+37.aab`, fait par « Préparer Color pour Google Play » et signé avec ta clé d'envoi.
-- Nom de la version : 1.0.0 (37).
+- Fichier : `google-play/Color-1.0.0+38.aab`, fait par « Préparer Color pour Google Play » et signé avec ta clé d'envoi.
+- Nom de la version : 1.0.0 (38).
 - Notes de version : « Première version de Color. »
 - Signature de l'application par Google Play (« Play App Signing ») : accepter. Google garde la clé qui signe Color ; ta clé d'envoi ne sert qu'à lui confier les fichiers.
 

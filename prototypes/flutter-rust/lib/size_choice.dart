@@ -77,7 +77,11 @@ class SizeChoiceControl extends StatelessWidget {
     required this.onChanged,
     required this.what,
     this.keyPrefix = 'size',
+    this.wrap = false,
   });
+
+  /// In a narrow column the three buttons go on to a second line.
+  final bool wrap;
 
   final ObjectSize value;
   final ValueChanged<ObjectSize>? onChanged;
@@ -89,46 +93,58 @@ class SizeChoiceControl extends StatelessWidget {
   final String what;
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      for (final size in ObjectSize.values) ...[
-        if (size != ObjectSize.small) const SizedBox(width: 6),
-        Tooltip(
-          message: size.label,
-          excludeFromSemantics: true,
-          child: OutlinedButton(
-            key: Key('$keyPrefix-${size.name}'),
-            onPressed: onChanged == null ? null : () => onChanged!(size),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size(48, 48),
-              maximumSize: const Size(48, 48),
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.standard,
-              backgroundColor: size == value ? studioSelected : studioSurface,
-              side: BorderSide(
-                color: size == value ? studioGreen : studioLine,
-                width: size == value ? 2 : 1,
-              ),
-            ),
-            // Named and marked as chosen on the button itself: a screen
-            // reader then announces, and activates, one single control.
-            child: Semantics(
-              label: 'Taille $what : ${size.label}',
-              selected: size == value,
-              // A growing dot reads the same in every language and text size.
-              child: Container(
-                width: 10.0 + 10 * size.index,
-                height: 10.0 + 10 * size.index,
-                decoration: BoxDecoration(
-                  color: size == value ? studioGreen : studioQuietMark,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
+  Widget build(BuildContext context) {
+    final buttons = [for (final size in ObjectSize.values) _button(size)];
+    return wrap
+        ? Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            alignment: WrapAlignment.center,
+            children: buttons,
+          )
+        : Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final button in buttons) ...[
+                if (button != buttons.first) const SizedBox(width: 6),
+                button,
+              ],
+            ],
+          );
+  }
+
+  Widget _button(ObjectSize size) => Tooltip(
+    message: size.label,
+    excludeFromSemantics: true,
+    child: OutlinedButton(
+      key: Key('$keyPrefix-${size.name}'),
+      onPressed: onChanged == null ? null : () => onChanged!(size),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        maximumSize: const Size(48, 48),
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.standard,
+        backgroundColor: size == value ? studioSelected : studioSurface,
+        side: BorderSide(
+          color: size == value ? studioGreen : studioLine,
+          width: size == value ? 2 : 1,
+        ),
+      ),
+      // Named and marked as chosen on the button itself: a screen
+      // reader then announces, and activates, one single control.
+      child: Semantics(
+        label: 'Taille $what : ${size.label}',
+        selected: size == value,
+        // A growing dot reads the same in every language and text size.
+        child: Container(
+          width: 10.0 + 10 * size.index,
+          height: 10.0 + 10 * size.index,
+          decoration: BoxDecoration(
+            color: size == value ? studioGreen : studioQuietMark,
+            shape: BoxShape.circle,
           ),
         ),
-      ],
-    ],
+      ),
+    ),
   );
 }

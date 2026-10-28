@@ -209,7 +209,7 @@ def main():
     listing = simulators(journal)
     ipad = device(journal, listing, runtime, 'Color iPad', 'iPad')
     iphone = device(journal, listing, runtime, 'Color iPhone', 'iPhone')
-    subprocess.call(['/usr/bin/open', '-a', 'Simulator'])
+    simulator_window = open_simulator_window(journal)
     all_passed = True
     for label, udid in (('ipad', ipad), ('iphone', iphone)):
         boot(journal, udid)
@@ -221,8 +221,27 @@ def main():
     journal.state(status='passed' if all_passed else 'failed', ipad=ipad, iphone=iphone)
     journal.say('\nTerminé. Color est ouverte dans le simulateur, sur « Color iPad » et'
                 ' « Color iPhone » : essaie-la avec la souris ou le trackpad.')
+    if not simulator_window:
+        journal.say('La fenêtre du simulateur ne s’est pas ouverte : dans Xcode, menu Xcode,'
+                    ' « Open Developer Tool », « Simulator ».')
     journal.say('Journal et captures : ' + str(journal.folder))
     subprocess.call(['/usr/bin/open', str(journal.captures)])
+
+
+def open_simulator_window(journal):
+    """Shows the window of the simulator. The Mac does not always know
+    Simulator.app by its name (« Unable to find application named
+    'Simulator' » on the owner's Mac): it is opened at its place in Xcode
+    first."""
+    code, developer = output(['/usr/bin/xcode-select', '-p'])
+    if code == 0 and developer.strip():
+        app = Path(developer.strip().splitlines()[-1]) / 'Applications' / 'Simulator.app'
+        if app.is_dir() and subprocess.call(['/usr/bin/open', str(app)]) == 0:
+            journal.keep('Simulateur ouvert : ' + str(app))
+            return True
+    opened = subprocess.call(['/usr/bin/open', '-a', 'Simulator']) == 0
+    journal.keep('Simulateur ouvert par son nom : ' + ('oui' if opened else 'non'))
+    return opened
 
 
 if __name__ == '__main__':

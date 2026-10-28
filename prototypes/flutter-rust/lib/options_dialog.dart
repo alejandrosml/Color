@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'fit_to_screen.dart';
 import 'studio_colors.dart';
 import 'studio_options.dart';
 import 'platform_words.dart';
@@ -20,7 +21,7 @@ Future<OptionsExit> showOptionsDialog(
 }) async =>
     await showDialog<OptionsExit>(
       context: context,
-      builder: (_) => OptionsDialog(store: store),
+      builder: (_) => FitDialog(child: OptionsDialog(store: store)),
     ) ??
     OptionsExit.closed;
 

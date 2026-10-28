@@ -8,6 +8,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'fit_to_screen.dart';
 import 'studio_colors.dart';
 import 'studio_text.dart';
 
@@ -34,7 +35,7 @@ Future<AdultGate> showAdultGate(
     await showDialog<AdultGate>(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AdultGateDialog(random: random),
+      builder: (_) => FitDialog(child: AdultGateDialog(random: random)),
     ) ??
     AdultGate.givenUp;
 

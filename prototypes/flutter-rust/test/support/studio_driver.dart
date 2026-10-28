@@ -49,12 +49,37 @@ class StudioDriver {
   /// What hears the sounds. Without one the studio is silent.
   final SoundPlayer? sounds;
 
+  /// Whether the studio stands on a telephone's screen.
+  bool phone = false;
+
+  /// [phone]: the screen is a telephone's, of [size], which the studio fills
+  /// but for the [padding] of the system, the notch or the island of an
+  /// iPhone and the bar at its foot.
   Future<void> start({
     Size size = const Size(1100, 760),
     double textScale = 1,
+    bool phone = false,
+    EdgeInsets padding = EdgeInsets.zero,
   }) async {
+    this.phone = phone;
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
+    if (phone) {
+      tester.view.display.size = size;
+      addTearDown(tester.view.display.resetSize);
+    }
+    if (padding != EdgeInsets.zero) {
+      final insets = FakeViewPadding(
+        left: padding.left,
+        top: padding.top,
+        right: padding.right,
+        bottom: padding.bottom,
+      );
+      tester.view.padding = insets;
+      tester.view.viewPadding = insets;
+      addTearDown(tester.view.resetPadding);
+      addTearDown(tester.view.resetViewPadding);
+    }
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -101,13 +126,40 @@ class StudioDriver {
     'openOptions',
   };
 
+  /// What the menu of a telephone holds.
+  static const phoneMenuEntries = {
+    'newProject',
+    'openProject',
+    'openGallery',
+    'importImage',
+    'saveProject',
+    'exportImage',
+    'printDrawing',
+    'replayDrawing',
+    'layersButton',
+    'fitPage',
+    'showHelp',
+    'openOptions',
+    'aboutColor',
+  };
+
+  /// Opens the menu of a telephone, which must be closed.
+  Future<void> openPhoneMenu() async {
+    await tester.tap(find.byKey(const Key('phoneMenu')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('phoneMenuDialog')), findsOneWidget);
+  }
+
   /// Opens the « … » menu of the header when the action [key] waits there
-  /// rather than on the line, as a person would before choosing it.
+  /// rather than on the line, as a person would before choosing it; on a
+  /// telephone, the menu where every action of the drawing waits.
   Future<void> reveal(String key) async {
-    if (find.byKey(Key(key)).evaluate().isNotEmpty ||
-        !_foldable.contains(key)) {
+    if (find.byKey(Key(key)).evaluate().isNotEmpty) return;
+    if (phone) {
+      if (phoneMenuEntries.contains(key)) await openPhoneMenu();
       return;
     }
+    if (!_foldable.contains(key)) return;
     final more = find.byKey(const Key('moreFileActions'));
     expect(more, findsOneWidget, reason: '$key is nowhere in the header');
     await tester.tap(more);
@@ -138,7 +190,8 @@ class StudioDriver {
     return ViewTransform.fit(
       viewWidth: size.width,
       viewHeight: size.height,
-      padding: size.height >= 160 ? 28 : 8,
+      // A telephone shows no name around the sheet.
+      padding: !phone && size.height >= 160 ? 28 : 8,
       documentWidth: width,
       documentHeight: height,
     );
@@ -170,6 +223,16 @@ class StudioDriver {
     ),
     findsOneWidget,
   );
+
+  /// On a telephone the count is read at the top of the menu, which is then
+  /// closed again.
+  Future<void> expectPhoneCount(int count) async {
+    await openPhoneMenu();
+    expectCount(count);
+    await tester.tap(find.byKey(const Key('closePhoneMenu')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('phoneMenuDialog')), findsNothing);
+  }
 
   Future<String> svg() async {
     await tap('exportImage');

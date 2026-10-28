@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'rust_document.dart' show maxTextBytes, maxTextLines;
+import 'fit_to_screen.dart';
 import 'screen_keyboard.dart';
 import 'size_choice.dart';
 import 'text_layout.dart';
@@ -34,12 +35,14 @@ Future<TextEntry?> showTextEntryDialog(
 }) => showDialog<TextEntry>(
   context: context,
   barrierDismissible: false,
-  builder: (_) => TextEntryDialog(
-    initialText: initialText,
-    initialSize: initialSize,
-    editing: editing,
-    problem: problem,
-    screenKeyboard: screenKeyboard,
+  builder: (_) => FitDialog(
+    child: TextEntryDialog(
+      initialText: initialText,
+      initialSize: initialSize,
+      editing: editing,
+      problem: problem,
+      screenKeyboard: screenKeyboard,
+    ),
   ),
 );
 

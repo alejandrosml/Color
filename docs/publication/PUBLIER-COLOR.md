@@ -1,6 +1,6 @@
 # Publier Color : le chemin, étape par étape
 
-*Pour la version 1.0.0 (37) ; mis à jour le 27 octobre 2026.* Ce que fait chaque lanceur est écrit en tête de son script, dans `construction-mac/`. Après chaque mise à jour de Xcode, ouvre Xcode une fois avant de lancer un lanceur : il installe parfois des composants dont le simulateur a besoin.
+*Pour la version 1.0.0 (38) ; mis à jour le 28 octobre 2026.* Ce que fait chaque lanceur est écrit en tête de son script, dans `construction-mac/`. Après chaque mise à jour de Xcode, ouvre Xcode une fois avant de lancer un lanceur : il installe parfois des composants dont le simulateur a besoin.
 
 ## 1. Essayer Color sur iPhone, iPad et Android, sur le Mac
 
@@ -37,7 +37,7 @@ Le lanceur « Envoyer Color vers l'App Store » ne sert qu'à la fin : il envoie
 ## 4. Google Play
 
 1. **Créer un compte de développeur personnel** sur [play.google.com/console](https://play.google.com/console) : 25 USD une seule fois, une pièce d'identité. Google demande aussi de vérifier l'accès à un appareil Android avec l'app Play Console : il faut, cette fois-ci, un téléphone Android, même prêté.
-2. Double-clique **`Préparer Color pour Google Play.command`**, après l'essai sur Android. La première fois, il crée ta **clé d'envoi** dans `Documents/Color - clé Google Play`. **Garde une copie de ce dossier en lieu sûr.** Il fait ensuite le fichier `google-play/Color-1.0.0+37.aab`.
+2. Double-clique **`Préparer Color pour Google Play.command`**, après l'essai sur Android. La première fois, il crée ta **clé d'envoi** dans `Documents/Color - clé Google Play`. **Garde une copie de ce dossier en lieu sûr.** Il fait ensuite le fichier `google-play/Color-1.0.0+38.aab`.
 3. Dans la Play Console : créer l'application **Color** (gratuite, application), remplir « Contenu de l'application » et la fiche avec [FICHE-GOOGLE-PLAY.md](FICHE-GOOGLE-PLAY.md).
 4. **Test fermé** : créer une version avec le fichier `.aab`, ajouter au moins **12 testeurs**, et attendre **14 jours d'affilée**. Puis demander l'accès à la production depuis le tableau de bord, et publier.
 

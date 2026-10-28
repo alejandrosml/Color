@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'fit_to_screen.dart';
 import 'studio_colors.dart';
 import 'studio_text.dart';
 
@@ -180,7 +181,13 @@ class ColorPalette extends StatefulWidget {
     this.onPickFromDrawing,
     this.picking = false,
     this.simple = false,
+    this.rail = false,
   });
+
+  /// The width a rail of [columns] swatches takes, without its border.
+  static double railWidth({required bool simple, int columns = 2}) =>
+      columns * (simple ? simpleSwatchSize : paletteSwatchSize) +
+      (columns - 1) * 8;
 
   final int selectedRgb;
   final ValueChanged<int>? onColorSelected;
@@ -204,6 +211,10 @@ class ColorPalette extends StatefulWidget {
   /// The simplest interface: a few large colours and [trailingControl],
   /// nothing to read, no dialog, no pipette, no second target.
   final bool simple;
+
+  /// The column of a telephone, beside the sheet: every colour in two
+  /// columns, and above them the controls as pictures, two by line.
+  final bool rail;
 
   @override
   State<ColorPalette> createState() => _ColorPaletteState();
@@ -253,8 +264,131 @@ class _ColorPaletteState extends State<ColorPalette> {
     }
   }
 
+  Widget _rail(BuildContext context) {
+    final swatches = Wrap(
+      key: const Key('paintColorRail'),
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final swatch
+            in widget.simple
+                ? simplePaintColors
+                : [...paintColors, ...morePaintColors])
+          _ColorSwatch(
+            key: Key('color-${swatch.rgb.toRadixString(16)}'),
+            rgb: swatch.rgb,
+            label: swatch.name,
+            selected: widget.selectedRgb == swatch.rgb,
+            onPressed: _enabled ? () => _choose(swatch.rgb) : null,
+            size: widget.simple ? simpleSwatchSize : paletteSwatchSize,
+          ),
+      ],
+    );
+    if (widget.simple) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.trailingControl != null) ...[
+            widget.trailingControl!,
+            const SizedBox(height: 10),
+          ],
+          swatches,
+        ],
+      );
+    }
+    final effectiveTarget = widget.canFill
+        ? widget.target
+        : PaintColorTarget.stroke;
+    Widget square(Widget child) => SizedBox.square(dimension: 48, child: child);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.canFill) ...[
+          Row(
+            key: const Key('paintColorTarget'),
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (final target in PaintColorTarget.values)
+                square(
+                  IconButton.outlined(
+                    key: ValueKey('paint-target-${target.name}'),
+                    tooltip: target == PaintColorTarget.stroke
+                        ? 'La couleur du trait'
+                        : 'La couleur de l’intérieur',
+                    isSelected: effectiveTarget == target,
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                      visualDensity: VisualDensity.standard,
+                    ),
+                    onPressed: !_enabled || widget.onTargetChanged == null
+                        ? null
+                        : () => widget.onTargetChanged!(target),
+                    icon: Icon(
+                      target == PaintColorTarget.stroke
+                          ? Icons.edit_outlined
+                          : Icons.format_color_fill,
+                      semanticLabel: target == PaintColorTarget.stroke
+                          ? 'Trait'
+                          : 'Intérieur',
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+        ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (widget.onPickFromDrawing != null)
+              square(
+                IconButton.outlined(
+                  key: const Key('pickPaintColor'),
+                  tooltip: 'Pipette : reprendre une couleur du dessin',
+                  isSelected: widget.picking,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    visualDensity: VisualDensity.standard,
+                  ),
+                  onPressed: _enabled ? widget.onPickFromDrawing : null,
+                  icon: const Icon(
+                    Icons.colorize,
+                    semanticLabel: 'Pipette : reprendre une couleur du dessin',
+                  ),
+                ),
+              ),
+            square(
+              IconButton.outlined(
+                key: const Key('morePaintColors'),
+                tooltip: 'Autres couleurs',
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(48, 48),
+                  visualDensity: VisualDensity.standard,
+                ),
+                onPressed: _enabled ? _moreColors : null,
+                icon: const Icon(
+                  Icons.palette_outlined,
+                  semanticLabel: 'Autres couleurs',
+                ),
+              ),
+            ),
+          ],
+        ),
+        if (widget.trailingControl != null) ...[
+          const SizedBox(height: 10),
+          widget.trailingControl!,
+        ],
+        const SizedBox(height: 10),
+        swatches,
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.rail) return _rail(context);
     if (widget.simple) {
       return Wrap(
         key: const Key('simplePaintColors'),
@@ -517,9 +651,11 @@ Future<int?> showPaintColorDialog(
   List<int> recentColors = const [],
 }) => showDialog<int>(
   context: context,
-  builder: (_) => PaintColorDialog(
-    initialRgb: initialRgb,
-    recentColors: List.unmodifiable(recentColors.take(8)),
+  builder: (_) => FitDialog(
+    child: PaintColorDialog(
+      initialRgb: initialRgb,
+      recentColors: List.unmodifiable(recentColors.take(8)),
+    ),
   ),
 );
 

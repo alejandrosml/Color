@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'fit_to_screen.dart';
 import 'french.dart';
 import 'gallery_storage.dart';
 import 'studio_colors.dart';
@@ -21,11 +22,13 @@ Future<GalleryEntry?> showGalleryDialog(
   bool opensFiles = true,
 }) => showDialog<GalleryEntry>(
   context: context,
-  builder: (_) => GalleryDialog(
-    storage: storage,
-    now: now,
-    ready: ready,
-    opensFiles: opensFiles,
+  builder: (_) => FitDialog(
+    child: GalleryDialog(
+      storage: storage,
+      now: now,
+      ready: ready,
+      opensFiles: opensFiles,
+    ),
   ),
 );
 
@@ -134,26 +137,28 @@ class _GalleryDialogState extends State<GalleryDialog> {
   Future<void> _remove(GalleryEntry entry) async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        key: const Key('galleryForgetDialog'),
-        title: Text('Retirer « ${cardTitle(entry.name)} » de la galerie ?'),
-        content: const Text(
-          'Sa carte disparaît d’ici, avec la copie que la galerie en gardait. Ton fichier enregistré reste à sa place.',
+      builder: (dialogContext) => FitDialog(
+        child: AlertDialog(
+          key: const Key('galleryForgetDialog'),
+          title: Text('Retirer « ${cardTitle(entry.name)} » de la galerie ?'),
+          content: const Text(
+            'Sa carte disparaît d’ici, avec la copie que la galerie en gardait. Ton fichier enregistré reste à sa place.',
+          ),
+          actions: [
+            TextButton(
+              key: const Key('cancelGalleryForget'),
+              style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              key: const Key('confirmGalleryForget'),
+              style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Retirer la carte'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            key: const Key('cancelGalleryForget'),
-            style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            key: const Key('confirmGalleryForget'),
-            style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Retirer la carte'),
-          ),
-        ],
       ),
     );
     if (confirmed != true || !mounted) return;

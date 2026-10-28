@@ -32,9 +32,14 @@ class SelectionToolbar extends StatelessWidget {
     required this.onEditText,
     required this.onDuplicate,
     required this.onDelete,
+    this.showHint = true,
   });
 
   final bool compact;
+
+  /// The sentence that says what to do with the chosen element. The
+  /// column of a telephone has the actions alone.
+  final bool showHint;
 
   /// Kind of the chosen element; null when nothing is chosen.
   final VectorKind? selectedKind;
@@ -137,7 +142,7 @@ class SelectionToolbar extends StatelessWidget {
     builder: (context, constraints) {
       final textScale = MediaQuery.textScalerOf(context).scale(12) / 12;
       // Under this width the sentence stands above the actions.
-      final stacked = constraints.maxWidth < 540 * textScale;
+      final stacked = !showHint || constraints.maxWidth < 540 * textScale;
       // The sentence keeps room for its picture and a few words.
       final hintWidth = (compact ? 32 : 56) + 12 + 132 * textScale;
       final actionsRoom = stacked
@@ -314,7 +319,10 @@ class SelectionToolbar extends StatelessWidget {
       if (stacked) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [hint, const SizedBox(height: 4), buttons],
+          children: [
+            if (showHint) ...[hint, const SizedBox(height: 4)],
+            buttons,
+          ],
         );
       }
       // The actions take what the sentence leaves, and stand on two lines

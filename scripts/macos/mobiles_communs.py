@@ -13,6 +13,7 @@ Written for the Python that a Mac may have: 3.8 or later.
 """
 from pathlib import Path
 import datetime
+import fcntl
 import hashlib
 import json
 import os
@@ -64,13 +65,42 @@ IOS_DEPLOYMENT_TARGET = '18.0'
 BUNDLE_ID = 'fr.aisml.color'
 
 
+LAUNCHER_NAMES = {
+    'iphone-ipad': 'Essayer Color sur iPhone et iPad',
+    'android': 'Essayer Color sur Android',
+    'app-store': 'Envoyer Color vers l’App Store',
+    'google-play': 'Préparer Color pour Google Play',
+}
+
+
+def hold_lock(what):
+    """The lock of this kind of launcher, held as long as it runs. A second
+    launcher of the same kind, from a second double click, stops at once:
+    it would build in the working copy of the first. The lock goes with the
+    process; its small file stays in MOBILES for the next time."""
+    MOBILES.mkdir(parents=True, exist_ok=True)
+    handle = (MOBILES / ('lanceur-%s.verrou' % what)).open('a')
+    try:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        handle.close()
+        print('« %s » tourne déjà dans une autre fenêtre du Terminal. Celle-ci '
+              's’arrête sans rien faire ; l’autre continue.'
+              % LAUNCHER_NAMES.get(what, what), flush=True)
+        sys.exit(3)
+    return handle
+
+
 class Journal:
     """What a launcher did, on the screen and in its folder of the journal."""
 
     # The journal of the launcher that runs, for main_wrapper.
     current = None
+    # The lock of the launcher that runs: see hold_lock.
+    lock = None
 
     def __init__(self, travail, what):
+        Journal.lock = hold_lock(what)
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')
         self.folder = travail / 'construction-mac' / 'journal' / (stamp + '-' + what)
         self.folder.mkdir(parents=True, exist_ok=True)

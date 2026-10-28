@@ -66,6 +66,7 @@ import 'studio_sounds.dart';
 import 'replay_dialog.dart';
 import 'device_self_test.dart';
 import 'fit_to_screen.dart';
+import 'phone_menu.dart';
 import 'platform_words.dart';
 
 Future<void> main() async {
@@ -257,6 +258,10 @@ class _DrawingStudioState extends State<DrawingStudio> {
   // The drawing was saved a moment ago: « Enregistrer » shows a tick.
   bool _savedJustNow = false;
   Timer? _savedTimer;
+
+  /// The column of a telephone, on the right of the sheet: a new tool shows
+  /// it from its top, where its choices are.
+  final _phoneRail = ScrollController();
   static const _bounceTime = Duration(milliseconds: 350);
   static const _bounceReach = 24.0;
   StudioTool _tool = StudioTool.brush;
@@ -374,6 +379,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
     if (widget.options == null) _optionsStore.dispose();
     _bounceTimer?.cancel();
     _savedTimer?.cancel();
+    _phoneRail.dispose();
     _recoveryScheduler.dispose();
     clearNativeExitHandler();
     clearNativeDiagnostics();
@@ -529,7 +535,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
     try {
       await showDialog<void>(
         context: context,
-        builder: (_) => StudioProblemDialog(problem: problem),
+        builder: (_) => FitDialog(child: StudioProblemDialog(problem: problem)),
       );
     } finally {
       if (mounted) {
@@ -2025,53 +2031,55 @@ class _DrawingStudioState extends State<DrawingStudio> {
     await _guardedDialog<void>(
       () => showDialog<void>(
         context: context,
-        builder: (_) => LayersDialog(
-          actions: LayerPanelActions(
-            layers: () => _document!.layers,
-            activeLayer: () => _document!.activeLayer,
-            // The page of a colouring page is locked: it can be hidden and
-            // shown, never chosen, erased or moved. The panel offers none of
-            // that; these guards keep a stale command from reaching the core.
-            select: (id) => _layerEdit((document) {
-              final position = document.layers.indexWhere(
-                (layer) => layer.id == id,
-              );
-              if (position < 0 || document.layers[position].locked) return;
-              if (!document.layers[position].visible) {
-                document.setLayerVisible(position, true);
-              }
-              document.setActiveLayer(id);
-            }),
-            add: () => _layerEdit((document) => document.addLayer()),
-            remove: (position) => _layerEdit((document) {
-              final layers = document.layers;
-              if (layers[position].locked) return;
-              // The sheet never ends up with hidden layers only: before the
-              // last visible layer to draw on goes, its nearest neighbour
-              // that is one is shown. Two steps for Annuler, and each of them
-              // leaves a sheet to see. The page is no layer to draw on.
-              final others = [
-                for (var other = 0; other < layers.length; other++)
-                  if (other != position && !layers[other].locked) other,
-              ];
-              if (others.isNotEmpty &&
-                  layers[position].visible &&
-                  !others.any((other) => layers[other].visible)) {
-                others.sort(
-                  (a, b) =>
-                      (a - position).abs().compareTo((b - position).abs()),
+        builder: (_) => FitDialog(
+          child: LayersDialog(
+            actions: LayerPanelActions(
+              layers: () => _document!.layers,
+              activeLayer: () => _document!.activeLayer,
+              // The page of a colouring page is locked: it can be hidden and
+              // shown, never chosen, erased or moved. The panel offers none of
+              // that; these guards keep a stale command from reaching the core.
+              select: (id) => _layerEdit((document) {
+                final position = document.layers.indexWhere(
+                  (layer) => layer.id == id,
                 );
-                document.setLayerVisible(others.first, true);
-              }
-              document.removeLayer(position);
-            }),
-            // No layer passes the page: the core refuses such a move.
-            move: (from, to) => _layerEdit((document) {
-              if (!canMoveLayer(document.layers, from, to)) return;
-              document.reorderLayer(from, to);
-            }),
-            setVisible: (position, visible) => _layerEdit(
-              (document) => document.setLayerVisible(position, visible),
+                if (position < 0 || document.layers[position].locked) return;
+                if (!document.layers[position].visible) {
+                  document.setLayerVisible(position, true);
+                }
+                document.setActiveLayer(id);
+              }),
+              add: () => _layerEdit((document) => document.addLayer()),
+              remove: (position) => _layerEdit((document) {
+                final layers = document.layers;
+                if (layers[position].locked) return;
+                // The sheet never ends up with hidden layers only: before the
+                // last visible layer to draw on goes, its nearest neighbour
+                // that is one is shown. Two steps for Annuler, and each of them
+                // leaves a sheet to see. The page is no layer to draw on.
+                final others = [
+                  for (var other = 0; other < layers.length; other++)
+                    if (other != position && !layers[other].locked) other,
+                ];
+                if (others.isNotEmpty &&
+                    layers[position].visible &&
+                    !others.any((other) => layers[other].visible)) {
+                  others.sort(
+                    (a, b) =>
+                        (a - position).abs().compareTo((b - position).abs()),
+                  );
+                  document.setLayerVisible(others.first, true);
+                }
+                document.removeLayer(position);
+              }),
+              // No layer passes the page: the core refuses such a move.
+              move: (from, to) => _layerEdit((document) {
+                if (!canMoveLayer(document.layers, from, to)) return;
+                document.reorderLayer(from, to);
+              }),
+              setVisible: (position, visible) => _layerEdit(
+                (document) => document.setLayerVisible(position, visible),
+              ),
             ),
           ),
         ),
@@ -2542,7 +2550,8 @@ class _DrawingStudioState extends State<DrawingStudio> {
     try {
       final choice = await showDialog<NewSheetChoice>(
         context: context,
-        builder: (_) => NewSheetDialog(pages: ColoringPages.all),
+        builder: (_) =>
+            FitDialog(child: NewSheetDialog(pages: ColoringPages.all)),
       );
       if (choice == null || !mounted) return;
       _finishStroke();
@@ -3586,181 +3595,497 @@ class _DrawingStudioState extends State<DrawingStudio> {
           },
           autofocus: true,
           child: Scaffold(
-            body: Column(
-              children: [
-                if (!_bigSheet &&
-                    _options.captions &&
-                    MediaQuery.sizeOf(context).height >= 620)
-                  Container(
-                    width: double.infinity,
-                    color: studioBanner,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 5,
-                    ),
-                    child: const Text(
-                      'Color · Un petit atelier pour les grandes idées',
-                      style: TextStyle(fontSize: 11, color: studioHelpText),
-                    ),
-                  ),
-                if (!_bigSheet)
-                  StudioHeader(
-                    onNew: _busy ? null : _newDrawing,
-                    onOpen: _busy ? null : _openProject,
-                    hasGallery: _gallery != null,
-                    onGallery: _busy ? null : _openGallery,
-                    onImportImage: _busy ? null : _importImage,
-                    onSave: _busy ? null : _saveProject,
-                    onExport: _busy ? null : _chooseExport,
-                    onPrint: _busy ? null : _printDrawing,
-                    onAbout: _busy ? null : _showAbout,
-                    onHelp: _busy ? null : _showHelp,
-                    onMenuVisibilityChanged: _colorDialogChanged,
-                    onOptions: _busy ? null : _openOptions,
-                    showOpen: _options.opensFiles,
-                    showImportImage: _options.opensFiles,
-                    showExport: _options.exports,
-                    showPrint: _options.printing,
-                    showHelp: _options.headerHelp,
-                    savedJustNow: _savedJustNow,
-                  ),
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final wide =
-                          !_bigSheet &&
-                          _options.inspector &&
-                          constraints.maxWidth >= 1120;
-                      final textScale =
-                          MediaQuery.textScalerOf(context).scale(12) / 12;
-                      final tools = _options.tools;
-                      final largeTools = _options.simpleControls;
-                      final narrow = StudioLayout.toolsAbove(
-                        width: constraints.maxWidth,
-                        height: constraints.maxHeight,
-                        textScale: textScale,
-                        toolCount: tools.length,
-                        largeTools: largeTools,
-                      );
-                      // The sheet comes first: the controls under it are
-                      // spacious only when the sheet stays comfortable.
-                      final short = !StudioLayout.spaciousControls(
-                        width: constraints.maxWidth,
-                        height: constraints.maxHeight,
-                        narrow: narrow,
-                        inspector: wide,
-                        textScale: textScale,
-                        toolCount: tools.length,
-                        largeTools: largeTools,
-                      );
-                      final gap = short ? 6.0 : 12.0;
-                      return Padding(
-                        padding: EdgeInsets.all(narrow || short ? 12 : 20),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (!narrow) ...[
-                              StudioToolBar(
-                                selected: _tool,
-                                onSelected: _busy ? null : _selectTool,
-                                tools: tools,
-                                large: largeTools,
+            body: _phoneLayout(context)
+                ? _phoneBody()
+                : Column(
+                    children: [
+                      if (!_bigSheet &&
+                          _options.captions &&
+                          MediaQuery.sizeOf(context).height >= 620)
+                        Container(
+                          width: double.infinity,
+                          color: studioBanner,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 5,
+                          ),
+                          child: const Text(
+                            'Color · Un petit atelier pour les grandes idées',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: studioHelpText,
+                            ),
+                          ),
+                        ),
+                      if (!_bigSheet)
+                        StudioHeader(
+                          onNew: _busy ? null : _newDrawing,
+                          onOpen: _busy ? null : _openProject,
+                          hasGallery: _gallery != null,
+                          onGallery: _busy ? null : _openGallery,
+                          onImportImage: _busy ? null : _importImage,
+                          onSave: _busy ? null : _saveProject,
+                          onExport: _busy ? null : _chooseExport,
+                          onPrint: _busy ? null : _printDrawing,
+                          onAbout: _busy ? null : _showAbout,
+                          onHelp: _busy ? null : _showHelp,
+                          onMenuVisibilityChanged: _colorDialogChanged,
+                          onOptions: _busy ? null : _openOptions,
+                          showOpen: _options.opensFiles,
+                          showImportImage: _options.opensFiles,
+                          showExport: _options.exports,
+                          showPrint: _options.printing,
+                          showHelp: _options.headerHelp,
+                          savedJustNow: _savedJustNow,
+                        ),
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final wide =
+                                !_bigSheet &&
+                                _options.inspector &&
+                                constraints.maxWidth >= 1120;
+                            final textScale =
+                                MediaQuery.textScalerOf(context).scale(12) / 12;
+                            final tools = _options.tools;
+                            final largeTools = _options.simpleControls;
+                            final narrow = StudioLayout.toolsAbove(
+                              width: constraints.maxWidth,
+                              height: constraints.maxHeight,
+                              textScale: textScale,
+                              toolCount: tools.length,
+                              largeTools: largeTools,
+                            );
+                            // The sheet comes first: the controls under it are
+                            // spacious only when the sheet stays comfortable.
+                            final short = !StudioLayout.spaciousControls(
+                              width: constraints.maxWidth,
+                              height: constraints.maxHeight,
+                              narrow: narrow,
+                              inspector: wide,
+                              textScale: textScale,
+                              toolCount: tools.length,
+                              largeTools: largeTools,
+                            );
+                            final gap = short ? 6.0 : 12.0;
+                            return Padding(
+                              padding: EdgeInsets.all(
+                                narrow || short ? 12 : 20,
                               ),
-                              const SizedBox(width: 18),
-                            ],
-                            Expanded(
-                              // Named, so that it stays the same column when
-                              // a window made much wider or narrower at once
-                              // gives it neighbours on both sides: what it
-                              // holds, an open colour dialog for one, must
-                              // not be forgotten.
-                              key: const ValueKey('studioColumn'),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (narrow) ...[
+                                  if (!narrow) ...[
                                     StudioToolBar(
                                       selected: _tool,
                                       onSelected: _busy ? null : _selectTool,
-                                      horizontal: true,
                                       tools: tools,
+                                      large: largeTools,
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(width: 18),
                                   ],
-                                  KeyedSubtree(
-                                    key: const Key('documentToolbar'),
-                                    child: _documentToolbar(),
-                                  ),
-                                  SizedBox(height: gap),
                                   Expanded(
-                                    child: LayoutBuilder(
-                                      builder: (context, room) {
-                                        // Whatever the controls need, the
-                                        // sheet keeps its floor: they scroll
-                                        // in what is left, and drawing stays
-                                        // in its own region.
-                                        final controlsRoom = math.max(
-                                          0.0,
-                                          room.maxHeight -
-                                              gap -
-                                              StudioLayout.sheetFloor(
-                                                room.maxHeight,
-                                              ),
-                                        );
-                                        return Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            Expanded(child: _canvas()),
-                                            SizedBox(height: gap),
-                                            ConstrainedBox(
-                                              constraints: BoxConstraints(
-                                                maxHeight: controlsRoom,
-                                              ),
-                                              child: Scrollbar(
-                                                thumbVisibility: true,
-                                                child: SingleChildScrollView(
-                                                  key: const Key(
-                                                    'drawingControlsScroll',
+                                    // Named, so that it stays the same column when
+                                    // a window made much wider or narrower at once
+                                    // gives it neighbours on both sides: what it
+                                    // holds, an open colour dialog for one, must
+                                    // not be forgotten.
+                                    key: const ValueKey('studioColumn'),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        if (narrow) ...[
+                                          StudioToolBar(
+                                            selected: _tool,
+                                            onSelected: _busy
+                                                ? null
+                                                : _selectTool,
+                                            horizontal: true,
+                                            tools: tools,
+                                          ),
+                                          const SizedBox(height: 8),
+                                        ],
+                                        KeyedSubtree(
+                                          key: const Key('documentToolbar'),
+                                          child: _documentToolbar(),
+                                        ),
+                                        SizedBox(height: gap),
+                                        Expanded(
+                                          child: LayoutBuilder(
+                                            builder: (context, room) {
+                                              // Whatever the controls need, the
+                                              // sheet keeps its floor: they scroll
+                                              // in what is left, and drawing stays
+                                              // in its own region.
+                                              final controlsRoom = math.max(
+                                                0.0,
+                                                room.maxHeight -
+                                                    gap -
+                                                    StudioLayout.sheetFloor(
+                                                      room.maxHeight,
+                                                    ),
+                                              );
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Expanded(child: _canvas()),
+                                                  SizedBox(height: gap),
+                                                  ConstrainedBox(
+                                                    constraints: BoxConstraints(
+                                                      maxHeight: controlsRoom,
+                                                    ),
+                                                    child: Scrollbar(
+                                                      thumbVisibility: true,
+                                                      child:
+                                                          SingleChildScrollView(
+                                                            key: const Key(
+                                                              'drawingControlsScroll',
+                                                            ),
+                                                            primary: true,
+                                                            child:
+                                                                _drawingControls(
+                                                                  narrow,
+                                                                  compact:
+                                                                      short,
+                                                                ),
+                                                          ),
+                                                    ),
                                                   ),
-                                                  primary: true,
-                                                  child: _drawingControls(
-                                                    narrow,
-                                                    compact: short,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
+                                  if (wide) ...[
+                                    const SizedBox(width: 18),
+                                    StudioInspector(
+                                      tool: _tool,
+                                      help: _toolHelp,
+                                      rgb: _color,
+                                      width: _width,
+                                      fillRgb: _filled ? _fillColor : null,
+                                      stamp: _tool == StudioTool.stamp
+                                          ? _currentStamp
+                                          : null,
+                                    ),
+                                  ],
                                 ],
                               ),
-                            ),
-                            if (wide) ...[
-                              const SizedBox(width: 18),
-                              StudioInspector(
-                                tool: _tool,
-                                help: _toolHelp,
-                                rgb: _color,
-                                width: _width,
-                                fillRgb: _filled ? _fillColor : null,
-                                stamp: _tool == StudioTool.stamp
-                                    ? _currentStamp
-                                    : null,
-                              ),
-                            ],
-                          ],
+                            );
+                          },
                         ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// A telephone on its side, as opposed to a tablet or a computer: the
+  /// studio then has a layout of its own.
+  bool _phoneLayout(BuildContext context) =>
+      touchFirst && phoneRoom(View.of(context), MediaQuery.sizeOf(context));
+
+  /// What the line above the sheet says of the drawing, and the menu of a
+  /// telephone: how many elements, and whether they are saved. What the
+  /// child made: the untouched zones and the lines of a colouring page are
+  /// not counted, a zone that the paint pot coloured is.
+  String get _documentCaption =>
+      '${elementCount(_document!.madeCount)} · ${_dirty
+          ? 'modifications non enregistrées'
+          : _currentPath == null
+          ? 'nouvelle feuille'
+          : 'projet enregistré'}';
+
+  String get _documentTitle =>
+      _currentPath == null ? 'Mon dessin' : StudioFiles.fileName(_currentPath!);
+
+  // The studio of a telephone on its side. The sheet takes the whole
+  // height, in the middle. On the left, the tools under the button of the
+  // menu, all in view. On the right, a column that scrolls: Annuler and
+  // Rétablir, the colours, the size and what the tool chooses. Everything
+  // else — the actions on the drawing, its film, the layers, help and
+  // options — is in the menu.
+  Widget _phoneBody() {
+    final simple = _options.simpleControls;
+    const railSide = BorderSide(color: studioLine);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DecoratedBox(
+          decoration: const BoxDecoration(
+            color: studioSurface,
+            border: Border(right: railSide),
+          ),
+          child: StudioToolBar(
+            rail: true,
+            leading: _phoneMenuButton(),
+            selected: _tool,
+            onSelected: _busy ? null : _selectTool,
+            tools: _options.tools,
+            large: simple,
+          ),
+        ),
+        Expanded(
+          child: Padding(padding: const EdgeInsets.all(6), child: _canvas()),
+        ),
+        DecoratedBox(
+          decoration: const BoxDecoration(
+            color: studioSurface,
+            border: Border(left: railSide),
+          ),
+          child: SizedBox(
+            width:
+                ColorPalette.railWidth(simple: simple) +
+                _phoneRailPadding.horizontal,
+            child: _phoneSideRail(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Room on the right of the column for its scrollbar.
+  static const _phoneRailPadding = EdgeInsets.fromLTRB(8, 8, 14, 8);
+
+  Widget _phoneMenuButton() => SizedBox(
+    height: 48,
+    child: OutlinedButton(
+      key: const Key('phoneMenu'),
+      onPressed: _busy || _confirmationOpen ? null : _openPhoneMenu,
+      style: OutlinedButton.styleFrom(
+        padding: EdgeInsets.zero,
+        backgroundColor: studioSurface,
+        foregroundColor: studioInk,
+      ),
+      // The drawing has just been saved: the button of the menu, where
+      // « Enregistrer » is, shows the tick for a moment.
+      child: _savedJustNow
+          ? Semantics(
+              liveRegion: true,
+              label: 'Dessin enregistré',
+              child: const Icon(
+                Icons.check_circle,
+                key: Key('savedTick'),
+                size: 30,
+                color: studioGreen,
+              ),
+            )
+          : const Tooltip(
+              message: 'Menu',
+              excludeFromSemantics: true,
+              child: Icon(Icons.menu_rounded, size: 30, semanticLabel: 'Menu'),
+            ),
+    ),
+  );
+
+  Future<void> _openPhoneMenu() async {
+    if (_busy || _confirmationOpen) return;
+    _settleLatch();
+    final entries = [
+      PhoneMenuEntry(
+        id: 'newProject',
+        name: 'Nouveau',
+        picture: (size) => EduIllustration(art: EduArt.newPage, size: size),
+        enabled: true,
+      ),
+      if (_options.opensFiles)
+        PhoneMenuEntry(
+          id: 'openProject',
+          name: 'Ouvrir',
+          picture: (size) => EduIllustration(art: EduArt.folder, size: size),
+          enabled: true,
+        ),
+      if (_gallery != null)
+        PhoneMenuEntry(
+          id: 'openGallery',
+          name: 'Mes dessins',
+          picture: (size) => EduIllustration(art: EduArt.gallery, size: size),
+          enabled: true,
+        ),
+      if (_options.opensFiles)
+        PhoneMenuEntry(
+          id: 'importImage',
+          name: 'Sur une image',
+          picture: (size) =>
+              Icon(Icons.add_photo_alternate_outlined, size: size),
+          enabled: true,
+        ),
+      PhoneMenuEntry(
+        id: 'saveProject',
+        name: 'Enregistrer',
+        picture: (size) => EduIllustration(art: EduArt.save, size: size),
+        enabled: true,
+        filled: true,
+      ),
+      if (_options.exports)
+        PhoneMenuEntry(
+          id: 'exportImage',
+          name: 'Exporter',
+          picture: (size) =>
+              EduIllustration(art: EduArt.exportImage, size: size),
+          enabled: true,
+        ),
+      if (_options.printing)
+        PhoneMenuEntry(
+          id: 'printDrawing',
+          name: 'Imprimer',
+          picture: (size) => EduIllustration(art: EduArt.printer, size: size),
+          enabled: true,
+        ),
+      PhoneMenuEntry(
+        id: 'replayDrawing',
+        name: 'Revoir',
+        picture: (size) => EduIllustration(art: EduArt.film, size: size),
+        enabled: _canReplay,
+      ),
+      if (_options.layers)
+        PhoneMenuEntry(
+          id: 'layersButton',
+          name: 'Calques',
+          picture: (size) => EduIllustration(art: EduArt.layers, size: size),
+          enabled: true,
+        ),
+      if (_options.viewControls)
+        PhoneMenuEntry(
+          id: 'fitPage',
+          name: 'Toute la feuille',
+          picture: (size) => Icon(Icons.fit_screen_outlined, size: size),
+          enabled: _viewEnabled && _view != null && !_view!.isFit,
+        ),
+      if (_options.headerHelp)
+        PhoneMenuEntry(
+          id: 'showHelp',
+          name: 'Aide',
+          picture: (size) => Icon(Icons.help_outline, size: size),
+          enabled: true,
+        ),
+      PhoneMenuEntry(
+        id: 'openOptions',
+        name: 'Options',
+        picture: (size) => EduIllustration(art: EduArt.options, size: size),
+        enabled: true,
+      ),
+      // Always there: the privacy policy is reached through it.
+      PhoneMenuEntry(
+        id: 'aboutColor',
+        name: 'À propos',
+        picture: (size) => Icon(Icons.info_outline, size: size),
+        enabled: true,
+      ),
+    ];
+    _colorDialogChanged(true);
+    String? chosen;
+    try {
+      chosen = await showPhoneMenu(
+        context,
+        title: _documentTitle,
+        caption: _documentCaption,
+        entries: entries,
+      );
+    } finally {
+      _colorDialogChanged(false);
+    }
+    if (!mounted || chosen == null) return;
+    switch (chosen) {
+      case 'newProject':
+        _newDrawing();
+      case 'openProject':
+        _openProject();
+      case 'openGallery':
+        _openGallery();
+      case 'importImage':
+        _importImage();
+      case 'saveProject':
+        _saveProject();
+      case 'exportImage':
+        _chooseExport();
+      case 'printDrawing':
+        _printDrawing();
+      case 'replayDrawing':
+        _showReplay();
+      case 'layersButton':
+        _openLayers();
+      case 'fitPage':
+        _fitView();
+      case 'showHelp':
+        _showHelp();
+      case 'openOptions':
+        _openOptions();
+      case 'aboutColor':
+        _showAbout();
+    }
+  }
+
+  Widget _phoneSideRail() {
+    final enabled = !_busy && !_confirmationOpen;
+    Widget history(bool redo) => SizedBox.square(
+      dimension: 48,
+      child: IconButton.outlined(
+        key: Key(redo ? 'redo' : 'undo'),
+        style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+        onPressed: redo
+            ? (!_busy && _document!.canRedo ? () => _history(true) : null)
+            : (_canUndo ? () => _history(false) : null),
+        icon: Semantics(
+          label: redo ? 'Rétablir le geste annulé' : 'Annuler le dernier geste',
+          child: EduIllustration(
+            art: redo ? EduArt.redo : EduArt.undo,
+            size: 26,
+          ),
+        ),
+      ),
+    );
+    return Scrollbar(
+      controller: _phoneRail,
+      thumbVisibility: true,
+      child: SingleChildScrollView(
+        key: const Key('phoneSideRail'),
+        controller: _phoneRail,
+        padding: _phoneRailPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [history(false), history(true)],
+            ),
+            // What can be done with the chosen element comes first: Copier
+            // and Effacer must not wait under every colour.
+            if (_choosing) ...[
+              const SizedBox(height: 10),
+              _selectionToolbar(compact: true, showHint: false),
+            ],
+            if (_canFill) ...[
+              const SizedBox(height: 8),
+              Semantics(
+                label: 'Remplir la forme',
+                child: Row(
+                  children: [
+                    Checkbox(
+                      key: const Key('fillShapeCheckbox'),
+                      value: _filled,
+                      onChanged: enabled
+                          ? (value) => _setFilled(value ?? false)
+                          : null,
+                    ),
+                    const Expanded(
+                      child: Text('Remplir', style: TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            _palettePanel(true, rail: true),
+          ],
         ),
       ),
     );
@@ -3783,40 +4108,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
             ],
             Expanded(
               child: _choosing
-                  ? SelectionToolbar(
-                      compact: compact || _bigSheet,
-                      selectedKind: _selectedObject?.kind,
-                      keepsOwnColours:
-                          _selectedObject != null &&
-                          _keepsOwnColours(_selectedObject!),
-                      clickMoves: _options.holdFree,
-                      carried: _latch == _Latch.move,
-                      // Without the layers of the complete interface,
-                      // « Ordre » does not send an element to another one,
-                      // nor to the locked layers of a colouring page.
-                      hasSeveralLayers:
-                          _options.layers &&
-                          _document!.layers
-                                  .where((layer) => !layer.locked)
-                                  .length >
-                              1,
-                      canBringForward: _canBringForward,
-                      canSendBackward: _canSendBackward,
-                      canMoveLayerUp: _canMoveSelectionLayer(1),
-                      canMoveLayerDown: _canMoveSelectionLayer(-1),
-                      onOrder: _orderSelection,
-                      onShrink: _canResizeSelection(_shrinkFactor)
-                          ? () => _resizeSelection(_shrinkFactor)
-                          : null,
-                      onGrow: _canResizeSelection(_growFactor)
-                          ? () => _resizeSelection(_growFactor)
-                          : null,
-                      onEditText: _canEditText ? _editSelectedText : null,
-                      onDuplicate: _canEditSelection
-                          ? _duplicateSelection
-                          : null,
-                      onDelete: _canEditSelection ? _deleteSelection : null,
-                    )
+                  ? _selectionToolbar(compact: compact || _bigSheet)
                   : Text(
                       _toolHelp,
                       style: TextStyle(
@@ -3842,6 +4134,37 @@ class _DrawingStudioState extends State<DrawingStudio> {
       ],
     ],
   );
+
+  Widget _selectionToolbar({required bool compact, bool showHint = true}) =>
+      SelectionToolbar(
+        compact: compact,
+        showHint: showHint,
+        selectedKind: _selectedObject?.kind,
+        keepsOwnColours:
+            _selectedObject != null && _keepsOwnColours(_selectedObject!),
+        clickMoves: _options.holdFree,
+        carried: _latch == _Latch.move,
+        // Without the layers of the complete interface, « Ordre » does not
+        // send an element to another one, nor to the locked layers of a
+        // colouring page.
+        hasSeveralLayers:
+            _options.layers &&
+            _document!.layers.where((layer) => !layer.locked).length > 1,
+        canBringForward: _canBringForward,
+        canSendBackward: _canSendBackward,
+        canMoveLayerUp: _canMoveSelectionLayer(1),
+        canMoveLayerDown: _canMoveSelectionLayer(-1),
+        onOrder: _orderSelection,
+        onShrink: _canResizeSelection(_shrinkFactor)
+            ? () => _resizeSelection(_shrinkFactor)
+            : null,
+        onGrow: _canResizeSelection(_growFactor)
+            ? () => _resizeSelection(_growFactor)
+            : null,
+        onEditText: _canEditText ? _editSelectedText : null,
+        onDuplicate: _canEditSelection ? _duplicateSelection : null,
+        onDelete: _canEditSelection ? _deleteSelection : null,
+      );
 
   String get _toolHelp => forTouch(_mouseToolHelp);
 
@@ -3887,6 +4210,14 @@ class _DrawingStudioState extends State<DrawingStudio> {
     });
     _sound(StudioSound.tool);
     _focus.requestFocus();
+    // The colours were scrolled to: the choices of the new tool are above.
+    if (_phoneRail.hasClients && _phoneRail.offset > 0) {
+      _phoneRail.animateTo(
+        0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
+      );
+    }
   }
 
   // Native menu commands can edit the document while the order popup is
@@ -4081,17 +4412,8 @@ class _DrawingStudioState extends State<DrawingStudio> {
   }
 
   Widget _documentToolbar() => DocumentToolbar(
-    title: _currentPath == null
-        ? 'Mon dessin'
-        : StudioFiles.fileName(_currentPath!),
-    // What the child made: the untouched zones and the lines of a colouring
-    // page are not counted, a zone that the paint pot coloured is.
-    caption:
-        '${elementCount(_document!.madeCount)} · ${_dirty
-            ? 'modifications non enregistrées'
-            : _currentPath == null
-            ? 'nouvelle feuille'
-            : 'projet enregistré'}',
+    title: _documentTitle,
+    caption: _documentCaption,
     viewControls: !_options.viewControls
         ? null
         : ViewControls(
@@ -4111,19 +4433,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
           ),
     showFill: _canFill,
     filled: _filled,
-    onFilledChanged: _busy
-        ? null
-        : (value) => setState(() {
-            // The chosen shape gains or loses its inside at once.
-            if (_selectedObject != null &&
-                !_styleSelection(
-                  changeFill: true,
-                  fillRgb: value ? _fillColor : null,
-                )) {
-              return;
-            }
-            _filled = value;
-          }),
+    onFilledChanged: _busy ? null : _setFilled,
     activeLayerName: layerName(_document!.activeLayer, _document!.layers),
     onLayers: _busy || _confirmationOpen ? null : _openLayers,
     onUndo: _canUndo ? () => _history(false) : null,
@@ -4134,9 +4444,25 @@ class _DrawingStudioState extends State<DrawingStudio> {
     showLayers: _options.layers,
   );
 
+  void _setFilled(bool value) => setState(() {
+    // The chosen shape gains or loses its inside at once.
+    if (_selectedObject != null &&
+        !_styleSelection(
+          changeFill: true,
+          fillRgb: value ? _fillColor : null,
+        )) {
+      return;
+    }
+    _filled = value;
+  });
+
   Widget _canvas() => LayoutBuilder(
     builder: (context, constraints) {
-      final showCaptions = _options.captions && constraints.maxHeight >= 160;
+      // A telephone gives the sheet all its room: no name around it.
+      final showCaptions =
+          _options.captions &&
+          constraints.maxHeight >= 160 &&
+          !_phoneLayout(context);
       // While a pointer is down the view keeps the size it had at the press.
       // A control that appears under the sheet, a sentence that wraps or a
       // window that is resized would otherwise slide the sheet under the
@@ -4366,40 +4692,50 @@ class _DrawingStudioState extends State<DrawingStudio> {
     if (mounted) setState(() => _confirmationOpen = open);
   }
 
-  Widget _palettePanel(bool narrow, {bool compact = false}) => Container(
-    padding: EdgeInsets.all(compact ? 10 : 16),
-    decoration: BoxDecoration(
-      color: studioSurface,
-      borderRadius: BorderRadius.circular(18),
-      border: Border.all(color: studioLine),
-    ),
-    child: ColorPalette(
-      selectedRgb: _canFill && _colorTarget == PaintColorTarget.fill
-          ? _fillColor
-          : _color,
-      canFill: _canFill,
-      target: _colorTarget,
-      compact: compact,
-      history: _recentColors,
-      onDialogVisibilityChanged: _colorDialogChanged,
-      onTargetChanged: (target) => setState(() => _colorTarget = target),
-      onColorSelected: _busy || _confirmationOpen
-          ? null
-          : (rgb) {
-              setState(() {
-                // A colour chosen in the palette is the choice: the pipette
-                // that was waiting has nothing left to fetch.
-                _picking = false;
-                _chooseColor(rgb);
-              });
-              _sound(StudioSound.colour);
-            },
-      onPickFromDrawing: _options.simpleControls ? null : _togglePicking,
-      picking: _picking,
-      simple: _options.simpleControls,
-      trailingControl: _sizeControl(narrow),
-    ),
-  );
+  /// The colours and the size of what is drawn. [rail]: in the column of a
+  /// telephone, which already gives them their surface.
+  Widget _palettePanel(bool narrow, {bool compact = false, bool rail = false}) {
+    final palette = _palette(narrow, compact: compact, rail: rail);
+    if (rail) return palette;
+    return Container(
+      padding: EdgeInsets.all(compact ? 10 : 16),
+      decoration: BoxDecoration(
+        color: studioSurface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: studioLine),
+      ),
+      child: palette,
+    );
+  }
+
+  Widget _palette(bool narrow, {required bool compact, required bool rail}) =>
+      ColorPalette(
+        rail: rail,
+        selectedRgb: _canFill && _colorTarget == PaintColorTarget.fill
+            ? _fillColor
+            : _color,
+        canFill: _canFill,
+        target: _colorTarget,
+        compact: compact,
+        history: _recentColors,
+        onDialogVisibilityChanged: _colorDialogChanged,
+        onTargetChanged: (target) => setState(() => _colorTarget = target),
+        onColorSelected: _busy || _confirmationOpen
+            ? null
+            : (rgb) {
+                setState(() {
+                  // A colour chosen in the palette is the choice: the pipette
+                  // that was waiting has nothing left to fetch.
+                  _picking = false;
+                  _chooseColor(rgb);
+                });
+                _sound(StudioSound.colour);
+              },
+        onPickFromDrawing: _options.simpleControls ? null : _togglePicking,
+        picking: _picking,
+        simple: _options.simpleControls,
+        trailingControl: _sizeControl(narrow, rail: rail),
+      );
 
   StampArt? get _currentStamp {
     try {
@@ -4412,7 +4748,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
 
   /// One place answers « how big? »: the outline of a trait or shape, the
   /// letters of a text, or a stamp placed with a click.
-  Widget? _sizeControl(bool narrow) {
+  Widget? _sizeControl(bool narrow, {bool rail = false}) {
     // The paint pot and the eraser have nothing to size.
     if (_tool == StudioTool.fill || _tool == StudioTool.eraser) return null;
     final enabled = !_busy && !_confirmationOpen;
@@ -4438,12 +4774,14 @@ class _DrawingStudioState extends State<DrawingStudio> {
         stamp: forStamp ? _currentStamp : null,
         stampRgb: _color,
         onChooseStamp: enabled ? _chooseStamp : null,
+        rail: rail,
       );
     }
     if (_options.simpleControls) {
       // Three sizes to click instead of a slider to move.
       return SizeChoiceControl(
         keyPrefix: 'brush',
+        wrap: rail,
         value: _width <= 9
             ? ObjectSize.small
             : _width <= 21
@@ -4462,6 +4800,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
       );
     }
     return OutlineWidthControl(
+      rail: rail,
       value: _width,
       shown: _selectedObject != null && !_selectionWidthMoving
           ? _selectedObject!.width

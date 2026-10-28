@@ -46,9 +46,10 @@ String get colorLicenceText =>
     'OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE '
     'USE OR OTHER DEALINGS IN THE SOFTWARE.';
 
-/// The address where the privacy policy and the help page are published,
-/// once they are. Empty: the policy is read in Color only.
-const colorSupportAddress = '';
+/// The address where the privacy policy and the help page are published
+/// (GitHub Pages of the public repository, online since 27 October 2026).
+/// Color shows it as text: it never opens a connection itself.
+const colorSupportAddress = 'https://alejandrosml.github.io/Color/';
 
 /// The privacy policy of Color, as « À propos » → « Confidentialité » shows
 /// it and as it is published beside the sources

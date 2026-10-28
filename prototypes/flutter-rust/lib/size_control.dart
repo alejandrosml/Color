@@ -16,7 +16,12 @@ class OutlineWidthControl extends StatelessWidget {
     required this.narrow,
     required this.onChanged,
     this.onChangeEnd,
+    this.rail = false,
   });
+
+  /// In the column of a telephone: the word and the number above the
+  /// slider, which takes the whole width.
+  final bool rail;
 
   /// Where the slider stands.
   final double value;
@@ -31,7 +36,32 @@ class OutlineWidthControl extends StatelessWidget {
   final VoidCallback? onChangeEnd;
 
   @override
-  Widget build(BuildContext context) => Row(
+  Widget build(BuildContext context) => rail
+      ? Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('Épaisseur', style: TextStyle(fontSize: 11)),
+                ),
+                Text('${shown.round()}', style: const TextStyle(fontSize: 11)),
+              ],
+            ),
+            SizedBox(
+              height: 48,
+              child: BrushWidthControl(
+                value: value,
+                onChanged: onChanged,
+                onChangeEnd: onChangeEnd,
+              ),
+            ),
+          ],
+        )
+      : _line();
+
+  Widget _line() => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
       const Text('Épaisseur', style: TextStyle(fontSize: 11)),
@@ -66,7 +96,12 @@ class PlacedSizeControl extends StatelessWidget {
     this.stamp,
     this.stampRgb = 0,
     this.onChooseStamp,
+    this.rail = false,
   });
+
+  /// In the column of a telephone: the stamp, then the sizes, one above
+  /// the other.
+  final bool rail;
 
   final ObjectSize size;
 
@@ -81,40 +116,59 @@ class PlacedSizeControl extends StatelessWidget {
   final int stampRgb;
   final VoidCallback? onChooseStamp;
 
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      if (forStamp) ...[
-        OutlinedButton(
-          key: const Key('chooseStamp'),
-          onPressed: onChooseStamp,
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(48, 48),
-            visualDensity: VisualDensity.standard,
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-          ),
-          // Named on the button itself, which keeps its own action.
-          child: Semantics(
-            label: 'Tampon ${stamp?.label ?? ''} · choisir un autre tampon',
-            excludeSemantics: true,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (stamp != null)
-                  StampPreview(stamp: stamp!, rgb: stampRgb, size: 34)
-                else
-                  const EduIllustration(art: EduArt.stamp, size: 34),
-                const Icon(Icons.arrow_drop_down, size: 20),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-      ],
-      const Text('Taille', style: TextStyle(fontSize: 11)),
-      const SizedBox(width: 8),
-      SizeChoiceControl(value: size, what: what, onChanged: onSizeChanged),
-    ],
+  Widget _stampButton() => OutlinedButton(
+    key: const Key('chooseStamp'),
+    onPressed: onChooseStamp,
+    style: OutlinedButton.styleFrom(
+      minimumSize: const Size(48, 48),
+      visualDensity: VisualDensity.standard,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+    ),
+    // Named on the button itself, which keeps its own action.
+    child: Semantics(
+      label: 'Tampon ${stamp?.label ?? ''} · choisir un autre tampon',
+      excludeSemantics: true,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (stamp != null)
+            StampPreview(stamp: stamp!, rgb: stampRgb, size: rail ? 44 : 34)
+          else
+            EduIllustration(art: EduArt.stamp, size: rail ? 44 : 34),
+          const Icon(Icons.arrow_drop_down, size: 20),
+        ],
+      ),
+    ),
   );
+
+  @override
+  Widget build(BuildContext context) => rail
+      ? Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (forStamp) ...[_stampButton(), const SizedBox(height: 8)],
+            const Text('Taille', style: TextStyle(fontSize: 11)),
+            const SizedBox(height: 4),
+            SizeChoiceControl(
+              value: size,
+              what: what,
+              onChanged: onSizeChanged,
+              wrap: true,
+            ),
+          ],
+        )
+      : Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (forStamp) ...[_stampButton(), const SizedBox(width: 10)],
+            const Text('Taille', style: TextStyle(fontSize: 11)),
+            const SizedBox(width: 8),
+            SizeChoiceControl(
+              value: size,
+              what: what,
+              onChanged: onSizeChanged,
+            ),
+          ],
+        );
 }

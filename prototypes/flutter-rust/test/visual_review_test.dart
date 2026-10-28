@@ -11,6 +11,7 @@ import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/main.dart';
+import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -96,9 +97,27 @@ void main() {
     MemoryFiles? files,
     GalleryStorage? gallery,
     StudioOptionsStore? options,
+    bool phone = false,
+    EdgeInsets padding = EdgeInsets.zero,
   }) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
+    // A telephone's screen, that the studio fills but for the island, the
+    // notch and the bar of the system.
+    if (phone) {
+      tester.view.display.size = size;
+      addTearDown(tester.view.display.resetSize);
+      final insets = FakeViewPadding(
+        left: padding.left,
+        top: padding.top,
+        right: padding.right,
+        bottom: padding.bottom,
+      );
+      tester.view.padding = insets;
+      tester.view.viewPadding = insets;
+      addTearDown(tester.view.resetPadding);
+      addTearDown(tester.view.resetViewPadding);
+    }
     tester.platformDispatcher.textScaleFactorTestValue = text;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -554,6 +573,79 @@ void main() {
       }
     } finally {
       debugDisableShadows = true;
+    }
+  }, skip: !available);
+
+  testWidgets('review pictures of a telephone on its side', (tester) async {
+    debugDisableShadows = false;
+    debugTouchFirstOverride = true;
+    try {
+      await tester.runAsync(_loadFonts);
+      for (final (name, size, insets) in const [
+        ('iphone', Size(852, 393), EdgeInsets.fromLTRB(59, 0, 59, 21)),
+        ('android', Size(915, 412), EdgeInsets.zero),
+        ('petit-android', Size(640, 360), EdgeInsets.zero),
+      ]) {
+        final store = StudioOptionsStore.memory();
+        addTearDown(store.dispose);
+        await start(
+          tester,
+          size,
+          gallery: MemoryGallery(),
+          options: store,
+          phone: true,
+          padding: insets,
+        );
+        await shot(tester, '70-$name-atelier-vide');
+        await drag(tester, const Offset(-150, -70), const Offset(-40, 50));
+        await tap(tester, 'tool-rectangle');
+        await tap(tester, 'fillShapeCheckbox');
+        await drag(tester, const Offset(-20, -60), const Offset(70, 20));
+        await shot(tester, '71-$name-rectangle');
+        await tap(tester, 'tool-stamp');
+        await tap(tester, 'size-large');
+        await click(tester, const Offset(110, 40));
+        await shot(tester, '72-$name-tampon');
+        await tap(tester, 'tool-select');
+        await click(tester, const Offset(110, 40));
+        await shot(tester, '73-$name-choisir');
+        await tap(tester, 'phoneMenu');
+        await shot(tester, '74-$name-menu');
+        await tap(tester, 'closePhoneMenu');
+        await tap(tester, 'tool-text');
+        await click(tester, const Offset(-60, 80));
+        await shot(tester, '75-$name-dialogue-texte');
+        await tap(tester, 'cancelText');
+        await tap(tester, 'tool-stroke');
+        final scroll = find.descendant(
+          of: find.byKey(const Key('phoneSideRail')),
+          matching: find.byType(Scrollable),
+        );
+        await tester.drag(scroll, const Offset(0, -260));
+        await tester.pumpAndSettle();
+        await shot(tester, '76-$name-colonne-defilee');
+        await tester.pumpWidget(const SizedBox.shrink());
+        for (final level in [InterfaceLevel.child, InterfaceLevel.toddler]) {
+          await store.change(store.value.copyWith(level: level));
+          await start(
+            tester,
+            size,
+            gallery: MemoryGallery(),
+            options: store,
+            phone: true,
+            padding: insets,
+          );
+          await drag(tester, const Offset(-150, -70), const Offset(-40, 50));
+          await shot(tester, '77-$name-interface-${level.code}');
+          await tap(tester, 'phoneMenu');
+          await shot(tester, '78-$name-menu-${level.code}');
+          await tap(tester, 'closePhoneMenu');
+          await tester.pumpWidget(const SizedBox.shrink());
+        }
+      }
+    } finally {
+      debugDisableShadows = true;
+      debugTouchFirstOverride = null;
     }
   }, skip: !available);
 }
