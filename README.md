@@ -9,7 +9,7 @@ Créé par **Alejandro San Martin Lamas** ([github.com/alejandrosml](https://git
 ## Ce qu’il sait faire
 
 - Le pinceau, la ligne, le rectangle, l’ovale, le texte, les tampons, le pot de peinture et la gomme.
-- Douze pages à colorier, et jusqu’à seize calques.
+- Douze pages à colorier, et jusqu’à huit calques.
 - « Mes dessins », l’impression, et l’export en PNG ou en SVG.
 - Le film du dessin, qui se refait tout seul.
 - Dessiner par-dessus une image.
@@ -18,7 +18,7 @@ Créé par **Alejandro San Martin Lamas** ([github.com/alejandrosml](https://git
 
 - De grandes cibles, faciles à toucher pour une petite main.
 - Trois niveaux d’interface, dont un niveau « tout-petits » à quatre outils.
-- Des options réservées à l’adulte, derrière une petite multiplication.
+- Des options réservées à l’adulte, qu’une petite multiplication peut protéger.
 - La prise en charge des lecteurs d’écran et du grand texte.
 
 ## Comment il est fait
