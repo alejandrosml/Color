@@ -10,9 +10,13 @@ Before the first sending, once:
   - Xcode knows the author's Apple Account (Xcode > Settings > Accounts);
   - the app « Color » exists in App Store Connect (Apps > + > Nouvelle app),
     for macOS and iOS, with the identifier fr.aisml.color;
-  - for iPhone and iPad, one iPhone or iPad is registered to the team: Xcode
-    signs an archive for iOS with a profile of development, which needs a
-    device. Plugged into the Mac and trusted, the device is registered here.
+  - for iPhone and iPad, either the « Apple Distribution » certificate of the
+    team in this Mac's keychain (Xcode > Settings > Accounts > Manage
+    Certificates) with the profile « Color App Store » made on
+    developer.apple.com, and Color is signed for the App Store without any
+    device; or one iPhone or iPad registered to the team, since Xcode signs
+    an archive automatically with a profile of development, which needs a
+    device: plugged into the Mac and trusted, it is registered here.
 A system already sent in this version is not sent again: App Store Connect
 refuses the same build number twice.
 
@@ -50,13 +54,22 @@ SENT_FILE = MOBILES / 'app-store-envoyes.json'
 # Xcode's words when the team has no iPhone or iPad to make the profile of
 # development with which it signs an archive for iOS.
 NO_DEVICE = re.compile(r'no devices? from which to generate|has no devices', re.IGNORECASE)
+# The profile with which Color is signed for the App Store of iOS without any
+# device: made once on developer.apple.com (Profiles > + > App Store Connect,
+# App ID fr.aisml.color, the « Apple Distribution » certificate of the team).
+PROFILE_NAME = 'Color App Store'
 NO_DEVICE_ADVICE = (
-    'Apple demande qu’un iPhone ou un iPad soit inscrit à ton compte de développeur avant de'
-    ' signer la version iPhone et iPad. Branche ton iPhone ou ton iPad au Mac avec un câble,'
-    ' déverrouille-le et touche « Se fier » s’il le demande, puis relance ce lanceur : il'
-    ' l’inscrira, et n’enverra pas une seconde fois ce qui est déjà parti. Tu peux aussi'
-    ' l’inscrire toi-même : https://developer.apple.com/account/resources/devices/add, avec'
-    ' son identifiant (UDID), que le Finder montre en cliquant sous le nom de l’appareil.')
+    'Apple demande qu’un iPhone ou un iPad soit inscrit à ton compte de développeur pour'
+    ' signer la version iPhone et iPad de cette façon. Deux chemins, puis relance ce lanceur,'
+    ' qui n’enverra pas une seconde fois ce qui est déjà parti :\n'
+    '  - sans câble : dans Xcode, Settings… → Accounts → ton compte → Manage Certificates… →'
+    ' « + » → Apple Distribution ; puis le profil « ' + PROFILE_NAME + ' » sur'
+    ' https://developer.apple.com/account/resources/profiles/add (App Store Connect, App ID'
+    ' fr.aisml.color, ce certificat) ;\n'
+    '  - avec un câble : branche ton iPhone ou ton iPad au Mac, déverrouille-le et touche'
+    ' « Se fier » : le lanceur l’inscrira.')
+NO_PROFILE = re.compile(r'No profiles? for|doesn.t match|not found|No signing certificate',
+                        re.IGNORECASE)
 
 
 def teams_of_this_mac():
@@ -101,22 +114,28 @@ def team(journal):
     return chosen
 
 
-def export_options(journal, team_id, folder):
+def export_options(journal, team_id, folder, manual=False):
     options = folder / 'ExportOptions.plist'
+    settings = {
+        'method': 'app-store-connect',
+        'destination': 'upload',
+        'teamID': team_id,
+        'signingStyle': 'automatic',
+        'uploadSymbols': True,
+        'manageAppVersionAndBuildNumber': False,
+    }
+    if manual:
+        settings.update(signingStyle='manual', signingCertificate='Apple Distribution',
+                        provisioningProfiles={'fr.aisml.color': PROFILE_NAME})
     with options.open('wb') as file:
-        plistlib.dump({
-            'method': 'app-store-connect',
-            'destination': 'upload',
-            'teamID': team_id,
-            'signingStyle': 'automatic',
-            'uploadSymbols': True,
-            'manageAppVersionAndBuildNumber': False,
-        }, file)
+        plistlib.dump(settings, file)
     return options
 
 
-def archive_and_send(journal, work, platform, team_id, extra_settings=()):
-    """xcodebuild archive, then exportArchive to App Store Connect."""
+def archive_and_send(journal, work, platform, team_id, extra_settings=(), manual=False):
+    """xcodebuild archive, then exportArchive to App Store Connect. A manual
+    signing is set in Equipe.xcconfig, for Color's target only: on the
+    command line it would reach the targets that take no profile."""
     folder = MOBILES / ('app-store-' + platform)
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
@@ -125,16 +144,26 @@ def archive_and_send(journal, work, platform, team_id, extra_settings=()):
     command = ['/usr/bin/xcodebuild', '-workspace', project, '-scheme', 'Runner',
                '-configuration', 'Release', '-archivePath', archive,
                '-destination', 'generic/platform=' + ('macOS' if platform == 'macos' else 'iOS'),
-               'archive', '-allowProvisioningUpdates', 'DEVELOPMENT_TEAM=' + team_id,
-               'CODE_SIGN_STYLE=Automatic'] + list(extra_settings)
-    run(journal, 'archive-' + platform, command, cwd=work)
+               'archive', '-allowProvisioningUpdates', 'DEVELOPMENT_TEAM=' + team_id]
+    if not manual:
+        command.append('CODE_SIGN_STYLE=Automatic')
+    run(journal, 'archive-' + platform, command + list(extra_settings), cwd=work)
     return archive, folder
 
 
-def send(journal, archive, folder, team_id, platform):
+def distribution_identity(team_id):
+    """The « Apple Distribution » identity of the team in the keychain of this
+    Mac, with its private key: with it and PROFILE_NAME, Color is signed for
+    the App Store of iOS without any registered device."""
+    code, listing = output(['/usr/bin/security', 'find-identity', '-v', '-p', 'codesigning'])
+    found = re.findall(r'"(Apple Distribution: [^"]*\(%s\))"' % re.escape(team_id), listing)
+    return found[0] if found else None
+
+
+def send(journal, archive, folder, team_id, platform, manual=False):
     # Apple refuses files that still carry the quarantine of a download.
     run(journal, 'quarantaine', ['/usr/bin/xattr', '-cr', archive], check=False)
-    options = export_options(journal, team_id, folder)
+    options = export_options(journal, team_id, folder, manual)
     run(journal, 'envoi-' + platform, ['/usr/bin/xcodebuild', '-exportArchive', '-archivePath',
                                        archive, '-exportOptionsPlist', options, '-exportPath',
                                        folder / 'export', '-allowProvisioningUpdates'])
@@ -256,17 +285,42 @@ def ios(journal, sources, version, team_id):
     place = work / 'ios' / 'rust' / 'iphoneos'
     place.mkdir(parents=True, exist_ok=True)
     shutil.copy2(CARGO_TARGET / 'aarch64-apple-ios' / 'release' / 'libedupaint_core.a', place)
-    (work / 'ios' / 'Runner' / 'Equipe.xcconfig').write_text(
-        'DEVELOPMENT_TEAM = %s\nCODE_SIGN_STYLE = Automatic\n' % team_id)
+    identity = distribution_identity(team_id)
+    if identity:
+        # Signed for the App Store from the start: no profile of development,
+        # so no device is needed.
+        (work / 'ios' / 'Runner' / 'Equipe.xcconfig').write_text(
+            'DEVELOPMENT_TEAM = %s\nCODE_SIGN_STYLE = Manual\n'
+            'CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution\n'
+            'PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*] = %s\n' % (team_id, PROFILE_NAME))
+    else:
+        (work / 'ios' / 'Runner' / 'Equipe.xcconfig').write_text(
+            'DEVELOPMENT_TEAM = %s\nCODE_SIGN_STYLE = Automatic\n' % team_id)
     flutter_env = flutter_environment()
     flutter(journal, 'flutter-precache', ['precache', '--ios'], work, flutter_env)
     flutter(journal, 'flutter-pub-get', ['pub', 'get', '--offline'], work, flutter_env)
     flutter(journal, 'flutter-config-ios', ['build', 'ios', '--release', '--no-pub',
                                             '--config-only'], work, flutter_env)
-    journal.say('  Archive signée par Xcode…')
-    archive, folder = archive_ios(journal, work, team_id)
+    if identity:
+        journal.say('  Archive signée pour l’App Store, par « %s » et le profil « %s »…'
+                    % (identity, PROFILE_NAME))
+        try:
+            archive, folder = archive_and_send(journal, work, 'ios', team_id, manual=True)
+        except Failure:
+            log = journal.folder / 'archive-ios.log'
+            text = log.read_text(encoding='utf-8', errors='replace') if log.exists() else ''
+            if PROFILE_NAME in text or NO_PROFILE.search(text):
+                raise Failure('Le profil « %s » manque ou ne va pas avec le certificat « %s ».'
+                              ' Crée-le sur https://developer.apple.com/account/resources/'
+                              'profiles/add : App Store Connect, App ID fr.aisml.color, ce'
+                              ' certificat, nom « %s ». Journal : %s'
+                              % (PROFILE_NAME, identity, PROFILE_NAME, log))
+            raise
+    else:
+        journal.say('  Archive signée par Xcode…')
+        archive, folder = archive_ios(journal, work, team_id)
     journal.say('  Envoi à App Store Connect…')
-    send(journal, archive, folder, team_id, 'ios')
+    send(journal, archive, folder, team_id, 'ios', manual=bool(identity))
     remember_sent('ios', version)
     journal.say('  Color pour iPhone et iPad : envoyée.')
 
