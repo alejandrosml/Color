@@ -52,6 +52,7 @@ Le lanceur « Envoyer Color vers l'App Store » ne sert qu'à la fin : il envoie
    - *Le 28 octobre, 1.0.0 (38) est arrivée pour l'iPhone et l'iPad, « Prête à soumettre » ; la version Mac a été refusée (ITMS-90284 : un paquet de ressources signé avec le certificat de développement). Le lanceur est corrigé, d'où 1.0.0 (39).*
 9. Une demi-heure plus tard environ, les versions apparaissent dans App Store Connect → Color → **TestFlight**. Installe l'app **TestFlight** depuis le Mac App Store pour essayer la version Mac, telle qu'Apple la distribuera.
 10. Remplis la fiche avec [FICHE-APP-STORE.md](FICHE-APP-STORE.md) : textes, catégorie, âge, confidentialité (« aucune donnée collectée »), statut de **non-professionnel**, captures. Choisis la version envoyée, puis « Ajouter pour vérification ». Apple vérifie en général en un ou deux jours, et Color paraît dès que tu le décides.
+    *Le 28 octobre, dans le navigateur de Claude : les deux versions 1.0.0 portent le build 39 et toute la fiche (textes, adresses, contact et notes pour la vérification, publication manuelle) ; Color est gratuite dans les 175 pays ; l'adresse de la politique de confidentialité est inscrite ; les 12 captures sont sur les pages produit. Il te reste trois déclarations (droits sur le contenu, classification par âge, confidentialité de l'app), la relecture, puis « Ajouter pour vérification » : voir « Où en est la fiche » dans [FICHE-APP-STORE.md](FICHE-APP-STORE.md).*
 
 ## 4. Google Play
 
@@ -64,6 +65,7 @@ Le lanceur « Envoyer Color vers l'App Store » ne sert qu'à la fin : il envoie
 
 - Payer, adhérer, accepter les conditions d'Apple et de Google : ce sont tes comptes. Dans ton compte Apple, ouvert dans le navigateur de Claude, je remplis ce que tu me demandes de remplir.
 - Créer les certificats de distribution : leur clé naît dans le trousseau de ton Mac, par Xcode.
+- Faire les déclarations qu'Apple te demande en ton nom : droits sur le contenu, classification par âge, confidentialité de l'app.
 - Soumettre Color à la vérification d'Apple, et la publier : ta décision.
 - Accepter les licences d'Android : le lanceur te les montre.
 - Créer le dépôt GitHub : ton compte, ta décision ; ensuite, j'y publie le code.

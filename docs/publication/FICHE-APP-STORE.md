@@ -2,6 +2,25 @@
 
 Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; Color n'existe qu'en français.
 
+## Où en est la fiche (28 octobre 2026)
+
+Rempli dans App Store Connect, dans le navigateur de Claude, avec ce qui suit :
+
+- « Informations sur l'app » : nom, sous-titre, catégories, statut de non-professionnel.
+- Les versions 1.0.0 pour iOS et pour macOS : le build 39, les textes, les adresses, le copyright, le contact et les notes pour la vérification, la publication manuelle.
+- « Tarifs et disponibilité » : gratuite, dans les 175 pays.
+- « Confidentialité de l'app » : l'adresse de la politique de confidentialité.
+- Les 12 captures, sur les pages produit de l'iPhone, de l'iPad 13 pouces et du Mac.
+
+À faire par toi, parce que ce sont des déclarations faites en ton nom à Apple :
+
+1. « Informations sur l'app » → « Droits relatifs au contenu » → **Modifier** : **Oui**, l'app contient du contenu de tiers, et coche la case qui dit que tu as les droits nécessaires → Enregistrer.
+2. « Informations sur l'app » → « Configurer les classifications par âge » : **Non** ou **Aucun** à chaque question (pas de contrôle parental ni de vérification de l'âge, pas d'accès libre au Web, pas de contenu partagé entre utilisateurs, pas de réseau social, pas de messagerie, pas de publicité, aucun thème adulte, rien de médical, aucune violence, aucun jeu de hasard). Ne coche pas « Conçu pour les enfants ». Color obtient **4+**.
+3. « Confidentialité de l'app » → **Démarrer** → « **Non**, nous ne collectons pas de données de cette app » → Enregistrer, puis **Publier**, en haut à droite.
+4. Relire les deux versions, puis **Ajouter pour vérification** sur la version iOS et sur la version macOS. App Store Connect ouvre alors la soumission ; « **Soumettre pour vérification** » l'envoie à Apple.
+
+Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides que Color prend en charge. À ne remplir que pour ce qui a été essayé sur un appareil, VoiceOver par exemple.
+
 ## Informations sur l'app
 
 | Champ | À mettre |
@@ -79,6 +98,8 @@ Faites le 28 octobre 2026 par Color elle-même, avec son cœur et ses polices, a
 | Mac | 2880 × 1800 (16:10) | `mac-1-dessin` … `mac-4-tout-petits` |
 
 Dans l'ordre : un dessin avec des tampons et un titre ; son film, « Revoir ton dessin », en train de se refaire ; une page à colorier, le dinosaure, coloriée au pot ; l'interface très simplifiée des tout-petits, avec un arc-en-ciel au pinceau. Sur l'iPhone, le studio du téléphone à l'horizontale ; sur l'iPad, le studio au doigt ; sur le Mac, la fenêtre. Les lettres du système y sont celles de Roboto, pas celles d'Apple.
+
+Dans App Store Connect, les images vont d'abord dans la « Bibliothèque de ressources », qui les range par appareil. Sur la page de la version iOS, la section des captures est cachée derrière le menu « En‑tête et résultats de recherche » : choisir « **Aperçus d'app et captures d'écran** », puis, pour chaque appareil, « **Parcourir les ressources** » et cocher les quatre images dans l'ordre. Sur la page de la version macOS, la section est visible tout de suite. L'en‑tête et la ressource des résultats de recherche sont facultatifs : sans eux, l'App Store montre les captures.
 
 Pour les refaire, dans `prototypes/flutter-rust` :
 
