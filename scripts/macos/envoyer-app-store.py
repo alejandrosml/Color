@@ -22,21 +22,27 @@ Before the first sending, once:
     Distribution », signs the package sent. Should Xcode ask for a device,
     this Mac is the one it registers.
 A system already sent in this version is not sent again: App Store Connect
-refuses the same build number twice.
+refuses the same build number twice, even after refusing the build itself.
 
 In order, for each system:
   1. finds the team of the author among the certificates of this Mac, or
      asks for it once, and keeps it beside the build folders;
   2. builds the core and Color in Release, archives it with Xcode, which
-     signs it for the team and makes the profiles it needs;
+     signs it for the team and makes the profiles it needs; on the Mac, the
+     resource bundles of Swift packages lose the signature Xcode gave them,
+     which App Store Connect refused (ITMS-90284, 1.0.0 (38));
   3. takes the quarantine marks off every file, as Apple asks;
-  4. hands the archive to Xcode, which signs it for the App Store and
-     sends it to App Store Connect, where TestFlight then offers it.
+  4. has Xcode sign the archive for the App Store into a package kept on
+     this Mac, and reads every signature in it: all must be Color's, by a
+     certificate of distribution, or nothing is sent;
+  5. hands the archive to Xcode, which signs it again and sends it to App
+     Store Connect, where TestFlight then offers it.
 Everything is written in construction-mac/journal. Nothing is published:
 submitting the version for review stays a click of the author's, in App
 Store Connect.
 """
 from pathlib import Path
+import hashlib
 import json
 import os
 import plistlib
@@ -74,6 +80,14 @@ NO_DEVICE_ADVICE = (
     ' « Se fier » : le lanceur l’inscrira.')
 NO_PROFILE = re.compile(r'No profiles? for|doesn.t match|not found|No signing certificate',
                         re.IGNORECASE)
+
+# The first bytes of a program or library of Apple: thin, in either order of
+# bytes, or universal.
+MACH_O_MAGICS = {bytes.fromhex(magic) for magic in (
+    'feedface', 'feedfacf', 'cefaedfe', 'cffaedfe', 'cafebabe', 'cafebabf')}
+# The certificates by which App Store Connect takes a build.
+DISTRIBUTION = re.compile(r'(Apple Distribution|3rd Party Mac Developer Application'
+                          r'|iPhone Distribution): ')
 
 
 def teams_of_this_mac():
@@ -118,11 +132,14 @@ def team(journal):
     return chosen
 
 
-def export_options(journal, team_id, folder, manual=False):
-    options = folder / 'ExportOptions.plist'
+def export_options(journal, team_id, folder, manual=False, destination='upload'):
+    """The options of xcodebuild -exportArchive: sent to App Store Connect, or,
+    with destination « export », kept on this Mac to be checked."""
+    options = folder / ('ExportOptions.plist' if destination == 'upload'
+                        else 'ExportOptions-verification.plist')
     settings = {
         'method': 'app-store-connect',
-        'destination': 'upload',
+        'destination': destination,
         'teamID': team_id,
         'signingStyle': 'automatic',
         'uploadSymbols': True,
@@ -172,9 +189,129 @@ def distribution_identity(team_id):
     return found[0] if found else None
 
 
+def resource_bundles_unsigned(journal, app):
+    """The resource bundles of Swift packages, in Contents/Resources: Xcode
+    signs them with the identity of the archive, and its export for the App
+    Store leaves them so, outside the places where it signs again. App Store
+    Connect refused Color 1.0.0 (38) for the Mac because of one (ITMS-90284,
+    28 October 2026: file_selector_macos_file_selector_macos.bundle « must be
+    signed with the certificate that is contained in the provisioning
+    profile »). They hold no code: without a signature of their own, they are
+    sealed by Color's, like its other resources. A bundle there that holds
+    code stops everything: it would need a signature of its own."""
+    for bundle in sorted((app / 'Contents' / 'Resources').glob('*.bundle')):
+        contents = bundle / 'Contents'
+        signature = contents / '_CodeSignature'
+        if not signature.exists():
+            continue
+        try:
+            info = plistlib.loads((contents / 'Info.plist').read_bytes())
+        except (OSError, ValueError):
+            info = {}
+        if info.get('CFBundleExecutable') or (contents / 'MacOS').exists():
+            raise Failure('« %s », dans les ressources de Color, contient du code : il lui faudrait'
+                          ' sa propre signature pour l’App Store. Rien n’est envoyé.' % bundle.name)
+        run(journal, 'signature', ['/usr/bin/codesign', '--remove-signature', bundle], check=False)
+        if signature.exists():
+            shutil.rmtree(signature)
+        journal.say('  « %s » : des ressources sans code, sa signature est retirée.' % bundle.name)
+
+
+def mach_o(path):
+    try:
+        with path.open('rb') as file:
+            return file.read(4) in MACH_O_MAGICS
+    except OSError:
+        return False
+
+
+def signed_items(app):
+    """What App Store Connect checks in `app`: the application, every program
+    and library, and every bundle that carries a signature of its own."""
+    items = [app]
+    for path in sorted(app.rglob('*')):
+        if path.is_symlink():
+            continue
+        if path.name == '_CodeSignature' and path.is_dir():
+            holder = path.parent.parent if path.parent.name == 'Contents' else path.parent
+            if holder not in items:
+                items.append(holder)
+        elif path.is_file() and mach_o(path) and path not in items:
+            items.append(path)
+    return items
+
+
+def leaf_certificate(item, scratch):
+    """The digest of the certificate that signed `item`, and what codesign says
+    of it; None for what carries no signature."""
+    for old in scratch.glob('certificat-*'):
+        old.unlink()
+    code, text = output(['/usr/bin/codesign', '-d', '-vv',
+                         '--extract-certificates=' + str(scratch / 'certificat-'), item])
+    leaf = scratch / 'certificat-0'
+    if code != 0 or not leaf.exists():
+        return None, text
+    return hashlib.sha256(leaf.read_bytes()).hexdigest(), text
+
+
+def check_signatures(journal, exported, platform):
+    """Opens the package of an export kept on this Mac and reads every
+    signature in it: each must be Color's, by a certificate of distribution.
+    Otherwise nothing is sent, since App Store Connect takes a build number
+    only once, even for a build it then refuses."""
+    packages = sorted(exported.glob('*.pkg' if platform == 'macos' else '*.ipa'))
+    if not packages:
+        raise Failure('L’export de vérification n’a rien produit : ' + str(exported))
+    opened = exported / 'ouvert'
+    if platform == 'macos':
+        run(journal, 'verification-' + platform,
+            ['/usr/sbin/pkgutil', '--expand-full', packages[0], opened])
+    else:
+        run(journal, 'verification-' + platform,
+            ['/usr/bin/ditto', '-x', '-k', packages[0], opened])
+    apps = sorted(opened.rglob('*.app'), key=lambda path: len(path.parts))
+    if not apps:
+        raise Failure('Pas d’application dans ' + str(packages[0]))
+    app = apps[0]
+    run(journal, 'verification-' + platform,
+        ['/usr/bin/codesign', '--verify', '--deep', '--strict', '--verbose=2', app])
+    scratch = exported / 'certificats'
+    scratch.mkdir(exist_ok=True)
+    reference, text = leaf_certificate(app, scratch)
+    authority = re.search(r'^Authority=(.*)$', text, re.MULTILINE)
+    if reference is None or not authority or not DISTRIBUTION.match(authority.group(1)):
+        raise Failure('Color n’est pas signée par un certificat de distribution : %s. Rien'
+                      ' n’est envoyé.' % (authority.group(1) if authority else text.strip()[-300:]))
+    items = signed_items(app)
+    wrong = []
+    for item in items[1:]:
+        digest, said = leaf_certificate(item, scratch)
+        if digest != reference:
+            other = re.search(r'^Authority=(.*)$', said, re.MULTILINE)
+            wrong.append('%s (%s)' % (item.relative_to(app),
+                                      other.group(1) if other else 'sans signature'))
+    journal.keep('Signatures relues : %s' % ', '.join(str(item.relative_to(app.parent))
+                                                    for item in items))
+    if wrong:
+        raise Failure('Signé autrement que Color, ce qu’App Store Connect refuserait : '
+                      + ' ; '.join(wrong) + '. Rien n’est envoyé.')
+    journal.say('  Signatures relues : %d éléments, tous par « %s ».'
+                % (len(items), authority.group(1)))
+
+
 def send(journal, archive, folder, team_id, platform, manual=False):
     # Apple refuses files that still carry the quarantine of a download.
     run(journal, 'quarantaine', ['/usr/bin/xattr', '-cr', archive], check=False)
+    # First an export kept here, whose signatures are all read before anything
+    # leaves this Mac.
+    journal.say('  Export de vérification, signé pour l’App Store…')
+    exported = folder / 'verification'
+    options = export_options(journal, team_id, folder, manual, destination='export')
+    run(journal, 'verification-' + platform,
+        ['/usr/bin/xcodebuild', '-exportArchive', '-archivePath', archive, '-exportOptionsPlist',
+         options, '-exportPath', exported, '-allowProvisioningUpdates'])
+    check_signatures(journal, exported, platform)
+    journal.say('  Envoi à App Store Connect…')
     options = export_options(journal, team_id, folder, manual)
     run(journal, 'envoi-' + platform, ['/usr/bin/xcodebuild', '-exportArchive', '-archivePath',
                                        archive, '-exportOptionsPlist', options, '-exportPath',
@@ -218,6 +355,7 @@ def mac(journal, sources, version, team_id):
     # identity, and the application is sealed again with its entitlements.
     embedded = app / 'Contents' / 'Frameworks' / 'libedupaint_core.dylib'
     shutil.copy2(dylib, embedded)
+    resource_bundles_unsigned(journal, app)
     code, description = output(['/usr/bin/codesign', '-dvv', app])
     identity = re.search(r'Authority=(Apple Development[^\n]*)', description)
     if not identity:
@@ -225,7 +363,6 @@ def mac(journal, sources, version, team_id):
     run(journal, 'signature', ['/usr/bin/codesign', '--force', '--sign', identity.group(1), embedded])
     run(journal, 'signature', ['/usr/bin/codesign', '--force', '--sign', identity.group(1),
                                '--preserve-metadata=entitlements,requirements,flags,runtime', app])
-    journal.say('  Envoi à App Store Connect…')
     send(journal, archive, folder, team_id, 'macos')
     remember_sent('macos', version)
     journal.say('  Color pour le Mac : envoyée.')
@@ -343,7 +480,6 @@ def ios(journal, sources, version, team_id):
     else:
         journal.say('  Archive signée par Xcode…')
         archive, folder = archive_ios(journal, work, team_id)
-    journal.say('  Envoi à App Store Connect…')
     send(journal, archive, folder, team_id, 'ios', manual=bool(identity))
     remember_sent('ios', version)
     journal.say('  Color pour iPhone et iPad : envoyée.')
