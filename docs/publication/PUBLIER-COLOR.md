@@ -1,6 +1,6 @@
 # Publier Color : le chemin, étape par étape
 
-*Pour la version 1.0.0 (38) ; mis à jour le 28 octobre 2026, à midi.* Ce que fait chaque lanceur est écrit en tête de son script, dans `construction-mac/`. Après chaque mise à jour de Xcode, ouvre Xcode une fois avant de lancer un lanceur : il installe parfois des composants dont le simulateur a besoin.
+*Pour la version 1.0.0 (38) ; mis à jour le 28 octobre 2026, à 13 heures.* Ce que fait chaque lanceur est écrit en tête de son script, dans `construction-mac/`. Après chaque mise à jour de Xcode, ouvre Xcode une fois avant de lancer un lanceur : il installe parfois des composants dont le simulateur a besoin.
 
 ## 1. Essayer Color sur iPhone, iPad et Android, sur le Mac
 
@@ -30,18 +30,24 @@ Le lanceur « Envoyer Color vers l'App Store » ne sert qu'à la fin : il envoie
    4. **Subscribe** : 99 USD par an, affichés en euros, en abonnement annuel renouvelé jusqu'à ce que tu l'arrêtes, payé avec le moyen de paiement de ton compte Apple — le tien.
    Sans courriel de confirmation 24 heures après le paiement, écris à Apple ([developer.apple.com/contact](https://developer.apple.com/contact/)) avec ton « Enrollment ID ». On peut aussi adhérer sur le site : [developer.apple.com/programs/enroll](https://developer.apple.com/programs/enroll/).
 3. **Donner ton compte à Xcode** : Xcode est en anglais. Menu **Xcode → Settings… → Accounts** → « + » en bas à gauche → **Apple Account** → ton adresse et ton mot de passe. Ton nom apparaît alors avec l'équipe « (Personal Team) » puis, une fois l'adhésion acceptée, ton équipe de développeur.
+   *Étapes 1 à 3 faites par toi le 28 octobre ; ton Team ID est gardé à côté des dossiers de construction.*
 4. **Créer la place de Color chez Apple**, en deux pages :
    1. [Les identifiants de ton compte](https://developer.apple.com/account/resources/identifiers/list) : « + » → **App IDs** → **App** → Description `Color`, Bundle ID **Explicit** : `fr.aisml.color` → Continue → Register.
-   2. [App Store Connect](https://appstoreconnect.apple.com) → **Apps** → « + » → **Nouvelle app** : coche **iOS** et **macOS** ; nom **Color** (s'il est pris : **Color Atelier de Dessin**) ; langue principale **Français** ; identifiant de lot **fr.aisml.color** ; SKU `color` ; accès complet → **Créer**.
+   2. [App Store Connect](https://appstoreconnect.apple.com) → **Apps** → « + » → **Nouvelle app** : coche **iOS** et **macOS** ; nom **Color** (s'il est pris : **Color Atelier de Dessin**) ; langue principale **Français** ; identifiant de lot **fr.aisml.color** ; SKU `color` ; accès complet → **Créer**. La version proposée est « 1.0 » : écris **1.0.0**, comme Color, pour l'iPhone et l'iPad comme pour le Mac, puis « Enregistrer ».
+   *Fait le 28 octobre, à ta demande, dans le navigateur de Claude où tu t'étais connecté : les conditions d'App Store Connect acceptées, l'identifiant inscrit, l'app « Color » créée (le nom était libre), en version 1.0.0 sur les deux systèmes.*
 5. **Dire à Apple que tu n'es pas un professionnel** (règlement européen sur les services numériques, obligatoire même hors d'Europe) : dans App Store Connect, **Business** → onglet **Agreements** → partie **Compliance** → à côté de **Digital Services Act**, **Complete Compliance Requirements** → **This is not a trader account** → **Done**. Les libellés peuvent être en français. Le contrat « Paid Apps » et les coordonnées bancaires ne servent qu'à vendre : pour une app gratuite, l'accord de licence du programme suffit.
+   *Fait le 28 octobre : la déclaration est active, et le contrat des apps gratuites aussi.*
+6. **Les certificats de distribution, dans Xcode** : ils créent la clé de signature dans le trousseau du Mac, c'est donc toi qui les fais. **Xcode → Settings… → Accounts** → ton compte, ton équipe → **Manage Certificates…** → « + » → **Apple Distribution**, puis encore « + » → **Mac Installer Distribution** → **Done**.
+7. **Le profil « Color App Store »**, pour signer la version iPhone et iPad sans brancher d'appareil : [les profils de ton compte](https://developer.apple.com/account/resources/profiles/add) → **App Store Connect** → App ID `fr.aisml.color` → le certificat « Apple Distribution » → nom **`Color App Store`** → Generate. Je le fais dans le navigateur de Claude dès que le certificat existe.
 
 **Ensuite, à chaque version :**
 
-6. Double-clique **`Envoyer Color vers l'App Store.command`**. La première fois, il peut te demander ton **Team ID** : 10 lettres et chiffres, sur [ton compte de développeur](https://developer.apple.com/account), rubrique « Membership details ». Il construit Color pour le Mac puis pour l'iPhone et l'iPad, les fait signer par Xcode et les envoie. **Rien n'est publié à ce moment.**
-   - Pour signer la version iPhone et iPad, Apple veut qu'**un iPhone ou un iPad soit inscrit** à ton compte, une fois. Branche le tien au Mac avec un câble, déverrouille-le et touche « Se fier » s'il le demande : le lanceur l'inscrit. Sans appareil branché, il s'arrête après avoir envoyé la version Mac, et dit quoi faire.
+8. Double-clique **`Envoyer Color vers l'App Store.command`**. Il construit Color pour le Mac puis pour l'iPhone et l'iPad, les fait signer par Xcode et les envoie. **Rien n'est publié à ce moment.**
+   - Avec le certificat « Apple Distribution » et le profil « Color App Store », la version iPhone et iPad est signée pour l'App Store **sans appareil**. Sans eux, Apple veut qu'**un iPhone ou un iPad soit inscrit** à ton compte : branché au Mac, déverrouillé, « Se fier » touché, le lanceur l'inscrit. Sans l'un ni l'autre, il s'arrête après avoir envoyé la version Mac, et dit quoi faire.
+   - Pour le Mac, Xcode fait les profils qui manquent ; s'il demande un appareil, le lanceur inscrit ce Mac.
    - Relancé, il n'envoie pas une seconde fois ce qui est déjà parti dans la même version.
-7. Une demi-heure plus tard environ, les versions apparaissent dans App Store Connect → Color → **TestFlight**. Installe l'app **TestFlight** depuis le Mac App Store pour essayer la version Mac, telle qu'Apple la distribuera.
-8. Remplis la fiche avec [FICHE-APP-STORE.md](FICHE-APP-STORE.md) : textes, catégorie, âge, confidentialité (« aucune donnée collectée »), statut de **non-professionnel**, captures. Choisis la version envoyée, puis « Ajouter pour vérification ». Apple vérifie en général en un ou deux jours, et Color paraît dès que tu le décides.
+9. Une demi-heure plus tard environ, les versions apparaissent dans App Store Connect → Color → **TestFlight**. Installe l'app **TestFlight** depuis le Mac App Store pour essayer la version Mac, telle qu'Apple la distribuera.
+10. Remplis la fiche avec [FICHE-APP-STORE.md](FICHE-APP-STORE.md) : textes, catégorie, âge, confidentialité (« aucune donnée collectée »), statut de **non-professionnel**, captures. Choisis la version envoyée, puis « Ajouter pour vérification ». Apple vérifie en général en un ou deux jours, et Color paraît dès que tu le décides.
 
 ## 4. Google Play
 
@@ -52,6 +58,8 @@ Le lanceur « Envoyer Color vers l'App Store » ne sert qu'à la fin : il envoie
 
 ## Ce que je ne peux pas faire à ta place
 
-- Payer, adhérer, accepter les conditions d'Apple et de Google, créer les fiches dans App Store Connect et la Play Console : ce sont tes comptes.
+- Payer, adhérer, accepter les conditions d'Apple et de Google : ce sont tes comptes. Dans ton compte Apple, ouvert dans le navigateur de Claude, je remplis ce que tu me demandes de remplir.
+- Créer les certificats de distribution : leur clé naît dans le trousseau de ton Mac, par Xcode.
+- Soumettre Color à la vérification d'Apple, et la publier : ta décision.
 - Accepter les licences d'Android : le lanceur te les montre.
 - Créer le dépôt GitHub : ton compte, ta décision ; ensuite, j'y publie le code.

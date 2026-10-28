@@ -16,7 +16,11 @@ Before the first sending, once:
     developer.apple.com, and Color is signed for the App Store without any
     device; or one iPhone or iPad registered to the team, since Xcode signs
     an archive automatically with a profile of development, which needs a
-    device: plugged into the Mac and trusted, it is registered here.
+    device: plugged into the Mac and trusted, it is registered here;
+  - for the Mac, Xcode makes the profiles and certificates it lacks; the
+    « Mac Installer Distribution » certificate, made beside « Apple
+    Distribution », signs the package sent. Should Xcode ask for a device,
+    this Mac is the one it registers.
 A system already sent in this version is not sent again: App Store Connect
 refuses the same build number twice.
 
@@ -132,19 +136,27 @@ def export_options(journal, team_id, folder, manual=False):
     return options
 
 
-def archive_and_send(journal, work, platform, team_id, extra_settings=(), manual=False):
+def archive_and_send(journal, work, platform, team_id, extra_settings=(), manual=False,
+                     register_this_mac=False):
     """xcodebuild archive, then exportArchive to App Store Connect. A manual
     signing is set in Equipe.xcconfig, for Color's target only: on the
-    command line it would reach the targets that take no profile."""
+    command line it would reach the targets that take no profile. With
+    `register_this_mac`, the archive is made for this Mac, which Xcode may
+    then register to the team, as its window does."""
     folder = MOBILES / ('app-store-' + platform)
     shutil.rmtree(folder, ignore_errors=True)
     folder.mkdir(parents=True)
     archive = folder / 'Color.xcarchive'
     project = work / platform / 'Runner.xcworkspace'
+    destination = 'generic/platform=' + ('macOS' if platform == 'macos' else 'iOS')
+    if register_this_mac:
+        destination = 'platform=macOS,arch=arm64'
     command = ['/usr/bin/xcodebuild', '-workspace', project, '-scheme', 'Runner',
                '-configuration', 'Release', '-archivePath', archive,
-               '-destination', 'generic/platform=' + ('macOS' if platform == 'macos' else 'iOS'),
+               '-destination', destination,
                'archive', '-allowProvisioningUpdates', 'DEVELOPMENT_TEAM=' + team_id]
+    if register_this_mac:
+        command.append('-allowProvisioningDeviceRegistration')
     if not manual:
         command.append('CODE_SIGN_STYLE=Automatic')
     run(journal, 'archive-' + platform, command + list(extra_settings), cwd=work)
@@ -185,8 +197,20 @@ def mac(journal, sources, version, team_id):
     flutter(journal, 'flutter-build-macos', ['build', 'macos', '--release', '--no-pub'], work,
             flutter_env)
     journal.say('  Archive signée par Xcode…')
-    archive, folder = archive_and_send(journal, work, 'macos', team_id,
-                                       ['CODE_SIGN_IDENTITY=Apple Development'])
+    try:
+        archive, folder = archive_and_send(journal, work, 'macos', team_id,
+                                           ['CODE_SIGN_IDENTITY=Apple Development'])
+    except Failure:
+        log = journal.folder / 'archive-macos.log'
+        text = log.read_text(encoding='utf-8', errors='replace') if log.exists() else ''
+        if not NO_DEVICE.search(text):
+            raise
+        # A profile of development needs a registered device: for the Mac,
+        # this Mac is one, which Xcode registers itself.
+        journal.say('  Apple demande un appareil inscrit à ton compte : j’inscris ce Mac…')
+        archive, folder = archive_and_send(journal, work, 'macos', team_id,
+                                           ['CODE_SIGN_IDENTITY=Apple Development'],
+                                           register_this_mac=True)
     app = archive / 'Products' / 'Applications' / 'Color.app'
     if not app.is_dir():
         raise Failure('L’archive ne contient pas Color.app : ' + str(archive))
