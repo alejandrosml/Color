@@ -116,13 +116,18 @@ class FitToScreen extends StatelessWidget {
             );
             final laidOut = Size(room.width / scale, room.height / scale);
             // Inside, the safe area is already kept: no padding is left
-            // for the widgets below to keep a second time.
+            // for the widgets below to keep a second time. Scaled down, a
+            // logical pixel covers fewer pixels of the screen: the images
+            // made inside (the sheet, the film) are made for those.
             final inner = MediaQuery(
               data: media.copyWith(
                 size: laidOut,
                 padding: EdgeInsets.zero,
                 viewPadding: EdgeInsets.zero,
                 viewInsets: media.viewInsets / scale,
+                devicePixelRatio: scale < 1
+                    ? media.devicePixelRatio * scale
+                    : media.devicePixelRatio,
               ),
               child: child,
             );
@@ -168,6 +173,8 @@ class FitDialog extends StatelessWidget {
             padding: media.padding / scale,
             viewPadding: media.viewPadding / scale,
             viewInsets: media.viewInsets / scale,
+            // Fewer pixels of the screen per logical pixel, as above.
+            devicePixelRatio: media.devicePixelRatio * scale,
           ),
           child: child,
         ),

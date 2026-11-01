@@ -1,7 +1,16 @@
 DejaVu Sans — licence
 
-Fichier : DejaVuSans.ttf (Version 2.27), repris à l'identique de
-Color/edupaint/data/fonts/default_font.ttf (Tux Paint 0.9.35).
+Fichier : DejaVuSans.ttf, un sous-ensemble de DejaVu Sans (Version 2.27)
+fait par scripts/alleger-la-police.py depuis 1.0.1 : latin, grec, cyrillique,
+ponctuation, chiffres, flèches et symboles ; chaque caractère gardé l'est tel quel,
+avec ses chasses, ses crénages et ses ligatures. Les noms de la police ne
+contiennent ni « Bitstream », ni « Vera », ni « Arev », comme le demandent
+les licences ci-dessous pour une police modifiée.
+SHA-256 : 7f62ae64162ff401831a92197ee31073be5f849016c91df8ca60258721e8fa42
+
+La police entière, source/DejaVuSans.ttf, que l'application n'emporte pas, est
+reprise à l'identique de Color/edupaint/data/fonts/default_font.ttf (Tux Paint
+0.9.35).
 SHA-256 : 938c19b7604cd9d4e408d8edcd223730f3b91f00bb081aac29dfc0dca87954e2
 Référence : http://dejavu.sourceforge.net/wiki/index.php/License
 

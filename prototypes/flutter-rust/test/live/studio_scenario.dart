@@ -26,11 +26,15 @@
 // it is there, has it closed, and says so in `shots/<name>.closed`. Nothing
 // is ever confirmed in that dialog: nothing is printed.
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:edupaint_flutter_study/app_folders.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
 import 'package:edupaint_flutter_study/gallery_storage.dart';
+import 'package:edupaint_flutter_study/licences.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/options_dialog.dart';
 import 'package:edupaint_flutter_study/recovery_location.dart';
@@ -47,10 +51,25 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:path_provider/path_provider.dart';
 
 void main() {
+  // The start of Color, timed against its budget (Q-03 of the retrospective
+  // of October 2026): the moment of main() on the clock of the timeline,
+  // which the engine times its frames with, how long the process had run
+  // then, and the first frame that the engine rasterizes.
+  final mainAt = developer.Timeline.now;
+  final runningBeforeMain = _processAgeMilliseconds();
   final binding = LiveTestWidgetsFlutterBinding.ensureInitialized();
+  ui.FrameTiming? firstFrame;
+  void firstFrameDrawn(List<ui.FrameTiming> timings) {
+    if (firstFrame != null || timings.isEmpty) return;
+    firstFrame = timings.reduce(
+      (a, b) => a.frameNumber <= b.frameNumber ? a : b,
+    );
+    binding.removeTimingsCallback(firstFrameDrawn);
+  }
+
+  binding.addTimingsCallback(firstFrameDrawn);
   final folder = Platform.environment['COLOR_SCENARIO_DIR'];
 
   testWidgets('the studio, played on the real engine', (tester) async {
@@ -85,11 +104,25 @@ void main() {
     // for from the start, because the engine only measures frames built
     // while somebody listens.
     var lastFrameDrawn = -1;
+    // The time each frame took to build and to rasterize, in microseconds,
+    // and when its rasterization ended, by its number; those of the frames
+    // from the press of each trait to the end of its settling are measured
+    // against the budgets (Q-03), and the first frame of Color itself.
+    final frameTimes = <int, (int, int, int)>{};
+    final traitFrames = <(int, int)>[];
+    // The last frame built before Color is: the frames of the test
+    // framework come before it.
+    int? beforeColor;
     void framesDrawn(List<ui.FrameTiming> timings) {
       for (final timing in timings) {
         if (timing.frameNumber > lastFrameDrawn) {
           lastFrameDrawn = timing.frameNumber;
         }
+        frameTimes[timing.frameNumber] = (
+          timing.buildDuration.inMicroseconds,
+          timing.rasterDuration.inMicroseconds,
+          timing.timestampInMicroseconds(ui.FramePhase.rasterFinish),
+        );
       }
     }
 
@@ -278,6 +311,7 @@ void main() {
     }
 
     Future<void> drag(List<Offset> through) async {
+      final from = tester.platformDispatcher.frameData.frameNumber;
       final gesture = await tester.startGesture(
         at(through.first.dx, through.first.dy),
       );
@@ -287,6 +321,10 @@ void main() {
       }
       await gesture.up();
       await settle();
+      traitFrames.add((
+        from + 1,
+        tester.platformDispatcher.frameData.frameNumber,
+      ));
     }
 
     int shownCount() {
@@ -378,6 +416,7 @@ void main() {
         addTearDown(options.dispose);
         expect(options.storage, isNotNull);
         expect(options.value, StudioOptions.defaults);
+        beforeColor = tester.platformDispatcher.frameData.frameNumber;
         await tester.pumpWidget(
           EduPaintApp(files: files, options: options, sounds: SystemSounds()),
         );
@@ -388,7 +427,7 @@ void main() {
               .evaluate()
               .isNotEmpty,
         );
-        support = (await getApplicationSupportDirectory()).path;
+        support = (await applicationSupportFolder()).path;
         albumFolder = galleryDirectoryPath(
           support,
           windows: Platform.isWindows,
@@ -934,53 +973,50 @@ void main() {
         }
       }
 
-      await step(
-        'Options opens at once, then behind the calculation the adult chose, not behind a wrong result',
-        () async {
-          // What the core answers when a sound is asked: 0 when it plays
-          // it, 1 when this computer gives it nothing to play with.
-          final coreSound = RustDocument.playSound(StudioSound.click.id);
-          // By default the options open at once; the adult switches the
-          // calculation on, and it keeps the door from then on.
-          await tap('openOptions');
-          expect(byKey('adultGate'), findsNothing);
-          await optionsListen();
-          await tester.ensureVisible(byKey('optionGuarded'));
-          await settle();
-          await tap('optionGuarded');
-          await tap('closeOptions');
-          expect(byKey('optionsDialog'), findsNothing);
-          await tap('openOptions');
-          expect(byKey('adultGate'), findsOneWidget);
-          await shot('22-options-door');
-          final (first, second) = doorNumbers();
-          await answerDoor(first * second == 42 ? 43 : 42);
-          expect(byKey('optionsDialog'), findsNothing);
-          expect(byKey('adultGateWrong'), findsOneWidget);
-          final (third, fourth) = doorNumbers();
-          expect(third * fourth, isNot(first * second));
-          await answerDoor(third * fourth);
-          expect(byKey('adultGate'), findsNothing);
-          await optionsListen();
-          await shot('23-options');
-          await tap('optionHoldFree');
-          await tap('optionScreenKeyboard');
-          await tap('closeOptions');
-          expect(byKey('optionsDialog'), findsNothing);
-          await until(
-            'the options to be kept',
-            () =>
-                keptOptions()['holdFree'] == true &&
-                keptOptions()['screenKeyboard'] == true,
-          );
-          return {
-            'first_calculation': '$first × $second',
-            'second_calculation': '$third × $fourth',
-            'core_answer_to_a_sound': coreSound,
-            'kept': keptOptions(),
-          };
-        },
-      );
+      await step('Options opens at once, then behind the calculation the adult chose, not behind a wrong result', () async {
+        // What the core answers when a sound is asked: 0 when it plays
+        // it, 1 when this computer gives it nothing to play with.
+        final coreSound = RustDocument.playSound(StudioSound.click.id);
+        // By default the options open at once; the adult switches the
+        // calculation on, and it keeps the door from then on.
+        await tap('openOptions');
+        expect(byKey('adultGate'), findsNothing);
+        await optionsListen();
+        await tester.ensureVisible(byKey('optionGuarded'));
+        await settle();
+        await tap('optionGuarded');
+        await tap('closeOptions');
+        expect(byKey('optionsDialog'), findsNothing);
+        await tap('openOptions');
+        expect(byKey('adultGate'), findsOneWidget);
+        await shot('22-options-door');
+        final (first, second) = doorNumbers();
+        await answerDoor(first * second == 42 ? 43 : 42);
+        expect(byKey('optionsDialog'), findsNothing);
+        expect(byKey('adultGateWrong'), findsOneWidget);
+        final (third, fourth) = doorNumbers();
+        expect(third * fourth, isNot(first * second));
+        await answerDoor(third * fourth);
+        expect(byKey('adultGate'), findsNothing);
+        await optionsListen();
+        await shot('23-options');
+        await tap('optionHoldFree');
+        await tap('optionScreenKeyboard');
+        await tap('closeOptions');
+        expect(byKey('optionsDialog'), findsNothing);
+        await until(
+          'the options to be kept',
+          () =>
+              keptOptions()['holdFree'] == true &&
+              keptOptions()['screenKeyboard'] == true,
+        );
+        return {
+          'first_calculation': '$first × $second',
+          'second_calculation': '$third × $fourth',
+          'core_answer_to_a_sound': coreSound,
+          'kept': keptOptions(),
+        };
+      });
 
       await step(
         'a trait without holding the button, a text on the keys of the screen',
@@ -1096,18 +1132,33 @@ void main() {
         expect(notices.lengthInBytes, greaterThan(10000));
         final entries = await LicenseRegistry.licenses.toList();
         final names = <String>{for (final entry in entries) ...entry.packages};
+        // What the core credits in its notices is listed, with Color and its
+        // font. The core of the stores reads no SVG (R-01 of the
+        // retrospective): no library is compiled into it, and only the
+        // recordings of its sounds are credited; a core that reads SVG
+        // credits usvg and the libraries it needs.
+        final fromCore = <String>{
+          for (final entry in coreLicenceEntries(
+            RustDocument.thirdPartyNotices(),
+          ))
+            ...entry.packages,
+        };
+        expect(fromCore, contains('Sons enregistrés'));
         expect(
           names,
-          containsAll(<String>[
-            'usvg',
-            'roxmltree',
-            'tiny-skia-path',
+          containsAll(<String>{
+            ...fromCore,
+            'Color',
             'DejaVu Sans (police des textes)',
-          ]),
+          }),
         );
-        final usvg = find.text('usvg');
+        final readsSvg = fromCore.contains('usvg');
+        if (readsSvg) {
+          expect(names, containsAll(const ['roxmltree', 'tiny-skia-path']));
+        }
+        final opened = find.text(readsSvg ? 'usvg' : 'Sons enregistrés');
         await tester.scrollUntilVisible(
-          usvg,
+          opened,
           300,
           scrollable: find
               .descendant(
@@ -1117,9 +1168,14 @@ void main() {
               .first,
         );
         await settle();
-        await tester.tap(usvg);
+        await tester.tap(opened);
         await settle();
-        expect(find.textContaining('usvg 0.48.1 — licence MIT'), findsWidgets);
+        expect(
+          find.textContaining(
+            readsSvg ? 'usvg 0.48.1 — licence MIT' : 'CC0 1.0 universel',
+          ),
+          findsWidgets,
+        );
         await shot('28-licences');
         // Out of the detail of one library when the window shows it on a
         // page of its own, then out of the page of the licences.
@@ -1134,6 +1190,7 @@ void main() {
         expect(byKey('aboutVersion'), findsNothing);
         return {
           'version': version,
+          'core_reads_svg': readsSvg,
           'entries_added_by_color': names.length,
           'flutter_notices_in_the_bundle_bytes': notices.lengthInBytes,
         };
@@ -1197,15 +1254,125 @@ void main() {
         return {'elements': before + 1, 'kept': keptOptions()};
       });
 
+      await step('a long trait, its frames timed', () async {
+        // More frames for the budgets of the frames (Q-03): a wave across
+        // the sheet, a sample every 16 ms, on the drawing as it is.
+        await tap('tool-stroke');
+        final before = painter().strokes.length;
+        await drag([
+          for (var i = 0; i <= 120; i++)
+            Offset(
+              sheetWidth * (.1 + .8 * i / 120),
+              sheetHeight * (.5 + .18 * math.sin(i / 10)),
+            ),
+        ]);
+        expect(painter().strokes.length, before + 1);
+        return {'samples': 121};
+      });
+
       passed = true;
     } catch (error) {
       record['error'] = '$error';
       rethrow;
     } finally {
       record['passed'] = passed;
+      // The last frames reported by the engine, then their times.
+      try {
+        await shown();
+      } catch (_) {
+        // The figures are those reported so far.
+      }
+      final micros = [
+        for (final (first, last) in traitFrames)
+          for (var number = first; number <= last; number++)
+            ?frameTimes[number],
+      ];
+      record['frames'] = {
+        'scope':
+            'Frames built from the press of each trait that the scenario '
+            'draws to the end of its settling, as the engine timed them '
+            '(FrameTiming), in milliseconds.',
+        'count': micros.length,
+        if (micros.isNotEmpty) ...{
+          'build_ms': _centiles([for (final (build, _, _) in micros) build]),
+          'raster_ms': _centiles([for (final (_, raster, _) in micros) raster]),
+        },
+      };
+      // The first frame of Color: the first one built after it was given
+      // to the test framework, whose own frames come first.
+      final from = beforeColor;
+      final colorFrames = from == null
+          ? const <int>[]
+          : (frameTimes.keys.where((number) => number > from).toList()..sort());
+      final colorFirst = colorFrames.isEmpty
+          ? null
+          : frameTimes[colorFrames.first];
+      final fromMain = colorFirst == null
+          ? null
+          : _hundredths(colorFirst.$3 - mainAt);
+      final framework = firstFrame;
+      record['startup'] = {
+        'scope':
+            'From main() of the scenario, and from the start of its process '
+            '(Linux, to the hundredth of a second), to the end of the '
+            'rasterization of the first frame of Color, after the frames of '
+            'the test framework, on the clock of the timeline that the '
+            'engine times its frames with. Between them: the start of the '
+            'framework, and the options of Color read from its folder.',
+        'first_frame_number': colorFrames.isEmpty ? null : colorFrames.first,
+        'first_frame_of_the_framework_from_main_ms': framework == null
+            ? null
+            : _hundredths(
+                framework.timestampInMicroseconds(ui.FramePhase.rasterFinish) -
+                    mainAt,
+              ),
+        'first_frame_from_main_ms': fromMain,
+        'process_age_at_main_ms': runningBeforeMain,
+        'first_frame_from_process_start_ms':
+            fromMain == null || runningBeforeMain == null
+            ? null
+            : _hundredths(((runningBeforeMain + fromMain) * 1000).round()),
+      };
       File('${root.path}/result.json').writeAsStringSync(
         '${const JsonEncoder.withIndent('  ').convert(record)}\n',
       );
     }
   });
+}
+
+/// How long this process had run, in milliseconds, as /proc tells it on
+/// Linux (to the hundredth of a second); null elsewhere.
+int? _processAgeMilliseconds() {
+  if (!Platform.isLinux) return null;
+  try {
+    final stat = File('/proc/self/stat').readAsStringSync();
+    // After the name of the program, between parentheses: the state is the
+    // third field, the start (in hundredths of a second since the system
+    // started) the twenty-second.
+    final fields = stat.substring(stat.lastIndexOf(')') + 2).split(' ');
+    final startTicks = int.parse(fields[19]);
+    final uptime = double.parse(
+      File('/proc/uptime').readAsStringSync().split(' ').first,
+    );
+    return ((uptime - startTicks / 100) * 1000).round();
+  } catch (_) {
+    return null;
+  }
+}
+
+/// [micros] in milliseconds, to the hundredth.
+double _hundredths(int micros) => (micros / 10).round() / 100;
+
+/// The 50th, the 90th and the 99th centiles of [micros], by the nearest
+/// rank, and the largest, in milliseconds to the hundredth.
+Map<String, double> _centiles(List<int> micros) {
+  final sorted = [...micros]..sort();
+  double at(double rank) =>
+      _hundredths(sorted[math.max(0, (rank * sorted.length).ceil() - 1)]);
+  return {
+    'p50': at(.5),
+    'p90': at(.9),
+    'p99': at(.99),
+    'max': _hundredths(sorted.last),
+  };
 }

@@ -26,3 +26,18 @@ svg = ["dep:usvg"]
 
 [dependencies]
 usvg = { version = "=0.48.1", default-features = false, optional = true }
+
+# One optimization unit for the whole core and its library, link-time
+# optimization across them: smaller and a little faster (measured in
+# docs/JALON-1.0.1.md). Never opt-level "s" or "z": they make the first use of
+# the catalogues 1.5 to 3.4 times slower. LTO applies when cargo builds one
+# linkable kind at a time — `cargo rustc --crate-type cdylib` (Android, Mac,
+# Linux, Windows) or `--crate-type staticlib` (iPhone, iPad) — not to the rlib.
+[profile.release]
+lto = "fat"
+codegen-units = 1
+# A panic stops the program: nothing of the core catches one any more, now
+# that the cores of the stores read no SVG (R-11 of the retrospective). The
+# tests, and the readers of SVG that they use, still unwind: cargo builds
+# tests that way whatever the profile says.
+panic = "abort"

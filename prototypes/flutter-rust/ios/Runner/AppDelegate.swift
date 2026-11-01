@@ -33,7 +33,7 @@ class ColorViewController: FlutterViewController {
 /// put a copy of a file where the person chooses. The other side is in lib/:
 /// studio_sounds.dart, studio_printer.dart and studio_files.dart. A sound is
 /// never worth an error: whatever fails there is silence.
-final class ColorNative: NSObject, UIDocumentPickerDelegate {
+final class ColorNative: NSObject, UIDocumentPickerDelegate, AVAudioPlayerDelegate {
   private let registrar: FlutterPluginRegistrar
   private var channels: [FlutterMethodChannel] = []
   private var players: [Int: AVAudioPlayer] = [:]
@@ -81,7 +81,23 @@ final class ColorNative: NSObject, UIDocumentPickerDelegate {
       }
       self.saveAs(call.arguments, result: result)
     }
-    channels = [sound, printer, files]
+    let folders = FlutterMethodChannel(name: "org.edupaint/folders", binaryMessenger: messenger)
+    folders.setMethodCallHandler { call, result in
+      switch call.method {
+      case "support": result(ColorNative.userFolder(.applicationSupportDirectory))
+      case "documents": result(ColorNative.userFolder(.documentDirectory))
+      case "temporary": result(ColorNative.userFolder(.cachesDirectory))
+      default: result(FlutterMethodNotImplemented)
+      }
+    }
+    channels = [sound, printer, files, folders]
+  }
+
+  /// A folder of Color in the user's domain, as path_provider gave it before
+  /// (lib/app_folders.dart): its own folder (Application Support, which
+  /// Dart makes when it is missing), the documents, the caches.
+  static func userFolder(_ directory: FileManager.SearchPathDirectory) -> String? {
+    NSSearchPathForDirectoriesInDomains(directory, .userDomainMask, true).first
   }
 
   /// The controller above which a panel of the system opens.
@@ -123,14 +139,25 @@ final class ColorNative: NSObject, UIDocumentPickerDelegate {
         players[id] = nil
         return false
       }
+      player.delegate = self
       player.prepareToPlay()
       players[id] = player
     }
     guard let player = players[id] else { return false }
-    // The same sound asked again while it plays starts again.
-    if player.isPlaying { player.stop() }
+    // The same sound asked again while it plays starts again, from its
+    // beginning. Never stop(): it would undo the preparation, and the sound
+    // would be prepared again before every play.
     player.currentTime = 0
+    if player.isPlaying { return true }
     return player.play()
+  }
+
+  /// A sound that has finished is no longer prepared, as Apple documents:
+  /// prepared again at once, so that the next request starts it without
+  /// waiting.
+  func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+    player.currentTime = 0
+    player.prepareToPlay()
   }
 
   // MARK: Printing

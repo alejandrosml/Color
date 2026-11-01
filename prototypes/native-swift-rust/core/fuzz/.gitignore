@@ -1,0 +1,4 @@
+# What a run of the fuzzer writes: kept out of the sources.
+/corpus/
+/crashes/
+/target/

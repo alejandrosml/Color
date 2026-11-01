@@ -5,7 +5,6 @@ import 'dart:math' as math;
 import 'dart:ui' show AppExitResponse;
 import 'dart:ui' as ui show Image;
 
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -25,11 +24,15 @@ import 'native_exit.dart';
 import 'native_diagnostics.dart';
 import 'drawing_gesture.dart';
 import 'document_renderer.dart';
+import 'draft_stroke.dart';
 import 'document_exports.dart';
 import 'document_save_state.dart';
 import 'png_export.dart';
 import 'print_render.dart';
 import 'selection_geometry.dart';
+import 'app_folders.dart';
+import 'stroke_input.dart';
+import 'sheet_images.dart';
 import 'raster_source.dart';
 import 'new_sheet_dialog.dart';
 import 'coloring_pages.dart';
@@ -82,6 +85,10 @@ Future<void> main() async {
   final options = await StudioOptionsStore.open();
   runApp(EduPaintApp(options: options, sounds: SystemSounds()));
 }
+
+/// Builds of the studio, for the tests that count them.
+@visibleForTesting
+int debugStudioBuilds = 0;
 
 class EduPaintApp extends StatelessWidget {
   const EduPaintApp({
@@ -199,12 +206,20 @@ enum _HistoryChange { edit, undo, redo }
 /// element, or the sheet under the hand.
 enum _Latch { stroke, move, pan }
 
-class _DrawingStudioState extends State<DrawingStudio> {
+class _DrawingStudioState extends State<DrawingStudio>
+    with WidgetsBindingObserver {
   RustDocument? _document;
   ui.Image? _backgroundImage;
   StudioProblem? _startupError;
   final _focus = FocusNode(debugLabel: 'Atelier Color');
   final _canvasRepaint = ValueNotifier<int>(0);
+
+  /// The drawing of the sheet kept as images between frames (F-01).
+  final _sheetImages = SheetImages();
+
+  /// The painter of the sheet was last made while the view moved: the end
+  /// of the gesture makes it again, and the images with it.
+  bool _paintedMoving = false;
   final _viewRebuild = ValueNotifier<int>(0);
   final _recentColors = RecentPaintColors();
   ViewTransform? _view;
@@ -220,9 +235,34 @@ class _DrawingStudioState extends State<DrawingStudio> {
   int _fillColor = 0x477fb2;
   late final AppLifecycleListener _lifecycle;
   List<RenderedElement> _strokes = const [];
-  List<DocumentPoint> _draft = [];
-  Path? _draftPath;
+
+  /// What is being drawn, read by the painter of the sheet at every frame:
+  /// a press and the moves of the pointer change it and paint the sheet
+  /// again, without building the studio again (F-03 of the retrospective of
+  /// October 2026).
+  final _drafting = SheetDraft();
+  List<DocumentPoint> get _draft => _drafting.points;
+  set _draft(List<DocumentPoint> points) => _drafting.points = points;
+  DraftStroke? get _draftStroke => _drafting.stroke;
+  set _draftStroke(DraftStroke? stroke) => _drafting.stroke = stroke;
   DocumentPoint? _draftRawEnd;
+
+  /// The 1€ filter of a trait drawn with a finger or a pen, whose samples
+  /// tremble; null for a mouse or a trackpad, which do not.
+  OneEuroFilter? _steady;
+
+  /// Where the pointer of a filtered trait is, as it is: the trait ends
+  /// there, not where its filter was.
+  DocumentPoint? _draftSeen;
+
+  /// The kind of the last pointer that pressed on the sheet, which is the
+  /// one that holds it while [_pointer] is set: a pen takes the trait over
+  /// from a finger, which was a hand resting on the screen (D-08).
+  PointerDeviceKind? _drawingKind;
+
+  static bool _isPen(PointerDeviceKind? kind) =>
+      kind == PointerDeviceKind.stylus ||
+      kind == PointerDeviceKind.invertedStylus;
   int? _pointer;
   // A click with a shape tool posed where the shape starts: the next click,
   // or the end of the next drag, says where it ends.
@@ -287,7 +327,8 @@ class _DrawingStudioState extends State<DrawingStudio> {
   // The width slider is being moved for the chosen element: the element
   // takes the new width when the hand leaves the slider, in one step.
   bool _selectionWidthMoving = false;
-  VectorKind _draftKind = VectorKind.stroke;
+  VectorKind get _draftKind => _drafting.kind;
+  set _draftKind(VectorKind kind) => _drafting.kind = kind;
   // The brush is heard when it touches the sheet, then again while it
   // travels: when it was last heard, and how far it went since.
   static const _brushHeardEvery = Duration(milliseconds: 340);
@@ -299,15 +340,21 @@ class _DrawingStudioState extends State<DrawingStudio> {
   ObjectSize _textSize = ObjectSize.medium;
   ObjectSize _stampSize = ObjectSize.medium;
   int _stampId = 0;
-  int _draftStamp = 0;
+  int get _draftStamp => _drafting.stamp;
+  set _draftStamp(int stamp) => _drafting.stamp = stamp;
   bool _filled = false;
-  int? _draftFillRgb;
+  int? get _draftFillRgb => _drafting.fillRgb;
+  set _draftFillRgb(int? rgb) => _drafting.fillRgb = rgb;
   int _color = 0x477fb2;
-  int _draftColor = 0x477fb2;
+  int get _draftColor => _drafting.rgb;
+  set _draftColor(int rgb) => _drafting.rgb = rgb;
   double _width = 12;
-  double _draftWidth = 12;
+  double get _draftWidth => _drafting.width;
+  set _draftWidth(double width) => _drafting.width = width;
   int _revision = 0;
   int _documentRevision = 0;
+  // The revision whose recovery copy going out of sight last asked for.
+  int? _hiddenRevision;
   DocumentSaveState? _saveState;
   bool get _dirty => _saveState?.isDirty ?? false;
   bool _busy = true;
@@ -327,7 +374,14 @@ class _DrawingStudioState extends State<DrawingStudio> {
   int _recoveryGeneration = 0;
   bool _recoveryWarningShown = false;
   bool _confirmationOpen = false;
-  String _status = 'Recherche d’un dessin à reprendre…';
+
+  /// What the line under the sheet says, with its own listenable: a sentence
+  /// that changes alone, as when a copy of recovery has been written, does
+  /// not build the studio again (F-03).
+  final _statusLine = ValueNotifier<String>(
+    'Recherche d’un dessin à reprendre…',
+  );
+  set _status(String status) => _statusLine.value = status;
   // The options of the adult; a studio that was given none keeps its own,
   // with the defaults, for as long as it lives.
   late final StudioOptionsStore _optionsStore =
@@ -339,6 +393,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
     super.initState();
     _recoveryScheduler = RecoveryScheduler(
       writeLatest: _writeRecovery,
+      delayFor: _recoveryDelay,
       onError: (error, stack) => FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,
@@ -365,12 +420,26 @@ class _DrawingStudioState extends State<DrawingStudio> {
     if (!_options.tools.contains(_tool)) _tool = StudioTool.brush;
     _lifecycle = AppLifecycleListener(
       onExitRequested: _requestExit,
-      onHide: _keepWhenHidden,
+      onHide: () {
+        // Out of sight the graphics processor may go: the images of the
+        // sheet are made again when it is seen.
+        _sheetImages.drop();
+        _keepWhenHidden();
+      },
       onPause: _keepWhenHidden,
     );
+    WidgetsBinding.instance.addObserver(this);
     installNativeExitHandler(() => _requestExit(finalNativeDecision: true));
     unawaited(installNativeDiagnostics());
     WidgetsBinding.instance.addPostFrameCallback((_) => _initializeRecovery());
+  }
+
+  /// The system runs short of memory: the images of the sheet go, and are
+  /// made again when the sheet is next painted.
+  @override
+  void didHaveMemoryPressure() {
+    _sheetImages.drop();
+    _canvasRepaint.value++;
   }
 
   @override
@@ -384,11 +453,14 @@ class _DrawingStudioState extends State<DrawingStudio> {
     clearNativeExitHandler();
     clearNativeDiagnostics();
     _lifecycle.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     _focus.dispose();
     _canvasRepaint.dispose();
+    _sheetImages.dispose();
     _viewRebuild.dispose();
     _recentColors.dispose();
     _selectionOffset.dispose();
+    _statusLine.dispose();
     _saveState?.retire();
     _document?.dispose();
     _backgroundImage?.dispose();
@@ -1211,6 +1283,25 @@ class _DrawingStudioState extends State<DrawingStudio> {
       }
       return;
     }
+    // A pen that comes down while the hand rests on the screen takes the
+    // sheet (D-08): two fingers of the hand that were moving the view stop,
+    // and what a finger was doing goes — a trait, a shape, the eraser, a
+    // drag — except the first click of a shape, which the pen made.
+    if (_isPen(event.kind)) {
+      if (_pinching) {
+        _pinching = false;
+        _endViewGesture();
+      }
+      if (_pointer != null && _drawingKind == PointerDeviceKind.touch) {
+        final anchor = _draftFromAnchor ? _shapeAnchor : null;
+        _cancelDraft();
+        if (anchor != null) {
+          _shapeAnchor = anchor
+            ..end = null
+            ..rawEnd = null;
+        }
+      }
+    }
     if (_busy ||
         _confirmationOpen ||
         _document == null ||
@@ -1237,6 +1328,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
       return;
     }
     _pressByMouse = event.kind == PointerDeviceKind.mouse;
+    _drawingKind = event.kind;
     final onSheet = viewport.contains(
       event.localPosition.dx,
       event.localPosition.dy,
@@ -1320,7 +1412,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
     }
     // A shape begun with a click ends where this press is released.
     final anchor = _shapeAnchor?.kind == kind ? _shapeAnchor : null;
-    setState(() {
+    void begin() {
       _pointer = event.pointer;
       _draftKind = kind;
       _draftStamp = _stampId;
@@ -1341,9 +1433,34 @@ class _DrawingStudioState extends State<DrawingStudio> {
       _draftRawEnd = point;
       _draftColor = _color;
       _draftWidth = _width;
-      _draftPath = Path()..moveTo(_draft.first.x, _draft.first.y);
-      _revision++;
-    });
+      _draftStroke = DraftStroke(_draft.first);
+      _draftSeen = null;
+      // A finger trembles, and a pen a little: their samples are smoothed;
+      // a mouse is followed as it is.
+      _steady =
+          kind == VectorKind.stroke &&
+              (event.kind == PointerDeviceKind.touch || _isPen(event.kind))
+          ? (OneEuroFilter()..filter(
+              event.localPosition.dx,
+              event.localPosition.dy,
+              event.timeStamp,
+            ))
+          : null;
+    }
+
+    // Only the sheet changes when a press begins a trait or a shape: it is
+    // painted again, and the studio is not built again (F-03). The two
+    // clicks of a shape change what the sheet shows of them and what
+    // « Annuler » offers: then it is.
+    if (anchor != null || _shapeAnchor != null || _draftFromAnchor) {
+      setState(() {
+        begin();
+        _revision++;
+      });
+    } else {
+      begin();
+      _canvasRepaint.value++;
+    }
     if (kind == VectorKind.stroke) {
       _sound(StudioSound.stroke);
       _brushHeardAt = event.timeStamp;
@@ -1453,14 +1570,24 @@ class _DrawingStudioState extends State<DrawingStudio> {
     DocumentViewport viewport, {
     Duration? at,
   }) {
-    final raw = viewport.point(position.dx, position.dy);
+    var place = position;
+    final steady = _steady;
+    if (steady != null && at != null && _draftKind == VectorKind.stroke) {
+      final (x, y) = steady.filter(position.dx, position.dy, at);
+      place = Offset(x, y);
+      _draftSeen = viewport.point(position.dx, position.dy);
+    }
+    final raw = viewport.point(place.dx, place.dy);
     _draftRawEnd = raw;
     if (_draftKind == VectorKind.stroke) {
       if (_draft.length >= 100000) return;
       final previous = _draft.last;
-      if (raw.x == previous.x && raw.y == previous.y) return;
+      // A move that the eye cannot see is not kept (D-08).
+      final dx = (raw.x - previous.x) * viewport.scale;
+      final dy = (raw.y - previous.y) * viewport.scale;
+      if (dx * dx + dy * dy < unseenMovePixels * unseenMovePixels) return;
       _draft.add(raw);
-      _draftPath!.lineTo(raw.x, raw.y);
+      _draftStroke!.lineTo(raw);
       _hearBrush(position, at);
     } else {
       _draft[1] = _shapeEndFrom(_draft.first, raw, _draftKind);
@@ -1657,11 +1784,14 @@ class _DrawingStudioState extends State<DrawingStudio> {
     final points = _draft;
     final fromAnchor = _draftFromAnchor;
     final rawEnd = _draftRawEnd;
+    final seen = _draftSeen;
+    _steady = null;
+    _draftSeen = null;
     // A press that stayed where it began is a click, told on the screen.
     final clicked =
         released && _pressTravel < clickTravel(touch: _pressByTouch);
     _draft = [];
-    _draftPath = null;
+    _draftStroke = null;
     _draftRawEnd = null;
     _pointer = null;
     _draftFromAnchor = false;
@@ -1670,7 +1800,17 @@ class _DrawingStudioState extends State<DrawingStudio> {
       // One FFI call for the completed gesture; pressure is not handled yet.
       if (_draftKind == VectorKind.stroke) {
         // The brush was heard while it travelled: nothing when it lifts.
-        _document!.addStroke(points, rgb: _draftColor, width: _draftWidth);
+        // A smoothed trait ends where the pointer is, not where its filter
+        // was; then only the points that the eye can see are kept.
+        if (seen != null &&
+            (seen.x != points.last.x || seen.y != points.last.y)) {
+          points.add(seen);
+        }
+        _document!.addStroke(
+          _simplified(points),
+          rgb: _draftColor,
+          width: _draftWidth,
+        );
       } else if (_draftKind == VectorKind.stamp) {
         final box = _stampBox(points.first, points.last);
         _document!.addStamp(
@@ -1736,6 +1876,22 @@ class _DrawingStudioState extends State<DrawingStudio> {
         _revision++;
       });
     }
+  }
+
+  /// The points of a trait without those that lie within a quarter of a
+  /// pixel of the line through the others, on the screen as it is: fewer
+  /// points to paint, to touch, to save and to replay, and the same trait.
+  List<DocumentPoint> _simplified(List<DocumentPoint> points) {
+    if (points.length <= 2) return points;
+    final scale = _view?.scale ?? 1;
+    final kept = simplifiedIndices(
+      [for (final point in points) point.x],
+      [for (final point in points) point.y],
+      simplifyPixels / scale,
+    );
+    return kept.length == points.length
+        ? points
+        : [for (final index in kept) points[index]];
   }
 
   static const _stampDragPixels = 18.0;
@@ -2138,8 +2294,10 @@ class _DrawingStudioState extends State<DrawingStudio> {
     _latch = null;
     _endViewGesture();
     _draft = [];
-    _draftPath = null;
+    _draftStroke = null;
     _draftRawEnd = null;
+    _steady = null;
+    _draftSeen = null;
     _pointer = null;
     _shapeAnchor = null;
     _draftFromAnchor = false;
@@ -2321,7 +2479,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
     try {
       _gallery = widget.gallery;
       if (widget.recoveryStorage == null) {
-        final support = (await getApplicationSupportDirectory()).path;
+        final support = (await applicationSupportFolder()).path;
         _storage = ProjectStorage(
           recoveryDirectory: Directory(
             recoveryDirectoryPath(support, windows: Platform.isWindows),
@@ -2399,6 +2557,15 @@ class _DrawingStudioState extends State<DrawingStudio> {
     }
   }
 
+  // Longer for a larger drawing, which each copy writes whole.
+  Duration _recoveryDelay() {
+    try {
+      return recoveryDelayFor(_document?.projectByteLength ?? 0);
+    } catch (_) {
+      return recoveryDelayFor(0);
+    }
+  }
+
   void _scheduleRecovery() {
     if (_storage == null) {
       if (_dirty) {
@@ -2433,9 +2600,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
       );
       if (!committed || !belongsToCurrentDocument() || !_dirty) return;
       if (revision == _documentRevision) {
-        setState(() {
-          _status = 'Copie de récupération à jour · projet à enregistrer.';
-        });
+        _status = 'Copie de récupération à jour · projet à enregistrer.';
       } else {
         // Keep the completed older snapshot, then coalesce the latest edits.
         // The scheduler never keeps an encoded snapshot for every pointer event.
@@ -2467,7 +2632,13 @@ class _DrawingStudioState extends State<DrawingStudio> {
   void _keepWhenHidden() {
     if (!touchFirst || _document == null || !mounted) return;
     _finishStroke();
-    if (_dirty) _scheduleRecovery();
+    // Hidden, then paused, one after the other: one copy serves both.
+    if (_dirty && _hiddenRevision != _documentRevision) {
+      _hiddenRevision = _documentRevision;
+      _scheduleRecovery();
+      // Now, not after the pause: the system may end Color before it.
+      _recoveryScheduler.flushNow();
+    }
   }
 
   Future<bool> _clearRecovery({bool Function()? stillCurrent}) async {
@@ -3451,6 +3622,7 @@ class _DrawingStudioState extends State<DrawingStudio> {
   );
 
   Widget _studio(BuildContext context) {
+    debugStudioBuilds++;
     if (_startupError != null) {
       return StudioStartupProblem(
         onDetails: () => _showProblemDetails(_startupError!),
@@ -4125,11 +4297,14 @@ class _DrawingStudioState extends State<DrawingStudio> {
         const SizedBox(height: 8),
         // One line, whatever it says: a sentence that came and went on two
         // lines would change the height left to the sheet at every edit.
-        Text(
-          _status,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 11, color: studioStatusText),
+        ValueListenableBuilder<String>(
+          valueListenable: _statusLine,
+          builder: (context, status, _) => Text(
+            status,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, color: studioStatusText),
+          ),
         ),
       ],
     ],
@@ -4245,6 +4420,10 @@ class _DrawingStudioState extends State<DrawingStudio> {
     _viewRebuild.value++;
   }
 
+  /// The hand, two fingers or a trackpad are moving the view.
+  bool get _viewMoving =>
+      _pinching || _panPointer != null || _trackpadPointer != null;
+
   void _endViewGesture() {
     if (_latch == _Latch.pan) _latch = null;
     _panPointer = null;
@@ -4252,6 +4431,8 @@ class _DrawingStudioState extends State<DrawingStudio> {
     _panStart = null;
     _trackpadPointer = null;
     _trackpadScale = 1;
+    // The images followed the view: they are made again where it stopped.
+    if (_paintedMoving) _viewRebuild.value++;
     // The room of the sheet changed while a pointer held the view: every
     // end of a gesture comes through here, and the next build fits it.
     if (_viewWaits && mounted) setState(() {});
@@ -4324,6 +4505,9 @@ class _DrawingStudioState extends State<DrawingStudio> {
   /// a second finger, which zooms and moves the view with the first.
   bool _fingerDown(PointerDownEvent event) {
     if (event.kind != PointerDeviceKind.touch) return false;
+    // A hand that rests while a pen draws: none of its fingers is heard,
+    // and they make no gesture of two fingers (D-08).
+    if (_pointer != null && _isPen(_drawingKind)) return true;
     _fingers[event.pointer] = event.localPosition;
     if (_fingers.length < 2 && !_pinching) return false;
     if (!_pinching && _viewEnabled && _view != null) {
@@ -4342,6 +4526,8 @@ class _DrawingStudioState extends State<DrawingStudio> {
       return false;
     }
     _fingers[event.pointer] = event.localPosition;
+    // While a pen draws, the hand that rests is not heard (D-08).
+    if (_pointer != null && _isPen(_drawingKind)) return true;
     // Without the view to move, the finger that draws goes on drawing and
     // the others are not heard.
     if (!_pinching) {
@@ -4561,7 +4747,10 @@ class _DrawingStudioState extends State<DrawingStudio> {
                           if (_panPointer == event.pointer) _endViewGesture();
                           if (_pointer == event.pointer) _cancelDraft();
                         },
+                        // The picture of the sheet, as the reference
+                        // images of test/reference_images_test.dart take it.
                         child: RepaintBoundary(
+                          key: const Key('sheetPicture'),
                           child: CustomPaint(
                             painter: DocumentPainter(
                               viewport: viewport,
@@ -4569,14 +4758,8 @@ class _DrawingStudioState extends State<DrawingStudio> {
                               background: _backgroundImage,
                               strokes: _strokes,
                               paintOrder: _document!.paintOrder,
-                              draftStamp: _draftStamp,
-                              draft: _draftPath,
-                              draftPoints: _draft,
+                              draft: _drafting,
                               repaint: _canvasRepaint,
-                              draftColor: _draftColor,
-                              draftWidth: _draftWidth,
-                              draftKind: _draftKind,
-                              draftFillRgb: _draftFillRgb,
                               revision: _revision,
                               selectedIndex: _selectedIndex,
                               selectionBounds: _selectedPaintBounds,
@@ -4598,6 +4781,11 @@ class _DrawingStudioState extends State<DrawingStudio> {
                               anchorFillRgb: _filled && _tool.drawsFillableShape
                                   ? _fillColor
                                   : null,
+                              images: _sheetImages,
+                              pixelRatio: MediaQuery.devicePixelRatioOf(
+                                context,
+                              ),
+                              viewMoving: _paintedMoving = _viewMoving,
                             ),
                             size: Size.infinite,
                           ),

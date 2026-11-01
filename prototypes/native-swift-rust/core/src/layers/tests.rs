@@ -755,6 +755,7 @@ fn layered_files_reject_inconsistent_layer_tables() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
 fn history_limits_apply_to_layer_commands_atomically() {
     let doc = Owned::new();
     assert_eq!(add_layer(&doc), 1);

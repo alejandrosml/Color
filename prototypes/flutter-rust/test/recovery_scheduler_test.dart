@@ -222,4 +222,77 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     expect(captures, 1);
   });
+
+  test('the pause grows with the drawing, from 400 ms to 5 s', () {
+    const kib = 1024, mib = 1024 * 1024;
+    expect(recoveryDelayFor(0), const Duration(milliseconds: 400));
+    expect(recoveryDelayFor(256 * kib), const Duration(milliseconds: 400));
+    expect(recoveryDelayFor(256 * kib + 1).inMilliseconds, 400);
+    expect(recoveryDelayFor(2 * mib + 128 * kib).inMilliseconds, 2700);
+    expect(recoveryDelayFor(4 * mib), const Duration(seconds: 5));
+    expect(recoveryDelayFor(68 * mib), const Duration(seconds: 5));
+    var before = Duration.zero;
+    for (var size = 0; size <= 5 * mib; size += 64 * kib) {
+      final delay = recoveryDelayFor(size);
+      expect(delay, greaterThanOrEqualTo(before), reason: '$size bytes');
+      before = delay;
+    }
+  });
+
+  testWidgets('the pause is asked for each time it starts', (tester) async {
+    var delay = const Duration(seconds: 5);
+    var writes = 0;
+    final scheduler = RecoveryScheduler(
+      writeLatest: () async => writes++,
+      onError: (error, stack) => fail('$error\n$stack'),
+      delayFor: () => delay,
+    );
+    addTearDown(scheduler.dispose);
+    scheduler.request();
+    await tester.pump(const Duration(milliseconds: 4999));
+    expect(writes, 0);
+    await tester.pump(const Duration(milliseconds: 1));
+    expect(writes, 1);
+    delay = const Duration(milliseconds: 400);
+    scheduler.request();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(writes, 2);
+  });
+
+  testWidgets('a flush writes at once, after a write in progress', (
+    tester,
+  ) async {
+    final events = <String>[];
+    final first = Completer<void>();
+    var revision = 1;
+    final scheduler = RecoveryScheduler(
+      writeLatest: () async {
+        events.add('capture $revision');
+        if (revision == 1) await first.future;
+      },
+      onError: (error, stack) => fail('$error\n$stack'),
+      delayFor: () => const Duration(seconds: 5),
+    );
+    addTearDown(scheduler.dispose);
+    // Nothing requested: nothing written.
+    scheduler.flushNow();
+    await tester.pump();
+    expect(events, isEmpty);
+    scheduler.request();
+    scheduler.flushNow();
+    await tester.pump();
+    expect(events, ['capture 1']);
+    // Requested while the first write lasts: written as soon as it ends,
+    // not five seconds later.
+    revision = 2;
+    scheduler.request();
+    scheduler.flushNow();
+    await tester.pump();
+    expect(events, ['capture 1']);
+    first.complete();
+    await tester.pump();
+    expect(events, ['capture 1', 'capture 2']);
+    await tester.pump(const Duration(seconds: 6));
+    expect(events, ['capture 1', 'capture 2']);
+  });
 }

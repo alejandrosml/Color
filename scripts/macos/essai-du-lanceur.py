@@ -239,6 +239,9 @@ class Trial:
             'COLOR_LOCAL_BUILD': str(local),
             'LC_ALL': 'C.UTF-8',
             'PYTHONIOENCODING': 'utf-8',
+            # The launcher is tried, not the disk of the machine that tries
+            # it: room enough, unless a case pretends otherwise.
+            'COLOR_TRIAL_FREE_BYTES': str(100 * 1024 ** 3),
         }
         environment.update(settings)
         journals = travail / 'construction-mac' / 'journal'
@@ -305,9 +308,12 @@ def main():
                'la signature de la copie remise est vérifiée')
 
         builds = [line for line in calls.splitlines() if line.startswith('cargo rustc ')]
-        expect(len(builds) == 1 and '--offline' in builds[0] and '--frozen' in builds[0]
-               and '--target aarch64-apple-darwin' in builds[0] and '[in core,' in builds[0],
+        expect(len(builds) == 2 and all('--offline' in build and '--frozen' in build
+                                        and '--target aarch64-apple-darwin' in build
+                                        and '[in core,' in build for build in builds),
                'le cœur est compilé par cargo, depuis son dossier, sans réseau')
+        expect(sum('--no-default-features' in build for build in builds) == 1,
+               'une fois avec son lecteur de SVG pour les tests, une fois sans pour l’application')
         expect('target=' + str(local / 'macos-color-cargo-target') + ']' in builds[0]
                and (local / 'macos-color-cargo-target').is_dir()
                and not (travail / 'Color-0.7.0+28-sources' / 'Color' / 'prototypes' / 'native-swift-rust'

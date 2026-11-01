@@ -8,6 +8,7 @@ import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/child_art.dart' show ShapeMarkColours;
 import 'package:edupaint_flutter_study/document_renderer.dart';
+import 'package:edupaint_flutter_study/draft_stroke.dart';
 import 'package:edupaint_flutter_study/drawing_gesture.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:edupaint_flutter_study/studio_painters.dart';
@@ -82,18 +83,13 @@ DocumentPainter _painter({
   background: null,
   strokes: strokes,
   paintOrder: paintOrder,
-  draftStamp: 0,
-  draft: draft.isEmpty
-      ? null
-      : (Path()..addPolygon([
-          for (final point in draft) Offset(point.x, point.y),
-        ], false)),
-  draftPoints: draft,
+  draft: SheetDraft(
+    points: draft,
+    stroke: draft.isEmpty ? null : DraftStroke.through(draft),
+    rgb: _red,
+    width: 10,
+  ),
   repaint: ValueNotifier(0),
-  draftColor: _red,
-  draftWidth: 10,
-  draftKind: VectorKind.stroke,
-  draftFillRgb: null,
   revision: 0,
   selectedIndex: null,
   selectionBounds: null,

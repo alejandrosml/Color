@@ -22,8 +22,8 @@ const colorLegalese =
     'garder la mention de son auteur et de cette licence. Il est fourni sans '
     'aucune garantie.\n\n'
     'Ci-dessous, la licence de Color, puis celles de ce avec quoi il est '
-    'fait : Flutter et ses paquets, les bibliothèques du cœur Rust, la police '
-    'des textes.';
+    'fait : Flutter et ses paquets, les sons enregistrés, la police des '
+    'textes.';
 
 /// The text of the MIT licence, as the LICENSE file of the sources gives
 /// it, with the line that names the author.

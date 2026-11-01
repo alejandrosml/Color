@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'rust_document.dart';
@@ -8,15 +9,13 @@ import 'stamp_catalog.dart';
 /// Geometry bounds use control points. Stroke paint can extend outside the page
 /// already, so translation preserves the core's point-in-page contract.
 Rect objectBounds(StrokeData object, {bool includeStroke = false}) {
-  var left = object.points.first.x;
-  var right = left;
-  var top = object.points.first.y;
-  var bottom = top;
-  for (final point in object.points.skip(1)) {
-    left = math.min(left, point.x);
-    right = math.max(right, point.x);
-    top = math.min(top, point.y);
-    bottom = math.max(bottom, point.y);
+  final c = object.coordinates;
+  double left = c[0], right = c[0], top = c[1], bottom = c[1];
+  for (var i = 2; i < c.length; i += 2) {
+    left = math.min(left, c[i]);
+    right = math.max(right, c[i]);
+    top = math.min(top, c[i + 1]);
+    bottom = math.max(bottom, c[i + 1]);
   }
   final bounds = Rect.fromLTRB(left, top, right, bottom);
   return includeStroke ? bounds.inflate(object.outlineRadius) : bounds;
@@ -70,7 +69,9 @@ bool _covers(
 }) {
   final radius = object.outlineRadius + reach;
   if (!bounds.inflate(radius + .000001).contains(position)) return false;
-  final points = object.points;
+  // x then y of each point, read in place.
+  final c = object.coordinates;
+  final count = c.length >> 1;
   switch (object.kind) {
     case VectorKind.text:
       // Letters have gaps that would make a small target hard to reach, and
@@ -84,15 +85,14 @@ bool _covers(
           art.inkAt(position, bounds, object.rgb, reach) != null;
     case VectorKind.stroke:
     case VectorKind.line:
-      if (points.length == 1) {
-        return (position - Offset(points.first.x, points.first.y)).distance <=
-            radius;
+      if (count == 1) {
+        return (position - Offset(c[0], c[1])).distance <= radius;
       }
-      for (var i = 1; i < points.length; i++) {
+      for (var i = 2; i < c.length; i += 2) {
         if (_segmentDistance(
               position,
-              Offset(points[i - 1].x, points[i - 1].y),
-              Offset(points[i].x, points[i].y),
+              Offset(c[i - 2], c[i - 1]),
+              Offset(c[i], c[i + 1]),
             ) <=
             radius) {
           return true;
@@ -127,19 +127,16 @@ bool _covers(
       }
       return _ellipseDistance(relative, rx, ry) <= radius;
     case VectorKind.contour:
-      if (insides &&
-          object.fillRgb != null &&
-          _insideContour(position, points)) {
+      if (insides && object.fillRgb != null && _insideContour(position, c)) {
         return true;
       }
       // Its sides, the last one going back to the first point.
-      for (var i = 0; i < points.length; i++) {
-        final from = points[i];
-        final to = points[i + 1 < points.length ? i + 1 : 0];
+      for (var i = 0; i < count; i++) {
+        final next = i + 1 < count ? i + 1 : 0;
         if (_segmentDistance(
               position,
-              Offset(from.x, from.y),
-              Offset(to.x, to.y),
+              Offset(c[2 * i], c[2 * i + 1]),
+              Offset(c[2 * next], c[2 * next + 1]),
             ) <=
             radius) {
           return true;
@@ -154,23 +151,25 @@ bool _insideEllipse(Offset relative, double rx, double ry) =>
         relative.dy * relative.dy / (ry * ry) <=
     1;
 
-/// Whether [position] is inside the closed polygon [points] by the nonzero
-/// rule, the one with which the inside of a contour is painted: of the sides
-/// that cross the horizontal line of the position on its right, those that
-/// go up are not as many as those that go down.
-bool _insideContour(Offset position, List<DocumentPoint> points) {
+/// Whether [position] is inside the closed polygon of the coordinates [c]
+/// (x then y of each point) by the nonzero rule, the one with which the
+/// inside of a contour is painted: of the sides that cross the horizontal
+/// line of the position on its right, those that go up are not as many as
+/// those that go down.
+bool _insideContour(Offset position, Float32List c) {
   final x = position.dx;
   final y = position.dy;
+  final count = c.length >> 1;
   var winding = 0;
-  for (var i = 0; i < points.length; i++) {
-    final from = points[i];
-    final to = points[i + 1 < points.length ? i + 1 : 0];
+  for (var i = 0; i < count; i++) {
+    final next = i + 1 < count ? i + 1 : 0;
+    final fromX = c[2 * i], fromY = c[2 * i + 1];
+    final toX = c[2 * next], toY = c[2 * next + 1];
     // Positive when the position lies on the left of the side.
-    final side =
-        (to.x - from.x) * (y - from.y) - (x - from.x) * (to.y - from.y);
-    if (from.y <= y) {
-      if (to.y > y && side > 0) winding++;
-    } else if (to.y <= y && side < 0) {
+    final side = (toX - fromX) * (y - fromY) - (x - fromX) * (toY - fromY);
+    if (fromY <= y) {
+      if (toY > y && side > 0) winding++;
+    } else if (toY <= y && side < 0) {
       winding--;
     }
   }
@@ -189,7 +188,8 @@ bool _encloses(StrokeData object, Rect bounds, Offset position) =>
         bounds.height / 2,
       ),
       VectorKind.contour =>
-        bounds.contains(position) && _insideContour(position, object.points),
+        bounds.contains(position) &&
+            _insideContour(position, object.coordinates),
       VectorKind.stroke ||
       VectorKind.line ||
       VectorKind.text ||

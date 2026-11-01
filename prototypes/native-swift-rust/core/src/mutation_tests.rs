@@ -289,6 +289,10 @@ fn rich_project() -> Vec<u8> {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "thousands of mutants: too long under Miri, which reads a few in a_few_mutants_of_every_kind_of_project_never_break_the_core"
+)]
 fn mutated_layered_projects_never_break_the_core() {
     let rich = rich_project();
     let mut totals = (0, 0);
@@ -342,6 +346,10 @@ fn rich_page_project() -> Vec<u8> {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "thousands of mutants: too long under Miri, which reads a few in a_few_mutants_of_every_kind_of_project_never_break_the_core"
+)]
 fn mutated_version_5_projects_never_break_the_core() {
     let rich = rich_page_project();
     for (name, base, seed) in [
@@ -360,6 +368,10 @@ fn mutated_version_5_projects_never_break_the_core() {
 }
 
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "thousands of mutants: too long under Miri, which reads a few in a_few_mutants_of_every_kind_of_project_never_break_the_core"
+)]
 fn mutated_historic_projects_never_break_the_core() {
     for (name, base, seed) in [
         (
@@ -381,9 +393,45 @@ fn mutated_historic_projects_never_break_the_core() {
     }
 }
 
+/// A few mutants of every kind of project, read and exercised as the large
+/// campaigns do: few enough for Miri (`cargo miri test`), which sees any
+/// undefined behaviour in what the reader does with a stranger's bytes.
+#[test]
+fn a_few_mutants_of_every_kind_of_project_never_break_the_core() {
+    let rich = rich_project();
+    let page = rich_page_project();
+    for (name, base, seed) in [
+        (
+            "legacy-v1",
+            fixture!("legacy-v1.edupaint"),
+            0x0101_0101_0101_0101,
+        ),
+        ("rgb-v3", fixture!("rgb-v3.edupaint"), 0x0303_0303_0303_0303),
+        (
+            "layers-text-stamp-v4",
+            fixture!("layers-text-stamp-v4.edupaint"),
+            0x0404_0404_0404_0404,
+        ),
+        (
+            "locked-page-v5",
+            fixture!("locked-page-v5.edupaint"),
+            0x0505_0505_0505_0505,
+        ),
+        ("rich", rich.as_slice(), 0x4444_0000_4444_0000),
+        ("rich page", page.as_slice(), 0x5555_0000_5555_0000),
+    ] {
+        let (accepted, rejected) = storm(name, base, seed, 6);
+        assert_eq!(accepted + rejected, 6, "{name}");
+    }
+}
+
 // A guard on the existence of the checksum test rather than on its strength:
 // CRC-32 detects every single flipped bit by construction.
 #[test]
+#[cfg_attr(
+    miri,
+    ignore = "thousands of mutants: too long under Miri, which reads a few in a_few_mutants_of_every_kind_of_project_never_break_the_core"
+)]
 fn a_mutant_without_its_repaired_checksum_is_always_refused() {
     for (base, seed) in [
         (rich_project(), 0x0f0f_f0f0_1234_5678),

@@ -11,7 +11,12 @@ codesign, pkgutil and ditto (the script's run and output are replaced):
     all read; one signed by another certificate, an application signed by a
     certificate of development, or a program without a signature stop the
     sending, and the version is not remembered as sent;
-  - iOS, signed by hand: the same verification, and the export options.
+  - iOS, signed by hand: the same verification, and the export options;
+  - since 1.0.1: the core of the Mac built alone as a cdylib (link-time
+    optimization), its dSYM put in the archive and the library stripped
+    before it is signed; without a dSYM, with one of another build (another
+    UUID), or when strip fails, the library stays whole and Color is still
+    sent; the symbols of the Dart code kept apart, for the Mac and for iOS.
 
   essai-de-l-envoi.py [FOLDER]
 
@@ -41,7 +46,7 @@ spec = importlib.util.spec_from_file_location('envoyer', scripts / 'envoyer-app-
 envoyer = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(envoyer)
 
-VERSION = '1.0.0+39'
+VERSION = '1.0.1+40'
 travail = trial / 'travail'
 sources = travail / ('Color-%s-sources' % VERSION)
 sources.mkdir(parents=True)
@@ -49,6 +54,7 @@ MACH_O = bytes.fromhex('cffaedfe') + b'\0' * 60
 BUNDLE = 'file_selector_macos_file_selector_macos.bundle'
 journals = []
 calls = []
+environments = []
 behaviour = {}
 failures = []
 
@@ -101,6 +107,7 @@ def fake_run(journal, name, command, cwd=None, env=None, timeout=None, interacti
              check=True):
     command = [str(part) for part in command]
     calls.append((name, command))
+    environments.append((name, env))
     answer = behaviour.get(name)
     if callable(answer):
         answer = answer(command)
@@ -129,6 +136,12 @@ def fake_run(journal, name, command, cwd=None, env=None, timeout=None, interacti
         archive = Path(Path(command[3]).read_text())
         shutil.copytree(archive / 'Products' / 'Applications' / 'Color.app',
                         Path(command[4]) / 'Payload' / 'Color.app', symlinks=True)
+    elif tool == 'xcrun' and command[1] == 'strip':
+        if behaviour.get('strip_fails'):
+            code = 1
+        else:
+            target = Path(command[-1])
+            target.write_bytes(target.read_bytes() + b'stripped')
     elif tool == 'codesign' and '--remove-signature' in command:
         if behaviour.get('codesign_removes', True):
             shutil.rmtree(Path(command[-1]) / 'Contents' / '_CodeSignature')
@@ -157,8 +170,17 @@ def fake_output(command, env=None, timeout=120):
         return 0, 'Executable=%s\nAuthority=Apple Distribution: Essai (ABCDE12345)\n' % item
     if command[0].endswith('codesign'):
         return 0, 'Authority=Apple Development: Essai (XYZ)\n'
+    if command[0].endswith('xcrun') and command[1] == 'dwarfdump':
+        stale = behaviour.get('stale_dsym') and command[-1].endswith('.dSYM')
+        uuid = '11111111-2222-3333-4444-555555555555' if stale else (
+            'A1B2C3D4-0000-4000-8000-123456789ABC')
+        return 0, 'UUID: %s (arm64) %s\n' % (uuid, command[-1])
     if 'find-identity' in command:
         return 0, behaviour.get('identities', '')
+    if command[0].endswith('xcrun') and command[1] == 'nm':
+        exported = [name for name in ('_ep_a', '_ep_b', '_ep_c', '_main_helper')
+                    if name != behaviour.get('missing_export')]
+        return 0, ''.join('0000000100001000 T %s\n' % name for name in exported)
     return 0, ''
 
 
@@ -181,6 +203,13 @@ ios_lib.parent.mkdir(parents=True)
 ios_lib.write_bytes(b'lib')
 archived_bundle = (envoyer.MOBILES / 'app-store-macos' / 'Color.xcarchive' / 'Products'
                    / 'Applications' / 'Color.app' / 'Contents' / 'Resources' / BUNDLE)
+archived_core = archived_bundle.parent.parent / 'Frameworks' / 'libedupaint_core.dylib'
+archived_dsym = (envoyer.MOBILES / 'app-store-macos' / 'Color.xcarchive' / 'dSYMs'
+                 / 'libedupaint_core.dylib.dSYM')
+# What rustc leaves beside the library with split debug information « packed ».
+built_dsym = dylib.with_name(dylib.name + '.dSYM')
+(built_dsym / 'Contents' / 'Resources' / 'DWARF').mkdir(parents=True)
+(built_dsym / 'Contents' / 'Resources' / 'DWARF' / dylib.name).write_bytes(MACH_O)
 
 
 def names():
@@ -189,6 +218,7 @@ def names():
 
 def case(title, settings, platform='macos'):
     calls.clear()
+    environments.clear()
     behaviour.clear()
     behaviour.update(settings)
     journal = make_journal()
@@ -235,6 +265,25 @@ text = (journals[-1].folder / 'journal.txt').read_text(encoding='utf-8') \
 expect('Signatures relues : 5 éléments' in text,
        'A: five signed items read (application, its program, a framework and its program, the core)')
 expect(envoyer.sent_versions().get('macos') == VERSION, 'A: the Mac version is remembered')
+core = [(c, e) for (n, c), (_, e) in zip(calls, environments) if n == 'coeur-mac']
+expect(len(core) == 1 and '--crate-type' in core[0][0]
+       and core[0][0][core[0][0].index('--crate-type') + 1] == 'cdylib'
+       and core[0][0].index('--crate-type') < core[0][0].index('--')
+       and core[0][1].get('CARGO_PROFILE_RELEASE_DEBUG') == 'line-tables-only'
+       and core[0][1].get('CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO') == 'packed',
+       'A: the core built alone as a cdylib, with line tables and its dSYM')
+build = [c for n, c in calls if n == 'flutter-build-macos']
+option = [part for part in build[0] if part.startswith('--split-debug-info=')] if build else []
+expect(len(option) == 1 and Path(option[0].split('=', 1)[1]).is_dir()
+       and str(journals[-1].folder) in option[0],
+       'A: the symbols of the Dart code kept apart, in the journal')
+expect((archived_dsym / 'Contents' / 'Resources' / 'DWARF' / 'libedupaint_core.dylib').exists(),
+       'A: the dSYM of the core is in the archive')
+strip = [i for i, (n, c) in enumerate(calls) if n == 'symboles-coeur' and 'strip' in c]
+first_signature = next(i for i, (n, c) in enumerate(calls) if n == 'signature')
+expect(strip and strip[0] < first_signature and calls[strip[0]][1][-3:-1] == ['-S', '-x']
+       and archived_core.read_bytes().endswith(b'stripped'),
+       'A: the core stripped of its local symbols before it is signed')
 
 # B. codesign leaves the signature: its folder is removed.
 reset_sent()
@@ -311,6 +360,8 @@ expect(check['destination'] == 'export' and sent['destination'] == 'upload'
 archives = [c for n, c in calls if n == 'archive-ios']
 expect(len(archives) == 1 and 'CODE_SIGN_STYLE=Automatic' not in archives[0],
        'I: one archive, signed by hand')
+expect(any(n == 'flutter-config-ios' and any(part.startswith('--split-debug-info=') for part in c)
+           for n, c in calls), 'I: the symbols of the Dart code kept apart for iOS')
 
 # J. iOS: a framework signed for development is caught too.
 reset_sent()
@@ -319,6 +370,53 @@ failure = case('iOS, Flutter signed for development',
                 'development': 'Flutter.framework'}, platform='ios')
 expect(failure is not None and 'Flutter.framework' in str(failure)
        and 'envoi-ios' not in names(), 'J: refused before sending')
+
+# K. No dSYM beside the core: the library stays whole, Color is sent.
+reset_sent()
+shutil.move(built_dsym, trial / 'dsym-de-cote')
+failure = case('Mac, no dSYM of the core', {})
+text = (journals[-1].folder / 'journal.txt').read_text(encoding='utf-8')
+expect(failure is None and 'pas de dSYM' in text and not archived_dsym.exists()
+       and not any(n == 'symboles-coeur' for n in names())
+       and not archived_core.read_bytes().endswith(b'stripped'),
+       'K: without a dSYM, the core keeps its symbols and the Mac is sent')
+shutil.move(trial / 'dsym-de-cote', built_dsym)
+
+# K2. A dSYM left by an earlier build (another UUID): not joined, no strip.
+reset_sent()
+failure = case('Mac, a dSYM of another build', {'stale_dsym': True})
+text = (journals[-1].folder / 'journal.txt').read_text(encoding='utf-8')
+expect(failure is None and 'pas de dSYM de ce cœur' in text and not archived_dsym.exists()
+       and not archived_core.read_bytes().endswith(b'stripped') and 'envoi-macos' in names(),
+       'K2: a dSYM of another build is not joined, the core keeps its symbols')
+
+# L. strip fails: the library stays whole, Color is sent.
+reset_sent()
+failure = case('Mac, strip fails', {'strip_fails': True})
+text = (journals[-1].folder / 'journal.txt').read_text(encoding='utf-8')
+expect(failure is None and 'strip a échoué' in text and 'envoi-macos' in names(),
+       'L: when strip fails, the core keeps its symbols and the Mac is sent')
+
+# M. iOS: the program of the archive exports every function of the core.
+symbols = sources / 'Color' / 'prototypes' / 'flutter-rust' / 'ios' / 'Runner' / 'core-symbols.txt'
+symbols.parent.mkdir(parents=True, exist_ok=True)
+symbols.write_text('_ep_a\n_ep_b\n_ep_c\n')
+reset_sent()
+failure = case('iOS, every function of the core exported',
+               {'identities': '  1) 01 "Apple Distribution: Essai (ABCDE12345)"\n'},
+               platform='ios')
+text = (journals[-1].folder / 'journal.txt').read_text(encoding='utf-8')
+expect(failure is None and 'Les 3 fonctions du cœur sont exportées' in text
+       and 'envoi-ios' in names(), 'M: the exports read with nm, then Color is sent')
+
+# N. iOS: a function of the core missing from the exports: nothing is sent.
+reset_sent()
+failure = case('iOS, a function of the core not exported',
+               {'identities': '  1) 01 "Apple Distribution: Essai (ABCDE12345)"\n',
+                'missing_export': '_ep_b'}, platform='ios')
+expect(failure is not None and '_ep_b' in str(failure)
+       and not any(n.startswith(('verification-ios', 'envoi-ios')) for n in names()),
+       'N: an export missing stops everything before the export and the sending')
 
 print('\n%d failure(s)' % len(failures))
 sys.exit(1 if failures else 0)

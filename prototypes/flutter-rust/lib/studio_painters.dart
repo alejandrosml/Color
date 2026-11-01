@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 
 import 'child_art.dart' show ShapeMarkColours;
 import 'document_renderer.dart';
+import 'draft_stroke.dart';
 import 'drawing_gesture.dart';
 import 'rust_document.dart';
+import 'sheet_images.dart';
 import 'studio_colors.dart';
 import 'viewport.dart';
 
@@ -46,6 +48,36 @@ int draftDepthOf({
   return low;
 }
 
+/// What is being drawn, as the painter of the sheet reads it at every
+/// frame: a press and the moves of the pointer change it, and paint the
+/// sheet again, without building the studio again (F-03 of the
+/// retrospective of October 2026).
+final class SheetDraft {
+  SheetDraft({
+    List<DocumentPoint>? points,
+    this.stroke,
+    this.kind = VectorKind.stroke,
+    this.rgb = 0x477fb2,
+    this.width = 12,
+    this.fillRgb,
+    this.stamp = 0,
+  }) : points = points ?? [];
+
+  /// Its points: those of a trait, or the two corners of a shape. Empty
+  /// when nothing is being drawn.
+  List<DocumentPoint> points;
+
+  /// A trait as pieces of path, frozen as it goes.
+  DraftStroke? stroke;
+  VectorKind kind;
+  int rgb;
+  double width;
+  int? fillRgb;
+
+  /// The drawing of a stamp.
+  int stamp;
+}
+
 class DocumentPainter extends CustomPainter {
   DocumentPainter({
     required this.viewport,
@@ -53,14 +85,8 @@ class DocumentPainter extends CustomPainter {
     required this.background,
     required this.strokes,
     required this.paintOrder,
-    required this.draftStamp,
     required this.draft,
-    required this.draftPoints,
     required Listenable repaint,
-    required this.draftColor,
-    required this.draftWidth,
-    required this.draftKind,
-    required this.draftFillRgb,
     required this.revision,
     required this.selectedIndex,
     required this.selectionBounds,
@@ -71,8 +97,21 @@ class DocumentPainter extends CustomPainter {
     this.anchorRgb = 0,
     this.anchorWidth = 1,
     this.anchorFillRgb,
+    this.images,
+    this.pixelRatio = 1,
+    this.viewMoving = false,
   }) : super(repaint: repaint);
   final DocumentViewport viewport;
+
+  /// The images that keep the drawing from one frame to the next, made for
+  /// [pixelRatio] pixels of the screen per logical pixel; null paints every
+  /// element at every frame.
+  final SheetImages? images;
+  final double pixelRatio;
+
+  /// The view moves under a gesture of the hand, two fingers or a trackpad:
+  /// the images follow it, and are made again once it stops.
+  final bool viewMoving;
 
   /// Colour of the sheet itself, under an image background and the drawing.
   final int paperRgb;
@@ -89,13 +128,9 @@ class DocumentPainter extends CustomPainter {
   /// the layers above: on a colouring page, under the lines of the page.
   /// Null paints it over the whole drawing.
   final int? draftDepth;
-  final int draftStamp;
-  final Path? draft;
-  final List<DocumentPoint> draftPoints;
-  final VectorKind draftKind;
-  final int? draftFillRgb;
-  final int draftColor;
-  final double draftWidth;
+
+  /// What is being drawn, read at every frame.
+  final SheetDraft draft;
   final int revision;
   final int? selectedIndex;
   final Rect? selectionBounds;
@@ -130,46 +165,75 @@ class DocumentPainter extends CustomPainter {
     );
   }
 
+  // The place of the chosen element in [paintOrder], -1 without one: once
+  // for a painter, not at every frame.
+  late final int _takenRank = selectedIndex == null
+      ? -1
+      : paintOrder.indexOf(selectedIndex!);
+
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.clipRect(Offset.zero & size);
-    final rect = Rect.fromLTWH(
-      viewport.left,
-      viewport.top,
-      viewport.width,
-      viewport.height,
-    );
-    canvas.drawShadow(Path()..addRect(rect), const Color(0x3323402c), 5, true);
-    canvas.drawRect(rect, Paint()..color = Color(0xff000000 | paperRgb));
-    canvas.save();
-    canvas.translate(viewport.left, viewport.top);
-    canvas.scale(viewport.scale);
-    canvas.clipRect(
-      Rect.fromLTWH(0, 0, viewport.documentWidth, viewport.documentHeight),
-    );
-    final image = background;
-    if (image != null) {
-      canvas.drawImageRect(
-        image,
-        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-        Rect.fromLTWH(0, 0, viewport.documentWidth, viewport.documentHeight),
-        Paint()..filterQuality = FilterQuality.medium,
-      );
-    }
     final waiting = anchor;
     final hovered = anchorDrawn ? null : waiting?.end;
     // The layers up to the active one, what is being drawn on it, then the
     // layers above it.
     final depth = (draftDepth ?? paintOrder.length).clamp(0, paintOrder.length);
-    for (var rank = 0; rank < depth; rank++) {
-      _paintElement(canvas, paintOrder[rank]);
+    final taken = _takenRank;
+    final drawing =
+        (draft.stroke != null && draft.points.isNotEmpty) ||
+        (waiting != null && hovered != null);
+    // The chosen element is taken by the pointer and follows it.
+    final dragging = taken >= 0 && selectionOffset.value != Offset.zero;
+    final images = this.images;
+    // At rest, and while something is drawn at the top of the drawing, one
+    // image holds the whole drawing, exactly as painted element by element.
+    // What is drawn under a layer, and the element being taken, lie between
+    // two images. Never both: a tool that draws lets the chosen element go;
+    // were it otherwise, the sheet is painted as without images.
+    final kept =
+        images != null &&
+        !(drawing && dragging) &&
+        images.paint(
+          canvas,
+          size,
+          pixelRatio: pixelRatio,
+          viewport: viewport,
+          viewMoving: viewMoving,
+          paperRgb: paperRgb,
+          background: background,
+          strokes: strokes,
+          paintOrder: paintOrder,
+          split: dragging
+              ? taken
+              : drawing
+              ? depth
+              : paintOrder.length,
+          excluded: dragging ? taken : -1,
+          paintLive: (canvas) => dragging
+              ? _paintElement(canvas, selectedIndex!)
+              : _paintDraft(canvas, waiting, hovered),
+        );
+    if (!kept) {
+      paintSheetBase(
+        canvas,
+        size,
+        viewport,
+        paperRgb: paperRgb,
+        background: background,
+      );
+      for (var rank = 0; rank < depth; rank++) {
+        _paintElement(canvas, paintOrder[rank]);
+      }
+      _paintDraft(canvas, waiting, hovered);
+      for (var rank = depth; rank < paintOrder.length; rank++) {
+        _paintElement(canvas, paintOrder[rank]);
+      }
+      canvas
+        ..restore()
+        ..restore();
     }
-    _paintDraft(canvas, waiting, hovered);
-    for (var rank = depth; rank < paintOrder.length; rank++) {
-      _paintElement(canvas, paintOrder[rank]);
-    }
-    canvas.restore();
+    canvas.save();
+    canvas.clipRect(Offset.zero & size);
     if (waiting != null) {
       // The little circle of the first click, and the one that follows the
       // pointer, in the colours of the picture of the tool.
@@ -177,7 +241,7 @@ class DocumentPainter extends CustomPainter {
           ? ShapeMarkColours.oval
           : ShapeMarkColours.line;
       final end = anchorDrawn
-          ? (draftPoints.length == 2 ? draftPoints.last : null)
+          ? (draft.points.length == 2 ? draft.points.last : null)
           : hovered;
       if (end != null) _mark(canvas, end, colours.end);
       _mark(canvas, waiting.start, colours.start);
@@ -233,36 +297,35 @@ class DocumentPainter extends CustomPainter {
     ShapeAnchor? waiting,
     DocumentPoint? hovered,
   ) {
-    if (draft != null && draftPoints.isNotEmpty) {
-      if (draftKind == VectorKind.stroke) {
+    final drawn = draft;
+    final stroke = drawn.stroke;
+    final points = drawn.points;
+    if (stroke != null && points.isNotEmpty) {
+      if (drawn.kind == VectorKind.stroke) {
         _drawStroke(
           canvas,
-          draft!,
-          Offset(draftPoints.first.x, draftPoints.first.y),
-          draftPoints.length == 1,
-          Color(0xff000000 | draftColor),
-          draftWidth,
+          stroke,
+          Offset(points.first.x, points.first.y),
+          points.length == 1,
+          Color(0xff000000 | drawn.rgb),
+          drawn.width,
         );
-      } else if (isUsableShape(
-        draftKind,
-        draftPoints.first,
-        draftPoints.last,
-      )) {
+      } else if (isUsableShape(drawn.kind, points.first, points.last)) {
         RenderedElement(
-          draftKind == VectorKind.stamp
+          drawn.kind == VectorKind.stamp
               ? StrokeData(
-                  draftPoints,
-                  draftColor,
+                  points,
+                  drawn.rgb,
                   1,
                   kind: VectorKind.stamp,
-                  stamp: draftStamp,
+                  stamp: drawn.stamp,
                 )
               : StrokeData(
-                  draftPoints,
-                  draftColor,
-                  draftWidth,
-                  kind: draftKind,
-                  fillRgb: draftFillRgb,
+                  points,
+                  drawn.rgb,
+                  drawn.width,
+                  kind: drawn.kind,
+                  fillRgb: drawn.fillRgb,
                 ),
         ).paint(canvas);
       }
@@ -284,7 +347,7 @@ class DocumentPainter extends CustomPainter {
 
   void _drawStroke(
     Canvas canvas,
-    Path path,
+    DraftStroke stroke,
     Offset first,
     bool single,
     Color color,
@@ -302,7 +365,9 @@ class DocumentPainter extends CustomPainter {
       ..strokeWidth = width
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(path, paint);
+    for (final piece in stroke.pieces) {
+      canvas.drawPath(piece, paint);
+    }
   }
 
   @override
@@ -319,7 +384,10 @@ class DocumentPainter extends CustomPainter {
       old.anchorDrawn != anchorDrawn ||
       old.anchorRgb != anchorRgb ||
       old.anchorWidth != anchorWidth ||
-      old.anchorFillRgb != anchorFillRgb;
+      old.anchorFillRgb != anchorFillRgb ||
+      !identical(old.images, images) ||
+      old.pixelRatio != pixelRatio ||
+      old.viewMoving != viewMoving;
 }
 
 class ToolPreviewPainter extends CustomPainter {

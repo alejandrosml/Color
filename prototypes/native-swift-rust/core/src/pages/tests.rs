@@ -16,7 +16,8 @@ fn page(body: &str) -> String {
 }
 
 fn all_pages() -> &'static [Page] {
-    pages().expect("every page compiled into the core reads")
+    static READ: std::sync::OnceLock<Vec<Page>> = std::sync::OnceLock::new();
+    READ.get_or_init(|| pages().expect("every page compiled into the core reads"))
 }
 
 /// The document of compiled page `id`, through the C function.

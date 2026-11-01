@@ -8,8 +8,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
-
+import 'app_folders.dart';
 import 'document_exports.dart';
 import 'png_export.dart';
 import 'rust_document.dart';
@@ -79,14 +78,35 @@ Future<Map<String, Object?>> runDeviceSelfTest() async {
     return '${png.length} bytes';
   });
   await check('folders', () async {
-    final support = await getApplicationSupportDirectory();
+    final support = await applicationSupportFolder();
+    final documents = await applicationDocumentsFolder();
+    final temporary = await temporaryFolder();
+    // The folders are where path_provider put them before 1.0.1 (P-01):
+    // the drawings, the options and the copy of recovery of a person who
+    // updates Color are there.
+    final wrong = misplacedFolders(
+      support: support.path,
+      documents: documents.path,
+      temporary: temporary.path,
+    );
+    if (wrong.isNotEmpty) throw StateError('dossiers déplacés : $wrong');
     final drawings = await const StudioFiles(mobile: true).ownDrawings();
-    final probe = File('${drawings.path}/.essai-color');
-    await probe.writeAsString('Color');
-    final read = await probe.readAsString();
-    await probe.delete();
-    if (read != 'Color') throw StateError('fichier relu différent');
-    return {'support': support.path, 'drawings': drawings.path};
+    if (!drawings.path.startsWith(documents.path)) {
+      throw StateError('les dessins sont hors des documents');
+    }
+    for (final folder in [drawings, temporary]) {
+      final probe = File('${folder.path}/.essai-color');
+      await probe.writeAsString('Color');
+      final read = await probe.readAsString();
+      await probe.delete();
+      if (read != 'Color') throw StateError('fichier relu différent');
+    }
+    return {
+      'support': support.path,
+      'documents': documents.path,
+      'temporary': temporary.path,
+      'drawings': drawings.path,
+    };
   });
   await check('sound', () async {
     // The core plays it where it has a player of its own (Android); 1 says
@@ -103,13 +123,53 @@ Future<Map<String, Object?>> runDeviceSelfTest() async {
   // The same, in a file of Color's own folder that the launcher reads from
   // the simulator or the emulator.
   try {
-    final support = await getApplicationSupportDirectory();
-    await support.create(recursive: true);
-    await File(
-      '${support.path}${Platform.pathSeparator}$selfTestFile',
-    ).writeAsString(jsonEncode(results));
+    final support = await applicationSupportFolder();
+    await File('${support.path}${Platform.pathSeparator}$selfTestFile')
+        .writeAsString(jsonEncode(results));
   } catch (_) {
     // The lines of the console remain.
   }
   return results;
+}
+
+/// The folders of [support], [documents] and [temporary] that are not where
+/// path_provider gave them on this system: on the iPhone and the iPad,
+/// Library/Application Support, Documents and Library/Caches of the
+/// container; on Android, files, app_flutter and cache of the application;
+/// on the Mac, the same as on the iPhone with the identifier of Color after
+/// Application Support and Caches. Elsewhere none is checked.
+List<String> misplacedFolders({
+  required String support,
+  required String documents,
+  required String temporary,
+  String? system,
+}) {
+  final on = system ?? Platform.operatingSystem;
+  bool under(String path, String parent) {
+    final at = path.lastIndexOf('/');
+    return at > 0 && path.substring(0, at).endsWith(parent);
+  }
+
+  final checks = switch (on) {
+    'ios' => {
+      'support': support.endsWith('/Library/Application Support'),
+      'documents': documents.endsWith('/Documents'),
+      'temporary': temporary.endsWith('/Library/Caches'),
+    },
+    'android' => {
+      'support': support.endsWith('/files'),
+      'documents': documents.endsWith('/app_flutter'),
+      'temporary': temporary.endsWith('/cache'),
+    },
+    'macos' => {
+      'support': under(support, '/Library/Application Support'),
+      'documents': documents.endsWith('/Documents'),
+      'temporary': under(temporary, '/Library/Caches'),
+    },
+    _ => <String, bool>{},
+  };
+  return [
+    for (final MapEntry(:key, :value) in checks.entries)
+      if (!value) key,
+  ];
 }

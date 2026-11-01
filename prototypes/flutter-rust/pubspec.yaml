@@ -1,7 +1,7 @@
 name: edupaint_flutter_study
 description: "Color : interface Flutter et cœur Rust partagé."
 publish_to: none
-version: 1.0.0+39
+version: 1.0.1+40
 environment:
   sdk: ^3.13.3
 dependencies:
@@ -11,7 +11,12 @@ dependencies:
     sdk: flutter
   ffi: ^2.1.4
   file_selector: 1.1.0
-  path_provider: ^2.1.6
+  # The folders of Color on Linux and Windows (lib/app_folders.dart): the
+  # readers of path_provider for those systems, in Dart. On the other
+  # systems the program that carries Color names them (P-01).
+  path_provider_linux: ^2.2.2
+  path_provider_platform_interface: ^2.1.3
+  path_provider_windows: ^2.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -22,7 +27,10 @@ flutter:
     # Shown with the other licences, from « À propos ».
     - fonts/LICENCE-DejaVu.txt
   fonts:
-    # Font 0 of text objects: every platform lays out the same glyphs.
+    # Font 0 of text objects: every platform lays out the same glyphs, for
+    # the characters it has. A subset of DejaVu Sans made by
+    # scripts/alleger-la-police.py; the whole font, in fonts/source/, is not
+    # carried.
     - family: ColorSans
       fonts:
         - asset: fonts/DejaVuSans.ttf

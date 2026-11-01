@@ -40,11 +40,21 @@ for paire in aarch64-linux-android:arm64-v8a:aarch64-linux-android \
   VARIABLE="CARGO_TARGET_$(echo "$CIBLE" | tr 'a-z-' 'A-Z_')_LINKER"
   export "$VARIABLE=$OUTILS/$CLANG"
   echo "Cœur pour Android, $ABI…"
-  "$CARGO" rustc --release --lib --offline --frozen --target "$CIBLE" --crate-type cdylib -- \
+  # Le cœur des boutiques ne lit aucun SVG : ni usvg ni ses lecteurs (R-01).
+  "$CARGO" rustc --release --lib --offline --frozen --no-default-features \
+    --target "$CIBLE" --crate-type cdylib -- \
     -C link-arg=-Wl,-soname,libedupaint_core.so \
     -C link-arg=-Wl,-z,max-page-size=16384
   mkdir -p "$SORTIE/$ABI"
   CIBLES="${CARGO_TARGET_DIR:-$COEUR/target}"
   cp "$CIBLES/$CIBLE/release/libedupaint_core.so" "$SORTIE/$ABI/libedupaint_core.so"
 done
+# Le cœur arm64 tel que Gradle l'emporte, sans les symboles qu'il retire
+# (--strip-unneeded), contre son budget (scripts/budgets.json, Q-03) :
+# au-delà, la recette s'arrête.
+SANS_SYMBOLES="$(mktemp)"
+"$OUTILS/llvm-strip" --strip-unneeded "$SORTIE/arm64-v8a/libedupaint_core.so" -o "$SANS_SYMBOLES"
+TAILLE="$(wc -c < "$SANS_SYMBOLES" | tr -d ' ')"
+rm -f "$SANS_SYMBOLES"
+python3 "$RACINE/scripts/budgets.py" verifier tailles core-android-arm64 "$TAILLE"
 echo "Bibliothèques du cœur pour Android : $SORTIE"

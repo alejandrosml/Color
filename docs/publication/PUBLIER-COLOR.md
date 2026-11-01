@@ -54,6 +54,13 @@ Le lanceur « Envoyer Color vers l'App Store » ne sert qu'à la fin : il envoie
 10. Remplis la fiche avec [FICHE-APP-STORE.md](FICHE-APP-STORE.md) : textes, catégorie, âge, confidentialité (« aucune donnée collectée »), statut de **non-professionnel**, captures. Choisis la version envoyée, puis « Ajouter pour vérification ». Apple vérifie en général en un ou deux jours, et Color paraît dès que tu le décides.
     *Le 28 octobre, dans le navigateur de Claude : les deux versions 1.0.0 portent le build 39 et toute la fiche (textes, adresses, contact et notes pour la vérification, publication manuelle) ; Color est gratuite dans les 175 pays ; les 12 captures sont sur les pages produit. Tu as fait les droits sur le contenu et la classification par âge (4+) ; à ta demande, j'ai publié la confidentialité (« Données non collectées »), **soumis les deux versions à Apple, à 15 h 38 et 15 h 39**, puis réglé leur publication en automatique : chacune paraît dès l'accord d'Apple. Voir « Où en est la fiche » dans [FICHE-APP-STORE.md](FICHE-APP-STORE.md).*
 
+**Une mise à jour, la 1.0.1 par exemple :**
+
+11. Attends que la version précédente soit « **Prête à la distribution** » : App Store Connect ne crée la suivante qu'à ce moment-là ([Create a new version](https://developer.apple.com/help/app-store-connect/update-your-app/create-a-new-version)). Ne retire pas une version de la vérification pour la remplacer : elle repartirait au bout de la file.
+12. Double-clique **`Envoyer Color vers l'App Store.command`** avec les sources de la mise à jour : il envoie son build (1.0.1 (40)).
+13. Dans App Store Connect, pour iOS puis pour macOS : « + » à côté du nom de la plateforme → le numéro de version → choisis le build, colle les **Nouveautés** de [FICHE-APP-STORE.md](FICHE-APP-STORE.md), puis « Ajouter pour vérification ». Les réponses sur les droits, l'âge et la confidentialité restent celles de la version précédente.
+    *La 1.0.1 est prête depuis le 1er novembre — les gains rapides de la rétrospective et toute son étape 1.1 (voir `docs/JALON-1.0.1.md`) ; elle attend que la 1.0.0 soit acceptée, et les essais du Mac. Si Apple refuse la 1.0.0, son correctif part de l'étiquette `color-1.0.0+39-soumise-20261028` avec le build 40, et la 1.0.1 prend le build 41.*
+
 ## 4. Google Play
 
 1. **Créer un compte de développeur personnel** sur [play.google.com/console](https://play.google.com/console) : 25 USD une seule fois, une pièce d'identité. Google demande aussi de vérifier l'accès à un appareil Android avec l'app Play Console : il faut, cette fois-ci, un téléphone Android, même prêté.

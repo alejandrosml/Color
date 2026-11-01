@@ -6,8 +6,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:path_provider/path_provider.dart';
 
+import 'app_folders.dart';
 import 'recovery_location.dart';
 import 'studio_tool.dart';
 
@@ -261,7 +261,7 @@ class StudioOptionsStore extends ValueNotifier<StudioOptions> {
   /// last as long as the session.
   static Future<StudioOptionsStore> open() async {
     try {
-      final support = (await getApplicationSupportDirectory().timeout(
+      final support = (await applicationSupportFolder().timeout(
         OptionsStorage.readTimeout,
       )).path;
       final storage = OptionsStorage(

@@ -30,7 +30,9 @@ In order, for each system:
   2. builds the core and Color in Release, archives it with Xcode, which
      signs it for the team and makes the profiles it needs; on the Mac, the
      resource bundles of Swift packages lose the signature Xcode gave them,
-     which App Store Connect refused (ITMS-90284, 1.0.0 (38));
+     which App Store Connect refused (ITMS-90284, 1.0.0 (38)); the symbols
+     of the Dart code stay in the journal (symboles-dart-<système>), those of
+     the core of the Mac go into the archive as a dSYM, sent with it;
   3. takes the quarantine marks off every file, as Apple asks;
   4. has Xcode sign the archive for the App Store into a package kept on
      this Mac, and reads every signature in it: all must be Color's, by a
@@ -54,7 +56,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mobiles_communs import (CARGO_TARGET, IOS_TARGETS, MOBILES, Failure, Journal,  # noqa: E402
                              check_flutter_sdk, core_folder, ensure_rust, find_sources, flutter,
-                             flutter_environment, main_wrapper, output, run, stage_app)
+                             flutter_environment, main_wrapper, output, run, stage_app,
+                             within_budgets)
 
 TEAM_FILE = MOBILES / 'equipe-apple.txt'
 TEAM = re.compile(r'^[A-Z0-9]{10}$')
@@ -85,6 +88,9 @@ NO_PROFILE = re.compile(r'No profiles? for|doesn.t match|not found|No signing ce
 # bytes, or universal.
 MACH_O_MAGICS = {bytes.fromhex(magic) for magic in (
     'feedface', 'feedfacf', 'cefaedfe', 'cffaedfe', 'cafebabe', 'cafebabf')}
+# What dwarfdump --uuid says of each architecture.
+UUID = re.compile(r'UUID: ([0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-'
+                  r'[0-9A-Fa-f]{12})')
 # The certificates by which App Store Connect takes a build.
 DISTRIBUTION = re.compile(r'(Apple Distribution|3rd Party Mac Developer Application'
                           r'|iPhone Distribution): ')
@@ -178,6 +184,57 @@ def archive_and_send(journal, work, platform, team_id, extra_settings=(), manual
         command.append('CODE_SIGN_STYLE=Automatic')
     run(journal, 'archive-' + platform, command + list(extra_settings), cwd=work)
     return archive, folder
+
+
+def dart_symbols(journal, platform):
+    """The option that keeps the symbols of the Dart code out of the
+    application, in the journal of this run: Color is lighter (−14 % for
+    the Dart code, measured on Android on 31 October 2026) and its stack
+    traces stay readable with « flutter symbolize » and these files. Flutter
+    writes the option into the settings that xcodebuild reads, so the
+    archive made afterwards keeps it."""
+    folder = journal.folder / ('symboles-dart-' + platform)
+    folder.mkdir(parents=True, exist_ok=True)
+    return '--split-debug-info=' + str(folder)
+
+
+def binary_uuids(path):
+    """The UUIDs that dwarfdump reads in a program, a library or a dSYM, one
+    per architecture; none when it cannot read them."""
+    code, text = output(['/usr/bin/xcrun', 'dwarfdump', '--uuid', path])
+    return set(UUID.findall(text)) if code == 0 else set()
+
+
+def core_dsym(journal, built, archive, embedded):
+    """The symbols of the core of the Mac, which App Store Connect asked for
+    at the first sending (« Upload Symbols Failed », 28 October 2026): rustc
+    leaves them in a dSYM beside the library it builds; it goes into the
+    dSYMs of the archive, which the export sends with Color. The copy in
+    Color then loses its debugging entries and local symbols (strip -S -x):
+    smaller, and crash reports are read with the dSYM. Its exported
+    functions, which Dart looks up by name, stay. Without a dSYM of this very
+    library (the same UUID: one left by an earlier build is not), the
+    library is left whole."""
+    found = [path for path in (built.with_name(built.name + '.dSYM'),
+                               built.parent / 'deps' / (built.name + '.dSYM')) if path.is_dir()]
+    library = binary_uuids(embedded)
+    found = [path for path in found if library and binary_uuids(path) == library]
+    journal.keep('UUID du cœur : %s' % ', '.join(sorted(library)))
+    if not found:
+        journal.say('  (pas de dSYM de ce cœur : sa bibliothèque garde ses symboles)')
+        return
+    dsyms = archive / 'dSYMs'
+    dsyms.mkdir(exist_ok=True)
+    target = dsyms / (embedded.name + '.dSYM')
+    shutil.rmtree(target, ignore_errors=True)
+    shutil.copytree(found[0], target, symlinks=True)
+    # -S the debugging entries, -x the local symbols; strip rewrites the file
+    # whole or leaves it as it was.
+    if run(journal, 'symboles-coeur', ['/usr/bin/xcrun', 'strip', '-S', '-x', embedded],
+           check=False) != 0:
+        journal.say('  (strip a échoué : la bibliothèque du cœur garde ses symboles)')
+        return
+    journal.say('  Symboles du cœur : dSYM dans l’archive, bibliothèque allégée.')
 
 
 def distribution_identity(team_id):
@@ -299,7 +356,40 @@ def check_signatures(journal, exported, platform):
                 % (len(items), authority.group(1)))
 
 
-def send(journal, archive, folder, team_id, platform, manual=False):
+def check_core_exports(journal, archive, sources):
+    """The program of the archive of iOS exports every function of the core
+    that Dart looks up by name, as ios/Runner/core-symbols.txt lists them
+    (P-04): a list that missed one would be found only at the first start on
+    a device, where Color could not open its core. Read with nm; nothing is
+    sent otherwise. Sources older than that list are said, not refused."""
+    listed = (sources / 'Color' / 'prototypes' / 'flutter-rust' / 'ios' / 'Runner'
+              / 'core-symbols.txt')
+    if not listed.is_file():
+        journal.say('  Fonctions exportées : ces sources n’en ont pas la liste.')
+        return
+    apps = sorted((Path(archive) / 'Products' / 'Applications').glob('*.app'))
+    if not apps:
+        raise Failure('L’archive n’a pas d’application : %s.' % archive)
+    info = apps[0] / 'Info.plist'
+    executable = apps[0].stem
+    if info.is_file():
+        executable = plistlib.loads(info.read_bytes()).get('CFBundleExecutable', executable)
+    program = apps[0] / executable
+    code, text = output(['/usr/bin/xcrun', 'nm', '-gU', str(program)])
+    if code != 0:
+        raise Failure('nm ne lit pas le programme de l’archive (%s).' % program)
+    exported = {line.split()[-1] for line in text.splitlines() if line.strip()}
+    wanted = [name for name in listed.read_text(encoding='utf-8').split() if name]
+    missing = [name for name in wanted if name not in exported]
+    journal.keep('nm -gU %s : %d symboles exportés' % (program, len(exported)))
+    if missing:
+        raise Failure('Le programme de l’archive n’exporte pas %d fonction(s) du cœur (%s) :'
+                      ' Color ne pourrait pas ouvrir son cœur. Rien n’est envoyé.'
+                      % (len(missing), ', '.join(missing[:6])))
+    journal.say('  Les %d fonctions du cœur sont exportées par le programme.' % len(wanted))
+
+
+def send(journal, archive, folder, team_id, platform, manual=False, sources=None):
     # Apple refuses files that still carry the quarantine of a download.
     run(journal, 'quarantaine', ['/usr/bin/xattr', '-cr', archive], check=False)
     # First an export kept here, whose signatures are all read before anything
@@ -311,6 +401,15 @@ def send(journal, archive, folder, team_id, platform, manual=False):
         ['/usr/bin/xcodebuild', '-exportArchive', '-archivePath', archive, '-exportOptionsPlist',
          options, '-exportPath', exported, '-allowProvisioningUpdates'])
     check_signatures(journal, exported, platform)
+    # What App Store Connect would receive, against the budgets of this
+    # version (Q-03): beyond them, nothing is sent.
+    if sources is not None:
+        files = sorted(exported.glob('*.ipa' if platform == 'ios' else '*.pkg'))
+        if files:
+            name = 'ios-ipa' if platform == 'ios' else 'mac-pkg'
+            within_budgets(journal, sources, 'tailles', {name: files[0].stat().st_size})
+        else:
+            journal.say('  Budget : l’export de vérification n’a ni IPA ni paquet à mesurer.')
     journal.say('  Envoi à App Store Connect…')
     options = export_options(journal, team_id, folder, manual)
     run(journal, 'envoi-' + platform, ['/usr/bin/xcodebuild', '-exportArchive', '-archivePath',
@@ -322,17 +421,25 @@ def mac(journal, sources, version, team_id):
     journal.say('\nColor pour le Mac App Store')
     work = stage_app(journal, sources, MOBILES / ('app-store-mac-%s-work' % version.replace('+', '-')))
     environment = os.environ.copy()
-    environment.update(MACOSX_DEPLOYMENT_TARGET='26.6', CARGO_TARGET_DIR=str(CARGO_TARGET / 'mac'))
+    # One linkable kind, so that cargo applies the link-time optimization of
+    # the release profile; line tables and rustc's own dSYM (split debug
+    # information « packed ») for the crash reports, see core_dsym.
+    environment.update(MACOSX_DEPLOYMENT_TARGET='26.6', CARGO_TARGET_DIR=str(CARGO_TARGET / 'mac'),
+                       CARGO_PROFILE_RELEASE_DEBUG='line-tables-only',
+                       CARGO_PROFILE_RELEASE_STRIP='none',
+                       CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO='packed')
     cargo = shutil.which('cargo', path='/opt/homebrew/bin') or 'cargo'
+    # The core of the stores reads no SVG: neither usvg nor the readers (R-01).
     run(journal, 'coeur-mac', [cargo, 'rustc', '--release', '--lib', '--offline', '--frozen',
-                               '--target', 'aarch64-apple-darwin', '--',
+                               '--no-default-features',
+                               '--target', 'aarch64-apple-darwin', '--crate-type', 'cdylib', '--',
                                '-C', 'link-arg=-Wl,-install_name,@rpath/libedupaint_core.dylib'],
         cwd=core_folder(sources), env=environment)
     dylib = CARGO_TARGET / 'mac' / 'aarch64-apple-darwin' / 'release' / 'libedupaint_core.dylib'
     flutter_env = flutter_environment()
     flutter(journal, 'flutter-pub-get', ['pub', 'get', '--offline'], work, flutter_env)
-    flutter(journal, 'flutter-build-macos', ['build', 'macos', '--release', '--no-pub'], work,
-            flutter_env)
+    flutter(journal, 'flutter-build-macos', ['build', 'macos', '--release', '--no-pub',
+                                             dart_symbols(journal, 'macos')], work, flutter_env)
     journal.say('  Archive signée par Xcode…')
     try:
         archive, folder = archive_and_send(journal, work, 'macos', team_id,
@@ -355,6 +462,7 @@ def mac(journal, sources, version, team_id):
     # identity, and the application is sealed again with its entitlements.
     embedded = app / 'Contents' / 'Frameworks' / 'libedupaint_core.dylib'
     shutil.copy2(dylib, embedded)
+    core_dsym(journal, dylib, archive, embedded)
     resource_bundles_unsigned(journal, app)
     code, description = output(['/usr/bin/codesign', '-dvv', app])
     identity = re.search(r'Authority=(Apple Development[^\n]*)', description)
@@ -363,7 +471,7 @@ def mac(journal, sources, version, team_id):
     run(journal, 'signature', ['/usr/bin/codesign', '--force', '--sign', identity.group(1), embedded])
     run(journal, 'signature', ['/usr/bin/codesign', '--force', '--sign', identity.group(1),
                                '--preserve-metadata=entitlements,requirements,flags,runtime', app])
-    send(journal, archive, folder, team_id, 'macos')
+    send(journal, archive, folder, team_id, 'macos', sources=sources)
     remember_sent('macos', version)
     journal.say('  Color pour le Mac : envoyée.')
 
@@ -440,7 +548,9 @@ def ios(journal, sources, version, team_id):
     work = stage_app(journal, sources, MOBILES / ('app-store-ios-%s-work' % version.replace('+', '-')))
     cargo, rust_env = ensure_rust(journal, IOS_TARGETS)
     rust_env['IPHONEOS_DEPLOYMENT_TARGET'] = '18.0'
+    # The core of the stores reads no SVG: neither usvg nor the readers (R-01).
     run(journal, 'coeur-ios', cargo + ['rustc', '--release', '--lib', '--offline', '--frozen',
+                                       '--no-default-features',
                                        '--target', 'aarch64-apple-ios', '--crate-type', 'staticlib'],
         cwd=core_folder(sources), env=rust_env)
     place = work / 'ios' / 'rust' / 'iphoneos'
@@ -461,7 +571,8 @@ def ios(journal, sources, version, team_id):
     flutter(journal, 'flutter-precache', ['precache', '--ios'], work, flutter_env)
     flutter(journal, 'flutter-pub-get', ['pub', 'get', '--offline'], work, flutter_env)
     flutter(journal, 'flutter-config-ios', ['build', 'ios', '--release', '--no-pub',
-                                            '--config-only'], work, flutter_env)
+                                            '--config-only', dart_symbols(journal, 'ios')],
+            work, flutter_env)
     if identity:
         journal.say('  Archive signée pour l’App Store, par « %s » et le profil « %s »…'
                     % (identity, PROFILE_NAME))
@@ -480,7 +591,8 @@ def ios(journal, sources, version, team_id):
     else:
         journal.say('  Archive signée par Xcode…')
         archive, folder = archive_ios(journal, work, team_id)
-    send(journal, archive, folder, team_id, 'ios', manual=bool(identity))
+    check_core_exports(journal, archive, sources)
+    send(journal, archive, folder, team_id, 'ios', manual=bool(identity), sources=sources)
     remember_sent('ios', version)
     journal.say('  Color pour iPhone et iPad : envoyée.')
 

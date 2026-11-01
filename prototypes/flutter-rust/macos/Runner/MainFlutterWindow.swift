@@ -19,12 +19,26 @@ enum EduPaintAtomicFileWriter {
       do {
         try checkDestination(coordinatedURL)
         try data.write(to: coordinatedURL, options: .atomic)
+        // Against a power cut: the file, then the folder that names it.
+        keepOnDisk(coordinatedURL.path)
+        keepOnDisk(coordinatedURL.deletingLastPathComponent().path)
       } catch {
         writeError = error
       }
     }
     if let error = coordinationError { throw error }
     if let error = writeError { throw error }
+  }
+
+  /// Asks macOS to put `path` on the disk itself, past the disk's own cache
+  /// (F_FULLFSYNC), as a plain flush does not. Best effort: the file is
+  /// written either way, and a folder outside what the sandbox opens is
+  /// left as it is.
+  private static func keepOnDisk(_ path: String) {
+    let descriptor = open(path, O_RDONLY)
+    guard descriptor >= 0 else { return }
+    _ = fcntl(descriptor, F_FULLFSYNC)
+    close(descriptor)
   }
 
   private static func checkDestination(_ url: URL) throws {
@@ -149,8 +163,12 @@ private final class EduPaintSounds {
       sounds[id] = sound
     }
     guard let sound = sounds[id] else { return false }
-    // The same sound asked again while it plays starts again.
-    if sound.isPlaying { _ = sound.stop() }
+    // The same sound asked again while it plays starts again, from its
+    // beginning, without being stopped and started anew.
+    if sound.isPlaying {
+      sound.currentTime = 0
+      return true
+    }
     return sound.play()
   }
 }
@@ -160,12 +178,26 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
   private var lifecycleChannel: FlutterMethodChannel?
   private var printChannel: FlutterMethodChannel?
   private var soundChannel: FlutterMethodChannel?
+  private var foldersChannel: FlutterMethodChannel?
   private let sounds = EduPaintSounds()
   private var printJob: EduPaintPrintJob?
   private var diagnostics: EduPaintDiagnostics?
   private var lifecycleHandlerReady = false
   private let fileWriteQueue = DispatchQueue(label: "org.edupaint.files", qos: .userInitiated)
   private var closeRequestQueued = false
+
+  /// A folder of Color in the user's domain, as path_provider gave it before
+  /// (lib/app_folders.dart): its own folder (Application Support, which
+  /// Dart makes when it is missing), the documents, the caches. On the Mac
+  /// its own folder and the caches are shared by the programs of a person
+  /// outside a sandbox: the identifier of Color comes after them, as it did.
+  static func userFolder(_ directory: FileManager.SearchPathDirectory) -> String? {
+    guard let path = NSSearchPathForDirectoriesInDomains(directory, .userDomainMask, true).first
+    else { return nil }
+    guard directory == .applicationSupportDirectory || directory == .cachesDirectory,
+          let identifier = Bundle.main.bundleIdentifier else { return path }
+    return URL(fileURLWithPath: path).appendingPathComponent(identifier).path
+  }
 
   func requestExitDecision(_ completion: @escaping (Bool) -> Void) {
     guard lifecycleHandlerReady, let channel = lifecycleChannel else {
@@ -290,6 +322,17 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
       }
     }
     filesChannel = channel
+    let folders = FlutterMethodChannel(name: "org.edupaint/folders",
+                                       binaryMessenger: flutterViewController.engine.binaryMessenger)
+    folders.setMethodCallHandler { call, result in
+      switch call.method {
+      case "support": result(MainFlutterWindow.userFolder(.applicationSupportDirectory))
+      case "documents": result(MainFlutterWindow.userFolder(.documentDirectory))
+      case "temporary": result(MainFlutterWindow.userFolder(.cachesDirectory))
+      default: result(FlutterMethodNotImplemented)
+      }
+    }
+    foldersChannel = folders
     lifecycleChannel = FlutterMethodChannel(name: "org.edupaint/lifecycle",
                                            binaryMessenger: flutterViewController.engine.binaryMessenger)
     lifecycleChannel?.setMethodCallHandler { [weak self] call, result in

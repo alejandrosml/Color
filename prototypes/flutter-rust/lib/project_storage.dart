@@ -4,7 +4,8 @@ import 'dart:io';
 import 'dart:math' show Random;
 import 'dart:typed_data';
 
-import 'rust_document.dart' show maxProjectBytes, RustDocument, PreparedProject;
+import 'rust_document.dart'
+    show DiskSync, keepOnDisk, maxProjectBytes, PreparedProject, RustDocument;
 import 'bounded_project_reader.dart' as bounded;
 import 'file_operation_cleanup_exception.dart';
 import 'recovery_location.dart';
@@ -71,7 +72,11 @@ class ProjectStorage {
     final snapshot = _snapshot(bytes);
     return _enqueue(() async {
       await recoveryDirectory.create(recursive: true);
-      await _writeAtomically(_recoveryFile.path, snapshot);
+      await _writeAtomically(
+        _recoveryFile.path,
+        snapshot,
+        sync: DiskSync.ordered,
+      );
     });
   }
 
@@ -214,8 +219,10 @@ class ProjectStorage {
   ///
   /// Requires write access to the destination directory. macOS user-selected
   /// file access alone may not provide this; use the native document writer
-  /// for external sandboxed files. There is no delete-then-copy fallback and
-  /// no claim of power-loss durability (the parent directory is not fsynced).
+  /// for external sandboxed files. There is no delete-then-copy fallback.
+  /// Against a power cut, the file is flushed to the disk itself before it
+  /// is named (F_FULLFSYNC on Apple systems, where Dart's flush is a plain
+  /// fsync), then its folder after (except on Windows): see [keepOnDisk].
   static Future<void> writeProject(String path, Uint8List bytes) =>
       _writeAtomically(path, _snapshot(bytes));
 
@@ -231,7 +238,11 @@ class ProjectStorage {
     return Uint8List.fromList(bytes);
   }
 
-  static Future<void> _writeAtomically(String path, Uint8List bytes) async {
+  static Future<void> _writeAtomically(
+    String path,
+    Uint8List bytes, {
+    DiskSync sync = DiskSync.full,
+  }) async {
     final target = File(path).absolute;
     await _checkDestination(target.path);
     final random = Random.secure();
@@ -253,9 +264,19 @@ class ProjectStorage {
       } finally {
         await handle.close();
       }
+      // Dart's flush is a plain fsync: enough elsewhere, not on Apple
+      // systems, where the data may wait in the disk's own cache.
+      if (Platform.isIOS || Platform.isMacOS) {
+        await keepOnDisk(temporary.path, sync);
+      }
       await _checkDestination(target.path);
       await temporary.rename(target.path);
       replaced = true;
+      // The new name lives in the folder. A recovery copy needs only the
+      // order kept above: the old copy or the new one.
+      if (sync == DiskSync.full && !Platform.isWindows) {
+        await keepOnDisk(target.parent.path, sync);
+      }
     } finally {
       if (!replaced) {
         try {

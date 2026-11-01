@@ -9,6 +9,7 @@ import 'dart:ui';
 import 'package:edupaint_flutter_study/fit_to_screen.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_files.dart';
+import 'package:edupaint_flutter_study/studio_painters.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -89,6 +90,64 @@ void main() {
       }
       await studio.drag(const Offset(-40, -20), const Offset(30, 20));
       studio.expectCount(1);
+      await studio.finish();
+    }, skip: !available);
+
+    testWidgets('in a small window the images of the sheet are made for the '
+        'pixels of the screen they are shown with', (tester) async {
+      final studio = StudioDriver(tester);
+      await studio.start(size: const Size(844, 390));
+      final painter = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((paint) => paint.painter)
+          .whereType<DocumentPainter>()
+          .single;
+      // The studio is laid out on 680 × 520 and shown at 390 / 520 of that:
+      // drawn one pixel for one, its images are made that much smaller.
+      expect(
+        painter.pixelRatio,
+        closeTo(tester.view.devicePixelRatio * 390 / 520, 1e-9),
+      );
+      await studio.finish();
+    }, skip: !available);
+
+    testWidgets('out of sight, the recovery copy is written at once, once', (
+      tester,
+    ) async {
+      final studio = StudioDriver(tester);
+      await studio.start(size: const Size(1180, 820));
+      await studio.drag(const Offset(-40, -20), const Offset(30, 20));
+      studio.expectCount(1);
+      void go(List<AppLifecycleState> states) {
+        for (final state in states) {
+          tester.binding.handleAppLifecycleStateChanged(state);
+        }
+      }
+
+      final before = studio.recovery.writes;
+      // As a tablet leaves Color: hidden, then paused. The studio hears
+      // both, and writes one copy, without waiting for its pause.
+      go(const [
+        AppLifecycleState.inactive,
+        AppLifecycleState.hidden,
+        AppLifecycleState.paused,
+      ]);
+      await tester.pump();
+      expect(studio.recovery.writes, before + 1);
+      await tester.pump(const Duration(seconds: 6));
+      expect(studio.recovery.writes, before + 1);
+      // Back, and away again with nothing new: nothing more to write.
+      go(const [
+        AppLifecycleState.hidden,
+        AppLifecycleState.inactive,
+        AppLifecycleState.resumed,
+      ]);
+      await tester.pump();
+      go(const [AppLifecycleState.inactive, AppLifecycleState.hidden]);
+      await tester.pump(const Duration(seconds: 6));
+      expect(studio.recovery.writes, before + 1);
+      go(const [AppLifecycleState.inactive, AppLifecycleState.resumed]);
+      await tester.pump();
       await studio.finish();
     }, skip: !available);
 

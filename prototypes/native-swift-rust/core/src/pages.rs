@@ -41,9 +41,13 @@
 //!
 //! The thumbnail of a page is its description by `art::describe`, with every
 //! guard of that reader, as for the pictures of the interface.
+//!
+//! The pages are read before the build: their catalogue and the project of
+//! each one's document are compiled in (catalogues.rs), and this reader is
+//! in the core only with the `svg` feature, for the tests that write them
+//! again.
 use super::*;
-use crate::art::{describe, owned_text};
-use std::sync::OnceLock;
+use crate::art::describe;
 use usvg::roxmltree::{Document, Node, ParsingOptions};
 
 mod clip;
@@ -51,7 +55,7 @@ mod clip;
 /// The pages, in the order of their keys, which are their file names
 /// without `.svg`. An identifier is a position in this table: it holds for
 /// this library only, and no project ever stores one.
-static PAGES: &[(&str, &str)] = &[
+pub(crate) static PAGES: &[(&str, &str)] = &[
     ("bateau", include_str!("../art/coloriages/bateau.svg")),
     (
         "bonhomme-de-neige",
@@ -583,12 +587,10 @@ pub(crate) fn read_page(svg: &str) -> Result<Page, Refused> {
     })
 }
 
-// Every page, read once; None if one of the files compiled into the library
-// is refused, which the tests of this module do not let happen.
-fn pages() -> Option<&'static [Page]> {
-    static READ: OnceLock<Option<Vec<Page>>> = OnceLock::new();
-    READ.get_or_init(|| PAGES.iter().map(|(_, svg)| read_page(svg).ok()).collect())
-        .as_deref()
+// Every page, read; None if one of the files is refused, which the tests of
+// this module do not let happen.
+fn pages() -> Option<Vec<Page>> {
+    PAGES.iter().map(|(_, svg)| read_page(svg).ok()).collect()
 }
 
 fn append(out: &mut String, text: &str) -> Option<()> {
@@ -611,52 +613,33 @@ fn escaped(out: &mut String, title: &str) -> Option<()> {
     Some(())
 }
 
-// The text of ep_page_catalog, made once; None if a page is refused or
-// memory is short.
-fn catalogue() -> Option<&'static str> {
-    static TEXT: OnceLock<Option<String>> = OnceLock::new();
-    TEXT.get_or_init(|| {
-        let mut out = String::new();
-        for (id, ((key, svg), page)) in PAGES.iter().zip(pages()?).enumerate() {
-            // Keys are short: see the tests.
-            out.try_reserve(64).ok()?;
-            write!(out, "T {id} {key} {} {} ", page.regions(), page.details()).ok()?;
-            escaped(&mut out, &page.title)?;
-            append(&mut out, "\n")?;
-            describe(key, svg, &mut out).ok()?;
-        }
-        Some(out)
-    })
-    .as_deref()
+/// The text of `ep_page_catalog`, as catalogues.rs documents it; None if a
+/// page is refused or memory is short.
+pub(crate) fn page_catalogue() -> Option<String> {
+    let mut out = String::new();
+    for (id, ((key, svg), page)) in PAGES.iter().zip(pages()?).enumerate() {
+        // Keys are short: see the tests.
+        out.try_reserve(64).ok()?;
+        write!(out, "T {id} {key} {} {} ", page.regions(), page.details()).ok()?;
+        escaped(&mut out, &page.title)?;
+        append(&mut out, "\n")?;
+        describe(key, svg, &mut out).ok()?;
+    }
+    Some(out)
 }
 
-/// Number of colouring pages of this core; identifiers are 0..count.
-#[no_mangle]
-pub extern "C" fn ep_page_count() -> u32 {
-    PAGES.len() as u32
-}
-
-/// Returns the colouring pages as owned, NUL-terminated ASCII text, or NULL
-/// when memory is short. For each page, in identifier order, one line
-///
-/// ```text
-/// T <id> <key> <regions> <details> <title>
-/// ```
-///
-/// then its thumbnail, described as ep_art_catalog describes a picture, from
-/// `P <key> <width> <height>` to `X`; the width and the height are those of
-/// the sheet that the page needs. `<regions>` counts its filled elements,
-/// the zones that the paint pot colours, `<details>` its other elements:
-/// lines, polylines, open paths and unfilled shapes; both count elements of
-/// the file, not the lines of its document. `<title>`, the rest of
-/// the line, is the UTF-8 of the French title with every byte outside
-/// printable ASCII, and `%`, written `%XX`. Release with ep_string_free only.
-#[no_mangle]
-pub extern "C" fn ep_page_catalog() -> *mut c_char {
-    // The libraries that read SVG are not ours: should one ever panic, the
-    // answer is NULL.
-    std::panic::catch_unwind(|| catalogue().map_or(ptr::null_mut(), owned_text))
-        .unwrap_or(ptr::null_mut())
+/// The project of the document of every page, in the order of their keys,
+/// as `ep_document_from_page` opens them; None if a page is refused.
+pub(crate) fn page_projects() -> Option<Vec<Vec<u8>>> {
+    pages()?
+        .iter()
+        .map(|page| {
+            let document = page_document(page).ok()?;
+            let mut bytes = vec![0; project_size(&document)];
+            (unsafe { copy_project(&document, bytes.as_mut_ptr(), bytes.len()) } == 0)
+                .then_some(bytes)
+        })
+        .collect()
 }
 
 // The objects of the document of a page, in this order, each with its layer,
@@ -755,30 +738,6 @@ pub(crate) fn page_document(page: &Page) -> Result<EpDocument, i32> {
     document.layer_count = 3;
     document.active_layer = DRAWING_LAYER;
     Ok(document)
-}
-
-/// Creates a NEW document for colouring page `page`, of the size of the
-/// page, or NULL for an unknown page or when memory is short. Its layers,
-/// bottom to top: identifier 1, locked, the zones of the page, every filled
-/// element filled with white inside a white outline of width 0.1;
-/// identifier 0, active and empty, where the child draws; identifier 2,
-/// locked, the lines of the page, no fill: the outline of every element as
-/// its file draws it, without the parts that a filled element drawn after
-/// it hides; an outline of which something is hidden becomes the freehand
-/// pieces left. Paint goes under the lines and over the zones; the paint
-/// pot colours a zone through ep_set_object_style, the one change a locked
-/// layer accepts. Nothing of the page is in the history: the document
-/// starts with no undo step. Released with ep_document_free.
-#[no_mangle]
-pub extern "C" fn ep_document_from_page(page: u32) -> *mut EpDocument {
-    // Read outside any document: a panic of the XML reader is a NULL.
-    let Ok(Some(pages)) = std::panic::catch_unwind(pages) else {
-        return ptr::null_mut();
-    };
-    match pages.get(page as usize).map(page_document) {
-        Some(Ok(document)) => owned_document(document),
-        _ => ptr::null_mut(),
-    }
 }
 
 #[cfg(test)]

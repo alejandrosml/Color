@@ -488,7 +488,11 @@ def main(argv=None):
     flutter, dart = sdk / 'bin/flutter', sdk / 'bin/dart'
     core = CORE_SOURCE  # Always canonical, including when ROOT is on ExFAT.
     dylib = output / 'libedupaint_core.dylib'
-    env['EDUPAINT_CORE_LIBRARY'] = str(dylib)
+    # The tests of the interface read SVG through the core (vector_art_test):
+    # they get a core of their own, with its reader of SVG. The application
+    # gets the core of the stores, without it (R-01 of the retrospective).
+    tested = output / 'libedupaint_core-tests.dylib'
+    env['EDUPAINT_CORE_LIBRARY'] = str(tested)
 
     def command(name, arguments, cwd=APP_SOURCE):
         run(name, arguments, cwd=cwd, env=env, report_dir=report_dir)
@@ -507,8 +511,15 @@ def main(argv=None):
     # sources that lost files of vendor/ cannot be built.
     command('rust-vendored-sources', [sys.executable, ROOT / 'scripts/check-vendored-sources.py', CORE_FOLDER],
             cwd=CORE_FOLDER)
+    # One linkable kind at a time: cargo then applies the link-time
+    # optimization of the release profile (Cargo.toml), which it skips for
+    # the rlib.
+    command('rust-dylib-tests', [cargo, 'rustc', '--release', '--lib', '--offline', '--frozen',
+        '--target', RUST_TARGET, '--crate-type', 'cdylib', '--',
+        '-C', 'link-arg=-Wl,-install_name,@rpath/libedupaint_core.dylib'], cwd=CORE_FOLDER)
+    install_library(cargo_target / RUST_TARGET / 'release/libedupaint_core.dylib', tested)
     command('rust-dylib', [cargo, 'rustc', '--release', '--lib', '--offline', '--frozen',
-        '--target', RUST_TARGET, '--',
+        '--no-default-features', '--target', RUST_TARGET, '--crate-type', 'cdylib', '--',
         '-C', 'link-arg=-Wl,-install_name,@rpath/libedupaint_core.dylib'], cwd=CORE_FOLDER)
     install_library(cargo_target / RUST_TARGET / 'release/libedupaint_core.dylib', dylib)
     if args.prepare_only:
@@ -572,8 +583,9 @@ def main(argv=None):
         dart_aot_sha256=sha256(app / 'Contents/Frameworks/App.framework/App'),
         rust_dylib_sha256=sha256(embedded), core_source_sha256=sha256(core),
         core_source_files_sha256=core_files, core_vendored_sources=core_vendor,
-        core_build='cargo rustc --release --lib --offline --frozen --target ' + RUST_TARGET
-                   + ', dependencies from vendor/ only',
+        core_build='cargo rustc --release --lib --offline --frozen --no-default-features --target '
+                   + RUST_TARGET + ' --crate-type cdylib; for the tests the same with the reader of SVG,'
+                   + ' dependencies from vendor/ only',
         cargo_target_directory=str(cargo_target),
         application_source_sha256={str(p.relative_to(work)): sha256(p)
             for p in sorted([*work.glob('lib/*.dart'), *work.glob('macos/Runner/*.swift'),

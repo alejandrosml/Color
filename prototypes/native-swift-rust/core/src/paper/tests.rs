@@ -159,6 +159,7 @@ fn files_spell_each_sheet_colour_in_exactly_one_way() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
 fn the_history_limit_refuses_a_new_colour_without_losing_anything() {
     let doc = Owned::new();
     for command in 0..MAX_HISTORY_STEPS {

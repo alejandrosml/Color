@@ -184,7 +184,7 @@ void main() {
       await gesture.moveTo(studio.sheetCenter + studio.at(800, 600));
       await tester.pump();
       // While it glides, the draft starts at the first click.
-      final draft = painter(tester).draftPoints;
+      final draft = painter(tester).draft.points;
       expect(draft.first.x, closeTo(200, .01));
       expect(draft.last.x, closeTo(800, .01));
       studio.expectCount(0);
@@ -553,13 +553,13 @@ void main() {
       );
       await gesture.moveTo(studio.sheetCenter + studio.at(600, 500));
       await tester.pump();
-      expect(painter(tester).draftPoints, hasLength(2));
+      expect(painter(tester).draft.points, hasLength(2));
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
       expect(anchor(tester), isNull);
-      expect(painter(tester).draftPoints, isEmpty);
+      expect(painter(tester).draft.points, isEmpty);
       // The line drawn before is still there.
       studio.expectCount(1);
       await gesture.up();

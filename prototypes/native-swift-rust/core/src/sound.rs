@@ -31,8 +31,8 @@
 //! recording is the same bytes everywhere by nature.
 //!
 //! Playing is offered where the interface has no player of its own: winmm
-//! on Windows, ALSA on Linux. Elsewhere the interface reads the WAV bytes
-//! and plays them itself. These functions touch no document and may be
+//! on Windows, ALSA on Linux, AAudio on Android. Elsewhere the interface
+//! reads the WAV bytes and plays them itself. These functions touch no document and may be
 //! called from any thread.
 use super::*;
 use std::f64::consts::TAU;
@@ -645,10 +645,17 @@ pub unsafe extern "C" fn ep_copy_sound_wav(id: u32, out: *mut u8, capacity: usiz
 /// library, one of its functions or the device is found missing, which only
 /// the thread of the first sound can discover, every later call returns 1.
 ///
-/// Android: AAudio, loaded at run time (Android 8 and later), on a
-/// short-lived thread per sound, at most four at once, as on Linux. Once the
-/// library or one of its functions is found missing, or a stream cannot be
-/// opened, every later call returns 1.
+/// Android: AAudio, loaded at run time by the first call (Android 8 and
+/// later). A thread of the core opens one output stream at low latency, at
+/// the rate of the device, when a sound is asked for, and closes it three
+/// seconds after the last one; its callback mixes up to four sounds, a fifth
+/// is dropped and 0 is still returned. Nothing of AAudio but its loading
+/// runs on the caller's thread: the call only hands the sound over. A stream
+/// that cannot be opened, that the system takes away or that stops calling
+/// back costs the sounds asked for meanwhile (0 still); the next one tries
+/// again, half a second after a failed opening at the soonest. Once the
+/// library or one of its functions is found missing, every later call
+/// returns 1.
 ///
 /// Elsewhere (macOS, iOS: the application plays the WAV bytes itself):
 /// always 1.
@@ -954,14 +961,235 @@ mod alsa {
 #[cfg(target_os = "android")]
 use aaudio::play;
 
-/// AAudio of the NDK, opened with dlopen: a telephone without it, or with a
-/// part of it missing, is silent, never stopped.
+/// What the player of Android does to the samples, apart from AAudio: here,
+/// where the tests of every system reach it.
+#[cfg_attr(not(any(target_os = "android", test)), allow(dead_code))]
+mod mixing {
+    use super::{RATE, WAV_HEADER_BYTES};
+    use std::ptr;
+    use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicUsize, Ordering};
+    use std::time::{Duration, Instant};
+
+    /// The samples of a WAV file of the core, read as numbers from -1 to 1
+    /// and brought from RATE to `rate` frames a second by drawing a straight
+    /// line between two neighbours: the sounds of Color are short, and their
+    /// highest partials stay far below what such a line blurs. None for a
+    /// rate outside what a device plays.
+    pub(super) fn ready_at(wav: &[u8], rate: u32) -> Option<Vec<f32>> {
+        if !(8_000..=192_000).contains(&rate) {
+            return None;
+        }
+        let samples: Vec<f32> = wav
+            .get(WAV_HEADER_BYTES..)?
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|&pair| f32::from(i16::from_le_bytes(pair)) / 32_768.0)
+            .collect();
+        if samples.is_empty() {
+            return Some(samples);
+        }
+        if rate == RATE {
+            return Some(samples);
+        }
+        let length = (samples.len() as u64 * u64::from(rate)).div_ceil(u64::from(RATE)) as usize;
+        let mut out = Vec::new();
+        out.try_reserve_exact(length).ok()?;
+        let last = samples.len() - 1;
+        for frame in 0..length {
+            // The place of this frame among the samples, as a whole number
+            // of samples and a fraction of one, computed without rounding.
+            let numerator = frame as u64 * u64::from(RATE);
+            let at = (numerator / u64::from(rate)) as usize;
+            let fraction = (numerator % u64::from(rate)) as f32 / rate as f32;
+            let here = samples[at.min(last)];
+            let next = samples[(at + 1).min(last)];
+            out.push(here + (next - here) * fraction);
+        }
+        Some(out)
+    }
+
+    /// Adds `frames` frames of `samples`, from `position`, to every one of
+    /// the `channels` of `out`. Returns the position after them.
+    pub(super) fn mix_into(
+        out: &mut [f32],
+        channels: usize,
+        samples: &[f32],
+        position: usize,
+    ) -> usize {
+        let channels = channels.max(1);
+        let frames = out.len() / channels;
+        let Some(rest) = samples.get(position..) else {
+            return position;
+        };
+        let taken = rest.len().min(frames);
+        for (frame, &sample) in rest[..taken].iter().enumerate() {
+            for value in &mut out[frame * channels..(frame + 1) * channels] {
+                *value += sample;
+            }
+        }
+        position + taken
+    }
+
+    /// A mix of numbers from -1 to 1 into 16-bit samples, the loud parts held
+    /// at the limit rather than wrapped around.
+    pub(super) fn to_i16(value: f32) -> i16 {
+        (value.clamp(-1.0, 1.0) * 32_767.0) as i16
+    }
+
+    /// A sound made ready at the rate of a stream, kept for as long as the
+    /// process runs.
+    pub(super) struct Prepared {
+        pub(super) samples: &'static [f32],
+    }
+
+    /// One place among the sounds that play: its sound and where it is in
+    /// it. Taken by the thread of the sounds, which writes the sound and the
+    /// position and sets `playing` last; given back by the callback, which
+    /// clears `playing` after its last reading. The sound is one pointer, so
+    /// that the samples of one sound are never read with the length of
+    /// another.
+    pub(super) struct Voice {
+        sound: AtomicPtr<Prepared>,
+        position: AtomicUsize,
+        playing: AtomicBool,
+    }
+
+    impl Voice {
+        pub(super) const fn new() -> Self {
+            Self {
+                sound: AtomicPtr::new(ptr::null_mut()),
+                position: AtomicUsize::new(0),
+                playing: AtomicBool::new(false),
+            }
+        }
+
+        /// Plays `sound` from its start, unless the voice plays one already.
+        pub(super) fn start(&self, sound: &'static Prepared) -> bool {
+            if self.playing() {
+                return false;
+            }
+            self.sound
+                .store(ptr::from_ref(sound).cast_mut(), Ordering::Relaxed);
+            self.position.store(0, Ordering::Relaxed);
+            self.playing.store(true, Ordering::Release);
+            true
+        }
+
+        pub(super) fn playing(&self) -> bool {
+            self.playing.load(Ordering::Acquire)
+        }
+
+        pub(super) fn stop(&self) {
+            self.playing.store(false, Ordering::Release);
+        }
+    }
+
+    /// The frames that a stream asks for, in its format.
+    pub(super) enum Output<'a> {
+        Float(&'a mut [f32]),
+        Short(&'a mut [i16]),
+    }
+
+    /// The voices that play, mixed into `out`: `channels` values a frame,
+    /// as many whole frames as `out` holds. Advances them, and gives back
+    /// those that end. Takes no lock and asks for no memory: the frames are
+    /// mixed in pieces, on the stack.
+    pub(super) fn fill(voices: &[Voice], channels: usize, mut out: Output<'_>) {
+        const PIECE: usize = 1_024;
+        let channels = channels.clamp(1, 8);
+        let length = match &out {
+            Output::Float(values) => values.len(),
+            Output::Short(values) => values.len(),
+        };
+        let total = length / channels * channels;
+        let mut done = 0;
+        while done < total {
+            // Whole frames in each piece.
+            let count = (total - done).min(PIECE / channels * channels);
+            let mut mix = [0f32; PIECE];
+            let mix = &mut mix[..count];
+            for voice in voices {
+                if !voice.playing() {
+                    continue;
+                }
+                let sound = voice.sound.load(Ordering::Relaxed);
+                // Written by `start`, from a sound that lives as long as the
+                // process, before `playing`.
+                let Some(sound) = (unsafe { sound.as_ref() }) else {
+                    voice.stop();
+                    continue;
+                };
+                let position = voice.position.load(Ordering::Relaxed);
+                let after = mix_into(mix, channels, sound.samples, position);
+                voice.position.store(after, Ordering::Relaxed);
+                if after >= sound.samples.len() {
+                    voice.stop();
+                }
+            }
+            match &mut out {
+                Output::Float(values) => {
+                    for (value, &mixed) in values[done..done + count].iter_mut().zip(mix.iter()) {
+                        *value = mixed.clamp(-1.0, 1.0);
+                    }
+                }
+                Output::Short(values) => {
+                    for (value, &mixed) in values[done..done + count].iter_mut().zip(mix.iter()) {
+                        *value = to_i16(mixed);
+                    }
+                }
+            }
+            done += count;
+        }
+    }
+
+    /// After this long without a sound asked for, and none playing, the
+    /// stream is closed.
+    pub(super) const SILENCE: Duration = Duration::from_secs(3);
+    /// A stream that has not called back for this long while sounds play is
+    /// taken for lost: no sound of Color lasts a second.
+    pub(super) const STALL: Duration = Duration::from_secs(1);
+
+    /// Whether the thread of the sounds closes its stream: the system took
+    /// it away (`lost`), it stopped calling back while sounds play, or no
+    /// sound was asked for during SILENCE and none plays.
+    pub(super) fn closes(
+        now: Instant,
+        last_asked: Option<Instant>,
+        playing: bool,
+        lost: bool,
+        last_callback: Instant,
+    ) -> bool {
+        if lost {
+            return true;
+        }
+        if playing {
+            return now.saturating_duration_since(last_callback) >= STALL;
+        }
+        last_asked.is_none_or(|asked| now.saturating_duration_since(asked) >= SILENCE)
+    }
+}
+
+/// AAudio of the NDK (Android 8 and later), opened with dlopen (P-02 of the
+/// retrospective of October 2026, reworked after its review). One thread of
+/// the core, for the life of the process, does everything AAudio asks for:
+/// it opens one output stream at low latency when a sound is asked for,
+/// gives each sound made ready at the rate of the device to one of four
+/// voices, and closes the stream three seconds after the last sound, or as
+/// soon as the system takes it away or it stops calling back. The stream's
+/// callback mixes the voices. The caller of `play` only hands its sound
+/// over: no binder call, no rendering of a sound, no wait on its thread,
+/// which is the thread of the interface. A stream that cannot be opened
+/// costs the sounds asked for meanwhile, and the next one tries again half a
+/// second later at the soonest. A telephone without AAudio is silent, never
+/// stopped.
 #[cfg(target_os = "android")]
 mod aaudio {
-    use super::{wav, RATE, WAV_HEADER_BYTES};
+    use super::mixing::{closes, fill, ready_at, Output, Prepared, Voice};
+    use super::{wav, SOUNDS};
     use std::ffi::{c_char, c_int, c_void, CStr};
-    use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-    use std::sync::OnceLock;
+    use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU32, AtomicU64, Ordering};
+    use std::sync::{Condvar, Mutex, OnceLock};
     use std::time::{Duration, Instant};
     use std::{mem, ptr, thread};
 
@@ -979,50 +1207,99 @@ mod aaudio {
     const AAUDIO_OK: i32 = 0;
     const AAUDIO_DIRECTION_OUTPUT: i32 = 0;
     const AAUDIO_FORMAT_PCM_I16: i32 = 1;
-    const AAUDIO_STREAM_STATE_STARTED: i32 = 4;
+    const AAUDIO_FORMAT_PCM_FLOAT: i32 = 2;
+    const AAUDIO_SHARING_MODE_SHARED: i32 = 1;
+    const AAUDIO_PERFORMANCE_MODE_LOW_LATENCY: i32 = 12;
+    const AAUDIO_CALLBACK_RESULT_CONTINUE: i32 = 0;
+    const AAUDIO_STREAM_STATE_UNINITIALIZED: i32 = 0;
     const AAUDIO_STREAM_STATE_STOPPING: i32 = 9;
-    const NANOS_PER_SECOND: i64 = 1_000_000_000;
 
     type Builder = c_void;
     type Stream = c_void;
+    type DataCallback = unsafe extern "C" fn(*mut Stream, *mut c_void, *mut c_void, i32) -> i32;
+    type ErrorCallback = unsafe extern "C" fn(*mut Stream, *mut c_void, i32);
     type CreateBuilder = unsafe extern "C" fn(*mut *mut Builder) -> i32;
     type SetInt = unsafe extern "C" fn(*mut Builder, i32);
+    type SetDataCallback = unsafe extern "C" fn(*mut Builder, Option<DataCallback>, *mut c_void);
+    type SetErrorCallback = unsafe extern "C" fn(*mut Builder, Option<ErrorCallback>, *mut c_void);
     type OpenStream = unsafe extern "C" fn(*mut Builder, *mut *mut Stream) -> i32;
     type DeleteBuilder = unsafe extern "C" fn(*mut Builder) -> i32;
     type StreamCall = unsafe extern "C" fn(*mut Stream) -> i32;
-    type Write = unsafe extern "C" fn(*mut Stream, *const c_void, i32, i64) -> i32;
-    type WaitForState = unsafe extern "C" fn(*mut Stream, i32, *mut i32, i64) -> i32;
+    type WaitForStateChange = unsafe extern "C" fn(*mut Stream, i32, *mut i32, i64) -> i32;
 
-    /// The functions of libaaudio that playing a sound takes.
+    /// The functions of libaaudio that the player takes.
     struct AAudio {
         create_builder: CreateBuilder,
         set_direction: SetInt,
         set_format: SetInt,
         set_channel_count: SetInt,
-        set_sample_rate: SetInt,
+        set_sharing_mode: SetInt,
+        set_performance_mode: SetInt,
+        set_data_callback: SetDataCallback,
+        set_error_callback: SetErrorCallback,
         open_stream: OpenStream,
         delete_builder: DeleteBuilder,
         request_start: StreamCall,
-        write: Write,
         request_stop: StreamCall,
-        wait_for_state: WaitForState,
+        wait_for_state_change: WaitForStateChange,
         close: StreamCall,
+        sample_rate: StreamCall,
+        format: StreamCall,
+        channel_count: StreamCall,
     }
 
-    /// Sounds that may play at the same time; a fifth is dropped.
-    const MAX_PLAYING: usize = 4;
-    /// Stack of a playing thread: AAudio's own code runs on it.
-    const STACK_BYTES: usize = 512 * 1024;
-    /// A sound that could only start this long after its gesture is dropped.
-    const TOO_LATE: Duration = Duration::from_secs(1);
+    /// Sounds that play at the same time; a fifth is dropped.
+    const VOICES: usize = 4;
+    /// While a stream is open, the thread looks at it this often.
+    const LOOK: Duration = Duration::from_millis(100);
+    /// After a stream that could not be opened, the next try waits this long.
+    const PATIENCE: Duration = Duration::from_millis(500);
+    /// How long a stop is awaited before the stream is closed anyway.
+    const STOPPING_NANOS: i64 = 100_000_000;
+    /// Some versions of Android still call back a moment after a stop; Oboe
+    /// waits as long before it closes a stream.
+    const BEFORE_CLOSE: Duration = Duration::from_millis(10);
+    /// In a layout, the flag of a stream of 16-bit samples.
+    const SHORT: u32 = 1 << 8;
+
+    static VOICE: [Voice; VOICES] = [const { Voice::new() }; VOICES];
+    /// The layout of the last two streams, each read by its own callback
+    /// only: its channels, and SHORT for 16-bit samples. A stream that still
+    /// calls back a moment after the next one opened reads its own.
+    static LAYOUT: [AtomicU32; 2] = [const { AtomicU32::new(1) }; 2];
+    /// The open stream, whose loss alone counts, and that loss.
+    static CURRENT: AtomicPtr<Stream> = AtomicPtr::new(ptr::null_mut());
+    static LOST: AtomicBool = AtomicBool::new(false);
+    /// Every call of a callback: a stream that stopped calling back is seen.
+    static CALLBACKS: AtomicU64 = AtomicU64::new(0);
 
     static LIBRARY: OnceLock<Option<AAudio>> = OnceLock::new();
-    static GIVEN_UP: AtomicBool = AtomicBool::new(false);
-    static PLAYING: AtomicUsize = AtomicUsize::new(0);
+
+    /// What the caller hands to the thread of the sounds.
+    struct Asked {
+        sounds: Vec<u32>,
+        /// When the last sound was asked for.
+        last: Option<Instant>,
+        /// Whether the thread runs.
+        running: bool,
+    }
+
+    static ASKED: Mutex<Asked> = Mutex::new(Asked {
+        sounds: Vec::new(),
+        last: None,
+        running: false,
+    });
+    static WAKE: Condvar = Condvar::new();
+
+    /// The stream, while it is open: the thread of the sounds alone has it.
+    struct Open {
+        stream: *mut Stream,
+        rate: u32,
+    }
 
     impl AAudio {
         fn load() -> Option<Self> {
-            // Never closed: a sound may be playing until the process ends.
+            // Never closed: a stream may be open until the process ends.
             let library = unsafe { dlopen(c"libaaudio.so".as_ptr(), RTLD_NOW) };
             if library.is_null() {
                 return None;
@@ -1047,8 +1324,17 @@ mod aaudio {
                     set_channel_count: mem::transmute::<*mut c_void, SetInt>(find(
                         c"AAudioStreamBuilder_setChannelCount",
                     )?),
-                    set_sample_rate: mem::transmute::<*mut c_void, SetInt>(find(
-                        c"AAudioStreamBuilder_setSampleRate",
+                    set_sharing_mode: mem::transmute::<*mut c_void, SetInt>(find(
+                        c"AAudioStreamBuilder_setSharingMode",
+                    )?),
+                    set_performance_mode: mem::transmute::<*mut c_void, SetInt>(find(
+                        c"AAudioStreamBuilder_setPerformanceMode",
+                    )?),
+                    set_data_callback: mem::transmute::<*mut c_void, SetDataCallback>(find(
+                        c"AAudioStreamBuilder_setDataCallback",
+                    )?),
+                    set_error_callback: mem::transmute::<*mut c_void, SetErrorCallback>(find(
+                        c"AAudioStreamBuilder_setErrorCallback",
                     )?),
                     open_stream: mem::transmute::<*mut c_void, OpenStream>(find(
                         c"AAudioStreamBuilder_openStream",
@@ -1059,20 +1345,31 @@ mod aaudio {
                     request_start: mem::transmute::<*mut c_void, StreamCall>(find(
                         c"AAudioStream_requestStart",
                     )?),
-                    write: mem::transmute::<*mut c_void, Write>(find(c"AAudioStream_write")?),
                     request_stop: mem::transmute::<*mut c_void, StreamCall>(find(
                         c"AAudioStream_requestStop",
                     )?),
-                    wait_for_state: mem::transmute::<*mut c_void, WaitForState>(find(
+                    wait_for_state_change: mem::transmute::<*mut c_void, WaitForStateChange>(find(
                         c"AAudioStream_waitForStateChange",
                     )?),
                     close: mem::transmute::<*mut c_void, StreamCall>(find(c"AAudioStream_close")?),
+                    sample_rate: mem::transmute::<*mut c_void, StreamCall>(find(
+                        c"AAudioStream_getSampleRate",
+                    )?),
+                    format: mem::transmute::<*mut c_void, StreamCall>(find(
+                        c"AAudioStream_getFormat",
+                    )?),
+                    channel_count: mem::transmute::<*mut c_void, StreamCall>(find(
+                        c"AAudioStream_getChannelCount",
+                    )?),
                 })
             }
         }
 
-        /// A started output stream for mono 16-bit frames at RATE, or None.
-        fn open(&self) -> Option<*mut Stream> {
+        /// A started stream at the rate of the device, its callback mixing
+        /// the voices with the layout of `slot`, or None.
+        fn open(&self, slot: usize) -> Option<Open> {
+            // Cleared before the stream exists: its own loss is never erased.
+            LOST.store(false, Ordering::Release);
             let mut builder = ptr::null_mut();
             if unsafe { (self.create_builder)(&mut builder) } != AAUDIO_OK || builder.is_null() {
                 return None;
@@ -1080,9 +1377,13 @@ mod aaudio {
             let mut stream = ptr::null_mut();
             let opened = unsafe {
                 (self.set_direction)(builder, AAUDIO_DIRECTION_OUTPUT);
-                (self.set_format)(builder, AAUDIO_FORMAT_PCM_I16);
+                (self.set_format)(builder, AAUDIO_FORMAT_PCM_FLOAT);
                 (self.set_channel_count)(builder, 1);
-                (self.set_sample_rate)(builder, RATE as i32);
+                (self.set_sharing_mode)(builder, AAUDIO_SHARING_MODE_SHARED);
+                (self.set_performance_mode)(builder, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
+                // The slot of its layout, handed back to the callback.
+                (self.set_data_callback)(builder, Some(render), slot as *mut c_void);
+                (self.set_error_callback)(builder, Some(lost), ptr::null_mut());
                 let opened = (self.open_stream)(builder, &mut stream);
                 (self.delete_builder)(builder);
                 opened
@@ -1090,107 +1391,213 @@ mod aaudio {
             if opened != AAUDIO_OK || stream.is_null() {
                 return None;
             }
-            if unsafe { (self.request_start)(stream) } != AAUDIO_OK {
+            CURRENT.store(stream, Ordering::Release);
+            let rate = unsafe { (self.sample_rate)(stream) };
+            let format = unsafe { (self.format)(stream) };
+            let channels = unsafe { (self.channel_count)(stream) };
+            let usable = (8_000..=192_000).contains(&rate)
+                && (1..=8).contains(&channels)
+                && (format == AAUDIO_FORMAT_PCM_FLOAT || format == AAUDIO_FORMAT_PCM_I16);
+            // Written before the callback can run: it starts with the stream.
+            let short = if format == AAUDIO_FORMAT_PCM_I16 {
+                SHORT
+            } else {
+                0
+            };
+            LAYOUT[slot].store(channels as u32 | short, Ordering::Release);
+            if !usable || unsafe { (self.request_start)(stream) } != AAUDIO_OK {
+                CURRENT.store(ptr::null_mut(), Ordering::Release);
                 unsafe { (self.close)(stream) };
                 return None;
             }
-            Some(stream)
+            Some(Open {
+                stream,
+                rate: rate as u32,
+            })
         }
 
-        /// Writes every frame, lets the last ones be heard and closes.
-        fn write_all(&self, stream: *mut Stream, mut frames: &[u8]) {
-            let mut patience = 8;
-            while frames.len() >= 2 && patience > 0 {
-                let asked = (frames.len() / 2).min(i32::MAX as usize) as i32;
-                // Blocks at most half a second for room in the buffer.
-                let written = unsafe {
-                    (self.write)(stream, frames.as_ptr().cast(), asked, NANOS_PER_SECOND / 2)
-                };
-                if written > 0 {
-                    let bytes = (written as usize).saturating_mul(2).min(frames.len());
-                    frames = &frames[bytes..];
-                } else {
-                    patience -= 1;
-                }
-            }
-            // A stopped output plays what it holds, then stops: it leaves
-            // « started », then « stopping ». Each wait ends at once when the
-            // stream has already moved on, and after a second at most.
+        /// Stops the stream, waits until it has stopped and a moment more,
+        /// closes it, and gives every voice back.
+        fn shut(&self, open: Open) {
+            CURRENT.store(ptr::null_mut(), Ordering::Release);
             unsafe {
-                if (self.request_stop)(stream) == AAUDIO_OK {
-                    let mut next = 0;
-                    for state in [AAUDIO_STREAM_STATE_STARTED, AAUDIO_STREAM_STATE_STOPPING] {
-                        (self.wait_for_state)(stream, state, &mut next, NANOS_PER_SECOND);
+                // requestStop only asks: the stream is stopping, then stopped.
+                if (self.request_stop)(open.stream) == AAUDIO_OK {
+                    let mut next = AAUDIO_STREAM_STATE_UNINITIALIZED;
+                    (self.wait_for_state_change)(
+                        open.stream,
+                        AAUDIO_STREAM_STATE_STOPPING,
+                        &mut next,
+                        STOPPING_NANOS,
+                    );
+                }
+            }
+            thread::sleep(BEFORE_CLOSE);
+            unsafe { (self.close)(open.stream) };
+            for voice in &VOICE {
+                voice.stop();
+            }
+        }
+    }
+
+    /// The callback of a stream, on a thread of AAudio: the voices that
+    /// play, mixed into the frames asked for, in the layout of its own
+    /// stream (`user` is its slot).
+    unsafe extern "C" fn render(
+        _stream: *mut Stream,
+        user: *mut c_void,
+        audio: *mut c_void,
+        frames: i32,
+    ) -> i32 {
+        CALLBACKS.fetch_add(1, Ordering::Relaxed);
+        if audio.is_null() || frames <= 0 {
+            return AAUDIO_CALLBACK_RESULT_CONTINUE;
+        }
+        let layout = LAYOUT[user as usize % 2].load(Ordering::Acquire);
+        let channels = ((layout & 0xff) as usize).clamp(1, 8);
+        let total = frames as usize * channels;
+        // AAudio hands `frames` frames of its stream's layout.
+        let out = if layout & SHORT != 0 {
+            Output::Short(unsafe { std::slice::from_raw_parts_mut(audio.cast::<i16>(), total) })
+        } else {
+            Output::Float(unsafe { std::slice::from_raw_parts_mut(audio.cast::<f32>(), total) })
+        };
+        fill(&VOICE, channels, out);
+        AAUDIO_CALLBACK_RESULT_CONTINUE
+    }
+
+    /// Called by AAudio, on a thread of its own, when a stream is lost: the
+    /// thread of the sounds closes it, as AAudio asks.
+    unsafe extern "C" fn lost(stream: *mut Stream, _user: *mut c_void, _error: i32) {
+        if stream == CURRENT.load(Ordering::Acquire) {
+            LOST.store(true, Ordering::Release);
+        }
+    }
+
+    /// Sound `id` ready at `rate`, made once, kept for as long as the process
+    /// runs: a few hundred kilobytes, and another set only when the device
+    /// changes rate (a headset plugged in).
+    fn prepared(
+        ready: &mut Vec<(u32, u32, &'static Prepared)>,
+        id: u32,
+        rate: u32,
+    ) -> Option<&'static Prepared> {
+        if let Some(&(_, _, sound)) = ready.iter().find(|(r, i, _)| *r == rate && *i == id) {
+            return Some(sound);
+        }
+        // Every sound at eight rates: a guard, never reached; past it a sound
+        // is dropped rather than made again.
+        if ready.len() >= SOUNDS.len() * 8 {
+            return None;
+        }
+        let samples: &'static [f32] = Vec::leak(ready_at(wav(id)?, rate)?);
+        let sound: &'static Prepared = Box::leak(Box::new(Prepared { samples }));
+        ready.push((rate, id, sound));
+        Some(sound)
+    }
+
+    /// The thread of the sounds.
+    fn run(aaudio: &'static AAudio) {
+        let mut open: Option<Open> = None;
+        let mut retry_at: Option<Instant> = None;
+        let mut openings = 0usize;
+        let mut ready = Vec::new();
+        let mut callbacks = 0u64;
+        let mut called_back = Instant::now();
+        loop {
+            let (sounds, last) = {
+                let Ok(mut asked) = ASKED.lock() else {
+                    return;
+                };
+                // Closed and nothing asked for: the thread sleeps.
+                while asked.sounds.is_empty() && open.is_none() {
+                    asked = match WAKE.wait(asked) {
+                        Ok(asked) => asked,
+                        Err(_) => return,
+                    };
+                }
+                if asked.sounds.is_empty() {
+                    asked = match WAKE.wait_timeout(asked, LOOK) {
+                        Ok((asked, _)) => asked,
+                        Err(_) => return,
+                    };
+                }
+                (mem::take(&mut asked.sounds), asked.last)
+            };
+            if !sounds.is_empty()
+                && open.is_none()
+                && retry_at.is_none_or(|at| Instant::now() >= at)
+            {
+                match aaudio.open(openings % 2) {
+                    Some(stream) => {
+                        open = Some(stream);
+                        openings = openings.wrapping_add(1);
+                        retry_at = None;
+                        callbacks = CALLBACKS.load(Ordering::Relaxed);
+                        called_back = Instant::now();
                     }
-                }
-                (self.close)(stream);
-            }
-        }
-    }
-
-    /// One of the few places among the sounds that play at the same time.
-    struct Turn;
-
-    impl Turn {
-        fn take() -> Option<Self> {
-            let mut playing = PLAYING.load(Ordering::Relaxed);
-            while playing < MAX_PLAYING {
-                match PLAYING.compare_exchange_weak(
-                    playing,
-                    playing + 1,
-                    Ordering::Relaxed,
-                    Ordering::Relaxed,
-                ) {
-                    Ok(_) => return Some(Self),
-                    Err(now) => playing = now,
+                    None => retry_at = Some(Instant::now() + PATIENCE),
                 }
             }
-            None
+            let Some(rate) = open.as_ref().map(|stream| stream.rate) else {
+                // No stream: these sounds are lost, not the sounds.
+                continue;
+            };
+            for id in sounds {
+                if let Some(sound) = prepared(&mut ready, id, rate) {
+                    // Four playing: this one is dropped, and it is no failure.
+                    let _ = VOICE.iter().any(|voice| voice.start(sound));
+                }
+            }
+            let now = Instant::now();
+            let count = CALLBACKS.load(Ordering::Relaxed);
+            if count != callbacks {
+                callbacks = count;
+                called_back = now;
+            }
+            let playing = VOICE.iter().any(Voice::playing);
+            if closes(
+                now,
+                last,
+                playing,
+                LOST.load(Ordering::Acquire),
+                called_back,
+            ) {
+                if let Some(stream) = open.take() {
+                    aaudio.shut(stream);
+                }
+            }
         }
-    }
-
-    impl Drop for Turn {
-        fn drop(&mut self) {
-            PLAYING.fetch_sub(1, Ordering::Relaxed);
-        }
-    }
-
-    fn play_to_the_end(id: u32, asked: Instant) {
-        let Some(aaudio) = LIBRARY.get_or_init(AAudio::load) else {
-            GIVEN_UP.store(true, Ordering::Relaxed);
-            return;
-        };
-        let Some(frames) = wav(id).and_then(|wav| wav.get(WAV_HEADER_BYTES..)) else {
-            return;
-        };
-        let Some(stream) = aaudio.open() else {
-            GIVEN_UP.store(true, Ordering::Relaxed);
-            return;
-        };
-        if asked.elapsed() > TOO_LATE {
-            unsafe { (aaudio.close)(stream) };
-            return;
-        }
-        aaudio.write_all(stream, frames);
     }
 
     pub(super) fn play(id: u32) -> bool {
-        if GIVEN_UP.load(Ordering::Relaxed) {
+        let Some(aaudio) = LIBRARY.get_or_init(AAudio::load).as_ref() else {
+            // No AAudio on this telephone: nothing here plays sounds.
             return false;
-        }
-        let Some(turn) = Turn::take() else {
-            // Four are playing: this one is dropped, and it is no failure.
+        };
+        // From here on a sound that does not start is that sound lost, not
+        // the end of the sounds: the next one tries again.
+        let Ok(mut asked) = ASKED.lock() else {
             return true;
         };
-        let asked = Instant::now();
-        let started = thread::Builder::new()
-            .name("color-sound".to_owned())
-            .stack_size(STACK_BYTES)
-            .spawn(move || {
-                let _turn = turn;
-                play_to_the_end(id, asked);
-            });
-        started.is_ok()
+        if !asked.running {
+            // AAudio's own code runs on this thread: a stack of its own size.
+            asked.running = thread::Builder::new()
+                .name("color-sound".to_owned())
+                .stack_size(256 * 1024)
+                .spawn(move || run(aaudio))
+                .is_ok();
+            if !asked.running {
+                return true;
+            }
+        }
+        if asked.sounds.len() < VOICES {
+            asked.sounds.push(id);
+        }
+        asked.last = Some(Instant::now());
+        drop(asked);
+        WAKE.notify_one();
+        true
     }
 }
 

@@ -747,11 +747,11 @@ fn random_edits_undo_and_redo_restore_the_exact_state() {
     let seeds: usize = std::env::var("EDUPAINT_MODEL_SEEDS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(12);
+        .unwrap_or(if cfg!(miri) { 2 } else { 12 });
     let steps: usize = std::env::var("EDUPAINT_MODEL_STEPS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(300);
+        .unwrap_or(if cfg!(miri) { 12 } else { 300 });
     for seed in 0..seeds as u64 {
         let (w, h) = pages[seed as usize % pages.len()];
         run(0x1000 + seed, steps, w, h, false);
@@ -766,7 +766,7 @@ fn random_edits_on_a_locked_page_restore_the_exact_state() {
     let steps: usize = std::env::var("EDUPAINT_MODEL_STEPS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(300);
+        .unwrap_or(if cfg!(miri) { 12 } else { 300 });
     for seed in 0..6 {
         run_on(
             Owned::from_project(page),
@@ -783,11 +783,11 @@ fn random_edits_with_active_layer_changes_restore_the_exact_state() {
     let seeds: usize = std::env::var("EDUPAINT_MODEL_SEEDS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(12);
+        .unwrap_or(if cfg!(miri) { 2 } else { 12 });
     let steps: usize = std::env::var("EDUPAINT_MODEL_STEPS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(300);
+        .unwrap_or(if cfg!(miri) { 12 } else { 300 });
     for seed in 0..seeds as u64 {
         let (w, h) = pages[seed as usize % pages.len()];
         run(0x9000 + seed, steps, w, h, true);

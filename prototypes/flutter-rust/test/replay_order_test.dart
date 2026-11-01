@@ -20,8 +20,12 @@ void main() {
       // Everything revealed is settled: nothing will come under it.
       expect(order.settledAt(count), count);
       expect(order.reachAt(count), count);
-      expect(order.restingAt(count), count);
     }
+    // Kept by steps of three, the square root of five rounded up.
+    expect(
+      [for (var count = 0; count <= 5; count++) order.restingAt(count)],
+      [0, 0, 0, 3, 3, 5],
+    );
     expect(
       [for (var rank = 0; rank < 5; rank++) order.elementAt(rank)],
       [0, 1, 2, 3, 4],
@@ -140,12 +144,16 @@ void main() {
     }
   });
 
-  test('the kept picture follows a small drawing element by element', () {
+  test('the kept picture follows a small drawing by small steps', () {
+    // Twelve elements: steps of four, the square root rounded up.
     final order = ReplayOrder(List.generate(12, (index) => index));
     expect(
       [for (var count = 0; count <= 12; count++) order.restingAt(count)],
-      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      [0, 0, 0, 0, 4, 4, 4, 4, 8, 8, 8, 8, 12],
     );
+    // One element, or none: kept as soon as it is complete.
+    expect(ReplayOrder(const [0]).restingAt(1), 1);
+    expect(ReplayOrder(const []).restingAt(0), 0);
   });
 
   test('the kept picture of a big drawing is renewed by steps', () {
@@ -153,46 +161,23 @@ void main() {
     final order = ReplayOrder(List.generate(count, (index) => index));
     final values = <int>{};
     var before = 0;
-    var widest = 0.0;
+    var widest = 0;
     for (var finished = 0; finished <= count; finished++) {
       final resting = order.restingAt(finished);
       expect(resting, lessThanOrEqualTo(finished));
       expect(resting, greaterThanOrEqualTo(before));
       before = resting;
       values.add(resting);
-      // What is complete and not kept is painted for every frame: never
-      // more than an eighth of what is kept, beyond a few elements.
-      if (finished - resting > 2) {
-        widest = math.max(widest, (finished - resting) / resting);
-      }
+      // What is complete and not kept is painted for every frame: less
+      // than a step, whatever the size of the drawing.
+      widest = math.max(widest, finished - resting);
     }
     expect(order.restingAt(count), count);
-    // Ten thousand elements, and the picture is painted afresh only some
-    // seventy times: each time once for many frames of the film.
-    expect(values.length, inInclusiveRange(40, 90));
-    expect(widest, lessThanOrEqualTo(1 / 8));
-    expect(values.take(20).toList(), [
-      0,
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      11,
-      12,
-      13,
-      14,
-      15,
-      16,
-      18,
-      20,
-      22,
-    ]);
+    // Ten thousand elements, and the image of the kept picture is made a
+    // hundred times, each time from the one before: once for many frames.
+    expect(values.length, 101);
+    expect(widest, 99);
+    expect(values.take(4).toList(), [0, 100, 200, 300]);
   });
 
   group('the scene of a document', () {

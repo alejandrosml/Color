@@ -11,6 +11,8 @@ import 'text_layout.dart';
 final class RenderedElement {
   factory RenderedElement(StrokeData data) {
     final points = data.points;
+    // x then y of each point: the loops below read them in place.
+    final c = data.coordinates;
     final (minimumWidth, maximumWidth) = switch (data.kind) {
       VectorKind.text => (minTextSize, maxTextSize),
       VectorKind.stamp => (1.0, 1.0),
@@ -32,9 +34,9 @@ final class RenderedElement {
     var top = double.infinity;
     var right = double.negativeInfinity;
     var bottom = double.negativeInfinity;
-    for (final point in points) {
-      final x = point.x;
-      final y = point.y;
+    for (var i = 0; i < c.length; i += 2) {
+      final x = c[i];
+      final y = c[i + 1];
       if (!x.isFinite || !y.isFinite) {
         throw ArgumentError('Un élément du dessin est invalide.');
       }
@@ -74,7 +76,7 @@ final class RenderedElement {
     if (data.text != null || data.stamp != null) {
       throw ArgumentError('Un élément du dessin est invalide.');
     }
-    final first = Offset(points.first.x, points.first.y);
+    final first = Offset(c[0], c[1]);
     final path = Path();
     final stroke = Paint()
       ..color = Color(0xff000000 | data.rgb)
@@ -99,8 +101,8 @@ final class RenderedElement {
         stroke.style = PaintingStyle.fill;
       } else {
         path.moveTo(first.dx, first.dy);
-        for (final point in points.skip(1)) {
-          path.lineTo(point.x, point.y);
+        for (var i = 2; i < c.length; i += 2) {
+          path.lineTo(c[i], c[i + 1]);
         }
       }
     } else if (data.kind == VectorKind.contour) {
@@ -115,8 +117,8 @@ final class RenderedElement {
         );
       }
       path.moveTo(first.dx, first.dy);
-      for (final point in points.skip(1)) {
-        path.lineTo(point.x, point.y);
+      for (var i = 2; i < c.length; i += 2) {
+        path.lineTo(c[i], c[i + 1]);
       }
       path.close();
       fill = insideOf(data.fillRgb);
@@ -124,7 +126,7 @@ final class RenderedElement {
       if (points.length != 2) {
         throw ArgumentError('Une forme nécessite deux points.');
       }
-      final last = Offset(points.last.x, points.last.y);
+      final last = Offset(c[2], c[3]);
       if (first == last) {
         throw ArgumentError('Une forme doit avoir une taille non nulle.');
       }

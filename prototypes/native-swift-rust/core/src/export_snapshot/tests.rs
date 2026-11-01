@@ -233,6 +233,7 @@ fn two_reader_threads_export_while_original_is_edited_then_freed() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
 fn snapshot_at_vector_limits_excludes_large_detached_history() {
     let doc = document(false);
     let points = vec![EpPoint { x: 2.0, y: 3.0 }; MAX_STROKE_POINTS];
@@ -258,6 +259,7 @@ fn snapshot_at_vector_limits_excludes_large_detached_history() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
 fn snapshot_at_object_limit_preserves_all_visible_order_and_revision_tokens() {
     let doc = document(false);
     let point = EpPoint { x: 2.0, y: 3.0 };

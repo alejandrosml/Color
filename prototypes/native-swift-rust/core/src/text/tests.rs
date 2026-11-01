@@ -333,6 +333,7 @@ fn moving_duplicating_and_removing_texts_keeps_characters_and_counters() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
 fn visible_and_retained_characters_are_bounded_atomically() {
     let doc = Owned::new();
     let full = "a".repeat(MAX_TEXT_BYTES);

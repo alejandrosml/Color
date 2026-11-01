@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 
+import 'app_folders.dart';
 import 'native_project_writer.dart';
 import 'platform_words.dart';
 import 'project_storage.dart';
@@ -124,14 +124,14 @@ class StudioFiles {
   Future<Directory> ownDrawings() async {
     final base =
         await (documentsDirectory ?? _applicationDocuments)() ??
-        (await getApplicationDocumentsDirectory()).path;
+        (await applicationDocumentsFolder()).path;
     final folder = Directory('$base${Platform.pathSeparator}Dessins');
     await folder.create(recursive: true);
     return folder;
   }
 
   static Future<String?> _applicationDocuments() async =>
-      (await getApplicationDocumentsDirectory()).path;
+      (await applicationDocumentsFolder()).path;
 
   /// Where a drawing is saved without a panel: where it already is when it
   /// was saved there, otherwise under its name, made free with a number.
@@ -155,7 +155,7 @@ class StudioFiles {
   /// Where an exported copy waits for the system's panel.
   Future<String> _outboxPath(String name) async {
     final base =
-        await outboxDirectory?.call() ?? (await getTemporaryDirectory()).path;
+        await outboxDirectory?.call() ?? (await temporaryFolder()).path;
     final outbox = Directory('$base${Platform.pathSeparator}color-outbox');
     await outbox.create(recursive: true);
     return '${outbox.path}${Platform.pathSeparator}$name';
@@ -385,7 +385,7 @@ class StudioFiles {
 
   static Future<String?> _documentsDirectory() async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
+      final directory = await applicationDocumentsFolder();
       // In the sandbox of the Mac, the folder Color is given is its own,
       // hidden in the Library: the panel opens on the person's Documents
       // instead. The panel may show it; Color itself may not look there,

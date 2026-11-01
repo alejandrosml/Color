@@ -446,6 +446,17 @@ EpDocument *ep_document_from_project(const uint8_t *bytes, size_t length, int32_
  * adoption; native validation is structural only. */
 int32_t ep_document_load_project(EpDocument *candidate, const uint8_t *bytes, size_t length);
 
+/* Asks the system to put the file or folder at `path`, written just before,
+ * on permanent storage, so that a power cut keeps a save. full = 1, for a
+ * save the person asked for: on Apple systems F_FULLFSYNC, which also empties
+ * the disk's own cache; elsewhere fsync. full = 0, for the recovery copy: on
+ * Apple systems F_BARRIERFSYNC, which only keeps the order of the writes;
+ * elsewhere fsync. A folder is flushed after a file got its name in it; on
+ * Windows a folder is left alone. Returns 0 done, -1 NULL, invalid UTF-8 or
+ * full above 1, -3 the system refused (what was written stays as it was).
+ * Uses no document: any thread may call it. path: NUL-terminated UTF-8. */
+int32_t ep_sync_path(const char *path, uint32_t full);
+
 /* Immutable autonomous export snapshot. Capture must run on the document owner
  * thread with no overlapping document calls. It copies the objects of the
  * drawing, those of hidden layers included since the project keeps them, and
@@ -538,14 +549,28 @@ size_t ep_copy_sound_wav(uint32_t id, uint8_t *out, size_t capacity);
  * returned. Once the library, one of its functions or the device is found
  * missing, which only the thread of the first sound can discover, every later
  * call returns 1 until the process ends: nothing is tried again.
- * macOS and every other system: always 1.
+ * Android: AAudio (libaaudio.so, loaded at run time by the first call, Android
+ * 8 and later). A thread of the core opens one output stream at low latency
+ * and at the rate of the device when a sound is asked for, and closes it three
+ * seconds after the last one; its callback mixes up to four sounds, a fifth is
+ * dropped and 0 is still returned. Nothing of AAudio but its loading runs on
+ * the caller's thread: the call only hands the sound over. A stream that
+ * cannot be opened, that the system takes away (a headset unplugged) or that
+ * stops calling back costs the sounds asked for meanwhile (0 still): the next
+ * one tries again, half a second after a failed opening at the soonest. Once
+ * the library or one of its functions is found missing, every later call
+ * returns 1.
+ * macOS, iOS and every other system: always 1.
  * The library must stay loaded while a sound may still be playing.
  */
 int32_t ep_sound_play(uint32_t id);
 
-/* Pictures read from SVG. Present only in a core built with its `svg`
- * feature, which is how cargo builds it; a core compiled by rustc alone from
- * src/lib.rs has none of these three functions.
+/* Pictures drawn in SVG. Every core has these three functions. The pictures
+ * of the interface are read from their SVG files before the core is built,
+ * and their descriptions compiled in (src/catalogues.rs): handing them over
+ * reads nothing. Only ep_picture_from_svg reads SVG, in a core built with
+ * its `svg` feature, which is how cargo builds it by default; the cores of
+ * the stores are built without it and read no SVG at all.
  * A picture is described as ASCII text, one instruction per line:
  *   P <key> <width> <height>   opens a picture; X ends it
  *   G <opacity> <matrix|->     opens a group; E ends it
@@ -567,9 +592,10 @@ uint32_t ep_art_count(void);
 char *ep_art_catalog(void);
 /* The description of one SVG text of len bytes, with the key `-`. NULL for a
  * NULL pointer, more than 1 MiB, text that is not UTF-8, an SVG that cannot
- * be read or that uses what is not drawn, or exhausted memory. No file is
- * opened and nothing is fetched, whatever the SVG refers to. The bytes are
- * only read. Release ONLY with ep_string_free. */
+ * be read or that uses what is not drawn, or exhausted memory; always NULL in
+ * a core built without its `svg` feature. No file is opened and nothing is
+ * fetched, whatever the SVG refers to. The bytes are only read. Release ONLY
+ * with ep_string_free. */
 char *ep_picture_from_svg(const uint8_t *svg, size_t len);
 
 /* COLOURING PAGES. Original drawings compiled into the core. A page makes a
@@ -593,8 +619,9 @@ char *ep_picture_from_svg(const uint8_t *svg, size_t len);
  * change a locked layer accepts (see LAYERS). Zones and lines are rectangles,
  * ellipses, lines, freehand strokes and contours: pages may draw closed and
  * open paths, whose curves are flattened into points when the core reads
- * them. Such a document is saved as project v5. Present only in a core built
- * with its `svg` feature, like the pictures above. Identifiers are positions
+ * them, before it is built: every core holds the catalogue and, for each page,
+ * the project of its document, compiled in. Such a document is saved as
+ * project v5. Identifiers are positions
  * in this core's catalogue, valid for this library only; a project never
  * stores one. These functions use no existing document: any thread may call
  * them; a document returned belongs to its caller's thread as any other. */
@@ -611,7 +638,8 @@ uint32_t ep_page_count(void);
  * outside printable ASCII, and `%` itself, written %XX (two capital
  * hexadecimal digits). Release ONLY with ep_string_free. */
 char *ep_page_catalog(void);
-/* A NEW document for page `page`, made as described above, or NULL for an
+/* A NEW document for page `page`, made as described above — opened from the
+ * project compiled in, which the page's document wrote —, or NULL for an
  * unknown page or exhausted memory. Nothing of the page is in the history:
  * the document starts with no undo step (ep_undo_count 0). Ownership as
  * ep_document_new: one owner, released with ep_document_free. */

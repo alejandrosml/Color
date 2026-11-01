@@ -59,7 +59,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | URL d'assistance | `https://alejandrosml.github.io/Color/` |
 | URL marketing | `https://alejandrosml.github.io/Color/` |
 | Copyright | 2026 Alejandro San Martin Lamas |
-| Version | 1.0.0 |
+| Version | 1.0.0, puis 1.0.1 |
 
 ### Description
 
@@ -79,6 +79,19 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 > Color ne collecte aucune donnée. Pas de publicité, pas de compte, pas d'achat, pas d'Internet : tout reste sur l'appareil.
 >
 > Color est un logiciel libre, sous licence MIT, créé par Alejandro San Martin Lamas.
+
+### Nouveautés de la version 1.0.1 (4 000 caractères au plus)
+
+Le champ « Nouveautés de cette version », que demande toute mise à jour. À mettre sur la page de la version 1.0.1, iOS et macOS, une fois la 1.0.0 « Prête à la distribution » :
+
+> Color est plus rapide et plus légère :
+> • le trait suit le doigt et le stylet sans trembler ; une main posée sur l'écran ne dessine plus et ne zoome plus pendant que le stylet dessine ;
+> • les grands dessins restent fluides quand on dessine, qu'on zoome ou qu'on déplace la feuille, et dans le film du dessin ;
+> • les dessins et les pages à colorier s'ouvrent plus vite, et une image placée derrière un dessin se charge plus vite ;
+> • les grands dessins sont copiés moins souvent pendant qu'on dessine ;
+> • un dessin enregistré résiste mieux à une coupure de courant ;
+> • un son rejoué part sans attendre ;
+> • l'application prend moins de place.
 
 ### Notes pour la vérification (en anglais, pour le relecteur d'Apple)
 

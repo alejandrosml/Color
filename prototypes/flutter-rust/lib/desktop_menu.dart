@@ -5,7 +5,12 @@ import 'package:flutter/widgets.dart';
 
 /// Routes macOS menu shortcuts to the same document actions as the toolbar.
 /// Install once. Null document callbacks disable their corresponding items.
-class EduPaintDesktopMenu extends StatelessWidget {
+///
+/// The menus are handed to the system again only when the commands offered
+/// change, not at every build of the studio (F-03 of the retrospective of
+/// October 2026: five traits sent the whole menu bar eleven times). An item
+/// calls the command of the widget as it is when the item is chosen.
+class EduPaintDesktopMenu extends StatefulWidget {
   const EduPaintDesktopMenu({
     super.key,
     required this.child,
@@ -75,219 +80,274 @@ class EduPaintDesktopMenu extends StatelessWidget {
   /// command must not find half done.
   final VoidCallback? beforeCommand;
 
-  VoidCallback? _command(VoidCallback? command) {
-    final before = beforeCommand;
-    if (command == null || before == null) return command;
+  @override
+  State<EduPaintDesktopMenu> createState() => _EduPaintDesktopMenuState();
+}
+
+class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
+  // The menus last handed to the system, and the commands they offer.
+  List<PlatformMenuItem>? _menus;
+  List<bool>? _offered;
+
+  // Which commands the widget offers now.
+  List<bool> _offeredNow() {
+    final menu = widget;
+    return [
+      menu.onAbout != null,
+      menu.onNew != null,
+      menu.onOpen != null,
+      menu.onImportImage != null,
+      menu.onSave != null,
+      menu.onSaveAs != null,
+      menu.onExportSvg != null,
+      menu.onExportPng != null,
+      menu.onPrint != null,
+      menu.onOptions != null,
+      menu.onReplay != null,
+      menu.onUndo != null,
+      menu.onRedo != null,
+      menu.onDuplicate != null,
+      menu.onDelete != null,
+      menu.onBringToFront != null,
+      menu.onSendToBack != null,
+      menu.onLayers != null,
+      menu.onEditText != null,
+      menu.onGrow != null,
+      menu.onShrink != null,
+      menu.onHelp != null,
+      menu.onGallery != null,
+      menu.hasGallery,
+    ];
+  }
+
+  // The command that [of] picks in the widget, as the widget is when the
+  // item is chosen; null, a disabled item, when it offers none now.
+  VoidCallback? _command(VoidCallback? Function(EduPaintDesktopMenu menu) of) {
+    if (of(widget) == null) return null;
     return () {
-      before();
+      final command = of(widget);
+      if (command == null) return;
+      widget.beforeCommand?.call();
       command();
     };
   }
 
   @override
   Widget build(BuildContext context) {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) return child;
-    return PlatformMenuBar(
-      menus: [
-        PlatformMenu(
-          label: 'Color',
-          menus: [
-            PlatformMenuItemGroup(
-              members: [
-                if (onAbout != null)
-                  PlatformMenuItem(
-                    label: 'À propos de Color',
-                    onSelected: _command(onAbout),
-                  )
-                else if (PlatformProvidedMenuItem.hasMenu(
-                  PlatformProvidedMenuItemType.about,
-                ))
-                  const PlatformProvidedMenuItem(
-                    type: PlatformProvidedMenuItemType.about,
-                  ),
-              ],
-            ),
-            PlatformMenuItemGroup(
-              members: [
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.macOS) {
+      return widget.child;
+    }
+    final offered = _offeredNow();
+    if (_menus == null || !listEquals(offered, _offered)) {
+      _menus = _items();
+      _offered = offered;
+    }
+    return PlatformMenuBar(menus: _menus!, child: widget.child);
+  }
+
+  List<PlatformMenuItem> _items() {
+    final hasGallery = widget.hasGallery;
+    return [
+      PlatformMenu(
+        label: 'Color',
+        menus: [
+          PlatformMenuItemGroup(
+            members: [
+              if (widget.onAbout != null)
                 PlatformMenuItem(
-                  label: 'Options…',
-                  onSelected: _command(onOptions),
-                  shortcut: const SingleActivator(
-                    LogicalKeyboardKey.comma,
-                    meta: true,
-                  ),
+                  label: 'À propos de Color',
+                  onSelected: _command((menu) => menu.onAbout),
+                )
+              else if (PlatformProvidedMenuItem.hasMenu(
+                PlatformProvidedMenuItemType.about,
+              ))
+                const PlatformProvidedMenuItem(
+                  type: PlatformProvidedMenuItemType.about,
                 ),
-              ],
-            ),
-            if (PlatformProvidedMenuItem.hasMenu(
-              PlatformProvidedMenuItemType.quit,
-            ))
-              // Native termination follows the app's existing exit-request path.
-              const PlatformProvidedMenuItem(
-                type: PlatformProvidedMenuItemType.quit,
-              ),
-          ],
-        ),
-        PlatformMenu(
-          label: 'Fichier',
-          menus: [
-            PlatformMenuItem(
-              label: 'Nouveau',
-              onSelected: _command(onNew),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyN,
-                meta: true,
-              ),
-            ),
-            PlatformMenuItem(
-              label: 'Ouvrir…',
-              onSelected: _command(onOpen),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyO,
-                meta: true,
-              ),
-            ),
-            if (hasGallery)
+            ],
+          ),
+          PlatformMenuItemGroup(
+            members: [
               PlatformMenuItem(
-                label: 'Mes dessins…',
-                onSelected: _command(onGallery),
-              ),
-            PlatformMenuItem(
-              label: 'Enregistrer',
-              onSelected: _command(onSave),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyS,
-                meta: true,
-              ),
-            ),
-            PlatformMenuItem(
-              label: 'Dessiner sur une image…',
-              onSelected: _command(onImportImage),
-            ),
-            PlatformMenuItem(
-              label: 'Enregistrer sous…',
-              onSelected: _command(onSaveAs),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyS,
-                meta: true,
-                shift: true,
-              ),
-            ),
-            PlatformMenuItem(
-              label: 'Exporter PNG…',
-              onSelected: _command(onExportPng),
-            ),
-            PlatformMenuItem(
-              label: 'Exporter SVG…',
-              onSelected: _command(onExportSvg),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyE,
-                meta: true,
-                shift: true,
-              ),
-            ),
-            PlatformMenuItemGroup(
-              members: [
-                PlatformMenuItem(
-                  label: 'Imprimer…',
-                  onSelected: _command(onPrint),
-                  shortcut: const SingleActivator(
-                    LogicalKeyboardKey.keyP,
-                    meta: true,
-                  ),
+                label: 'Options…',
+                onSelected: _command((menu) => menu.onOptions),
+                shortcut: const SingleActivator(
+                  LogicalKeyboardKey.comma,
+                  meta: true,
                 ),
-              ],
-            ),
-          ],
-        ),
-        PlatformMenu(
-          label: 'Édition',
-          menus: [
-            PlatformMenuItem(
-              label: 'Annuler',
-              onSelected: _command(onUndo),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyZ,
-                meta: true,
               ),
+            ],
+          ),
+          if (PlatformProvidedMenuItem.hasMenu(
+            PlatformProvidedMenuItemType.quit,
+          ))
+            // Native termination follows the app's existing exit-request path.
+            const PlatformProvidedMenuItem(
+              type: PlatformProvidedMenuItemType.quit,
             ),
+        ],
+      ),
+      PlatformMenu(
+        label: 'Fichier',
+        menus: [
+          PlatformMenuItem(
+            label: 'Nouveau',
+            onSelected: _command((menu) => menu.onNew),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyN,
+              meta: true,
+            ),
+          ),
+          PlatformMenuItem(
+            label: 'Ouvrir…',
+            onSelected: _command((menu) => menu.onOpen),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyO,
+              meta: true,
+            ),
+          ),
+          if (hasGallery)
             PlatformMenuItem(
-              label: 'Rétablir',
-              onSelected: _command(onRedo),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyZ,
-                meta: true,
-                shift: true,
-              ),
+              label: 'Mes dessins…',
+              onSelected: _command((menu) => menu.onGallery),
             ),
-            PlatformMenuItem(
-              label: 'Copier l’élément choisi',
-              onSelected: _command(onDuplicate),
-              shortcut: const SingleActivator(
-                LogicalKeyboardKey.keyD,
-                meta: true,
-              ),
+          PlatformMenuItem(
+            label: 'Enregistrer',
+            onSelected: _command((menu) => menu.onSave),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyS,
+              meta: true,
             ),
-            PlatformMenuItem(
-              label: 'Placer tout devant',
-              onSelected: _command(onBringToFront),
+          ),
+          PlatformMenuItem(
+            label: 'Dessiner sur une image…',
+            onSelected: _command((menu) => menu.onImportImage),
+          ),
+          PlatformMenuItem(
+            label: 'Enregistrer sous…',
+            onSelected: _command((menu) => menu.onSaveAs),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyS,
+              meta: true,
+              shift: true,
             ),
-            PlatformMenuItem(
-              label: 'Placer tout derrière',
-              onSelected: _command(onSendToBack),
+          ),
+          PlatformMenuItem(
+            label: 'Exporter PNG…',
+            onSelected: _command((menu) => menu.onExportPng),
+          ),
+          PlatformMenuItem(
+            label: 'Exporter SVG…',
+            onSelected: _command((menu) => menu.onExportSvg),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyE,
+              meta: true,
+              shift: true,
             ),
-            PlatformMenuItem(
-              label: 'Effacer l’élément choisi',
-              onSelected: _command(onDelete),
-              shortcut: const SingleActivator(LogicalKeyboardKey.backspace),
-            ),
-            PlatformMenuItem(
-              label: 'Modifier le texte choisi…',
-              onSelected: _command(onEditText),
-            ),
-            PlatformMenuItem(
-              label: 'Rendre l’élément choisi plus grand',
-              onSelected: _command(onGrow),
-            ),
-            PlatformMenuItem(
-              label: 'Rendre l’élément choisi plus petit',
-              onSelected: _command(onShrink),
-            ),
-            PlatformMenuItem(label: 'Calques…', onSelected: _command(onLayers)),
-            PlatformMenuItemGroup(
-              members: [
-                PlatformMenuItem(
-                  label: 'Revoir le dessin se faire tout seul',
-                  onSelected: _command(onReplay),
+          ),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(
+                label: 'Imprimer…',
+                onSelected: _command((menu) => menu.onPrint),
+                shortcut: const SingleActivator(
+                  LogicalKeyboardKey.keyP,
+                  meta: true,
                 ),
-              ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      PlatformMenu(
+        label: 'Édition',
+        menus: [
+          PlatformMenuItem(
+            label: 'Annuler',
+            onSelected: _command((menu) => menu.onUndo),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyZ,
+              meta: true,
             ),
-          ],
-        ),
-        PlatformMenu(
-          label: 'Fenêtre',
-          menus: [
-            for (final type in const [
-              PlatformProvidedMenuItemType.minimizeWindow,
-              PlatformProvidedMenuItemType.zoomWindow,
-              PlatformProvidedMenuItemType.toggleFullScreen,
-              PlatformProvidedMenuItemType.arrangeWindowsInFront,
-            ])
-              if (PlatformProvidedMenuItem.hasMenu(type))
-                PlatformProvidedMenuItem(type: type),
-          ],
-        ),
-        PlatformMenu(
-          label: 'Aide',
-          menus: [
-            PlatformMenuItem(
-              label: 'Comment faire ?',
-              onSelected: _command(onHelp),
+          ),
+          PlatformMenuItem(
+            label: 'Rétablir',
+            onSelected: _command((menu) => menu.onRedo),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyZ,
+              meta: true,
+              shift: true,
             ),
-          ],
-        ),
-      ],
-      child: child,
-    );
+          ),
+          PlatformMenuItem(
+            label: 'Copier l’élément choisi',
+            onSelected: _command((menu) => menu.onDuplicate),
+            shortcut: const SingleActivator(
+              LogicalKeyboardKey.keyD,
+              meta: true,
+            ),
+          ),
+          PlatformMenuItem(
+            label: 'Placer tout devant',
+            onSelected: _command((menu) => menu.onBringToFront),
+          ),
+          PlatformMenuItem(
+            label: 'Placer tout derrière',
+            onSelected: _command((menu) => menu.onSendToBack),
+          ),
+          PlatformMenuItem(
+            label: 'Effacer l’élément choisi',
+            onSelected: _command((menu) => menu.onDelete),
+            shortcut: const SingleActivator(LogicalKeyboardKey.backspace),
+          ),
+          PlatformMenuItem(
+            label: 'Modifier le texte choisi…',
+            onSelected: _command((menu) => menu.onEditText),
+          ),
+          PlatformMenuItem(
+            label: 'Rendre l’élément choisi plus grand',
+            onSelected: _command((menu) => menu.onGrow),
+          ),
+          PlatformMenuItem(
+            label: 'Rendre l’élément choisi plus petit',
+            onSelected: _command((menu) => menu.onShrink),
+          ),
+          PlatformMenuItem(
+            label: 'Calques…',
+            onSelected: _command((menu) => menu.onLayers),
+          ),
+          PlatformMenuItemGroup(
+            members: [
+              PlatformMenuItem(
+                label: 'Revoir le dessin se faire tout seul',
+                onSelected: _command((menu) => menu.onReplay),
+              ),
+            ],
+          ),
+        ],
+      ),
+      PlatformMenu(
+        label: 'Fenêtre',
+        menus: [
+          for (final type in const [
+            PlatformProvidedMenuItemType.minimizeWindow,
+            PlatformProvidedMenuItemType.zoomWindow,
+            PlatformProvidedMenuItemType.toggleFullScreen,
+            PlatformProvidedMenuItemType.arrangeWindowsInFront,
+          ])
+            if (PlatformProvidedMenuItem.hasMenu(type))
+              PlatformProvidedMenuItem(type: type),
+        ],
+      ),
+      PlatformMenu(
+        label: 'Aide',
+        menus: [
+          PlatformMenuItem(
+            label: 'Comment faire ?',
+            onSelected: _command((menu) => menu.onHelp),
+          ),
+        ],
+      ),
+    ];
   }
 }

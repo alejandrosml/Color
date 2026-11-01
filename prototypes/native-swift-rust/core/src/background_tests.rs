@@ -89,6 +89,7 @@ fn fix_crc(bytes: &mut [u8]) {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "megabytes through the CRC: too long under Miri")]
 fn combined_cached_crc_matches_direct_crc_and_recovers_the_background_crc() {
     let bytes: Vec<u8> = (0..8193usize)
         .map(|i| ((i * 197) ^ (i >> 3)) as u8)
@@ -123,6 +124,44 @@ fn combined_cached_crc_matches_direct_crc_and_recovers_the_background_crc() {
                 crc32(&bytes[..bytes.len() - 4])
             );
         }
+    }
+}
+
+#[test]
+#[cfg_attr(miri, ignore = "megabytes through the CRC: too long under Miri")]
+fn validation_yields_the_crc_of_the_whole_png_from_its_chunks() {
+    // The validator does not inflate IDAT: any bytes do for this test. Chunk
+    // sizes cover one chain, the four-lane CRC and its combination.
+    let mut seed = 7u32;
+    let mut noise = |length: usize| -> Vec<u8> {
+        (0..length)
+            .map(|_| {
+                seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+                (seed >> 24) as u8
+            })
+            .collect()
+    };
+    for (metadata, idat_sizes) in [
+        (false, vec![1]),
+        (true, vec![7, 8, 9]),
+        (false, vec![20_000, 3]),
+        (true, vec![16_384, 70_001, 1, 65_536]),
+    ] {
+        let mut png = RGB[..33].to_vec();
+        if metadata {
+            png.extend(png_chunk(b"sRGB", &[0]));
+            png.extend(png_chunk(b"gAMA", &45455u32.to_be_bytes()));
+        }
+        for size in idat_sizes {
+            png.extend(png_chunk(b"IDAT", &noise(size)));
+        }
+        png.extend(png_chunk(b"IEND", b""));
+        let (info, crc) = validate_canonical_png(&png).unwrap();
+        assert_eq!(info.byte_count, png.len());
+        assert_eq!(crc, crc32(&png));
+    }
+    for fixture in [RGB, RGBA] {
+        assert_eq!(validate_canonical_png(fixture).unwrap().1, crc32(fixture));
     }
 }
 

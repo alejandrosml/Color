@@ -226,6 +226,7 @@ fn recipes_keep_to_the_rules_that_make_them_gentle() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn every_sound_is_a_complete_wav_file_of_the_announced_size_and_length() {
     for id in 0..ep_sound_count() {
         let sound = &SOUNDS[id as usize];
@@ -253,6 +254,7 @@ fn every_sound_is_a_complete_wav_file_of_the_announced_size_and_length() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn levels_are_exactly_the_announced_peaks_and_no_sound_is_silent() {
     for id in 0..ep_sound_count() {
         let sound = &SOUNDS[id as usize];
@@ -277,6 +279,7 @@ fn levels_are_exactly_the_announced_peaks_and_no_sound_is_silent() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn every_sound_rises_from_silence_and_returns_to_it_without_a_click() {
     for id in 0..ep_sound_count() {
         let key = SOUNDS[id as usize].key;
@@ -322,6 +325,7 @@ fn every_sound_rises_from_silence_and_returns_to_it_without_a_click() {
 const CLICKS: [(&str, i32, f64); 1] = [("texte", 9, 4100.0)];
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn no_two_sounds_are_alike_and_a_second_rendering_gives_the_same_bytes() {
     let files: Vec<_> = (0..ep_sound_count()).map(wav_file).collect();
     for (id, file) in files.iter().enumerate() {
@@ -366,6 +370,7 @@ const PINNED: [u32; 18] = [
 ];
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn every_platform_renders_the_pinned_bytes() {
     let found: Vec<u32> = (0..ep_sound_count())
         .map(|id| crc32(&wav_file(id)))
@@ -374,6 +379,7 @@ fn every_platform_renders_the_pinned_bytes() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn copying_writes_the_whole_file_or_nothing_and_never_beyond_it() {
     const GUARD: u8 = 0xa5;
     for id in 0..ep_sound_count() {
@@ -407,6 +413,7 @@ fn copying_writes_the_whole_file_or_nothing_and_never_beyond_it() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn threads_asking_at_once_all_get_the_one_rendering() {
     // Rendered by whichever thread comes first; the others wait or lose.
     let files: Vec<Vec<(usize, Vec<u8>)>> = std::thread::scope(|scope| {
@@ -436,6 +443,7 @@ fn threads_asking_at_once_all_get_the_one_rendering() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn glides_go_the_way_they_are_described() {
     let glide = |key: &str, early: (usize, usize), late: (usize, usize)| {
         let id = FROZEN_KEYS
@@ -468,6 +476,7 @@ fn glides_go_the_way_they_are_described() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn notes_sound_at_their_pitch_and_in_their_order() {
     let note = |key: &str, from: usize, to: usize| {
         let id = FROZEN_KEYS
@@ -517,6 +526,7 @@ fn notes_sound_at_their_pitch_and_in_their_order() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn noise_is_broad_and_soft_and_tones_are_never_shrill() {
     for id in 0..ep_sound_count() {
         let sound = &SOUNDS[id as usize];
@@ -556,6 +566,7 @@ fn noise_is_broad_and_soft_and_tones_are_never_shrill() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn the_brush_the_stamp_and_the_pot_sound_like_what_they_imitate() {
     // The brush is bright without being shrill.
     let brush = samples(2);
@@ -773,6 +784,7 @@ const PROVENANCE: &str = include_str!("../../sons/PROVENANCE.md");
 const RECORDING_NOTICES: &str = include_str!("../../sons/notices.txt");
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn each_recording_is_credited_under_a_free_licence_with_the_bytes_compiled_in() {
     let found = recordings();
     // Each section of the provenance is a sound of the catalogue that plays a
@@ -854,6 +866,7 @@ fn the_series_agree_with_the_mathematical_library() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "renders sounds sample by sample: too long under Miri")]
 fn the_noise_generator_is_even_and_without_memory() {
     // The two conditions of a full period on 64 bits.
     assert_eq!(NOISE_A % 8, 5);
@@ -1206,4 +1219,177 @@ mod alsa_calls {
         assert_eq!(fake.heard, sound[..PATIENCE as usize * 20]);
         assert_eq!(fake.drained, 0);
     }
+}
+
+// The player of Android (P-02): the sounds made ready at the rate of the
+// device, and mixed. What AAudio itself does is tried on a device.
+
+#[test]
+fn a_sound_is_ready_at_its_own_rate_as_its_samples() {
+    let wav = wav(0).unwrap();
+    let ready = mixing::ready_at(wav, RATE).unwrap();
+    let samples = &wav[WAV_HEADER_BYTES..];
+    assert_eq!(ready.len(), samples.len() / 2);
+    for (index, value) in ready.iter().enumerate() {
+        let sample = i16::from_le_bytes([samples[2 * index], samples[2 * index + 1]]);
+        assert_eq!(*value, f32::from(sample) / 32_768.0);
+    }
+}
+
+#[test]
+fn a_sound_is_ready_at_the_rate_of_any_device() {
+    // A sine at 441 Hz, a hundredth of the rate, as a WAV of the core.
+    let frames = 4_410;
+    let mut wav = vec![0u8; WAV_HEADER_BYTES];
+    for frame in 0..frames {
+        let value = (frame as f64 / 100.0 * std::f64::consts::TAU).sin() * 16_000.0;
+        wav.extend_from_slice(&(value.round() as i16).to_le_bytes());
+    }
+    for rate in [8_000, 16_000, 22_050, 32_000, 48_000, 96_000, 192_000] {
+        let ready = mixing::ready_at(&wav, rate).unwrap();
+        assert_eq!(
+            ready.len(),
+            (frames as u64 * rate as u64).div_ceil(RATE as u64) as usize
+        );
+        assert_eq!(ready[0], 0.0);
+        // The same sine, at the new rate, within the error of a straight line
+        // between two of its samples a hundredth of a turn apart.
+        for (frame, value) in ready.iter().enumerate() {
+            let at = frame as f64 * RATE as f64 / rate as f64;
+            // Past the last sample the sound holds it: no sine to follow.
+            if at > (frames - 1) as f64 {
+                break;
+            }
+            let expected = (at / 100.0 * std::f64::consts::TAU).sin() * 16_000.0 / 32_768.0;
+            assert!(
+                (f64::from(*value) - expected).abs() < 0.002,
+                "{rate}: frame {frame}"
+            );
+        }
+    }
+    assert!(mixing::ready_at(&wav, 0).is_none());
+    assert!(mixing::ready_at(&wav, 1_000_000).is_none());
+    assert!(mixing::ready_at(&wav[..10], 48_000).is_none());
+}
+
+#[test]
+fn voices_add_up_on_every_channel_and_end_where_their_sound_does() {
+    let sound = [0.25f32, 0.5, -0.75];
+    let mut out = vec![0.1f32; 4 * 2];
+    let after = mixing::mix_into(&mut out, 2, &sound, 1);
+    assert_eq!(after, 3);
+    assert_eq!(out, [0.6, 0.6, -0.65, -0.65, 0.1, 0.1, 0.1, 0.1]);
+    // Nothing is left of it: nothing is added.
+    assert_eq!(mixing::mix_into(&mut out, 2, &sound, 3), 3);
+    assert_eq!(out[0], 0.6);
+    // A position past the end of the sound adds nothing, and stays.
+    assert_eq!(mixing::mix_into(&mut out, 2, &sound, 7), 7);
+    assert_eq!(out[0], 0.6);
+    // Loud mixes are held at the limits of sixteen bits.
+    assert_eq!(mixing::to_i16(2.0), i16::MAX);
+    assert_eq!(mixing::to_i16(-2.0), -i16::MAX);
+    assert_eq!(mixing::to_i16(0.5), 16_383);
+}
+
+/// A sound ready to play, for as long as the tests run. Kept where a static
+/// reaches it, as the player keeps the sounds it prepares: memory that
+/// nothing reaches any more is a leak to Miri, even in a test.
+fn prepared(samples: &[f32]) -> &'static mixing::Prepared {
+    static KEPT: std::sync::Mutex<Vec<&'static mixing::Prepared>> =
+        std::sync::Mutex::new(Vec::new());
+    let sound: &'static mixing::Prepared = Box::leak(Box::new(mixing::Prepared {
+        samples: Vec::leak(samples.to_vec()),
+    }));
+    KEPT.lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .push(sound);
+    sound
+}
+
+#[test]
+fn voices_are_mixed_into_the_frames_asked_for_and_given_back_when_they_end() {
+    let voices = [mixing::Voice::new(), mixing::Voice::new()];
+    assert!(voices[0].start(prepared(&[0.5, 0.5, 0.5])));
+    assert!(voices[1].start(prepared(&[0.25; 5])));
+    // A voice that plays takes no other sound.
+    assert!(!voices[0].start(prepared(&[1.0])));
+    let mut out = [9.0f32; 4];
+    mixing::fill(&voices, 1, mixing::Output::Float(&mut out));
+    assert_eq!(out, [0.75, 0.75, 0.75, 0.25]);
+    assert!(!voices[0].playing());
+    assert!(voices[1].playing());
+    // The rest of the second sound, then silence; then it is given back.
+    let mut out = [9.0f32; 3];
+    mixing::fill(&voices, 1, mixing::Output::Float(&mut out));
+    assert_eq!(out, [0.25, 0.0, 0.0]);
+    assert!(!voices[1].playing());
+    // Given back, a voice takes a new sound, from its start.
+    assert!(voices[0].start(prepared(&[0.125, 0.5])));
+    let mut out = [9.0f32; 1];
+    mixing::fill(&voices, 1, mixing::Output::Float(&mut out));
+    assert_eq!(out, [0.125]);
+}
+
+#[test]
+fn every_channel_of_every_frame_is_filled_in_either_format() {
+    let voices = [mixing::Voice::new()];
+    let long: Vec<f32> = (0..3_000).map(|i| (i % 7) as f32 / 10.0).collect();
+    assert!(voices[0].start(prepared(&long)));
+    // More frames than one piece of the mix, on two channels.
+    let mut out = vec![9.0f32; 2 * 1_500];
+    mixing::fill(&voices, 2, mixing::Output::Float(&mut out));
+    for frame in 0..1_500 {
+        assert_eq!(out[2 * frame], long[frame]);
+        assert_eq!(out[2 * frame + 1], long[frame]);
+    }
+    // In sixteen bits: the rest of the sound, then silence.
+    let mut short = vec![7i16; 2 * 1_600];
+    mixing::fill(&voices, 2, mixing::Output::Short(&mut short));
+    for frame in 0..1_500 {
+        assert_eq!(short[2 * frame], mixing::to_i16(long[1_500 + frame]));
+        assert_eq!(short[2 * frame + 1], mixing::to_i16(long[1_500 + frame]));
+    }
+    assert!(short[3_000..].iter().all(|&value| value == 0));
+    assert!(!voices[0].playing());
+    // Two loud sounds together are held at the limit.
+    let loud = [mixing::Voice::new(), mixing::Voice::new()];
+    assert!(loud[0].start(prepared(&[0.75])));
+    assert!(loud[1].start(prepared(&[0.75])));
+    let mut one = [0i16; 1];
+    mixing::fill(&loud, 1, mixing::Output::Short(&mut one));
+    assert_eq!(one, [i16::MAX]);
+    // Six channels, and values that make no whole frame: left as they are.
+    let voices = [mixing::Voice::new()];
+    assert!(voices[0].start(prepared(&[0.5, 0.25])));
+    let mut odd = [9.0f32; 14];
+    mixing::fill(&voices, 6, mixing::Output::Float(&mut odd));
+    assert_eq!(&odd[..6], &[0.5; 6]);
+    assert_eq!(&odd[6..12], &[0.25; 6]);
+    assert_eq!(&odd[12..], &[9.0, 9.0]);
+}
+
+#[test]
+fn the_stream_closes_after_a_silence_a_loss_or_a_stall_and_not_before() {
+    use mixing::{closes, SILENCE, STALL};
+    use std::time::{Duration, Instant};
+    let start = Instant::now();
+    let at = |ms: u64| start + Duration::from_millis(ms);
+    // A sound asked for a moment ago, none playing any more: still open.
+    assert!(!closes(at(2_000), Some(at(0)), false, false, at(0)));
+    // As long after the last sound asked for as SILENCE: closed.
+    assert!(closes(at(0) + SILENCE, Some(at(0)), false, false, at(0)));
+    // Sounds playing, the callback alive: open, however long ago.
+    assert!(!closes(at(10_000), Some(at(0)), true, false, at(9_900)));
+    // Sounds playing, and no callback for STALL: the stream is taken for lost.
+    assert!(closes(
+        at(10_000),
+        Some(at(0)),
+        true,
+        false,
+        at(10_000) - STALL
+    ));
+    // Lost: closed at once.
+    assert!(closes(at(10), Some(at(0)), true, true, at(10)));
+    // Nothing ever asked for: nothing keeps it open.
+    assert!(closes(at(0), None, false, false, at(0)));
 }

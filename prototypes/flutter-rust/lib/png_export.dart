@@ -81,11 +81,12 @@ Future<Uint8List> exportDocumentPng(
   var pointCount = 0;
   for (final element in elements) {
     pointCount += element.points.length;
-    if (pointCount > 1000000 ||
-        element.points.any(
-          (point) =>
-              point.x < 0 || point.x > width || point.y < 0 || point.y > height,
-        )) {
+    final c = element.coordinates;
+    var outside = pointCount > 1000000;
+    for (var i = 0; i < c.length && !outside; i += 2) {
+      outside = c[i] < 0 || c[i] > width || c[i + 1] < 0 || c[i + 1] > height;
+    }
+    if (outside) {
       throw ArgumentError('Les éléments dépassent les limites du document.');
     }
   }

@@ -281,11 +281,45 @@ def core_folder(sources):
     return sources / 'Color' / 'prototypes' / 'native-swift-rust' / 'core'
 
 
+def budgets_of(sources):
+    """scripts/budgets.py of the sources, the budgets of their version (Q-03),
+    or None for sources older than they are."""
+    import importlib.util
+    path = sources / 'Color' / 'scripts' / 'budgets.py'
+    if not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location('color_budgets', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def within_budgets(journal, sources, kind, measures):
+    """Says each of `measures`, {name: value}, against the budgets of the
+    sources, and stops when one of them goes beyond its budget."""
+    budgets = budgets_of(sources)
+    if budgets is None:
+        journal.say('  Budgets : ces sources n’en ont pas.')
+        return
+    over = []
+    for name, value in measures.items():
+        ok, sentence = budgets.check(kind, name, value)
+        journal.say('  Budget ' + sentence)
+        if not ok:
+            over.append(sentence)
+    if over:
+        raise Failure('Au-delà du budget (scripts/budgets.json) : ' + ' ; '.join(over)
+                      + '. Si cette taille est voulue, sa référence se change dans ce fichier,'
+                        ' avec la mesure qui la justifie.')
+
+
 def build_ios_core(journal, sources, work, cargo, environment):
     """The core as two static libraries: devices, and the simulator of this Mac."""
     environment = dict(environment, IPHONEOS_DEPLOYMENT_TARGET=IOS_DEPLOYMENT_TARGET)
     for target, sdk in (('aarch64-apple-ios', 'iphoneos'), ('aarch64-apple-ios-sim', 'iphonesimulator')):
+        # The core of the stores reads no SVG: neither usvg nor the readers.
         run(journal, 'coeur-ios', cargo + ['rustc', '--release', '--lib', '--offline', '--frozen',
+                                           '--no-default-features',
                                            '--target', target, '--crate-type', 'staticlib'],
             cwd=core_folder(sources), env=environment)
         place = work / 'ios' / 'rust' / sdk
@@ -300,12 +334,23 @@ def build_android_core(journal, sources, work, cargo, environment):
         variable = 'CARGO_TARGET_%s_LINKER' % target.upper().replace('-', '_')
         env = dict(environment, **{variable: str(tools / ('%s%d-clang' % (clang, ANDROID_API)))})
         run(journal, 'coeur-android', cargo + [
-            'rustc', '--release', '--lib', '--offline', '--frozen', '--target', target,
+            'rustc', '--release', '--lib', '--offline', '--frozen', '--no-default-features',
+            '--target', target,
             '--crate-type', 'cdylib', '--', '-C', 'link-arg=-Wl,-soname,libedupaint_core.so',
             '-C', 'link-arg=-Wl,-z,max-page-size=16384'], cwd=core_folder(sources), env=env)
         place = work / 'android' / 'app' / 'src' / 'main' / 'jniLibs' / abi
         place.mkdir(parents=True, exist_ok=True)
         shutil.copy2(CARGO_TARGET / target / 'release' / 'libedupaint_core.so', place)
+        if abi == 'arm64-v8a':
+            # Its size as Gradle packs it, stripped by the NDK as Gradle
+            # strips it (--strip-unneeded), against the budget of these
+            # sources (Q-03).
+            stripped = work / 'coeur-arm64-sans-symboles.so'
+            run(journal, 'coeur-android-taille', [str(tools / 'llvm-strip'), '--strip-unneeded',
+                                                  str(place / 'libedupaint_core.so'),
+                                                  '-o', str(stripped)])
+            within_budgets(journal, sources, 'tailles',
+                           {'core-android-arm64': stripped.stat().st_size})
 
 
 def java_release(home):

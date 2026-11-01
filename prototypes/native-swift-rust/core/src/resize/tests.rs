@@ -271,6 +271,7 @@ fn a_shape_never_collapses_and_the_scale_stays_bounded() {
 }
 
 #[test]
+#[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
 fn resizing_respects_layers_snapshots_and_the_history_limit() {
     let doc = Owned::new();
     assert_eq!(

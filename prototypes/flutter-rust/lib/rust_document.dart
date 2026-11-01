@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // The mutable document belongs to one isolate. Asynchronous export lends only
 // a separate immutable snapshot to a worker, with an explicit bounded lifetime.
+import 'dart:collection';
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
@@ -193,6 +194,62 @@ class DocumentPoint {
   final double y;
 }
 
+/// The points of an element as the core keeps them: x then y of each point,
+/// in single precision, one after the other in [coordinates]. Eight bytes a
+/// point where a [DocumentPoint] takes 32 to 40, and one object for the
+/// garbage collector where a list of points has one per point; copied from
+/// the core in one block (D-01 of the retrospective of October 2026: a
+/// million points were 126.6 ms to convert, and up to 32 MB more).
+///
+/// Loops over every point read [coordinates]. The rest of the code indexes
+/// this as a list of points, each one made when it is asked for. Never
+/// changed once made: its [coordinates] must not be written.
+final class DocumentPoints extends ListBase<DocumentPoint> {
+  DocumentPoints._(this.coordinates);
+
+  /// The points of [points], kept in single precision, as the core keeps
+  /// them and as a path draws them: the same list when it already is one.
+  factory DocumentPoints.of(List<DocumentPoint> points) {
+    if (points is DocumentPoints) return points;
+    final coordinates = Float32List(points.length * 2);
+    for (var index = 0; index < points.length; index++) {
+      final point = points[index];
+      coordinates[2 * index] = point.x;
+      coordinates[2 * index + 1] = point.y;
+    }
+    return DocumentPoints._(coordinates);
+  }
+
+  /// [coordinates] themselves, x then y of each point, an even number of
+  /// them; the caller gives up any other use of the list.
+  factory DocumentPoints.adopt(Float32List coordinates) {
+    if (coordinates.length.isOdd) {
+      throw ArgumentError('Des coordonnées vont par deux.');
+    }
+    return DocumentPoints._(coordinates);
+  }
+
+  /// x then y of each point, in order.
+  final Float32List coordinates;
+
+  @override
+  int get length => coordinates.length >> 1;
+
+  @override
+  set length(int value) =>
+      throw UnsupportedError('Les points d’un élément ne changent pas.');
+
+  @override
+  DocumentPoint operator [](int index) {
+    RangeError.checkValidIndex(index, this);
+    return DocumentPoint(coordinates[2 * index], coordinates[2 * index + 1]);
+  }
+
+  @override
+  void operator []=(int index, DocumentPoint value) =>
+      throw UnsupportedError('Les points d’un élément ne changent pas.');
+}
+
 class StrokeData {
   StrokeData(
     List<DocumentPoint> points,
@@ -203,8 +260,12 @@ class StrokeData {
     this.layer = 0,
     this.text,
     this.stamp,
-  }) : points = List.unmodifiable(points);
-  final List<DocumentPoint> points;
+  }) : points = DocumentPoints.of(points);
+  final DocumentPoints points;
+
+  /// x then y of each point, in single precision: what loops over every
+  /// point read. See [DocumentPoints].
+  Float32List get coordinates => points.coordinates;
   final int rgb;
 
   /// Outline width; the size of a text; always 1 for a stamp.
@@ -653,17 +714,169 @@ class _Bindings {
       .lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>(
         'ep_third_party_notices',
       );
+  late final syncPath = library
+      .lookupFunction<
+        Int32 Function(Pointer<Utf8>, Uint32),
+        int Function(Pointer<Utf8>, int)
+      >('ep_sync_path');
+}
+
+/// How far [keepOnDisk] goes.
+enum DiskSync {
+  /// A save the person asked for: to the disk itself (F_FULLFSYNC on Apple
+  /// systems, fsync elsewhere).
+  full,
+
+  /// The recovery copy: in order only, much cheaper (F_BARRIERFSYNC on
+  /// Apple systems, fsync elsewhere).
+  ordered,
+}
+
+/// Asks the core to put [path], a file just written or the folder where one
+/// was just named, on permanent storage (ep_sync_path), with [bindings].
+/// True when done. Never throws, even with a core older than the function:
+/// the file is written either way. Blocks for as long as the disk takes:
+/// call it away from the interface.
+bool _syncPath(_Bindings bindings, String path, DiskSync how) {
+  Pointer<Utf8> native = nullptr;
+  try {
+    native = path.toNativeUtf8(allocator: calloc);
+    return bindings.syncPath(native, how == DiskSync.full ? 1 : 0) == 0;
+  } catch (_) {
+    // A core without ep_sync_path, or no memory for the path: not synced.
+    return false;
+  } finally {
+    if (native != nullptr) calloc.free(native);
+  }
+}
+
+/// [_syncPath] in an isolate of its own, so that the interface never waits
+/// for the disk. Never throws: the file is written either way, and this
+/// only makes a power cut less likely to take it. False when it could not be
+/// done, the core included.
+Future<bool> keepOnDisk(
+  String path,
+  DiskSync how, {
+  String? libraryPath,
+}) async {
+  try {
+    final library = libraryPath ?? RustDocument.defaultLibraryPath;
+    return await Isolate.run(
+      () => _syncPath(_Bindings(openCoreLibrary(library), library), path, how),
+    );
+  } catch (_) {
+    return false;
+  }
 }
 
 /// The name that stands for the program itself, where the core is linked
 /// into the application rather than beside it: on iPhone and iPad.
 const processCoreLibrary = '<application>';
 
+/// The functions of the core, as include/edupaint_core.h declares them:
+/// those that Dart looks up by name. On the iPhone and the iPad the program
+/// exports these and nothing else (ios/Runner/core-symbols.txt), and the
+/// linker removes what none of them reaches (P-04 of the retrospective of
+/// October 2026).
+const coreFunctionNames = <String>[
+  'ep_active_layer',
+  'ep_add_layer',
+  'ep_add_shape',
+  'ep_add_stamp',
+  'ep_add_stroke',
+  'ep_add_text',
+  'ep_art_catalog',
+  'ep_art_count',
+  'ep_background_info',
+  'ep_constrain_object_movement',
+  'ep_copy_background_png',
+  'ep_copy_object_text',
+  'ep_copy_points',
+  'ep_copy_project',
+  'ep_copy_sound_wav',
+  'ep_document_free',
+  'ep_document_from_background_png',
+  'ep_document_from_page',
+  'ep_document_from_project',
+  'ep_document_height',
+  'ep_document_load_project',
+  'ep_document_new',
+  'ep_document_width',
+  'ep_duplicate_object',
+  'ep_export_snapshot_copy_project',
+  'ep_export_snapshot_export_svg',
+  'ep_export_snapshot_free',
+  'ep_export_snapshot_new',
+  'ep_export_snapshot_project_size',
+  'ep_export_svg',
+  'ep_layer_count',
+  'ep_layer_info',
+  'ep_layer_locked',
+  'ep_move_object',
+  'ep_object_extra',
+  'ep_object_revision',
+  'ep_object_style',
+  'ep_page_catalog',
+  'ep_page_count',
+  'ep_paper_color',
+  'ep_picture_from_svg',
+  'ep_project_size',
+  'ep_redo',
+  'ep_redo_count',
+  'ep_remove_layer',
+  'ep_remove_object',
+  'ep_reorder_layer',
+  'ep_reorder_object',
+  'ep_scale_object',
+  'ep_set_active_layer',
+  'ep_set_layer_visible',
+  'ep_set_object_layer',
+  'ep_set_object_style',
+  'ep_set_paper_color',
+  'ep_set_text',
+  'ep_sound_count',
+  'ep_sound_names',
+  'ep_sound_play',
+  'ep_sound_wav_size',
+  'ep_stamp_catalog',
+  'ep_stamp_count',
+  'ep_string_free',
+  'ep_stroke_count',
+  'ep_stroke_info',
+  'ep_sync_path',
+  'ep_third_party_notices',
+  'ep_undo',
+  'ep_undo_count',
+];
+
+/// Those of [coreFunctionNames] that [library] does not have.
+List<String> missingCoreFunctions(DynamicLibrary library) => [
+  for (final name in coreFunctionNames)
+    if (!library.providesSymbol(name)) name,
+];
+
+// The cores already checked, by their path.
+final _checkedCores = <String>{};
+
 /// Opens the core named [path]: a library beside the program, or the
-/// program itself for [processCoreLibrary].
-DynamicLibrary openCoreLibrary(String path) => path == processCoreLibrary
-    ? DynamicLibrary.process()
-    : DynamicLibrary.open(path);
+/// program itself for [processCoreLibrary]. The first time, every function
+/// of the core is looked for in it: a core with one missing is refused at
+/// once, rather than when that function is first needed.
+DynamicLibrary openCoreLibrary(String path) {
+  final library = path == processCoreLibrary
+      ? DynamicLibrary.process()
+      : DynamicLibrary.open(path);
+  if (_checkedCores.add(path)) {
+    final missing = missingCoreFunctions(library);
+    if (missing.isNotEmpty) {
+      _checkedCores.remove(path);
+      throw StateError(
+        'Le cœur de Color est incomplet : ${missing.join(', ')} manque.',
+      );
+    }
+  }
+  return library;
+}
 
 /// Owns exactly one Rust document. Do not share its handle or use it concurrently.
 /// No native pointer escapes this wrapper; all returned data is copied into Dart.
@@ -1950,6 +2163,12 @@ Future<int> _prepareProjectFile(_ProjectFileRequest request) async {
     handle = await temporary.open(mode: FileMode.writeOnly);
     await handle.writeFrom(bytes.asTypedList(size));
     await handle.flush();
+    // Dart's flush is a plain fsync: on Apple systems the copy could still
+    // reach the disk after its new name. A barrier keeps the order, the old
+    // copy or the new one surviving a power cut. Best effort.
+    if (Platform.isIOS || Platform.isMacOS) {
+      _syncPath(bindings, temporary.path, DiskSync.ordered);
+    }
   } catch (error, stack) {
     failure = error;
     failureStack = stack;
@@ -2180,12 +2399,12 @@ _DocumentCache _readDocumentCache(
         if (bindings.copyPoints(handle, index, points, length) != length) {
           throw StateError('Copie de points incomplète.');
         }
+        // One block, as the core holds them: two floats a point.
+        final coordinates = Float32List(length * 2)
+          ..setAll(0, points.cast<Float>().asTypedList(length * 2));
         snapshot.add(
           StrokeData(
-            [
-              for (var i = 0; i < length; i++)
-                DocumentPoint(points[i].x, points[i].y),
-            ],
+            DocumentPoints.adopt(coordinates),
             info.ref.rgb,
             info.ref.width,
             kind: kind,
@@ -2469,18 +2688,27 @@ void main(List<String> arguments) {
     check(
       catalogue.contains('P options 64 64\n') &&
           catalogue.contains('P film 64 64\n'),
-      'pictures of the interface read from their SVG files',
+      'pictures of the interface, as their SVG files draw them',
     );
+    // The core of the stores reads no SVG and carries no library (R-01 of
+    // the retrospective of October 2026); the core of the tests reads SVG
+    // with usvg, and carries its notices.
+    final notices = RustDocument.thirdPartyNotices(libraryPath: libraryPath);
+    final readsSvg = notices.contains('\nusvg\n\nusvg ');
     final described = RustDocument.describeSvg(
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
       '<rect width="4" height="4" fill="#ff0000"/></svg>',
       libraryPath: libraryPath,
     );
     check(
-      described != null &&
-          described.startsWith('P - 10 10\n') &&
-          described.contains('#ff0000ff'),
-      'an SVG text is described',
+      readsSvg
+          ? described != null &&
+                described.startsWith('P - 10 10\n') &&
+                described.contains('#ff0000ff')
+          : described == null,
+      readsSvg
+          ? 'an SVG text is described'
+          : 'a core of the stores reads no SVG',
     );
     check(
       RustDocument.describeSvg('<svg', libraryPath: libraryPath) == null,
@@ -2527,10 +2755,11 @@ void main(List<String> arguments) {
       RustDocument.soundWav(sounds.length, libraryPath: libraryPath) == null,
       'unknown sound',
     );
-    final notices = RustDocument.thirdPartyNotices(libraryPath: libraryPath);
     check(
-      notices.startsWith('arrayref\n\n') && notices.contains('\nusvg\n\nusvg '),
-      'notices of the libraries of the core',
+      readsSvg
+          ? notices.startsWith('arrayref\n\n')
+          : notices.startsWith('Sons enregistrés\n\n'),
+      'notices of the libraries of the core, and of its recordings',
     );
     final project = document.exportProject();
     final projectSvg = document.exportSvg();

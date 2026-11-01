@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:edupaint_flutter_study/document_renderer.dart';
@@ -6,31 +7,23 @@ import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:edupaint_flutter_study/selection_geometry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class _ObservedPoint extends DocumentPoint {
-  _ObservedPoint(super.x, super.y) : currentX = x, currentY = y;
-  double currentX;
-  double currentY;
-  int reads = 0;
-  @override
-  double get x {
-    reads++;
-    return currentX;
-  }
-
-  @override
-  double get y {
-    reads++;
-    return currentY;
-  }
-}
-
+/// The same object whose points change, as a subclass may do: the general
+/// path (no prepared bounds) must follow it. Counts the reads of its
+/// coordinates, which every loop over the points makes once.
 class _ChangingStroke extends StrokeData {
-  _ChangingStroke(List<DocumentPoint> value)
-    : current = value,
-      super(value, 0, 2, kind: VectorKind.line);
-  List<DocumentPoint> current;
+  _ChangingStroke(List<DocumentPoint> value, {super.kind = VectorKind.line})
+    : current = DocumentPoints.of(value),
+      super(value, 0, 2);
+  DocumentPoints current;
+  int coordinateReads = 0;
+  set geometry(List<DocumentPoint> value) => current = DocumentPoints.of(value);
   @override
-  List<DocumentPoint> get points => current;
+  DocumentPoints get points => current;
+  @override
+  Float32List get coordinates {
+    coordinateReads++;
+    return current.coordinates;
+  }
 }
 
 void main() {
@@ -168,22 +161,18 @@ void main() {
     },
   );
 
-  test('preparation uses the validation traversal and repeated misses read no points', () {
-    final points = List.generate(
-      512,
-      (i) => _ObservedPoint(i.toDouble(), (i % 10).toDouble()),
+  test('preparation reads the points once and repeated misses not at all', () {
+    final object = _ChangingStroke(
+      List.generate(
+        512,
+        (i) => DocumentPoint(i.toDouble(), (i % 10).toDouble()),
+      ),
+      kind: VectorKind.stroke,
     );
-    final object = StrokeData(points, 0, 3);
     final prepared = RenderedElement(object);
-    // The previous renderer traversed coordinates for validation and its path.
-    // Bounds must fit those two traversals, not add a third one.
-    expect(
-      points.fold<int>(0, (sum, p) => sum + p.reads),
-      lessThanOrEqualTo(4 * points.length),
-    );
-    for (final p in points) {
-      p.reads = 0;
-    }
+    // Validation, bounds and path read the same coordinates.
+    expect(object.coordinateReads, 1);
+    object.coordinateReads = 0;
     for (var click = 0; click < 8; click++) {
       expect(
         hitTestObjects(
@@ -201,25 +190,22 @@ void main() {
         pageHeight: 800,
       );
     }
-    expect(points.fold<int>(0, (sum, p) => sum + p.reads), 0);
+    expect(object.coordinateReads, 0);
     expect(
       hitTestObjects([object], const DocumentPoint(2000, 2000), scale: 1),
       isNull,
     );
-    expect(
-      points.fold<int>(0, (sum, p) => sum + p.reads),
-      greaterThanOrEqualTo(2 * points.length),
-    );
+    expect(object.coordinateReads, greaterThanOrEqualTo(1));
   });
 
   test(
     'general path and null provider stay fresh for same-identity subclasses',
     () {
-      final point = _ObservedPoint(10, 10);
-      final dot = StrokeData([point], 0, 2);
+      final dot = _ChangingStroke(const [
+        DocumentPoint(10, 10),
+      ], kind: VectorKind.stroke);
       final old = RenderedElement(dot);
-      point.currentX = 100;
-      point.currentY = 100;
+      dot.geometry = const [DocumentPoint(100, 100)];
       expect(old.controlBounds, const Rect.fromLTRB(10, 10, 10, 10));
       expect(objectBounds(dot), const Rect.fromLTRB(100, 100, 100, 100));
       expect(hitTestObjects([dot], const DocumentPoint(100, 100), scale: 1), 0);
@@ -232,7 +218,7 @@ void main() {
         DocumentPoint(20, 20),
       ]);
       final observed = RenderedElement(line);
-      line.current = const [DocumentPoint(100, 100), DocumentPoint(200, 100)];
+      line.geometry = const [DocumentPoint(100, 100), DocumentPoint(200, 100)];
       expect(observed.controlBounds, const Rect.fromLTRB(10, 20, 20, 20));
       expect(
         hitTestObjects(

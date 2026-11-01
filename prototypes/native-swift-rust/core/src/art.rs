@@ -1,5 +1,9 @@
-//! Pictures kept as SVG files: read here, handed to the interface as a short
-//! list of drawing instructions that it paints itself.
+//! Pictures kept as SVG files: read here into a short list of drawing
+//! instructions that the interface paints itself. The pictures of the
+//! interface are read before the build, and their descriptions compiled in
+//! (catalogues.rs); this reader, and usvg with it, is in the core only with
+//! the `svg` feature: for the tests that write the descriptions again, and
+//! for `ep_picture_from_svg`.
 //!
 //! The reading is done by usvg, the reading half of resvg, the only library
 //! this core depends on: styles, reused shapes, units and transforms are
@@ -21,11 +25,8 @@
 //! over with a part silently missing — except text, which usvg leaves out
 //! without a word when it is built without fonts, as it is here.
 use super::*;
-use std::sync::OnceLock;
 use usvg::tiny_skia_path::{Path as Outline, PathSegment, StrokeDash};
 
-/// Largest SVG text accepted from a caller.
-pub const MAX_SVG_BYTES: usize = 1024 * 1024;
 /// Groups and outlines of one picture, clip outlines included.
 const MAX_PICTURE_ITEMS: usize = 10_000;
 /// Move, line and curve commands of one picture.
@@ -49,7 +50,9 @@ const MAX_GRADIENT_STOPS: usize = 256;
 /// which may be small, is not used. Only touched pages are real.
 const READER_STACK_BYTES: usize = 64 * 1024 * 1024;
 
-/// The pictures of the interface, in the order of their keys.
+/// The pictures of the interface, in the order of their keys: read by the
+/// tests, which write their descriptions into catalogues/interface.txt.
+#[cfg(test)]
 static INTERFACE: &[(&str, &str)] = &[
     ("film", include_str!("../art/interface/film.svg")),
     ("logo", include_str!("../art/interface/logo.svg")),
@@ -527,7 +530,9 @@ pub(crate) fn describe(key: &str, svg: &str, out: &mut String) -> Result<(), Ref
         return Err(Refusal::TooLarge);
     }
     // On a thread of its own, whose stack is known: see READER_STACK_BYTES.
-    // A panic of the libraries ends that thread and is a refusal here.
+    // A panic of the libraries ends that thread and is a refusal here where
+    // panics unwind: under `cargo test`. A release build of the core aborts
+    // on a panic (Cargo.toml, R-11): there it ends the process.
     std::thread::scope(|scope| {
         std::thread::Builder::new()
             .stack_size(READER_STACK_BYTES)
@@ -755,65 +760,25 @@ fn read(key: &str, svg: &str, out: &mut String) -> Result<(), Refusal> {
     push(out, "X\n")
 }
 
-// Every picture of the interface, one description after the other; None if
-// one of the files compiled into the library is refused, which the tests of
-// this module do not let happen.
-fn catalogue() -> Option<&'static str> {
-    static TEXT: OnceLock<Option<String>> = OnceLock::new();
-    TEXT.get_or_init(|| {
-        let mut out = String::new();
-        for (key, svg) in INTERFACE {
-            describe(key, svg, &mut out).ok()?;
-        }
-        Some(out)
-    })
-    .as_deref()
-}
-
-// Also the catalogue of the colouring pages: see pages.rs.
-pub(crate) fn owned_text(text: &str) -> *mut c_char {
-    let mut bytes = Vec::new();
-    if bytes.try_reserve_exact(text.len() + 1).is_err() {
-        return ptr::null_mut();
+/// Every picture of the interface, one description after the other, as
+/// `ep_art_catalog` hands them over; None if a file is refused, which the
+/// tests of this module do not let happen.
+#[cfg(test)]
+pub(crate) fn interface_catalogue() -> Option<String> {
+    let mut out = String::new();
+    for (key, svg) in INTERFACE {
+        describe(key, svg, &mut out).ok()?;
     }
-    bytes.extend_from_slice(text.as_bytes());
-    bytes.push(0);
-    // A description is made of numbers, letters and punctuation: no NUL.
-    CString::from_vec_with_nul(bytes).map_or(ptr::null_mut(), CString::into_raw)
+    Some(out)
 }
 
-/// Number of pictures of the interface compiled into this core.
-#[no_mangle]
-pub extern "C" fn ep_art_count() -> u32 {
-    INTERFACE.len() as u32
-}
-
-/// Returns the pictures of the interface as owned, NUL-terminated ASCII text,
-/// or NULL on allocation failure. One description per picture, in the order
-/// of their keys; the format is documented at `describe`. Release with
-/// ep_string_free only.
-#[no_mangle]
-pub extern "C" fn ep_art_catalog() -> *mut c_char {
-    // The library that reads SVG is not ours: should it ever panic, the
-    // answer is NULL. What a text may ask of memory and of the stack is
-    // bounded by the guards of `describe`.
-    std::panic::catch_unwind(|| catalogue().map_or(ptr::null_mut(), owned_text))
-        .unwrap_or(ptr::null_mut())
-}
-
-/// Reads SVG text and returns its description, as ep_art_catalog does for
-/// one picture, with the key `-`. NULL for a NULL pointer, more than
-/// MAX_SVG_BYTES, text that is not UTF-8, an SVG that cannot be read, one
-/// that uses what this version does not draw (masks, filters, patterns, blend
-/// modes, embedded images, text), or exhausted memory. No file is opened and
-/// nothing is fetched, whatever the SVG refers to. Release with
-/// ep_string_free only.
+/// The description of one SVG text, with the key `-`, for
+/// `ep_picture_from_svg`.
 ///
 /// # Safety
 /// Non-null `svg` must address `len` initialized bytes that stay unchanged
 /// for the whole call; they are only read.
-#[no_mangle]
-pub unsafe extern "C" fn ep_picture_from_svg(svg: *const u8, len: usize) -> *mut c_char {
+pub(crate) unsafe fn picture_from_svg(svg: *const u8, len: usize) -> *mut c_char {
     if svg.is_null() || len > MAX_SVG_BYTES {
         return ptr::null_mut();
     }
@@ -821,6 +786,11 @@ pub unsafe extern "C" fn ep_picture_from_svg(svg: *const u8, len: usize) -> *mut
     let Ok(text) = std::str::from_utf8(bytes) else {
         return ptr::null_mut();
     };
+    // The library that reads SVG is not ours: should it ever panic where
+    // panics unwind (`cargo test`), the answer is NULL; a release build
+    // aborts on a panic (Cargo.toml, R-11), and no core of the stores reads
+    // SVG. What a text may ask of memory and of the stack is bounded by the
+    // guards of `describe`.
     std::panic::catch_unwind(|| {
         let mut out = String::new();
         match describe("-", text, &mut out) {

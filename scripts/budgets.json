@@ -1,0 +1,79 @@
+{
+  "a_propos": "Les budgets de Color (Q-03 de la rétrospective d'octobre 2026), lus par scripts/budgets.py. Une mesure au-delà de sa référence, marge comprise, arrête ce qui l'a faite. Une référence nulle attend sa première mesure : on l'écrit ici, avec la version et la recette qui l'ont faite.",
+  "tailles": {
+    "unite": "octets",
+    "marge": 0.03,
+    "entrees": {
+      "core-android-arm64": {
+        "reference": 1015800,
+        "mesure": "1.0.1+40, cœur des boutiques (sans SVG, panic = abort), Rust 1.99, NDK 28.2, llvm-strip --strip-unneeded comme Gradle : le cœur arm64 de l'App Bundle, à l'octet près (construire-le-coeur.sh, mobiles_communs.py). Avec llvm-strip sans option : 1 015 480 o ; 1 008 240 o avant les sons d'Android en un seul flux (P-02 : +5 656 o, puis +1 584 o pour sa reprise après la relecture)"
+      },
+      "core-linux-x86_64": {
+        "reference": 1116120,
+        "mesure": "1.0.1+40, cœur des boutiques tel que la recette Linux le construit, avec la Rust de scripts/rust-reference.json (1.99) ; 1 122 816 o avec Rust 1.97"
+      },
+      "android-aab-arm64-v8a": {
+        "reference": 8976445,
+        "mesure": "1.0.1+40, comme preparer-google-play.py la fait (flutter build appbundle --release --split-debug-info, Flutter 3.47.4, cœur Rust 1.99 sans SVG), sous Linux, signée de la clé de débogage : ce qui est commun à toutes les ABI plus les bibliothèques de celle-ci, compressé dans l'App Bundle (8976265 o avant la reprise de P-02)"
+      },
+      "android-aab-armeabi-v7a": {
+        "reference": 8450691,
+        "mesure": "1.0.1+40, comme preparer-google-play.py la fait (flutter build appbundle --release --split-debug-info, Flutter 3.47.4, cœur Rust 1.99 sans SVG), sous Linux, signée de la clé de débogage : ce qui est commun à toutes les ABI plus les bibliothèques de celle-ci, compressé dans l'App Bundle (8450430 o avant la reprise de P-02)"
+      },
+      "android-aab-x86_64": {
+        "reference": 9166259,
+        "mesure": "1.0.1+40, comme preparer-google-play.py la fait (flutter build appbundle --release --split-debug-info, Flutter 3.47.4, cœur Rust 1.99 sans SVG), sous Linux, signée de la clé de débogage : ce qui est commun à toutes les ABI plus les bibliothèques de celle-ci, compressé dans l'App Bundle (9162417 o avant la reprise de P-02)"
+      },
+      "ios-ipa": {
+        "reference": null,
+        "mesure": "envoi App Store (envoyer-app-store.py) : l'IPA de l'export de vérification, avant l'envoi"
+      },
+      "mac-pkg": {
+        "reference": null,
+        "mesure": "envoi App Store (envoyer-app-store.py) : le paquet de l'export de vérification, avant l'envoi"
+      }
+    }
+  },
+  "images": {
+    "unite": "ms",
+    "marge": 0.25,
+    "entrees": {
+      "scenario-construction-p90": {
+        "reference": 1.11,
+        "mesure": "1.0.1+40, scénario de test/live/studio_scenario.dart (application Linux en profile, cœur des boutiques), sous Xvfb sur une machine calme à deux cœurs x86-64 partagés, rendu llvmpipe (LLVM 20.1.2, 256 bits) : la plus lente de deux passages (1,11 et 0,95 ms ; 163 et 160 images). Marge large : presque toutes les images se construisent en moins d'une milliseconde, quelques-unes en 15 à 24 ms ; ce centile passe au-delà si plus d'une image sur dix devient lourde, ce que la marge laisse voir (F-03).",
+        "rendu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+        "marge": 2.0
+      },
+      "scenario-construction-p99": {
+        "reference": 15.77,
+        "mesure": "1.0.1+40, scénario de test/live/studio_scenario.dart (application Linux en profile, cœur des boutiques), sous Xvfb sur une machine calme à deux cœurs x86-64 partagés, rendu llvmpipe (LLVM 20.1.2, 256 bits) : la plus lente de deux passages (15,77 et 15,19 ms). Marge de moitié : d'un passage à l'autre, sur une machine partagée, ce centile a varié d'un tiers.",
+        "rendu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+        "marge": 0.5
+      },
+      "scenario-rasterisation-p90": {
+        "reference": 50.15,
+        "mesure": "1.0.1+40, scénario de test/live/studio_scenario.dart (application Linux en profile, cœur des boutiques), sous Xvfb sur une machine calme à deux cœurs x86-64 partagés, rendu llvmpipe (LLVM 20.1.2, 256 bits) : la plus lente de deux passages (50,15 et 49,73 ms). Marge de moitié, pour une machine partagée ; avant les images de la feuille (F-01), une image du tracé coûtait autant que le dessin est grand.",
+        "rendu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+        "marge": 0.5
+      },
+      "scenario-rasterisation-p99": {
+        "reference": 57.92,
+        "mesure": "1.0.1+40, scénario de test/live/studio_scenario.dart (application Linux en profile, cœur des boutiques), sous Xvfb sur une machine calme à deux cœurs x86-64 partagés, rendu llvmpipe (LLVM 20.1.2, 256 bits) : la plus lente de deux passages (57,92 et 55,77 ms).",
+        "rendu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+        "marge": 0.5
+      }
+    }
+  },
+  "demarrage": {
+    "unite": "ms",
+    "marge": 0.25,
+    "entrees": {
+      "scenario-premiere-image": {
+        "reference": 3801.77,
+        "mesure": "1.0.1+40, scénario Linux (profile, Xvfb, llvmpipe (LLVM 20.1.2, 256 bits), deux cœurs partagés) : du lancement du processus à la fin de la rastérisation de la première image de Color (après celles de l'outil de test) ; la plus lente de deux passages, 3 801,77 et 3 282,83 ms. Marge de moitié : le lancement d'un processus varie beaucoup sur une machine partagée.",
+        "rendu": "llvmpipe (LLVM 20.1.2, 256 bits)",
+        "marge": 0.5
+      }
+    }
+  }
+}

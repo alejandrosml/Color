@@ -118,11 +118,11 @@ final class ReplayPlan {
     }
     switch (data.kind) {
       case VectorKind.stroke:
-        final points = data.points;
+        final c = data.coordinates;
         var length = 0.0;
-        for (var index = 1; index < points.length; index++) {
-          final dx = points[index].x - points[index - 1].x;
-          final dy = points[index].y - points[index - 1].y;
+        for (var i = 2; i < c.length; i += 2) {
+          final dx = c[i] - c[i - 2];
+          final dy = c[i + 1] - c[i - 1];
           length += math.sqrt(dx * dx + dy * dy);
         }
         final micros = length / sheetDiagonal * diagonalTrait.inMicroseconds;
@@ -231,14 +231,20 @@ final class ReplayOrder {
     for (var index = 0; index < count; index++) {
       reaches[index + 1] = math.max(reaches[index], paintRank[index] + 1);
     }
-    return ReplayOrder._(byRank, floors, reaches);
+    return ReplayOrder._(
+      byRank,
+      floors,
+      reaches,
+      math.max(1, math.sqrt(count).ceil()),
+    );
   }
 
-  ReplayOrder._(this._byRank, this._floors, this._reaches);
+  ReplayOrder._(this._byRank, this._floors, this._reaches, this._step);
 
   final Int32List _byRank;
   final Int32List _floors;
   final Int32List _reaches;
+  final int _step;
 
   /// Number of elements.
   int get length => _byRank.length;
@@ -258,19 +264,15 @@ final class ReplayOrder {
 
   /// How many places at the bottom of the pile the picture kept between two
   /// frames holds once [finished] elements are complete. It follows
-  /// [settledAt] by steps: at every element while the drawing is small,
-  /// then every eighth more of what is already there, and to the end with
-  /// the last element. A big drawing whose film completes several elements
-  /// in every frame would otherwise have its kept picture, thousands of
-  /// elements, painted again for every frame: no better than no picture.
+  /// [settledAt] by steps of as many elements as the square root of their
+  /// number — 71 for 5 000 —, and to the end with the last element. The kept
+  /// picture is an image, made at every step from the one before with the
+  /// elements that came to rest (F-02 of the retrospective of October 2026):
+  /// some seventy images for 5 000 elements, and never more than a step of
+  /// complete elements painted beside it at a frame, whatever the size of the
+  /// drawing.
   int restingAt(int finished) {
     if (finished >= length) return settledAt(length);
-    var step = 0;
-    while (true) {
-      final next = step + math.max<int>(1, step >> 3);
-      if (next > finished) break;
-      step = next;
-    }
-    return settledAt(step);
+    return settledAt(finished - finished % _step);
   }
 }

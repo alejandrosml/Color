@@ -23,9 +23,10 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mobiles_communs import (ANDROID_SDK, ANDROID_TARGETS, MOBILES, Failure, Journal,  # noqa: E402
-                             android_environment, build_android_core, check_flutter_sdk,
-                             ensure_rust, find_sources, flutter, flutter_environment, flutter_jdk,
-                             installed_java_home, main_wrapper, output, run, stage_app)
+                             android_environment, budgets_of, build_android_core,
+                             check_flutter_sdk, ensure_rust, find_sources, flutter,
+                             flutter_environment, flutter_jdk, installed_java_home, main_wrapper,
+                             output, run, stage_app, within_budgets)
 
 KEYS = Path.home() / 'Documents' / 'Color - clé Google Play'
 
@@ -80,7 +81,13 @@ def main():
     flutter_env = flutter_environment(dict(environment, COLOR_UPLOAD_KEY=str(properties)))
     flutter_jdk(journal, java, work, flutter_env)
     flutter(journal, 'flutter-pub-get', ['pub', 'get', '--offline'], work, flutter_env)
-    flutter(journal, 'flutter-build-appbundle', ['build', 'appbundle', '--release', '--no-pub'],
+    # The symbols of the Dart code stay in the journal of this run: the Dart
+    # code is 14 % lighter (measured on 31 October 2026), and its stack
+    # traces are read with « flutter symbolize » and these files.
+    symbols = journal.folder / 'symboles-dart-android'
+    symbols.mkdir(parents=True, exist_ok=True)
+    flutter(journal, 'flutter-build-appbundle', ['build', 'appbundle', '--release', '--no-pub',
+                                                 '--split-debug-info=' + str(symbols)],
             work, flutter_env)
     bundle = work / 'build' / 'app' / 'outputs' / 'bundle' / 'release' / 'app-release.aab'
     code, signer = output([Path(java) / 'bin' / 'keytool', '-printcert', '-jarfile', bundle])
@@ -88,11 +95,21 @@ def main():
     if 'CN=Alejandro San Martin Lamas' not in signer:
         raise Failure('Le fichier n’est pas signé par ta clé d’envoi : la Play Console le refuserait.'
                       ' Détail : ' + str(journal.folder / 'journal.txt'))
+    # What a telephone of each kind receives, against the budgets of this
+    # version (Q-03): beyond them, nothing is delivered.
+    budgets = budgets_of(sources)
+    missing = getattr(budgets, 'aab_problems', lambda _: [])(bundle) if budgets is not None else []
+    if missing:
+        raise Failure('L’App Bundle est incomplet : ' + ' ; '.join(missing) + '.')
+    sizes = budgets.aab_sizes(bundle) if budgets is not None else {}
+    journal.state(version=version, status='measured', sizes=sizes)
+    within_budgets(journal, sources, 'tailles',
+                   {'android-aab-' + abi: size for abi, size in sizes.items()})
     target = travail / 'google-play'
     target.mkdir(exist_ok=True)
     delivered = target / ('Color-%s.aab' % version)
     shutil.copy2(bundle, delivered)
-    journal.state(version=version, status='prepared', bundle=str(delivered))
+    journal.state(version=version, status='prepared', bundle=str(delivered), sizes=sizes)
     journal.say('\nTerminé : ' + str(delivered))
     journal.say('Dans la Play Console : Tester > Tests fermés > Créer une version, puis'
                 ' dépose ce fichier.')

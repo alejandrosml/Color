@@ -5,14 +5,29 @@
 // ios/rust/. Dart finds its functions by name, in the program itself
 // (DynamicLibrary.process()); no code of the program calls them. So:
 //   - -force_load takes every object of the library into the program;
-//   - dead-code stripping is off: in a program, unlike in a library, the
-//     linker counts a global function that nothing calls as dead, and would
-//     remove all of the core;
+//   - in Release and Profile, the program exports the functions of the core
+//     and nothing else (core-symbols.txt, the list of
+//     include/edupaint_core.h, which a test of the core compares with it):
+//     exported, they are what dead-code stripping keeps, with all they
+//     reach, and the rest of the core goes (P-04 of the retrospective of
+//     October 2026). A function of the list missing from the core stops the
+//     link;
+//   - in Debug, as in 1.0.0, nothing is stripped and nothing restricted:
+//     Xcode may build the code of a Debug app as a library of its own, whose
+//     entry point the program looks up by name, and which a list of exports
+//     would hide;
 //   - Strip Style « non-global » keeps the names of those functions in the
-//     copy for the App Store, where Dart looks them up.
+//     copy for the App Store, where Dart looks them up; Dart looks for every
+//     one of them when it first opens the core.
 OTHER_LDFLAGS[sdk=iphoneos*] = $(inherited) -force_load $(PROJECT_DIR)/rust/iphoneos/libedupaint_core.a
 OTHER_LDFLAGS[sdk=iphonesimulator*] = $(inherited) -force_load $(PROJECT_DIR)/rust/iphonesimulator/libedupaint_core.a
-DEAD_CODE_STRIPPING = NO
+COLOR_EXPORTS_Release = $(PROJECT_DIR)/Runner/core-symbols.txt
+COLOR_EXPORTS_Profile = $(PROJECT_DIR)/Runner/core-symbols.txt
+EXPORTED_SYMBOLS_FILE = $(COLOR_EXPORTS_$(CONFIGURATION))
+COLOR_DEAD_CODE_Debug = NO
+COLOR_DEAD_CODE_Release = YES
+COLOR_DEAD_CODE_Profile = YES
+DEAD_CODE_STRIPPING = $(COLOR_DEAD_CODE_$(CONFIGURATION))
 STRIP_STYLE = non-global
 
 // The simulator of a Mac with Apple silicon, for which the core is built:

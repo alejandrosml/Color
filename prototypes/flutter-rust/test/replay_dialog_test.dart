@@ -153,14 +153,8 @@ void _paintAsStudio(
     background: scene.background,
     strokes: strokes ?? scene.elements,
     paintOrder: paintOrder ?? byRank,
-    draftStamp: 0,
-    draft: null,
-    draftPoints: const [],
+    draft: SheetDraft(),
     repaint: ValueNotifier(0),
-    draftColor: 0,
-    draftWidth: 1,
-    draftKind: VectorKind.stroke,
-    draftFillRgb: null,
     revision: 0,
     selectedIndex: null,
     selectionBounds: null,
@@ -2203,6 +2197,7 @@ void main() {
       final moving = tester.renderObject<RenderRepaintBoundary>(pictures.last);
       resting.debugResetMetrics();
       moving.debugResetMetrics();
+      debugFilmImagesMade = 0;
 
       // Every frame of the film at sixty frames a second.
       const frame = Duration(microseconds: 16667);
@@ -2235,6 +2230,8 @@ void main() {
           resting.debugAsymmetricPaintCount + resting.debugSymmetricPaintCount;
       expect(movingPaints, greaterThanOrEqualTo(frames - 1));
       expect(restingPaints, inInclusiveRange(30, 90));
+      // Each time an image, made from the one before (F-02).
+      expect(debugFilmImagesMade, inInclusiveRange(30, restingPaints));
       expect(find.text('Ton dessin est fini.'), findsOneWidget);
       final last = await _shot(tester);
       expect(
@@ -2257,6 +2254,12 @@ void main() {
       // On a page of its own: nothing comes into view, nothing is to wait
       // for. And nobody listens to its start or to its end.
       final scene = _smallScene();
+      // A screen of one pixel per point, as the pictures are taken: the kept
+      // picture is an image made for the pixels of the screen.
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(800, 600);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(body: ReplayDialog(scene: scene)),

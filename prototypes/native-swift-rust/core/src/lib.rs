@@ -14,17 +14,19 @@ use std::ptr;
 use std::slice;
 use std::sync::Arc;
 
+// The readers of SVG files, with usvg: what reads a caller's SVG and, in
+// the tests, writes the catalogues again (see catalogues.rs).
 #[cfg(feature = "svg")]
 mod art;
-#[cfg(feature = "svg")]
-pub use art::*;
-#[cfg(feature = "svg")]
+mod catalogues;
+#[cfg(all(feature = "svg", test))]
 mod pages;
-#[cfg(feature = "svg")]
-pub use pages::*;
+pub use catalogues::*;
 mod background;
 use background::{validate_canonical_png, BackgroundPng};
 pub use background::{MAX_BACKGROUND_BYTES, MAX_BACKGROUND_DIMENSION, MAX_BACKGROUND_PIXELS};
+mod durable;
+pub use durable::*;
 mod export_snapshot;
 pub use export_snapshot::*;
 mod import_project;
@@ -730,8 +732,9 @@ pub unsafe extern "C" fn ep_document_from_background_png(
         Err(INVALID)
     } else {
         let bytes = unsafe { slice::from_raw_parts(bytes, length) };
-        validate_canonical_png(bytes).and_then(|info| {
-            BackgroundPng::copy_validated(info.width, info.height, bytes, crc32(bytes))
+        // The validation reads the image once and yields its CRC as well.
+        validate_canonical_png(bytes).and_then(|(info, crc)| {
+            BackgroundPng::copy_validated(info.width, info.height, bytes, crc)
         })
     };
     let (document, status) = match result {
@@ -1803,27 +1806,76 @@ const fn crc_tables() -> [[u32; 256]; 8] {
 }
 const CRC_TABLES: [[u32; 256]; 8] = crc_tables();
 
-fn crc32(bytes: &[u8]) -> u32 {
-    let mut crc = u32::MAX;
-    // Slicing-by-8 reduces the serial dependency chain with 8 KiB of immutable
-    // tables. Explicit byte reads work on every alignment and endianness, with
-    // no CPU-specific intrinsics or changes to the stored checksum convention.
+// One slicing-by-8 step: eight bytes folded into a running, not yet
+// complemented, CRC. Slicing-by-8 shortens the serial dependency chain with
+// 8 KiB of immutable tables. Explicit byte reads work on every alignment and
+// endianness, with no CPU-specific intrinsics or changes to the stored
+// checksum convention.
+#[inline(always)]
+fn crc_step(crc: u32, chunk: &[u8; 8]) -> u32 {
+    let first = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]) ^ crc;
+    CRC_TABLES[7][(first & 0xff) as usize]
+        ^ CRC_TABLES[6][((first >> 8) & 0xff) as usize]
+        ^ CRC_TABLES[5][((first >> 16) & 0xff) as usize]
+        ^ CRC_TABLES[4][(first >> 24) as usize]
+        ^ CRC_TABLES[3][chunk[4] as usize]
+        ^ CRC_TABLES[2][chunk[5] as usize]
+        ^ CRC_TABLES[1][chunk[6] as usize]
+        ^ CRC_TABLES[0][chunk[7] as usize]
+}
+
+// The running CRC continued over `bytes`, in one dependency chain.
+fn crc_update(mut crc: u32, bytes: &[u8]) -> u32 {
     let (chunks, remainder) = bytes.as_chunks::<8>();
     for chunk in chunks {
-        let first = u32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]) ^ crc;
-        crc = CRC_TABLES[7][(first & 0xff) as usize]
-            ^ CRC_TABLES[6][((first >> 8) & 0xff) as usize]
-            ^ CRC_TABLES[5][((first >> 16) & 0xff) as usize]
-            ^ CRC_TABLES[4][(first >> 24) as usize]
-            ^ CRC_TABLES[3][chunk[4] as usize]
-            ^ CRC_TABLES[2][chunk[5] as usize]
-            ^ CRC_TABLES[1][chunk[6] as usize]
-            ^ CRC_TABLES[0][chunk[7] as usize];
+        crc = crc_step(crc, chunk);
     }
     for byte in remainder {
         crc = CRC_TABLES[0][((crc ^ u32::from(*byte)) & 0xff) as usize] ^ (crc >> 8);
     }
-    !crc
+    crc
+}
+
+// The final CRC of `A || bytes`, given the final CRC of A.
+fn crc32_continue(crc: u32, bytes: &[u8]) -> u32 {
+    !crc_update(!crc, bytes)
+}
+
+// Under four lanes of this many bytes, one chain is about as fast: the three
+// combinations below would cost what the overlap saves.
+const CRC_LANE_MIN_BYTES: usize = 4096;
+
+fn crc32(bytes: &[u8]) -> u32 {
+    // Each table lookup waits for the previous step of its chain. Four
+    // independent chains over the four quarters of the input keep the
+    // processor busy meanwhile; crc32_combine then joins the four CRCs into
+    // exactly the one a single chain gives (CRC is linear over GF(2)). The
+    // quarters are multiples of eight bytes; the last one takes the rest.
+    let lane = (bytes.len() / 4) & !7;
+    if lane < CRC_LANE_MIN_BYTES {
+        return !crc_update(u32::MAX, bytes);
+    }
+    let (first, rest) = bytes.split_at(lane);
+    let (second, rest) = rest.split_at(lane);
+    let (third, fourth) = rest.split_at(lane);
+    let (fourth_head, fourth_tail) = fourth.split_at(lane);
+    let (mut a, mut b, mut c, mut d) = (u32::MAX, u32::MAX, u32::MAX, u32::MAX);
+    for (((w, x), y), z) in first
+        .as_chunks::<8>()
+        .0
+        .iter()
+        .zip(second.as_chunks::<8>().0)
+        .zip(third.as_chunks::<8>().0)
+        .zip(fourth_head.as_chunks::<8>().0)
+    {
+        a = crc_step(a, w);
+        b = crc_step(b, x);
+        c = crc_step(c, y);
+        d = crc_step(d, z);
+    }
+    let last = !crc_update(d, fourth_tail);
+    let joined = crc32_combine(crc32_combine(!a, !b, lane), !c, lane);
+    crc32_combine(joined, last, fourth.len())
 }
 
 // CRC-32/ISO-HDLC concatenation over final (complemented) CRCs. Cache the
@@ -1978,12 +2030,7 @@ unsafe fn copy_project(doc: &EpDocument, out_bytes: *mut u8, capacity: usize) ->
         output[cursor + 16..cursor + 20].copy_from_slice(&stroke.style.fill_enabled.to_le_bytes());
         output[cursor + 20..cursor + 24].copy_from_slice(&stroke.style.fill_rgb.to_le_bytes());
         cursor += 24;
-        for index in 0..stroke.points.len() {
-            let point = stroke.point_at(index);
-            output[cursor..cursor + 4].copy_from_slice(&point.x.to_le_bytes());
-            output[cursor + 4..cursor + 8].copy_from_slice(&point.y.to_le_bytes());
-            cursor += 8;
-        }
+        cursor = put_points(stroke, output, cursor);
     }
     // The immutable PNG checksum is cached once. Compute the changing vector
     // prefix and combine CRCs without rescanning the large image after its copy.
@@ -1995,6 +2042,41 @@ unsafe fn copy_project(doc: &EpDocument, out_bytes: *mut u8, capacity: usize) ->
     }
     output[cursor..cursor + 4].copy_from_slice(&checksum.to_le_bytes());
     0
+}
+
+// Writes the visible points of `stroke` at `cursor`, eight bytes each (x then
+// y, little-endian f32), and returns the cursor after them. One bounds check
+// for the whole run instead of two per point. An object never moved nor
+// resized is written as stored: the transform would return every coordinate
+// bit for bit (see Stroke::transformed).
+fn put_points(stroke: &Stroke, output: &mut [u8], cursor: usize) -> usize {
+    let end = cursor + stroke.points.len() * 8;
+    let (chunks, _) = output[cursor..end].as_chunks_mut::<8>();
+    let put = |chunk: &mut [u8; 8], point: EpPoint| {
+        chunk[..4].copy_from_slice(&point.x.to_le_bytes());
+        chunk[4..].copy_from_slice(&point.y.to_le_bytes());
+    };
+    if stroke.scale == 1.0 && stroke.translation == [0.0; 2] {
+        for (chunk, point) in chunks.iter_mut().zip(&stroke.points) {
+            put(chunk, *point);
+        }
+    } else {
+        for (chunk, point) in chunks.iter_mut().zip(&stroke.points) {
+            put(
+                chunk,
+                Stroke::transformed(*point, stroke.scale, stroke.translation),
+            );
+        }
+    }
+    end
+}
+
+// The point at the start of `chunk`, as put_points writes it.
+fn read_point(chunk: &[u8; 8]) -> EpPoint {
+    EpPoint {
+        x: f32::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]),
+        y: f32::from_le_bytes([chunk[4], chunk[5], chunk[6], chunk[7]]),
+    }
 }
 
 // The header word of the sheet's colour: zero for white, the only form of a
@@ -2059,11 +2141,7 @@ fn copy_layered_project(doc: &EpDocument, output: &mut [u8]) {
         put(output, &mut cursor, u32::from(stroke.layer));
         put(output, &mut cursor, stroke.param);
         put(output, &mut cursor, stroke.text.len() as u32);
-        for index in 0..stroke.points.len() {
-            let point = stroke.point_at(index);
-            put(output, &mut cursor, point.x.to_bits());
-            put(output, &mut cursor, point.y.to_bits());
-        }
+        cursor = put_points(stroke, output, cursor);
         output[cursor..cursor + stroke.text.len()].copy_from_slice(&stroke.text);
         cursor += stroke.text.len();
     }
@@ -2304,24 +2382,22 @@ fn validate_project(bytes: &[u8]) -> Result<ProjectHeader, i32> {
         return Err(INVALID);
     }
     let checksum = u32::from_le_bytes(bytes[payload_end..].try_into().map_err(|_| INVALID)?);
-    if crc32(&bytes[..payload_end]) != checksum {
-        return Err(INVALID);
-    }
+    // Every byte is read once for the checksum: the vector part here, the PNG
+    // by its validation, whose chunk checks yield its CRC. The two CRCs give
+    // the file's (CRC combination is linear over GF(2)), and the PNG's is
+    // kept for the next save, which does not scan the image again.
+    let mut computed = crc32(&bytes[..header.background_start]);
     if header.background_bytes != 0 {
-        let info = validate_canonical_png(&bytes[header.background_start..payload_end])?;
+        let (info, background_crc) =
+            validate_canonical_png(&bytes[header.background_start..payload_end])?;
         if info.width != header.width || info.height != header.height {
             return Err(INVALID);
         }
+        computed = crc32_combine(computed, background_crc, header.background_bytes);
+        header.background_crc = background_crc;
     }
-    if header.background_bytes != 0 {
-        // CRC(prefix || PNG) is already verified. Derive the PNG CRC without
-        // another scan of its bytes; CRC combination is linear over GF(2).
-        header.background_crc = checksum
-            ^ crc32_combine(
-                crc32(&bytes[..header.background_start]),
-                0,
-                header.background_bytes,
-            );
+    if computed != checksum {
+        return Err(INVALID);
     }
 
     // Exclude the background and checksum from the vector record reader.
@@ -2370,9 +2446,10 @@ fn validate_project(bytes: &[u8]) -> Result<ProjectHeader, i32> {
         // The extent of a contour, gathered without storing its points.
         let mut low = [f32::INFINITY; 2];
         let mut high = [f32::NEG_INFINITY; 2];
-        for _ in 0..count {
-            let x = reader.f32()?;
-            let y = reader.f32()?;
+        // count <= MAX_STROKE_POINTS, checked above: the product cannot overflow.
+        let (points, _) = reader.take(count * 8)?.as_chunks::<8>();
+        for chunk in points {
+            let EpPoint { x, y } = read_point(chunk);
             if !x.is_finite()
                 || !y.is_finite()
                 || !(0.0..=header.width as f32).contains(&x)
@@ -2445,12 +2522,9 @@ fn load_project(bytes: &[u8]) -> Result<EpDocument, i32> {
         points
             .try_reserve_exact(record.count)
             .map_err(|_| ALLOCATION_FAILURE)?;
-        for _ in 0..record.count {
-            points.push(EpPoint {
-                x: reader.f32()?,
-                y: reader.f32()?,
-            });
-        }
+        // Validated above: record.count <= MAX_STROKE_POINTS.
+        let (chunks, _) = reader.take(record.count * 8)?.as_chunks::<8>();
+        points.extend(chunks.iter().map(read_point));
         let mut text = Vec::new();
         text.try_reserve_exact(record.text_bytes)
             .map_err(|_| ALLOCATION_FAILURE)?;
@@ -2764,6 +2838,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
     fn order_history_limit_is_atomic_and_a_noop_still_succeeds() {
         let doc = Owned::new();
         assert_eq!(doc.add(&[point(1.0, 1.0)], 1, 1.0), 0);
@@ -2785,6 +2860,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
     fn full_document_can_reorder_without_new_geometry_or_object_capacity() {
         let doc = Owned::new();
         for rgb in 0..MAX_STROKES {
@@ -3309,6 +3385,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
     fn history_command_limit_rejects_atomically_and_allows_branching() {
         let doc = Owned::new();
         assert_eq!(doc.add(&[point(10.0, 20.0)], 0, 1.0), 0);
@@ -3335,6 +3412,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
     fn detached_history_points_are_bounded_and_branch_releases_payload() {
         let doc = Owned::new();
         let points = vec![point(10.0, 20.0); MAX_STROKE_POINTS];
@@ -3360,6 +3438,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
     fn detached_history_objects_are_bounded_even_with_tiny_geometry() {
         let doc = Owned::new();
         unsafe {
@@ -3523,6 +3602,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
     fn point_and_document_limits_are_enforced_without_mutation() {
         let doc = Owned::new();
         let batch = vec![point(0.0, 800.0); MAX_STROKE_POINTS];
@@ -3554,6 +3634,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "megabytes through the CRC: too long under Miri")]
     fn project_crc_matches_independent_bitwise_reference_for_every_prefix_and_alignment() {
         fn reference(bytes: &[u8]) -> u32 {
             let mut crc = u32::MAX;
@@ -3591,6 +3672,88 @@ mod tests {
             bytes.fill(repeated);
             assert_eq!(crc32(&bytes), reference(&bytes));
         }
+    }
+
+    #[test]
+    #[cfg_attr(miri, ignore = "megabytes through the CRC: too long under Miri")]
+    fn four_lane_crc_equals_one_chain_on_both_sides_of_every_split() {
+        // One chain, checked bit by bit by the test above, is the reference.
+        let one_chain = |bytes: &[u8]| !crc_update(u32::MAX, bytes);
+        let threshold = 4 * CRC_LANE_MIN_BYTES;
+        let mut bytes = vec![0u8; 3 * threshold + 4096];
+        let mut seed = 99u32;
+        for byte in &mut bytes {
+            seed = seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+            *byte = (seed >> 24) as u8;
+        }
+        // Below, at and above the threshold, with every remainder modulo 32
+        // (four lanes of whole 8-byte steps, the last lane taking the rest).
+        let lengths = (threshold - 40..=threshold + 40)
+            .chain(2 * threshold - 33..=2 * threshold + 33)
+            .chain([bytes.len() - 7, bytes.len()]);
+        for length in lengths {
+            for offset in [0, 1, 5] {
+                let end = (offset + length).min(bytes.len());
+                let input = &bytes[offset..end];
+                assert_eq!(crc32(input), one_chain(input), "length {}", input.len());
+            }
+        }
+        // Long runs of one value, whose lanes are all alike.
+        for value in [0u8, 0xff] {
+            let same = vec![value; 2 * threshold + 13];
+            assert_eq!(crc32(&same), one_chain(&same));
+        }
+        // Continuing a CRC is the same as computing it at once.
+        let (head, tail) = bytes.split_at(12_345);
+        assert_eq!(crc32_continue(crc32(head), tail), crc32(&bytes));
+        assert_eq!(crc32_continue(0, b"123456789"), 0xcbf4_3926);
+    }
+
+    #[test]
+    fn points_are_written_as_the_transform_gives_them_and_read_back_exactly() {
+        let source = Owned::new();
+        let points: Vec<EpPoint> = (0..1000)
+            .map(|i| point(0.25 + (i % 97) as f32 * 7.5, 1.0 + (i / 97) as f32 * 3.125))
+            .collect();
+        assert_eq!(source.add(&points, 0x123456, 2.0), 0);
+        assert_eq!(
+            source.add(&[point(-0.0, 5.0), point(9.0, 10.0)], 0x654321, 1.5),
+            0
+        );
+        assert_eq!(source.add(&points[..3], 0, 4.0), 0);
+        // Moved, resized, then moved by a value that needs the f64 path.
+        unsafe {
+            assert_eq!(ep_move_object(source.0, 0, 3.0, 2.0), 1);
+            assert_eq!(ep_scale_object(source.0, 2, 1.5, 4.0), 1);
+            assert_eq!(ep_move_object(source.0, 2, 0.1, 0.3), 1);
+        }
+        let bytes = source.project();
+        // Written exactly as the transform gives every point, one at a time.
+        let document = unsafe { &*source.0 };
+        let mut expected = Vec::new();
+        for stroke in &document.strokes {
+            for index in 0..stroke.points.len() {
+                let point = stroke.point_at(index);
+                expected.extend_from_slice(&point.x.to_le_bytes());
+                expected.extend_from_slice(&point.y.to_le_bytes());
+            }
+        }
+        assert_eq!(bytes[8..10], PROJECT_VERSION.to_le_bytes());
+        let mut written = Vec::new();
+        let mut starts = Vec::new();
+        let mut cursor = PROJECT_HEADER_BYTES;
+        for stroke in &document.strokes {
+            cursor += 24;
+            starts.push(cursor);
+            written.extend_from_slice(&bytes[cursor..cursor + stroke.points.len() * 8]);
+            cursor += stroke.points.len() * 8;
+        }
+        assert_eq!(cursor, bytes.len() - 4);
+        assert_eq!(written, expected);
+        // The untouched stroke keeps its stored bits, the sign of zero included.
+        assert_eq!(bytes[starts[1]..starts[1] + 4], (-0.0f32).to_le_bytes());
+        let loaded = Owned::from_project(&bytes);
+        assert_eq!(loaded.project(), bytes);
     }
 
     #[test]
@@ -3779,6 +3942,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg_attr(miri, ignore = "fills a limit of the core: too long under Miri")]
     fn project_load_at_point_limit_and_many_strokes_preserves_history() {
         let source = Owned::new();
         let batch = vec![point(0.0, 800.0); MAX_STROKE_POINTS];

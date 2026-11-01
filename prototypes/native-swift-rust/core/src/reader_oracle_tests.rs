@@ -649,7 +649,7 @@ fn the_reader_agrees_with_an_independent_oracle_on_structured_files() {
     let rounds: usize = std::env::var("EDUPAINT_ORACLE_ROUNDS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(30_000);
+        .unwrap_or(if cfg!(miri) { 40 } else { 30_000 });
     let mut rng = Rng(0x5eed_0001);
     let (mut plain, mut layered, mut locked, mut invalid) = (0usize, 0usize, 0usize, 0usize);
     let mut lowered = 0usize;
@@ -745,11 +745,11 @@ fn edits_and_history_are_exact_on_random_loaded_projects() {
     let wanted: usize = std::env::var("EDUPAINT_MODEL_LOADED")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(40);
+        .unwrap_or(if cfg!(miri) { 2 } else { 40 });
     let steps: usize = std::env::var("EDUPAINT_MODEL_STEPS")
         .ok()
         .and_then(|s| s.parse().ok())
-        .unwrap_or(150);
+        .unwrap_or(if cfg!(miri) { 12 } else { 150 });
     let mut rng = Rng(0x10ad_ed00);
     let mut done = 0usize;
     let mut round = 0u64;

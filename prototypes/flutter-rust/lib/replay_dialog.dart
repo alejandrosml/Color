@@ -32,7 +32,7 @@
 // white: those that the paint pot coloured take their colour one after the
 // other, then the film redraws what the child drew.
 import 'dart:math' as math;
-import 'dart:ui' as ui show Image;
+import 'dart:ui' as ui show Image, PictureRasterizationException;
 
 import 'package:flutter/material.dart';
 
@@ -40,6 +40,7 @@ import 'document_renderer.dart';
 import 'fit_to_screen.dart';
 import 'replay.dart';
 import 'rust_document.dart' show whitePaper;
+import 'sheet_images.dart';
 import 'studio_colors.dart';
 import 'viewport.dart';
 
@@ -331,7 +332,7 @@ class _ReplayDialogState extends State<ReplayDialog>
   late final AnimationController _clock;
 
   // What the kept part of the picture holds: it is painted again only when
-  // this changes.
+  // this changes, by steps (see ReplayOrder.restingAt).
   late final ValueNotifier<int> _resting;
 
   // A handle of this dialog's own on the borrowed image: the film goes on
@@ -402,6 +403,7 @@ class _ReplayDialogState extends State<ReplayDialog>
     _arrival?.removeStatusListener(_arrived);
     _clock.dispose();
     _resting.dispose();
+    _film.dispose();
     _background?.dispose();
     super.dispose();
   }
@@ -432,7 +434,7 @@ class _ReplayDialogState extends State<ReplayDialog>
   // The sheet on its backdrop, as in the studio. Two pictures, one on the
   // other: what rests is kept from frame to frame, and only what moves is
   // painted for each of them.
-  Widget _sheet({required bool overshoot}) => Semantics(
+  Widget _sheet(BuildContext context, {required bool overshoot}) => Semantics(
     container: true,
     image: true,
     label: ReplayDialog.sheetLabel,
@@ -449,7 +451,11 @@ class _ReplayDialogState extends State<ReplayDialog>
             RepaintBoundary(
               child: CustomPaint(
                 isComplex: true,
-                painter: _RestingPainter(_film, _resting),
+                painter: _RestingPainter(
+                  _film,
+                  _resting,
+                  pixelRatio: MediaQuery.devicePixelRatioOf(context),
+                ),
                 size: Size.infinite,
               ),
             ),
@@ -580,7 +586,7 @@ class _ReplayDialogState extends State<ReplayDialog>
                                   constraints: const BoxConstraints(
                                     minHeight: ReplayDialog.minSheetHeight,
                                   ),
-                                  child: _sheet(overshoot: overshoot),
+                                  child: _sheet(context, overshoot: overshoot),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -602,6 +608,10 @@ class _ReplayDialogState extends State<ReplayDialog>
     );
   }
 }
+
+/// Images of the kept picture made by every film: what the tests count.
+@visibleForTesting
+int debugFilmImagesMade = 0;
 
 // One film: its scene, its times, its pile and its clock, for the painters.
 class _Film {
@@ -626,22 +636,98 @@ class _Film {
   /// kept picture followed by the other revealed elements, lowest first, is
   /// the whole pile in its order.
   int get resting => order.restingAt(plan.finishedAt(elapsed));
+
+  // The kept picture as an image, the size of the box in pixels of the
+  // screen, and what it holds.
+  ui.Image? _image;
+  Size? _imageSize;
+  double _imagePixelRatio = 0;
+  int _imageCount = 0;
+
+  /// The image of the sheet with the [count] first elements of the pile, in
+  /// a box of [size] with [pixelRatio] pixels of the screen per point: from
+  /// the one before when it held fewer of them. Null when no image can be
+  /// made for such a box: the picture is then painted element by element.
+  ui.Image? keptImage(Size size, double pixelRatio, int count) {
+    final width = (size.width * pixelRatio).ceil();
+    final height = (size.height * pixelRatio).ceil();
+    if (!(pixelRatio > 0) ||
+        width <= 0 ||
+        height <= 0 ||
+        width > maxSheetImageSide ||
+        height > maxSheetImageSide) {
+      dispose();
+      return null;
+    }
+    final before = _image;
+    final same =
+        before != null && _imageSize == size && _imagePixelRatio == pixelRatio;
+    if (same && _imageCount == count) return before;
+    final from = same && _imageCount < count ? _imageCount : 0;
+    final image = rasterizeSheet(width, height, (canvas) {
+      if (from > 0) {
+        copySheetImage(canvas, before!);
+        canvas.scale(pixelRatio);
+        canvas.save();
+        canvas.clipRect(Offset.zero & size);
+        _enterSheet(canvas, _sheetIn(size, scene));
+      } else {
+        canvas.scale(pixelRatio);
+        _paintUnderDrawing(canvas, size, scene, background);
+      }
+      for (var rank = from; rank < count; rank++) {
+        scene.elements[order.elementAt(rank)].paint(canvas);
+      }
+      canvas
+        ..restore()
+        ..restore();
+    });
+    before?.dispose();
+    debugFilmImagesMade++;
+    _image = image;
+    _imageSize = size;
+    _imagePixelRatio = pixelRatio;
+    _imageCount = count;
+    return image;
+  }
+
+  void dispose() {
+    _image?.dispose();
+    _image = null;
+  }
 }
 
 // The part of the picture that is kept between frames: the sheet and the
-// elements at the bottom of the pile that will not change any more.
+// elements at the bottom of the pile that will not change any more, as an
+// image that the engine keeps from one frame to the next.
 class _RestingPainter extends CustomPainter {
-  _RestingPainter(this.film, Listenable resting) : super(repaint: resting);
+  _RestingPainter(this.film, Listenable resting, {required this.pixelRatio})
+    : super(repaint: resting);
   final _Film film;
+  final double pixelRatio;
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
+    final resting = film.resting;
+    final saved = canvas.getSaveCount();
+    try {
+      final image = film.keptImage(size, pixelRatio, resting);
+      if (image != null) {
+        drawSheetImage(canvas, image, pixelRatio);
+        return;
+      }
+    } on ui.PictureRasterizationException {
+      // The engine could not make it, the graphics processor being away:
+      // painted element by element, on the canvas as it was found, and
+      // made again at the next step.
+      canvas.restoreToCount(saved);
+      film.dispose();
+    }
     final scene = film.scene;
     final elements = scene.elements;
     final order = film.order;
     _paintUnderDrawing(canvas, size, scene, film.background);
-    final resting = film.resting;
     for (var rank = 0; rank < resting; rank++) {
       elements[order.elementAt(rank)].paint(canvas);
     }
@@ -651,11 +737,12 @@ class _RestingPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_RestingPainter old) => !identical(old.film, film);
+  bool shouldRepaint(_RestingPainter old) =>
+      !identical(old.film, film) || old.pixelRatio != pixelRatio;
 }
 
 // The part painted for every frame: the element being redrawn, and the
-// complete ones that are not in the kept picture yet.
+// complete ones that are not in the kept picture yet: less than a step.
 class _MovingPainter extends CustomPainter {
   _MovingPainter(this.film, {required this.overshoot})
     : super(repaint: film.clock);

@@ -100,7 +100,7 @@ fn every_picture_of_the_interface_reads_on_its_grid() {
         assert!(out.is_ascii(), "{key}");
         whole.push_str(&out);
     }
-    assert_eq!(catalogue(), Some(whole.as_str()));
+    assert_eq!(interface_catalogue().as_deref(), Some(whole.as_str()));
     let text = ep_art_catalog();
     assert!(!text.is_null());
     assert_eq!(unsafe { CStr::from_ptr(text) }.to_str().unwrap(), whole);

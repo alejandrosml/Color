@@ -1,7 +1,7 @@
 //! Structural validation only: the caller must decode successfully before
 //! adopting a candidate document. No zlib, pixels, ICC or private Tux chunks
 //! are decompressed by this dependency-free core.
-use super::{crc32, EpBackgroundInfo, ALLOCATION_FAILURE, INVALID};
+use super::{crc32, crc32_combine, crc32_continue, EpBackgroundInfo, ALLOCATION_FAILURE, INVALID};
 
 pub const MAX_BACKGROUND_DIMENSION: u32 = 8192;
 pub const MAX_BACKGROUND_PIXELS: u64 = 16 * 1024 * 1024;
@@ -49,7 +49,12 @@ fn be_u32(bytes: &[u8]) -> Result<u32, i32> {
 /// unique sRGB/gAMA/cHRM/pHYs then contiguous IDAT chunks and final empty IEND.
 /// gAMA/cHRM, when present, must describe sRGB, not contradict the asset contract.
 /// A profile-free PNG is treated as sRGB by the caller's normalization contract.
-pub(super) fn validate_canonical_png(bytes: &[u8]) -> Result<EpBackgroundInfo, i32> {
+///
+/// Also returns the CRC-32 of all of `bytes`, the one a project stores for its
+/// background, without a second scan: each chunk's own check already reads
+/// its type and data, and the few other bytes (signature, lengths, stored
+/// CRCs) are added around it.
+pub(super) fn validate_canonical_png(bytes: &[u8]) -> Result<(EpBackgroundInfo, u32), i32> {
     if !(57..=MAX_BACKGROUND_BYTES).contains(&bytes.len())
         || bytes.get(..8) != Some(PNG_SIGNATURE.as_slice())
     {
@@ -60,6 +65,7 @@ pub(super) fn validate_canonical_png(bytes: &[u8]) -> Result<EpBackgroundInfo, i
     let mut metadata_seen = 0u8;
     let mut idat_seen = false;
     let mut idat_bytes = 0usize;
+    let mut whole = crc32(&bytes[..8]);
     while cursor < bytes.len() {
         let header_end = cursor.checked_add(8).ok_or(INVALID)?;
         let header = bytes.get(cursor..header_end).ok_or(INVALID)?;
@@ -67,10 +73,15 @@ pub(super) fn validate_canonical_png(bytes: &[u8]) -> Result<EpBackgroundInfo, i
         let data_end = header_end.checked_add(length).ok_or(INVALID)?;
         let end = data_end.checked_add(4).ok_or(INVALID)?;
         let data = bytes.get(header_end..data_end).ok_or(INVALID)?;
-        let stored_crc = be_u32(bytes.get(data_end..end).ok_or(INVALID)?)?;
-        if crc32(&bytes[cursor + 4..data_end]) != stored_crc {
+        let stored = bytes.get(data_end..end).ok_or(INVALID)?;
+        let chunk_crc = crc32(&bytes[cursor + 4..data_end]);
+        if chunk_crc != be_u32(stored)? {
             return Err(INVALID);
         }
+        // Length word, then type and data (the chunk's CRC), then that CRC.
+        whole = crc32_continue(whole, &header[..4]);
+        whole = crc32_combine(whole, chunk_crc, data_end - (cursor + 4));
+        whole = crc32_continue(whole, stored);
         let kind = &header[4..8];
         if info.is_none() && kind != b"IHDR" {
             return Err(INVALID);
@@ -148,7 +159,8 @@ pub(super) fn validate_canonical_png(bytes: &[u8]) -> Result<EpBackgroundInfo, i
                 if length != 0 || !idat_seen || idat_bytes == 0 || end != bytes.len() {
                     return Err(INVALID);
                 }
-                return info.ok_or(INVALID);
+                // end == bytes.len(): `whole` covers every byte.
+                return info.ok_or(INVALID).map(|info| (info, whole));
             }
             // In particular reject APNG, compressed profiles/text, PLTE/tRNS,
             // private chunks and unknown critical/ancillary extensions.

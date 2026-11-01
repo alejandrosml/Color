@@ -518,7 +518,7 @@ fn ellipses_are_outlined_every_three_units_with_their_four_extremes_exact() {
 
 #[test]
 fn the_lines_of_a_page_are_the_same_bits_every_time() {
-    for ((key, svg), page) in PAGES.iter().zip(pages().unwrap()) {
+    for ((key, svg), page) in PAGES.iter().zip(pages().unwrap().iter()) {
         for _ in 0..2 {
             let again = read_page(svg).unwrap();
             assert_eq!(again.lines.len(), page.lines.len(), "{key}");
@@ -541,7 +541,7 @@ fn the_lines_of_a_page_are_the_same_bits_every_time() {
 
 #[test]
 fn every_page_loses_only_what_a_filled_element_drawn_after_it_hides() {
-    for ((key, _), page) in PAGES.iter().zip(pages().unwrap()) {
+    for ((key, _), page) in PAGES.iter().zip(pages().unwrap().iter()) {
         let mut lines = Vec::new();
         let mut cut = 0;
         for (index, object) in page.objects.iter().enumerate() {
@@ -623,7 +623,7 @@ fn the_chimney_and_the_ground_of_the_house_lose_what_the_file_paints_over() {
         [ep(664.0, 240.0), ep(728.0, 350.0)]
     );
     assert_eq!(
-        pieces(page, 19),
+        pieces(&page, 19),
         [vec![
             ep(664.0, 300.0),
             ep(664.0, 240.0),
@@ -632,10 +632,10 @@ fn the_chimney_and_the_ground_of_the_house_lose_what_the_file_paints_over() {
         ]]
     );
     // The roof stays a rectangle: the walls under it only touch it.
-    assert!(whole(page, 20) && whole(page, 21));
+    assert!(whole(&page, 20) && whole(&page, 21));
     // The top of the ground, y = 632, loses where the two lower bushes,
     // drawn after it, cross it; the third one stops above it.
-    let ground = pieces(page, 0);
+    let ground = pieces(&page, 0);
     assert_eq!(ground.len(), 2);
     // Half the chord of each bush at y = 632: radii 50 and 46, centres 38
     // and 34 above.

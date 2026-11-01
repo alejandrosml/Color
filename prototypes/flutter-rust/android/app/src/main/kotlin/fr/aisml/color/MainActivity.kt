@@ -31,11 +31,12 @@ import java.nio.ByteBuffer
 import java.util.concurrent.Executors
 
 /**
- * The window of Color on Android. Two things that only the system can do are
- * done here, in Kotlin: printing the picture of the sheet, and putting a copy
- * of a file where the person chooses. The other side of the two channels is
- * lib/studio_printer.dart and lib/studio_files.dart. Everything else — the
- * drawing, the files of Color, the sounds — is Dart and Rust.
+ * The window of Color on Android. What only the system can do is done here,
+ * in Kotlin: printing the picture of the sheet, putting a copy of a file
+ * where the person chooses, and naming the folders of Color. The other side
+ * of the channels is lib/studio_printer.dart, lib/studio_files.dart and
+ * lib/app_folders.dart. Everything else — the drawing, the files of Color,
+ * the sounds — is Dart and Rust.
  */
 class MainActivity : FlutterActivity() {
     private val work = Executors.newSingleThreadExecutor()
@@ -60,6 +61,18 @@ class MainActivity : FlutterActivity() {
                     call.argument<ByteArray>("rgba"),
                     result,
                 )
+            }
+        }
+        // The folders of Color, as path_provider gave them before
+        // (lib/app_folders.dart): its own folder, its documents, its cache.
+        MethodChannel(messenger, "org.edupaint/folders").setMethodCallHandler { call, result ->
+            when (call.method) {
+                "support" -> result.success(applicationContext.filesDir?.path)
+                "documents" -> result.success(
+                    applicationContext.getDir("flutter", Context.MODE_PRIVATE)?.path,
+                )
+                "temporary" -> result.success(applicationContext.cacheDir?.path)
+                else -> result.notImplemented()
             }
         }
         MethodChannel(messenger, "org.edupaint/files").setMethodCallHandler { call, result ->
