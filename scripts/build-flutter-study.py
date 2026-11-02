@@ -493,6 +493,10 @@ def main(argv=None):
     # gets the core of the stores, without it (R-01 of the retrospective).
     tested = output / 'libedupaint_core-tests.dylib'
     env['EDUPAINT_CORE_LIBRARY'] = str(tested)
+    # The tests run in a copy of the application, away from the core: the
+    # one that compares the functions of Dart, of the header and of the
+    # iPhone (P-04) is told where the header is.
+    env['EDUPAINT_CORE_HEADER'] = str(core.parent.parent / 'include' / 'edupaint_core.h')
 
     def command(name, arguments, cwd=APP_SOURCE):
         run(name, arguments, cwd=cwd, env=env, report_dir=report_dir)

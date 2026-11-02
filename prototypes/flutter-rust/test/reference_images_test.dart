@@ -11,7 +11,12 @@
 //   flutter test --update-goldens test/reference_images_test.dart   (remake)
 //
 // Remake them only for a change of the picture that is wanted, and look at
-// each new image before keeping it.
+// each new image before keeping it. The pictures with a text have a second
+// reference, made on the Mac (references/macos/): its font engine draws the
+// edges of the letters a little differently. The first ones of the Mac are
+// the pictures of its recipe of 2 November 2026, which differed from those
+// of Linux at the letters only, by up to 102 levels, on at most 1 217
+// pixels of 432 234.
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -229,9 +234,18 @@ class _Studio {
     _height = page.height.toDouble();
   }
 
-  Future<void> expectPicture(String name) async {
+  /// [text]: the picture shows a text. The font engine of the system draws
+  /// its glyphs (FreeType on Linux, Core Text on the Mac), each a little
+  /// differently at the edges of the letters: such a picture has a
+  /// reference of its own on the Mac, in references/macos/, made there.
+  /// Every other pixel is the same on both (05, the garden without its
+  /// text, has one reference for both). Elsewhere a picture with a text is
+  /// not compared yet: no reference of its glyphs was made there.
+  Future<void> expectPicture(String name, {bool text = false}) async {
     await tester.pump();
-    await expectLater(_sheet, matchesGoldenFile('references/$name.png'));
+    if (text && !Platform.isLinux && !Platform.isMacOS) return;
+    final folder = text && Platform.isMacOS ? 'references/macos' : 'references';
+    await expectLater(_sheet, matchesGoldenFile('$folder/$name.png'));
   }
 }
 
@@ -267,16 +281,16 @@ void main() {
     final studio = _Studio(tester);
     await studio.start();
     await studio.garden();
-    await studio.expectPicture('03-jardin');
+    await studio.expectPicture('03-jardin', text: true);
     await studio.tap('tool-eraser');
     await studio.click(300, 450);
-    await studio.expectPicture('04-jardin-sans-maison');
+    await studio.expectPicture('04-jardin-sans-maison', text: true);
     await studio.tap('undo');
-    await studio.expectPicture('03-jardin');
+    await studio.expectPicture('03-jardin', text: true);
     await studio.tap('undo');
     await studio.expectPicture('05-jardin-sans-texte');
     await studio.tap('redo');
-    await studio.expectPicture('03-jardin');
+    await studio.expectPicture('03-jardin', text: true);
     await studio.finish();
   }, skip: !available);
 
@@ -286,7 +300,7 @@ void main() {
     await studio.garden();
     await studio.tap('zoomIn');
     await studio.tap('zoomIn');
-    await studio.expectPicture('06-jardin-zoom');
+    await studio.expectPicture('06-jardin-zoom', text: true);
     // The hand moves the sheet: a third of the view to the right.
     await studio.tap('panPage');
     final centre = tester.getCenter(_surface);
@@ -294,7 +308,7 @@ void main() {
     await gesture.moveTo(centre + const Offset(150, 40));
     await gesture.up();
     await tester.pumpAndSettle();
-    await studio.expectPicture('07-jardin-deplace');
+    await studio.expectPicture('07-jardin-deplace', text: true);
     await studio.finish();
   }, skip: !available);
 

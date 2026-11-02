@@ -9,9 +9,16 @@ import 'dart:io';
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// The header of the core: in the sources, beside the application. A recipe
+/// that tests a copy of the application kept elsewhere (the Mac's,
+/// scripts/build-flutter-study.py) names it in EDUPAINT_CORE_HEADER.
+File _header() => File(
+  Platform.environment['EDUPAINT_CORE_HEADER'] ??
+      '../native-swift-rust/core/include/edupaint_core.h',
+);
+
 Set<String> _declared() {
-  final header = File('../native-swift-rust/core/include/edupaint_core.h')
-      .readAsStringSync();
+  final header = _header().readAsStringSync();
   // Outside comments, a name of the core followed by a parenthesis is a
   // declaration.
   final code = header.replaceAll(RegExp(r'/\*.*?\*/', dotAll: true), '');

@@ -290,7 +290,13 @@ def budgets_of(sources):
         return None
     spec = importlib.util.spec_from_file_location('color_budgets', path)
     module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    # Read only: Python would leave its bytecode in scripts/__pycache__ of
+    # the sources, which the launchers do not change.
+    kept, sys.dont_write_bytecode = sys.dont_write_bytecode, True
+    try:
+        spec.loader.exec_module(module)
+    finally:
+        sys.dont_write_bytecode = kept
     return module
 
 
