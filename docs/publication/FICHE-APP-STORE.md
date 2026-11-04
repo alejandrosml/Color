@@ -2,9 +2,15 @@
 
 Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; Color n'existe qu'en français.
 
-## Où en est la fiche (4 novembre 2026)
+## Où en est la fiche (5 novembre 2026)
 
-**iOS : refusée le 3 novembre, renvoyée le 4.** Le 3 novembre au soir, Apple a refusé la version iOS 1.0.0 (39), vérifiée sur un iPad Air 11 pouces (M3), selon la règle **2.3.8, « Accurate Metadata »**. Le sous-titre « Atelier de dessin pour enfants » présentait Color comme faite pour les enfants, alors que l'app n'était pas dans la catégorie Enfants. Apple laissait le choix : retirer du nom, du sous-titre, de l'icône et des captures ce qui dit « pour enfants », ou cocher « Fait pour les enfants ».
+**macOS : la 1.0.0 acceptée le 4 novembre, la 1.0.1 envoyée le 5.** Apple a accepté Color 1.0.0 (39) pour le Mac le 4 novembre au soir (courriel de 20 h 17), et l'a publiée aussitôt, comme prévu. Le 5 novembre, à ta demande, les builds 1.0.1 (40) du Mac, de l'iPhone et de l'iPad sont partis chez Apple (« Envoyer Color vers l'App Store », vers 0 h 25), et la version 1.0.1 du Mac a été envoyée à la vérification à 0 h 38, avec ton accord :
+
+- la description commence par « Color est un petit atelier de dessin. », comme sur l'iPhone ;
+- les nouveautés sont celles de la fiche, plus bas, sans leur première ligne : le doigt, le stylet et la main posée sur l'écran ne concernent pas le Mac ;
+- publication automatique dès l'accord d'Apple, à tous les utilisateurs d'un coup, en gardant la note existante.
+
+**iOS : refusée le 3 novembre, renvoyée le 4, toujours « En attente de vérification ».** Le 3 novembre au soir, Apple a refusé la version iOS 1.0.0 (39), vérifiée sur un iPad Air 11 pouces (M3), selon la règle **2.3.8, « Accurate Metadata »**. Le sous-titre « Atelier de dessin pour enfants » présentait Color comme faite pour les enfants, alors que l'app n'était pas dans la catégorie Enfants. Apple laissait le choix : retirer du nom, du sous-titre, de l'icône et des captures ce qui dit « pour enfants », ou cocher « Fait pour les enfants ».
 
 Le 4 novembre, à ta demande :
 
@@ -13,9 +19,11 @@ Le 4 novembre, à ta demande :
 - tu as approuvé la réponse envoyée à Apple depuis la page « Vérification de l'app », à 11 h 37 ;
 - le même build 39 a été renvoyé à 11 h 38 : « En attente de vérification ».
 
-La catégorie Enfants viendra avec la 1.1, avec un contrôle parental devant ce qui ouvre les panneaux du système. « Fait pour les enfants » ne se décoche plus une fois l'app acceptée.
+Le build 1.0.1 (40) de l'iPhone et de l'iPad est déjà chez Apple : leur version 1.0.1 se prépare dès que la 1.0.0 est acceptée, avec les nouveautés entières, puis part avec ton accord.
 
-**macOS : soumise le 28 octobre à 15 h 39, toujours « En attente de vérification ».** Le sous-titre est commun aux deux plateformes. La description du Mac dit encore « pour les enfants » : pour la changer, il faudrait retirer la version de la file d'attente.
+**La catégorie Enfants viendra avec la 1.1** (décidé le 4 novembre). « Fait pour les enfants » ne se décoche plus une fois l'app acceptée.
+
+Le sous-titre est commun aux deux plateformes. La description de la 1.0.0 du Mac, acceptée telle quelle, disait encore « pour les enfants » ; celle de sa 1.0.1 ne le dit plus.
 
 Le 28 octobre, **Color 1.0.0 (39) était soumise à Apple** à 15 h 38 pour iOS et à 15 h 39 pour macOS.
 
@@ -50,7 +58,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | Catégorie secondaire | Divertissement |
 | Droits sur le contenu | « Oui, l'app contient du contenu de tiers, et j'ai les droits nécessaires » : des sons sous licence CC0 et la police DejaVu Sans, dont les licences sont dans « À propos » → « Licences » |
 | Classification par âge | Répondre « Aucun » à chaque question : Color obtient **4+** |
-| Fait pour les enfants (« Made for Kids ») | **Non coché** pour la 1.0 : la catégorie Enfants impose un contrôle parental devant tout ce qui mène hors de l'app, et « Exporter » ouvre le panneau du système. **À cocher avec la 1.1**, décidé le 4 novembre, une fois le contrôle parental en place. Une seule tranche d'âge (5 ans et moins, 6–8 ou 9–11) ; ni la case ni, sans doute, la tranche ne se changent plus après l'accord d'Apple |
+| Fait pour les enfants (« Made for Kids ») | **Non coché** pour la 1.0. **À cocher avec la 1.1**, décidé le 4 novembre. La catégorie Enfants demande un contrôle parental devant ce qui fait sortir de l'app et devant les achats ; Color n'a ni l'un ni l'autre, et ses panneaux de fichiers restent dans l'app : pas de contrôle de plus, sauf si Apple le demande. Une seule tranche d'âge (5 ans et moins, 6–8 ou 9–11) ; ni la case ni, sans doute, la tranche ne se changent plus après l'accord d'Apple |
 | Statut de professionnel (Union européenne) | **Je ne suis pas un professionnel** |
 
 ## Prix et disponibilité
@@ -95,7 +103,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 
 ### Nouveautés de la version 1.0.1 (4 000 caractères au plus)
 
-Le champ « Nouveautés de cette version », que demande toute mise à jour. À mettre sur la page de la version 1.0.1, iOS et macOS, une fois la 1.0.0 « Prête à la distribution » :
+Le champ « Nouveautés de cette version », que demande toute mise à jour. À mettre sur la page de la version 1.0.1, iOS et macOS, une fois la 1.0.0 « Prête à la distribution ». Sur le Mac (envoyée le 5 novembre), sans la première ligne, qui ne le concerne pas :
 
 > Color est plus rapide et plus légère :
 > • le trait suit le doigt et le stylet sans trembler ; une main posée sur l'écran ne dessine plus et ne zoome plus pendant que le stylet dessine ;
