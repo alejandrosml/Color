@@ -2,9 +2,22 @@
 
 Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; Color n'existe qu'en français.
 
-## Où en est la fiche (28 octobre 2026)
+## Où en est la fiche (4 novembre 2026)
 
-**Color 1.0.0 (39) est soumise à Apple** le 28 octobre à 15 h 38 pour iOS et à 15 h 39 pour macOS : « En attente de vérification ».
+**iOS : refusée le 3 novembre, renvoyée le 4.** Le 3 novembre au soir, Apple a refusé la version iOS 1.0.0 (39), vérifiée sur un iPad Air 11 pouces (M3), selon la règle **2.3.8, « Accurate Metadata »**. Le sous-titre « Atelier de dessin pour enfants » présentait Color comme faite pour les enfants, alors que l'app n'était pas dans la catégorie Enfants. Apple laissait le choix : retirer du nom, du sous-titre, de l'icône et des captures ce qui dit « pour enfants », ou cocher « Fait pour les enfants ».
+
+Le 4 novembre, à ta demande :
+
+- le sous-titre est devenu **« Atelier de dessin »** ;
+- la description commence par « Color est un petit atelier de dessin. », sans « pour les enfants » ;
+- tu as approuvé la réponse envoyée à Apple depuis la page « Vérification de l'app », à 11 h 37 ;
+- le même build 39 a été renvoyé à 11 h 38 : « En attente de vérification ».
+
+La catégorie Enfants viendra avec la 1.1, avec un contrôle parental devant ce qui ouvre les panneaux du système. « Fait pour les enfants » ne se décoche plus une fois l'app acceptée.
+
+**macOS : soumise le 28 octobre à 15 h 39, toujours « En attente de vérification ».** Le sous-titre est commun aux deux plateformes. La description du Mac dit encore « pour les enfants » : pour la changer, il faudrait retirer la version de la file d'attente.
+
+Le 28 octobre, **Color 1.0.0 (39) était soumise à Apple** à 15 h 38 pour iOS et à 15 h 39 pour macOS.
 
 Ce qui a été rempli dans App Store Connect :
 
@@ -29,7 +42,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | Champ | À mettre |
 |---|---|
 | Nom | **Color** ; s'il est déjà pris : **Color Atelier de Dessin** |
-| Sous-titre (30 caractères au plus) | Atelier de dessin pour enfants |
+| Sous-titre (30 caractères au plus) | Atelier de dessin (« pour enfants » retiré le 4 novembre : voir plus haut) |
 | Identifiant de lot (Bundle ID) | fr.aisml.color |
 | SKU | color |
 | Langue principale | Français |
@@ -37,7 +50,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | Catégorie secondaire | Divertissement |
 | Droits sur le contenu | « Oui, l'app contient du contenu de tiers, et j'ai les droits nécessaires » : des sons sous licence CC0 et la police DejaVu Sans, dont les licences sont dans « À propos » → « Licences » |
 | Classification par âge | Répondre « Aucun » à chaque question : Color obtient **4+** |
-| Fait pour les enfants (« Made for Kids ») | **Non coché** pour la première version : la catégorie Enfants impose un contrôle parental devant tout ce qui mène hors de l'app, et « Exporter » ouvre le panneau du système. À reconsidérer ensuite, avec le calcul des options activé par défaut sur iPhone et iPad |
+| Fait pour les enfants (« Made for Kids ») | **Non coché** pour la 1.0 : la catégorie Enfants impose un contrôle parental devant tout ce qui mène hors de l'app, et « Exporter » ouvre le panneau du système. **À cocher avec la 1.1**, décidé le 4 novembre, une fois le contrôle parental en place. Une seule tranche d'âge (5 ans et moins, 6–8 ou 9–11) ; ni la case ni, sans doute, la tranche ne se changent plus après l'accord d'Apple |
 | Statut de professionnel (Union européenne) | **Je ne suis pas un professionnel** |
 
 ## Prix et disponibilité
@@ -63,7 +76,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 
 ### Description
 
-> Color est un petit atelier de dessin pour les enfants. Tout y est grand, simple et bien rangé, pour dessiner sans avoir besoin de lire.
+> Color est un petit atelier de dessin. Tout y est grand, simple et bien rangé, pour dessiner sans avoir besoin de lire.
 >
 > • Le pinceau, les lignes, les rectangles et les ovales, le texte, la gomme et le pot de peinture.
 > • Des tampons à poser et à colorier.
