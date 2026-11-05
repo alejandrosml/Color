@@ -11,6 +11,7 @@ import 'platform_words.dart';
 import 'project_storage.dart';
 import 'rust_document.dart';
 import 'raster_source.dart' show maxRasterBytes;
+import 'language.dart';
 
 /// A native save panel seam; returned paths are kept only in this process.
 typedef StudioSaveChooser = Future<String?> Function({
@@ -97,15 +98,15 @@ class StudioFiles {
   StudioDestinationSession get _destinations =>
       destinationSession ?? _sessionDestinations;
 
-  static const _projectType = XTypeGroup(
-    label: 'Projet Color',
+  static XTypeGroup get _projectType => XTypeGroup(
+    label: tr('Projet Color'),
     extensions: ['edupaint'],
     uniformTypeIdentifiers: ['org.edupaint.project'],
   );
 
   Future<String?> chooseOpen() => _chooseSource(
-    acceptedTypeGroups: const [_projectType],
-    confirmButtonText: 'Ouvrir le dessin',
+    acceptedTypeGroups: [_projectType],
+    confirmButtonText: tr('Ouvrir le dessin'),
     isImage: false,
   );
 
@@ -114,13 +115,14 @@ class StudioFiles {
       : _chooseDestination(
           currentPath: currentPath,
           suggestedName: _suggestedProjectName(currentPath),
-          acceptedTypeGroups: const [_projectType],
-          confirmButtonText: 'Enregistrer le dessin',
+          acceptedTypeGroups: [_projectType],
+          confirmButtonText: tr('Enregistrer le dessin'),
           isExport: false,
         );
 
   /// Color's own folder of drawings on a tablet or a telephone: « Dessins »
-  /// in its documents.
+  /// in its documents, in every language — its drawings stay where they
+  /// are when the language changes.
   Future<Directory> ownDrawings() async {
     final base =
         await (documentsDirectory ?? _applicationDocuments)() ??
@@ -208,14 +210,14 @@ class StudioFiles {
       _mobile ? (_handedNames[path] ?? fileName(path)) : path;
 
   Future<String?> chooseImage() => _chooseSource(
-    acceptedTypeGroups: const [
+    acceptedTypeGroups: [
       XTypeGroup(
-        label: 'Image PNG ou JPEG',
+        label: tr('Image PNG ou JPEG'),
         extensions: ['png', 'jpg', 'jpeg'],
         uniformTypeIdentifiers: ['public.png', 'public.jpeg'],
       ),
     ],
-    confirmButtonText: 'Dessiner sur cette image',
+    confirmButtonText: tr('Dessiner sur cette image'),
     isImage: true,
   );
 
@@ -262,7 +264,7 @@ class StudioFiles {
   Future<Uint8List> readImage(String path) => ProjectStorage.readBoundedBytes(
     path,
     maximumBytes: maxRasterBytes,
-    tooLargeMessage: 'Cette image dépasse la taille autorisée.',
+    tooLargeMessage: tr('Cette image dépasse la taille autorisée.'),
   );
 
   Future<String?> chooseExport({String? currentPath}) => _mobile
@@ -273,14 +275,14 @@ class StudioFiles {
       _chooseDestination(
         currentPath: currentPath,
         suggestedName: _suggestedImageName(currentPath, '.svg'),
-        acceptedTypeGroups: const [
+        acceptedTypeGroups: [
           XTypeGroup(
-            label: 'Dessin SVG',
+            label: tr('Dessin SVG'),
             extensions: ['svg'],
             uniformTypeIdentifiers: ['public.svg-image'],
           ),
         ],
-        confirmButtonText: 'Exporter l’image',
+        confirmButtonText: tr('Exporter l’image'),
         isExport: true,
       );
 
@@ -298,14 +300,14 @@ class StudioFiles {
       _chooseDestination(
         currentPath: currentPath,
         suggestedName: _suggestedImageName(currentPath, '.png'),
-        acceptedTypeGroups: const [
+        acceptedTypeGroups: [
           XTypeGroup(
-            label: 'Image PNG',
+            label: tr('Image PNG'),
             extensions: ['png'],
             uniformTypeIdentifiers: ['public.png'],
           ),
         ],
-        confirmButtonText: 'Exporter l’image',
+        confirmButtonText: tr('Exporter l’image'),
         isExport: true,
       );
 
@@ -422,7 +424,7 @@ class StudioFiles {
       kept.writeCharCode(steering ? 0x20 : rune);
     }
     final name = kept.toString().replaceAll(RegExp(' +'), ' ').trim();
-    if (name.isEmpty) return 'Mon dessin';
+    if (name.isEmpty) return tr('Mon dessin');
     final runes = name.runes.toList();
     return runes.length <= 80
         ? name
@@ -430,7 +432,7 @@ class StudioFiles {
   }
 
   static String _suggestedImageName(String? currentPath, String extension) {
-    if (currentPath == null) return 'Mon dessin$extension';
+    if (currentPath == null) return trf('Mon dessin{0}', [extension]);
     final name = fileName(currentPath);
     const projectExtension = '.edupaint';
     final stem =
@@ -443,7 +445,7 @@ class StudioFiles {
 
   static String _suggestedProjectName(String? currentPath) {
     final name = currentPath == null
-        ? 'Mon dessin.edupaint'
+        ? tr('Mon dessin.edupaint')
         : fileName(currentPath);
     const extension = '.edupaint';
     // NSSavePanel adds the preferred extension of our registered UTType.

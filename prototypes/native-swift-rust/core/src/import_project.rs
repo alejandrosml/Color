@@ -34,7 +34,7 @@ pub unsafe extern "C" fn ep_document_load_project(
 ) -> i32 {
     if candidate.is_null()
         || bytes.is_null()
-        || !(PROJECT_MIN_BYTES..=MAX_PROJECT_BYTES).contains(&length)
+        || !(PROJECT_MIN_BYTES..=MAX_READ_PROJECT_BYTES).contains(&length)
     {
         return INVALID;
     }

@@ -458,6 +458,9 @@ void main() {
           Offset(1080, 700),
         ]);
         expect(shownCount(), 1);
+        // Since 1.1 the oval and the rectangle are choices of « Formes », in
+        // the line of help.
+        await tap('tool-shapes');
         await tap('tool-ellipse');
         await drag(const [
           Offset(880, 90),
@@ -584,7 +587,8 @@ void main() {
         saved = describe(bytes);
         final elements = saved['elements']! as List;
         expect(elements, hasLength(8));
-        expect(saved['format_version'], 4);
+        // Version 6 of the format since 1.1.
+        expect(saved['format_version'], 6);
         expect(
           [for (final Map element in elements) element['kind']],
           [
@@ -933,16 +937,15 @@ void main() {
         return (int.parse(match![1]!), int.parse(match[2]!));
       }
 
-      // A result typed on the keys of the door, then « Entrer ».
+      // A result typed on the keys of the door: its second digit answers.
       Future<void> answerDoor(int result) async {
         for (final digit in '$result'.split('')) {
           await tap('adultGateDigit$digit');
         }
-        await tap('adultGateEnter');
       }
 
       // The options, once the door is open, take a moment before they
-      // listen: the hand that has just pressed « Entrer » is still there.
+      // listen: the hand that has just typed the answer is still there.
       Future<void> optionsListen() async {
         expect(byKey('optionsDialog'), findsOneWidget);
         await tester.pump(
@@ -1211,10 +1214,12 @@ void main() {
         }
         for (final hidden in const [
           'tool-line',
+          'tool-shapes',
           'tool-rectangle',
           'tool-ellipse',
           'tool-text',
           'tool-select',
+          'tool-magic',
           'showHelp',
           'layersButton',
           'bigSheet',

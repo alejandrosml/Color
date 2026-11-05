@@ -51,7 +51,9 @@ void main() {
           expect(document.copyBackgroundPng(), png);
           expect(identical(document.backgroundInfo, info), isTrue);
           final ordered = document.exportProject();
-          expect(ordered[8], background ? 3 : 2);
+          expect(ordered[8], 6);
+          // The writer of Color 1.0 would still keep it in its oldest version.
+          expect(document.exportLegacyProject()![8], background ? 3 : 2);
           final svg = document.exportSvg();
           expect(svg.indexOf('#445566'), lessThan(svg.indexOf('#778899')));
           expect(svg.indexOf('#778899'), lessThan(svg.indexOf('#112233')));

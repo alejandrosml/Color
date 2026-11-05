@@ -177,14 +177,14 @@ impl EpDocument {
         detached.clear();
     }
 
-    pub(super) fn apply_layer_presence(&mut self, slot: usize) {
+    pub(super) fn apply_layer_presence(&mut self, edit: &mut Edit) {
         // Take the payload out of the command: its capacity returns below.
         let Edit::LayerPresence {
             position,
             layer,
             detached,
             active,
-        } = &mut self.history[slot]
+        } = edit
         else {
             return;
         };
@@ -211,7 +211,7 @@ impl EpDocument {
             detached,
             active,
             ..
-        } = &mut self.history[slot]
+        } = edit
         {
             *layer = removed;
             *detached = objects;

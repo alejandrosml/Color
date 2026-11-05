@@ -48,6 +48,33 @@ void main() {
     );
   });
 
+  test('beside two elements within reach, the nearest answers', () {
+    // Two lines 1 unit wide, at x = 100 and x = 112; the one at 112 in
+    // front. A point at x = 104 is within 7 pixels of both.
+    StrokeData line(double x) => StrokeData(
+      [DocumentPoint(x, 0), DocumentPoint(x, 200)],
+      0,
+      1,
+      kind: VectorKind.line,
+    );
+    final lines = [line(100), line(112)];
+    expect(hitTestObjects(lines, const DocumentPoint(104, 100), scale: 1), 0);
+    expect(hitTestObjects(lines, const DocumentPoint(108.5, 100), scale: 1), 1);
+    // Halfway, the one in front.
+    expect(hitTestObjects(lines, const DocumentPoint(106, 100), scale: 1), 1);
+    expect(
+      hitTestObjects(lines, const DocumentPoint(130, 100), scale: 1),
+      isNull,
+    );
+    // A finger reaches farther than a mouse, more on a telephone.
+    final mouse = reachPixels(touch: false, touchScreen: false);
+    final finger = reachPixels(touch: true, touchScreen: false);
+    final phone = reachPixels(touch: true, touchScreen: true);
+    expect(mouse, closeTo(7.56, .01));
+    expect(finger, greaterThan(mouse));
+    expect(phone, greaterThan(finger));
+  });
+
   test('line and freehand distance uses segments and rounded endpoints', () {
     final line = shape(VectorKind.line);
     expect(hitTestObjects([line], const DocumentPoint(110, 70), scale: 1), 0);

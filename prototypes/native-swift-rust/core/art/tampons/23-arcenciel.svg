@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Arc-en-ciel », n° 23. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Arc-en-ciel</title>
+  <path d="M 10.5 70 C 10.5 48.18 28.18 30.5 50 30.5 C 71.82 30.5 89.5 48.18 89.5 70" fill="none" stroke="#f98a8d" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 18.5 70 C 18.5 52.6 32.6 38.5 50 38.5 C 67.4 38.5 81.5 52.6 81.5 70" fill="none" stroke="#ffe45c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 26.5 70 C 26.5 57.02 37.02 46.5 50 46.5 C 62.98 46.5 73.5 57.02 73.5 70" fill="none" stroke="#93d36e" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 70 C 34 61.16 41.16 54 50 54 C 58.84 54 66 61.16 66 70" fill="none" stroke="#77aef0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

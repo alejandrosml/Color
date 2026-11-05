@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Ouvrir », un dossier ouvert. Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Ouvrir</title>
+  <path d="M 8 18 Q 8 13 13 13 L 25 13 L 31 20 L 51 20 Q 56 20 56 25 L 54 48 L 8 48 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 8 29 L 56 29 L 52 50 Q 51 54 47 54 L 16 54 Q 12 54 11 50 Z" fill="#b7e6d2" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="21" y1="41" x2="42" y2="41" fill="none" stroke="#43ac9c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

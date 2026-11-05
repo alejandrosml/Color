@@ -20,10 +20,18 @@ Future<void> waitForPreparedOpen(
     final recoveryDecision =
         allowRecoveryDecision &&
         find.byKey(const Key('restoreRecovery')).evaluate().isNotEmpty;
+    // The question about a damaged drawing is always one to stop at.
+    final rescueDecision = find
+        .byKey(const Key('rescueDialog'))
+        .evaluate()
+        .isNotEmpty;
     final menu = tester.widget<EduPaintDesktopMenu>(
       find.byType(EduPaintDesktopMenu),
     );
-    if (menu.onSave != null || saveDecision || recoveryDecision) {
+    if (menu.onSave != null ||
+        saveDecision ||
+        recoveryDecision ||
+        rescueDecision) {
       await tester.pumpAndSettle();
       return;
     }

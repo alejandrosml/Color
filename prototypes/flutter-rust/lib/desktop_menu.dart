@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'language.dart';
+
 /// Routes macOS menu shortcuts to the same document actions as the toolbar.
 /// Install once. Null document callbacks disable their corresponding items.
 ///
@@ -88,6 +90,7 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
   // The menus last handed to the system, and the commands they offer.
   List<PlatformMenuItem>? _menus;
   List<bool>? _offered;
+  AppLanguage? _language;
 
   // Which commands the widget offers now.
   List<bool> _offeredNow() {
@@ -138,9 +141,14 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
       return widget.child;
     }
     final offered = _offeredNow();
-    if (_menus == null || !listEquals(offered, _offered)) {
+    // Made again when what is offered changes, or the language: the menu
+    // bar speaks the language just chosen, at once.
+    if (_menus == null ||
+        !listEquals(offered, _offered) ||
+        appLanguage.value != _language) {
       _menus = _items();
       _offered = offered;
+      _language = appLanguage.value;
     }
     return PlatformMenuBar(menus: _menus!, child: widget.child);
   }
@@ -149,13 +157,13 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
     final hasGallery = widget.hasGallery;
     return [
       PlatformMenu(
-        label: 'Color',
+        label: tr('Color'),
         menus: [
           PlatformMenuItemGroup(
             members: [
               if (widget.onAbout != null)
                 PlatformMenuItem(
-                  label: 'À propos de Color',
+                  label: tr('À propos de Color'),
                   onSelected: _command((menu) => menu.onAbout),
                 )
               else if (PlatformProvidedMenuItem.hasMenu(
@@ -169,7 +177,7 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
           PlatformMenuItemGroup(
             members: [
               PlatformMenuItem(
-                label: 'Options…',
+                label: tr('Options…'),
                 onSelected: _command((menu) => menu.onOptions),
                 shortcut: const SingleActivator(
                   LogicalKeyboardKey.comma,
@@ -188,10 +196,10 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
         ],
       ),
       PlatformMenu(
-        label: 'Fichier',
+        label: tr('Fichier'),
         menus: [
           PlatformMenuItem(
-            label: 'Nouveau',
+            label: tr('Nouveau'),
             onSelected: _command((menu) => menu.onNew),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyN,
@@ -199,7 +207,7 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
             ),
           ),
           PlatformMenuItem(
-            label: 'Ouvrir…',
+            label: tr('Ouvrir…'),
             onSelected: _command((menu) => menu.onOpen),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyO,
@@ -208,11 +216,11 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
           ),
           if (hasGallery)
             PlatformMenuItem(
-              label: 'Mes dessins…',
+              label: tr('Mes dessins…'),
               onSelected: _command((menu) => menu.onGallery),
             ),
           PlatformMenuItem(
-            label: 'Enregistrer',
+            label: tr('Enregistrer'),
             onSelected: _command((menu) => menu.onSave),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyS,
@@ -220,11 +228,11 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
             ),
           ),
           PlatformMenuItem(
-            label: 'Dessiner sur une image…',
+            label: tr('Dessiner sur une image…'),
             onSelected: _command((menu) => menu.onImportImage),
           ),
           PlatformMenuItem(
-            label: 'Enregistrer sous…',
+            label: tr('Enregistrer sous…'),
             onSelected: _command((menu) => menu.onSaveAs),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyS,
@@ -233,11 +241,11 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
             ),
           ),
           PlatformMenuItem(
-            label: 'Exporter PNG…',
+            label: tr('Exporter PNG…'),
             onSelected: _command((menu) => menu.onExportPng),
           ),
           PlatformMenuItem(
-            label: 'Exporter SVG…',
+            label: tr('Exporter SVG…'),
             onSelected: _command((menu) => menu.onExportSvg),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyE,
@@ -248,7 +256,7 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
           PlatformMenuItemGroup(
             members: [
               PlatformMenuItem(
-                label: 'Imprimer…',
+                label: tr('Imprimer…'),
                 onSelected: _command((menu) => menu.onPrint),
                 shortcut: const SingleActivator(
                   LogicalKeyboardKey.keyP,
@@ -260,10 +268,12 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
         ],
       ),
       PlatformMenu(
-        label: 'Édition',
+        label: tr('Édition'),
         menus: [
           PlatformMenuItem(
-            label: 'Annuler',
+            // « Annuler » undoes here; in English that is « Undo », not the
+            // « Cancel » of the dialogs.
+            label: inEnglish ? 'Undo' : 'Annuler',
             onSelected: _command((menu) => menu.onUndo),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyZ,
@@ -271,7 +281,7 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
             ),
           ),
           PlatformMenuItem(
-            label: 'Rétablir',
+            label: tr('Rétablir'),
             onSelected: _command((menu) => menu.onRedo),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyZ,
@@ -280,7 +290,7 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
             ),
           ),
           PlatformMenuItem(
-            label: 'Copier l’élément choisi',
+            label: tr('Copier l’élément choisi'),
             onSelected: _command((menu) => menu.onDuplicate),
             shortcut: const SingleActivator(
               LogicalKeyboardKey.keyD,
@@ -288,38 +298,38 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
             ),
           ),
           PlatformMenuItem(
-            label: 'Placer tout devant',
+            label: tr('Placer tout devant'),
             onSelected: _command((menu) => menu.onBringToFront),
           ),
           PlatformMenuItem(
-            label: 'Placer tout derrière',
+            label: tr('Placer tout derrière'),
             onSelected: _command((menu) => menu.onSendToBack),
           ),
           PlatformMenuItem(
-            label: 'Effacer l’élément choisi',
+            label: tr('Effacer l’élément choisi'),
             onSelected: _command((menu) => menu.onDelete),
             shortcut: const SingleActivator(LogicalKeyboardKey.backspace),
           ),
           PlatformMenuItem(
-            label: 'Modifier le texte choisi…',
+            label: tr('Modifier le texte choisi…'),
             onSelected: _command((menu) => menu.onEditText),
           ),
           PlatformMenuItem(
-            label: 'Rendre l’élément choisi plus grand',
+            label: tr('Rendre l’élément choisi plus grand'),
             onSelected: _command((menu) => menu.onGrow),
           ),
           PlatformMenuItem(
-            label: 'Rendre l’élément choisi plus petit',
+            label: tr('Rendre l’élément choisi plus petit'),
             onSelected: _command((menu) => menu.onShrink),
           ),
           PlatformMenuItem(
-            label: 'Calques…',
+            label: tr('Calques…'),
             onSelected: _command((menu) => menu.onLayers),
           ),
           PlatformMenuItemGroup(
             members: [
               PlatformMenuItem(
-                label: 'Revoir le dessin se faire tout seul',
+                label: tr('Revoir le dessin se faire tout seul'),
                 onSelected: _command((menu) => menu.onReplay),
               ),
             ],
@@ -327,7 +337,7 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
         ],
       ),
       PlatformMenu(
-        label: 'Fenêtre',
+        label: tr('Fenêtre'),
         menus: [
           for (final type in const [
             PlatformProvidedMenuItemType.minimizeWindow,
@@ -340,10 +350,10 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
         ],
       ),
       PlatformMenu(
-        label: 'Aide',
+        label: tr('Aide'),
         menus: [
           PlatformMenuItem(
-            label: 'Comment faire ?',
+            label: tr('Comment faire ?'),
             onSelected: _command((menu) => menu.onHelp),
           ),
         ],

@@ -21,6 +21,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:edupaint_flutter_study/coloring_pages.dart';
+import 'package:edupaint_flutter_study/country_signs.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/text_layout.dart';
 import 'package:edupaint_flutter_study/view_transform.dart';
@@ -40,6 +41,9 @@ class _Studio {
   double _width = 1200, _height = 800;
 
   Future<void> start() async {
+    // The same marks of « Magie » whichever test drew before.
+    debugMarkSeeds = () => math.Random(11);
+    addTearDown(() => debugMarkSeeds = null);
     tester.view.devicePixelRatio = 1;
     // The window of the pictures of the App Store for the Mac: its palette
     // shows every colour used here.
@@ -47,7 +51,12 @@ class _Studio {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      EduPaintApp(files: MemoryFiles(), recoveryStorage: MemoryRecovery()),
+      EduPaintApp(
+        files: MemoryFiles(),
+        recoveryStorage: MemoryRecovery(),
+        // The same pot on every machine: in France, it closes small gaps.
+        countrySigns: () async => CountrySigns(codes: const ['FR']),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -56,6 +65,11 @@ class _Studio {
 
   Future<void> tap(String key) async {
     final control = find.byKey(Key(key));
+    // The rectangle and the oval are chosen in « Formes ».
+    if (control.evaluate().isEmpty &&
+        (key == 'tool-rectangle' || key == 'tool-ellipse')) {
+      await tap('tool-shapes');
+    }
     await tester.ensureVisible(control);
     await tester.pumpAndSettle();
     await tester.tap(control);
@@ -226,6 +240,87 @@ class _Studio {
     await tap('confirmText');
   }
 
+  /// Presses the pot at ([x], [y]) and waits for what it pours: on the
+  /// paper it reads the drawing as an image, made outside the test's clock.
+  Future<void> pour(double x, double y) async {
+    await tester.tapAt(at(x, y));
+    await tester.pump();
+    final pouring = find.byKey(const Key('pouring'));
+    for (var attempt = 0; attempt < 300; attempt++) {
+      if (pouring.evaluate().isEmpty) break;
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pump();
+    }
+    expect(pouring, findsNothing);
+    await tester.pumpAndSettle();
+  }
+
+  /// What Color 1.1 adds to the sheet: the magic of « Magie », a star of
+  /// « Formes », a loop of the brush that the pot fills with a gradient on
+  /// the paper, the round pot on a shape, and a stamp turned and mirrored.
+  Future<void> newTools() async {
+    await tap('tool-magic');
+    await tap('magic-rainbow');
+    await drag([
+      for (var step = 0; step <= 24; step++)
+        Offset(90 + step * 18.0, 680 - 90 * math.sin(step / 7.6)),
+    ]);
+    await tap('magic-grass');
+    await colour(0x388778);
+    await drag([
+      const Offset(60, 770),
+      const Offset(340, 770),
+      const Offset(620, 770),
+    ]);
+    await tap('magic-bricks');
+    await colour(0xd75e56);
+    await drag([
+      const Offset(700, 120),
+      const Offset(900, 120),
+      const Offset(1120, 120),
+    ]);
+    await tap('tool-shapes');
+    await tap('shape-star');
+    await colour(0xeebf4e);
+    await drag([
+      const Offset(720, 260),
+      const Offset(820, 360),
+      const Offset(940, 480),
+    ]);
+    // The round pot inside the star.
+    await tap('tool-fill');
+    await tap('pour-radial');
+    await colour(0xd75e56);
+    await click(830, 380);
+    // A loop of the brush, filled with a gradient where it is paper.
+    await tap('tool-stroke');
+    await brushWidth(0.3);
+    await colour(0x477fb2);
+    await drag([
+      for (var step = 0; step <= 48; step++)
+        Offset(
+          330 + 170 * math.cos(step / 7.5),
+          330 + 130 * math.sin(step / 7.5),
+        ),
+    ]);
+    await tap('tool-fill');
+    await tap('pour-linear');
+    await colour(0xeebf4e);
+    await pour(330, 330);
+    // A stamp turned twice and mirrored.
+    await tap('tool-stamp');
+    await tap('chooseStamp');
+    await tap('stamp-poisson');
+    await colour(0x477fb2);
+    await tap('size-large');
+    await tap('turnStamp');
+    await tap('turnStamp');
+    await tap('mirrorStamp');
+    await click(1040, 640);
+  }
+
   Future<void> page(String key) async {
     final page = ColoringPages.all.singleWhere((page) => page.key == key);
     await tap('newProject');
@@ -272,6 +367,22 @@ void main() {
     await studio.start();
     await studio.shapes();
     await studio.expectPicture('02-formes');
+    await studio.finish();
+  }, skip: !available);
+
+  testWidgets('the objects of 1.1, then a trait cut by the eraser', (
+    tester,
+  ) async {
+    final studio = _Studio(tester);
+    await studio.start();
+    await studio.newTools();
+    await studio.expectPicture('15-outils-1.1');
+    // The eraser cuts the loop where it rubs, and Annuler mends it.
+    await studio.tap('tool-eraser');
+    await studio.drag([const Offset(480, 230), const Offset(520, 330)]);
+    await studio.expectPicture('16-gomme-coupe');
+    await studio.tap('undo');
+    await studio.expectPicture('15-outils-1.1');
     await studio.finish();
   }, skip: !available);
 

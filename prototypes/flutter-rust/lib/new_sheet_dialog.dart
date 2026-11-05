@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'vector_art.dart';
+import 'language.dart';
 
 /// What « Nouveau » starts: an empty sheet of one shape, or a colouring page
 /// on the sheet it was drawn for.
@@ -16,8 +17,9 @@ enum NewSheetShape implements NewSheetChoice {
   portrait('Portrait', 800, 1200),
   square('Carré', 1200, 1200);
 
-  const NewSheetShape(this.label, this.width, this.height);
-  final String label;
+  const NewSheetShape(this.frenchLabel, this.width, this.height);
+  final String frenchLabel;
+  String get label => tr(frenchLabel);
   @override
   final int width;
   @override
@@ -46,7 +48,8 @@ final class ColoringPage implements NewSheetChoice {
   /// hyphens, stable from one version to the next.
   final String key;
 
-  /// The French title shown to the child.
+  /// The French title shown to the child, in the language of the
+  /// interface by `tr`.
   final String title;
 
   /// The filled elements of its file, white: the zones that « Remplir »
@@ -126,7 +129,7 @@ class _NewSheetDialogState extends State<NewSheetDialog> {
     scrollable: true,
     insetPadding: const EdgeInsets.all(16),
     constraints: const BoxConstraints(maxWidth: 480),
-    title: const Text('Choisis la forme de ta feuille'),
+    title: Text(tr('Choisis la forme de ta feuille')),
     // The keyboard goes through the shapes, then through the pages in the
     // order they are written, though some are scrolled out of sight: the
     // order of the screen would put those after the buttons below.
@@ -211,7 +214,7 @@ class _NewSheetDialogState extends State<NewSheetDialog> {
             if (widget.pages.isNotEmpty) ...[
               const SizedBox(height: 24),
               Text(
-                'Ou une page à colorier',
+                tr('Ou une page à colorier'),
                 key: const Key('coloringPagesTitle'),
                 style: Theme.of(context).textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.w700),
@@ -238,7 +241,7 @@ class _NewSheetDialogState extends State<NewSheetDialog> {
             visualDensity: VisualDensity.standard,
           ),
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
+          child: Text(tr('Annuler')),
         ),
       ),
       FilledButton(
@@ -248,7 +251,7 @@ class _NewSheetDialogState extends State<NewSheetDialog> {
           visualDensity: VisualDensity.standard,
         ),
         onPressed: () => Navigator.pop(context, _selected),
-        child: const Text('Créer'),
+        child: Text(tr('Créer')),
       ),
     ],
   );
@@ -325,7 +328,7 @@ class _PageButton extends StatelessWidget {
     // One name on the button itself, which keeps its own action: the
     // picture and the title written under it only decorate.
     child: Semantics(
-      label: page.title,
+      label: tr(page.title),
       excludeSemantics: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -347,7 +350,7 @@ class _PageButton extends StatelessWidget {
           const SizedBox(height: 6),
           // Three lines keep « Le bonhomme de neige » whole in large text.
           Text(
-            page.title,
+            tr(page.title),
             maxLines: 3,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,

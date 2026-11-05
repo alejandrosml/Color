@@ -12,12 +12,14 @@
 //
 //   COLOR_STORE_DIR=/absolute/output flutter test test/store_pictures_test.dart
 //
-// Without that variable the test is skipped and writes nothing.
+// Without that variable the test is skipped and writes nothing. With
+// COLOR_STORE_LANGUAGE=en, the pictures of the English page (Color 1.1).
 import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/coloring_pages.dart';
+import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/replay_dialog.dart';
@@ -184,6 +186,11 @@ class _Pictures {
 
   Future<void> tap(String key) async {
     final control = find.byKey(Key(key));
+    // The rectangle and the oval are chosen in « Formes ».
+    if (control.evaluate().isEmpty &&
+        (key == 'tool-rectangle' || key == 'tool-ellipse')) {
+      await tap('tool-shapes');
+    }
     await tester.ensureVisible(control);
     await tester.pumpAndSettle();
     await tester.tap(control);
@@ -269,7 +276,10 @@ class _Pictures {
     await tap('tool-text');
     await colour(0xd75e56);
     await click(40, 40);
-    await tester.enterText(find.byKey(const Key('textField')), 'Mon jardin');
+    await tester.enterText(
+      find.byKey(const Key('textField')),
+      inEnglish ? 'My garden' : 'Mon jardin',
+    );
     await tester.pumpAndSettle();
     await tap('confirmText');
     await tap('tool-stroke');
@@ -369,6 +379,9 @@ void main() {
       debugDisableShadows = false;
       debugTouchFirstOverride = device.touch;
       debugDefaultTargetPlatformOverride = device.platform;
+      if (Platform.environment['COLOR_STORE_LANGUAGE'] == 'en') {
+        debugDeviceLanguage = AppLanguage.english;
+      }
       try {
         await tester.runAsync(loadReviewFonts);
         final pictures = _Pictures(tester, device, output!);
@@ -401,6 +414,7 @@ void main() {
         debugDisableShadows = true;
         debugTouchFirstOverride = null;
         debugDefaultTargetPlatformOverride = null;
+        debugDeviceLanguage = AppLanguage.french;
       }
     }, skip: !available);
   }

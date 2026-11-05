@@ -1,6 +1,6 @@
 # Color sur l'App Store — la fiche, prête à coller
 
-Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; Color n'existe qu'en français.
+Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; jusqu'à la 1.0.1, Color n'existe qu'en français. La 1.1 parle aussi anglais : sa fiche reçoit une localisation anglaise, prête plus bas.
 
 ## Où en est la fiche (5 novembre 2026)
 
@@ -21,7 +21,7 @@ Le 4 novembre, à ta demande :
 
 Le build 1.0.1 (40) de l'iPhone et de l'iPad est déjà chez Apple : leur version 1.0.1 se prépare dès que la 1.0.0 est acceptée, avec les nouveautés entières, puis part avec ton accord.
 
-**La catégorie Enfants viendra avec la 1.1** (décidé le 4 novembre). « Fait pour les enfants » ne se décoche plus une fois l'app acceptée.
+**La catégorie Enfants viendra avec la 1.1** (décidé le 4 novembre ; voir `docs/JALON-1.1.md`). « Fait pour les enfants » ne se décoche plus une fois l'app acceptée.
 
 Le sous-titre est commun aux deux plateformes. La description de la 1.0.0 du Mac, acceptée telle quelle, disait encore « pour les enfants » ; celle de sa 1.0.1 ne le dit plus.
 
@@ -50,7 +50,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | Champ | À mettre |
 |---|---|
 | Nom | **Color** ; s'il est déjà pris : **Color Atelier de Dessin** |
-| Sous-titre (30 caractères au plus) | Atelier de dessin (« pour enfants » retiré le 4 novembre : voir plus haut) |
+| Sous-titre (30 caractères au plus) | Atelier de dessin, depuis le 4 novembre (règle 2.3.8). « Atelier de dessin pour enfants » pourra revenir avec la catégorie Enfants, à la 1.1 |
 | Identifiant de lot (Bundle ID) | fr.aisml.color |
 | SKU | color |
 | Langue principale | Français |
@@ -58,7 +58,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | Catégorie secondaire | Divertissement |
 | Droits sur le contenu | « Oui, l'app contient du contenu de tiers, et j'ai les droits nécessaires » : des sons sous licence CC0 et la police DejaVu Sans, dont les licences sont dans « À propos » → « Licences » |
 | Classification par âge | Répondre « Aucun » à chaque question : Color obtient **4+** |
-| Fait pour les enfants (« Made for Kids ») | **Non coché** pour la 1.0. **À cocher avec la 1.1**, décidé le 4 novembre. La catégorie Enfants demande un contrôle parental devant ce qui fait sortir de l'app et devant les achats ; Color n'a ni l'un ni l'autre, et ses panneaux de fichiers restent dans l'app : pas de contrôle de plus, sauf si Apple le demande. Une seule tranche d'âge (5 ans et moins, 6–8 ou 9–11) ; ni la case ni, sans doute, la tranche ne se changent plus après l'accord d'Apple |
+| Fait pour les enfants (« Made for Kids ») | **Non coché** pour la 1.0. **À cocher avec la 1.1**, décidé le 4 novembre. La catégorie Enfants demande un contrôle parental devant ce qui fait sortir de l'app et devant les achats ; Color n'a ni l'un ni l'autre, et ses panneaux de fichiers restent dans l'app : pas de contrôle de plus, sauf si Apple le demande. Une seule tranche d'âge (5 ans et moins, 6–8 ou 9–11 ; conseil : 5 ans et moins), sans doute impossible à changer ensuite, comme la case. Retirer alors la disponibilité sur Apple Vision Pro : les apps pour enfants n'y sont pas permises |
 | Statut de professionnel (Union européenne) | **Je ne suis pas un professionnel** |
 
 ## Prix et disponibilité
@@ -85,6 +85,8 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 ### Description
 
 > Color est un petit atelier de dessin. Tout y est grand, simple et bien rangé, pour dessiner sans avoir besoin de lire.
+>
+> *(« pour les enfants » retiré le 4 novembre ; à remettre avec la catégorie Enfants, à la 1.1.)*
 >
 > • Le pinceau, les lignes, les rectangles et les ovales, le texte, la gomme et le pot de peinture.
 > • Des tampons à poser et à colorier.
@@ -114,6 +116,71 @@ Le champ « Nouveautés de cette version », que demande toute mise à jour. À 
 > • un son rejoué part sans attendre ;
 > • l'application prend moins de place.
 
+### Nouveautés de la version 1.1 (4 000 caractères au plus)
+
+Pour la page de la version 1.1, une fois la 1.0.1 envoyée et acceptée. En français :
+
+> Color 1.1 : de nouveaux outils, et l'anglais.
+> • Le pot de peinture remplit aussi le papier entre tes traits, et ne déborde plus par un tout petit trou (sauf aux États-Unis, pour l'instant) ; avec une couleur, un dégradé ou un dégradé rond.
+> • « Formes » : le triangle, l'étoile, le cœur, le losange, l'hexagone, la flèche, et l'aimant, qui rend bien droite une forme dessinée à main levée.
+> • « Magie » : un arc-en-ciel, de l'herbe, des briques, des confettis, et un miroir qui dessine deux fois.
+> • Le pinceau a cinq pointes : rond, feutre, plume, craie, aérographe ; il suit la pression du stylet.
+> • La gomme coupe les traits là où elle passe.
+> • Tourner un élément, le retourner comme dans un miroir ; tourner un tampon avant de le poser.
+> • Un mélangeur qui mélange les couleurs comme de la peinture ; tes couleurs restent d'une fois à l'autre.
+> • Quatre écritures de plus pour les textes, dont celle de l'école.
+> • Le diaporama de « Mes dessins ».
+> • Pour toucher plus facilement : le doigt atteint ce qui est tout près, « Régler le toucher », le trait tranquille pour une main qui tremble, un pointeur au clavier ou à la manette.
+> • Color parle anglais : il suit la langue de l'appareil, ou celle choisie dans les options.
+> • Un dessin abîmé s'ouvre quand même : Color sauve tout ce qui peut l'être.
+> • Les dessins enregistrés prennent moins de place. Enregistrés avec la 1.1, ils ne s'ouvrent plus avec les versions précédentes.
+
+En anglais (localisation « English (U.K.) » ou « English (U.S.) ») :
+
+> Color 1.1: new tools, and English.
+> • The paint pot also fills the paper between your lines, with one colour, a gradient or a round gradient.
+> • “Shapes”: triangle, star, heart, diamond, hexagon, arrow, and the magnet, which makes a freehand shape neat and straight.
+> • “Magic”: a rainbow, grass, bricks, confetti, and a mirror that draws twice.
+> • The brush has five tips: round, felt pen, nib, chalk, airbrush; it follows the pressure of the stylus.
+> • The eraser cuts lines where it passes.
+> • Turn an element, flip it as in a mirror; turn a stamp before you put it down.
+> • A mixer that mixes colours like paint; your colours stay from one time to the next.
+> • Four more fonts for texts, including school handwriting.
+> • A slideshow of “My drawings”.
+> • Easier to touch: a finger reaches what is very close, “Adjust touch”, a steady line for a shaky hand, a pointer with the keyboard or a gamepad.
+> • Color speaks English: it follows the language of the device, or the one chosen in the options.
+> • A damaged drawing still opens: Color saves all it can.
+> • Saved drawings take less room. Saved with 1.1, they no longer open in earlier versions.
+
+### La fiche en anglais (1.1)
+
+Dans App Store Connect, « Informations sur l'app » → ajouter la langue anglaise ; les champs de la version aussi.
+
+| Champ | En anglais |
+|---|---|
+| Nom | **Color** |
+| Sous-titre (30) | Drawing studio for children (avec la catégorie Enfants ; sinon : Drawing studio) |
+| Texte promotionnel (170) | Draw, colour, stamp, then watch your drawing make itself again. No ads, no account, no Internet. |
+| Mots-clés (100 octets) | drawing,kids,colouring,coloring,paint,brush,stamp,art,crayon,preschool,sketch |
+
+> Color is a little drawing studio for children. Everything in it is big, simple and tidy, so they can draw without needing to read.
+>
+> • The brush with five tips, lines, rectangles, ovals and six more shapes, the magnet that straightens a freehand shape, text in five fonts, the eraser and the paint pot.
+> • Magic: rainbows, grass, bricks, confetti, and a mirror that draws twice.
+> • Stamps to put down, turn and colour.
+> • Twelve colouring pages, drawn for Color: the boat, the cat, the dinosaur, the tortoise…
+> • A palette of colours, a mixer that mixes them like paint, thicknesses, the eyedropper to take a colour from the drawing.
+> • “Watch your drawing again”: the film of your drawing making itself again, line after line.
+> • “My drawings” keeps every saved drawing, to go on with it later, and shows them as a slideshow.
+> • Undo and redo, as many times as needed.
+> • Print, and export your drawing as a picture.
+>
+> For grown-ups, the options set what Color shows: a very simple interface for the youngest, a medium one, or all of Color with layers. You can also turn off sounds or printing, draw without holding the button, adjust touch, steady a shaky hand, move a pointer with the keyboard or a gamepad, write with an on-screen keyboard, and guard the options with a sum. Color speaks French and English.
+>
+> Color collects no data. No ads, no account, no purchases, no Internet: everything stays on the device.
+>
+> Color is free software, under the MIT licence, created by Alejandro San Martin Lamas.
+
 ### Notes pour la vérification (en anglais, pour le relecteur d'Apple)
 
 > Color is a drawing app for children, in French only. It has no account, no in-app purchase, no advertising, no analytics and no network access: nothing leaves the device.
@@ -123,6 +190,10 @@ Le champ « Nouveautés de cette version », que demande toute mise à jour. À 
 > The toothed wheel opens the adult's options (interface level, sounds, printing, accessibility). By default they open directly. When the option « Protéger les options par un calcul » is on, a multiplication of the tables from 6 to 9 is asked first: the answer is the product of the two numbers shown.
 >
 > The privacy policy is also in the app: « À propos » → « Confidentialité ».
+
+Pour la 1.1, remplacer la première phrase par : « Color is a drawing app for children, in French and English: it follows the language of the device, or the one chosen in the options (the globe at the top of the toothed wheel's window). » Les noms en français entre guillemets restent ceux de l'interface française ; en anglais : « New », « Fill », « Watch your drawing again », « Save », « My drawings », « Print », « Export », « Guard the options with a sum », « About » → « Privacy ».
+
+Et, pour la 1.1 dans la catégorie Enfants, ajouter après le troisième paragraphe : « Color has no link out of the app and no purchase. « Ouvrir » (open), « Sur une image » (draw on a picture) and « Exporter » (export) use the system's file panels, which stay inside the app; saving keeps the drawing in the app's own folder, and printing uses the system's print panel. »
 
 ## Les captures d'écran
 

@@ -325,7 +325,7 @@ def build_ios_core(journal, sources, work, cargo, environment):
     for target, sdk in (('aarch64-apple-ios', 'iphoneos'), ('aarch64-apple-ios-sim', 'iphonesimulator')):
         # The core of the stores reads no SVG: neither usvg nor the readers.
         run(journal, 'coeur-ios', cargo + ['rustc', '--release', '--lib', '--offline', '--frozen',
-                                           '--no-default-features',
+                                           '--no-default-features', '--features', 'deflate',
                                            '--target', target, '--crate-type', 'staticlib'],
             cwd=core_folder(sources), env=environment)
         place = work / 'ios' / 'rust' / sdk
@@ -341,7 +341,7 @@ def build_android_core(journal, sources, work, cargo, environment):
         env = dict(environment, **{variable: str(tools / ('%s%d-clang' % (clang, ANDROID_API)))})
         run(journal, 'coeur-android', cargo + [
             'rustc', '--release', '--lib', '--offline', '--frozen', '--no-default-features',
-            '--target', target,
+            '--features', 'deflate', '--target', target,
             '--crate-type', 'cdylib', '--', '-C', 'link-arg=-Wl,-soname,libedupaint_core.so',
             '-C', 'link-arg=-Wl,-z,max-page-size=16384'], cwd=core_folder(sources), env=env)
         place = work / 'android' / 'app' / 'src' / 'main' / 'jniLibs' / abi

@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: MIT
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'child_art.dart';
+import 'rust_document.dart' show NewShape;
 import 'stamp_catalog.dart';
 import 'stamp_dialog.dart';
 import 'studio_colors.dart';
 import 'studio_painters.dart';
 import 'studio_tool.dart';
 import 'text_layout.dart';
+import 'language.dart';
+import 'companion.dart';
 
 /// The side panel of wide windows: what the current tool does, with an
 /// example in the current colour, an idea to try and the mascot.
@@ -20,6 +24,8 @@ class StudioInspector extends StatelessWidget {
     required this.width,
     required this.fillRgb,
     required this.stamp,
+    this.shape = NewShape.star,
+    this.companionCue,
   });
 
   final StudioTool tool;
@@ -35,16 +41,25 @@ class StudioInspector extends StatelessWidget {
   /// The stamp that a click would pose; null if the catalogue is unavailable.
   final StampArt? stamp;
 
+  /// The shape that « Formes » draws.
+  final NewShape shape;
+
+  /// What makes the companion stand up and paint (lib/companion.dart).
+  final ValueListenable<int>? companionCue;
+
   String get _headline => switch (tool) {
-    StudioTool.select => 'Ton dessin peut bouger !',
-    StudioTool.fill => 'De la couleur partout !',
-    StudioTool.eraser => 'Oups ? On efface.',
-    StudioTool.brush => 'Un trait, une idée.',
-    StudioTool.text => 'Des mots dans ton dessin.',
-    StudioTool.stamp => 'Un tampon, et hop !',
+    StudioTool.select => tr('Ton dessin peut bouger !'),
+    StudioTool.fill => tr('De la couleur partout !'),
+    StudioTool.eraser => tr('Oups ? On efface.'),
+    StudioTool.brush => tr('Un trait, une idée.'),
+    StudioTool.text => tr('Des mots dans ton dessin.'),
+    StudioTool.stamp => tr('Un tampon, et hop !'),
     StudioTool.line ||
     StudioTool.rectangle ||
-    StudioTool.ellipse => 'Une forme, mille idées.',
+    StudioTool.ellipse ||
+    StudioTool.shapes => tr('Une forme, mille idées.'),
+    StudioTool.magic => tr('Un peu de magie !'),
+    StudioTool.magnet => tr('Ta forme devient toute droite.'),
   };
 
   Widget _example() {
@@ -57,7 +72,7 @@ class StudioInspector extends StatelessWidget {
         return Center(
           child: ExcludeSemantics(
             child: Text(
-              'Abc',
+              tr('Abc'),
               style: TextStyle(
                 fontFamily: colorTextFontFamily,
                 fontSize: 34,
@@ -79,6 +94,7 @@ class StudioInspector extends StatelessWidget {
             width,
             kind,
             fillRgb == null ? null : Color(0xff000000 | fillRgb!),
+            shape: shape,
           ),
           child: const SizedBox.expand(),
         );
@@ -98,10 +114,10 @@ class StudioInspector extends StatelessWidget {
         LayoutId(id: _InspectorPart.cards, child: _cards()),
         LayoutId(
           id: _InspectorPart.mascot,
-          child: const EduIllustration(
-            key: Key('inspectorMascot'),
-            art: EduArt.mascot,
+          child: Companion(
+            key: const Key('inspectorMascot'),
             size: 104,
+            cue: companionCue,
           ),
         ),
       ],
@@ -169,11 +185,11 @@ class StudioInspector extends StatelessWidget {
             color: studioIdeaCard,
             borderRadius: BorderRadius.circular(19),
           ),
-          child: const Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'UNE PETITE IDÉE',
+                tr('UNE PETITE IDÉE'),
                 style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 1.2,
@@ -182,12 +198,14 @@ class StudioInspector extends StatelessWidget {
               ),
               SizedBox(height: 12),
               Text(
-                'Et si le ciel était rose ?',
+                tr('Et si le ciel était rose ?'),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
               SizedBox(height: 9),
               Text(
-                'Tu peux essayer toutes les couleurs. Annuler est là pour revenir en arrière.',
+                tr(
+                  'Tu peux essayer toutes les couleurs. Annuler est là pour revenir en arrière.',
+                ),
                 style: TextStyle(
                   fontSize: 12,
                   height: 1.6,

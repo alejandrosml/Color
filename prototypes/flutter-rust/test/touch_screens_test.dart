@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:edupaint_flutter_study/fit_to_screen.dart';
+import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_files.dart';
 import 'package:edupaint_flutter_study/studio_painters.dart';
@@ -222,6 +223,24 @@ void main() {
         '${folder.path}/documents/Dessins/La mer.edupaint',
       );
       expect(studio.shownPath(first), 'Mon dessin.edupaint');
+    });
+
+    test('the folder is the same in every language', () async {
+      final studio = files();
+      final french = await studio.chooseSave();
+      await File(french!).writeAsBytes([1, 2, 3]);
+      appLanguage.value = AppLanguage.english;
+      try {
+        // Saved again in English, the drawing stays where it is; a new one
+        // goes beside it, under its English name.
+        expect(await studio.chooseSave(currentPath: french), french);
+        expect(
+          await studio.chooseSave(),
+          '${folder.path}/documents/Dessins/My drawing.edupaint',
+        );
+      } finally {
+        appLanguage.value = AppLanguage.french;
+      }
     });
 
     test('an image is handed to the system’s panel, then taken out', () async {

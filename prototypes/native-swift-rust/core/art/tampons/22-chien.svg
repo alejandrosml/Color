@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Chien », n° 22. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Chien</title>
+  <path d="M 22 30 C 8 30 4 50 10 64 C 14 72 24 66 26 54 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 78 30 C 92 30 96 50 90 64 C 86 72 76 66 74 54 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 50 14 C 72 14 82 30 82 50 C 82 72 68 88 50 88 C 32 88 18 72 18 50 C 18 30 28 14 50 14 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 67 66 C 67 73.73 59.39 80 50 80 C 40.61 80 33 73.73 33 66 C 33 58.27 40.61 52 50 52 C 59.39 52 67 58.27 67 66 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 41 44 C 41 47.04 39.21 49.5 37 49.5 C 34.79 49.5 33 47.04 33 44 C 33 40.96 34.79 38.5 37 38.5 C 39.21 38.5 41 40.96 41 44 Z" fill="#293d4b"/>
+  <path d="M 67 44 C 67 47.04 65.21 49.5 63 49.5 C 60.79 49.5 59 47.04 59 44 C 59 40.96 60.79 38.5 63 38.5 C 65.21 38.5 67 40.96 67 44 Z" fill="#293d4b"/>
+  <path d="M 57 60 C 57 62.76 53.87 65 50 65 C 46.13 65 43 62.76 43 60 C 43 57.24 46.13 55 50 55 C 53.87 55 57 57.24 57 60 Z" fill="#293d4b"/>
+  <path d="M 50 65 C 50 73 42 76 39 71 M 50 65 C 50 73 58 76 61 71" fill="none" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

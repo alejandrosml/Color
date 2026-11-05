@@ -16,16 +16,23 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 doctest = false
 
 [features]
-default = ["svg"]
+default = ["svg", "deflate"]
 # Reading SVG files — the pictures of the interface, colouring pages — with
 # usvg, the reading half of resvg. It is the only dependency of the core, and
 # its sources are kept in vendor/: nothing is downloaded to build Color.
 # Without this feature the core has no dependency at all and still compiles
 # with rustc alone (src/lib.rs), as the older scripts of the project do.
 svg = ["dep:usvg"]
+# Compressing the blocks of a project of version 6 (raw DEFLATE, RFC 1951)
+# with miniz_oxide, pure Rust, kept in vendor/ as usvg is. The cores of the
+# stores have it (--no-default-features --features deflate). Without it, the
+# core writes the blocks of version 6 as they are, and refuses a compressed
+# one: still a valid project, only larger.
+deflate = ["dep:miniz_oxide"]
 
 [dependencies]
 usvg = { version = "=0.48.1", default-features = false, optional = true }
+miniz_oxide = { version = "=0.9.1", default-features = false, features = ["with-alloc"], optional = true }
 
 # One optimization unit for the whole core and its library, link-time
 # optimization across them: smaller and a little faster (measured in

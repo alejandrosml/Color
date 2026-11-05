@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Éclair », n° 17. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Éclair</title>
+  <path d="M 58 5 L 20 55 L 45 55 L 36 95 L 82 40 L 55 40 L 68 5 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 54 16 L 36 44" fill="none" stroke="#efbebb" data-stroke="claire" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

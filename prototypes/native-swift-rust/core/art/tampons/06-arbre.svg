@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Arbre », n° 6. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Arbre</title>
+  <path d="M 43 60 L 57 60 L 60 93 L 40 93 Z" fill="#9a6b4a" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 30 66 C 12 66 6 48 18 38 C 14 22 30 10 44 16 C 54 4 76 10 78 26 C 94 30 96 52 82 60 C 76 70 60 70 54 64 C 48 70 36 70 30 66 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 41 34 C 41 36.76 38.76 39 36 39 C 33.24 39 31 36.76 31 34 C 31 31.24 33.24 29 36 29 C 38.76 29 41 31.24 41 34 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 66 44 C 66 46.21 64.21 48 62 48 C 59.79 48 58 46.21 58 44 C 58 41.79 59.79 40 62 40 C 64.21 40 66 41.79 66 44 Z" fill="#efbebb" data-fill="claire"/>
+</svg>

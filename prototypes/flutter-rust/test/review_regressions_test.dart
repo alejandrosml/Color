@@ -266,14 +266,19 @@ void main() {
         } finally {
           document.dispose();
         }
-        // Bare paper just outside the frame: the sheet takes the colour, the
-        // frame stays hollow.
+        // Bare paper just outside the frame: the zone around it takes the
+        // colour (Color 1.1), under everything; the frame stays hollow.
         await studio.tap('color-eebf4e');
-        await studio.click(studio.at(275, 400));
+        await studio.pour(studio.at(275, 400));
         document = await studio.saved();
         try {
-          expect(document.paperRgb, 0xeebf4e);
-          expect(document.strokes[1].fillRgb, isNull);
+          final [zone, star, frame] = document.strokes;
+          expect(zone.look.zone, isTrue);
+          expect(zone.fillRgb, 0xeebf4e);
+          expect(zone.rings, hasLength(2));
+          expect(star.rgb, 0xd75e56);
+          expect(frame.fillRgb, isNull);
+          expect(document.paperRgb, 0xffffff);
         } finally {
           document.dispose();
         }
@@ -755,13 +760,13 @@ void main() {
             for (final tool in [
               'stroke',
               'line',
-              'rectangle',
-              'ellipse',
+              'shapes',
               'text',
               'stamp',
               'fill',
               'eraser',
               'select',
+              'magic',
             ])
               'tool-$tool',
           ]);
@@ -770,7 +775,15 @@ void main() {
             'fillShapeCheckbox',
             'paint-target-stroke',
             'paint-target-fill',
+            // The choices of « Formes ».
+            'tool-rectangle',
+            'tool-ellipse',
+            'shape-star',
+            'tool-magnet',
           ]);
+          await studio.tap('tool-stroke');
+          measure(['brushTip-chalk']);
+          await studio.tap('tool-rectangle');
           await studio.drag(studio.at(200, 200), studio.at(500, 500));
           await studio.addText('mot', x: 700, y: 300);
           await studio.tap('tool-select');

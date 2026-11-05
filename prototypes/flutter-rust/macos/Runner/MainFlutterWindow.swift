@@ -1,5 +1,6 @@
 import Cocoa
 import FlutterMacOS
+import StoreKit
 
 /// Foundation performs the safe-save operation for a file selected by the user.
 /// It does not require creating an arbitrary sibling in the selected directory.
@@ -179,6 +180,7 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
   private var printChannel: FlutterMethodChannel?
   private var soundChannel: FlutterMethodChannel?
   private var foldersChannel: FlutterMethodChannel?
+  private var countryChannel: FlutterMethodChannel?
   private let sounds = EduPaintSounds()
   private var printJob: EduPaintPrintJob?
   private var diagnostics: EduPaintDiagnostics?
@@ -333,6 +335,32 @@ class MainFlutterWindow: NSWindow, NSWindowDelegate {
       }
     }
     foldersChannel = folders
+    // What the Mac says of its country, for the paint pot
+    // (lib/country_signs.dart), at once: the region of the settings and the
+    // time zone. The country of the App Store, which may be slow, is asked
+    // apart ("store"): it never keeps them waiting.
+    let country = FlutterMethodChannel(name: "org.edupaint/country",
+                                       binaryMessenger: flutterViewController.engine.binaryMessenger)
+    country.setMethodCallHandler { call, result in
+      switch call.method {
+      case "signs":
+        var codes: [String] = []
+        if let region = Locale.current.region?.identifier {
+          codes.append(region)
+        }
+        let signs: [String: Any] = ["codes": codes, "timeZone": TimeZone.current.identifier]
+        result(signs)
+      case "store":
+        Task {
+          let store = await Storefront.current
+          let code = store?.countryCode
+          await MainActor.run { result(code) }
+        }
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+    countryChannel = country
     lifecycleChannel = FlutterMethodChannel(name: "org.edupaint/lifecycle",
                                            binaryMessenger: flutterViewController.engine.binaryMessenger)
     lifecycleChannel?.setMethodCallHandler { [weak self] call, result in

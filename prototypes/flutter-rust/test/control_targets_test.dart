@@ -224,10 +224,12 @@ void main() {
         }
         final lightness = find.byKey(const ValueKey('paintAxis-Clarté'));
         final rect = tester.getRect(lightness);
-        await tester.tapAt(Offset(rect.left + 1, rect.top + 1));
+        // At both ends of the slider, on its line: the mixer of Color 1.1
+        // under it brings it to the top of the dialog, at its very edge.
+        await tester.tapAt(Offset(rect.left + 1, rect.center.dy));
         await tester.pumpAndSettle();
         expect(tester.getSemantics(lightness), isSemantics(value: '0 %'));
-        await tester.tapAt(Offset(rect.right - 1, rect.bottom - 1));
+        await tester.tapAt(Offset(rect.right - 1, rect.center.dy));
         await tester.pumpAndSettle();
         expect(tester.getSemantics(lightness), isSemantics(value: '100 %'));
         expect(chosen, isNull);

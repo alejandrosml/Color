@@ -15,10 +15,14 @@ import 'support/studio_driver.dart';
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
+  // The rectangle, the oval and the magnet answer among the choices of
+  // « Formes », when they are shown.
   StudioTool selectedTool(WidgetTester tester) {
     for (final tool in StudioTool.values) {
+      final button = find.byKey(Key(tool.keyName));
+      if (button.evaluate().isEmpty) continue;
       final selected = tester
-          .getSemantics(find.byKey(Key(tool.keyName)))
+          .getSemantics(button)
           .flagsCollection
           .isSelected
           .toBoolOrNull();
@@ -30,10 +34,14 @@ void main() {
   testWidgets('every tool has a key, a name and a sentence of its own', (
     tester,
   ) async {
-    expect(StudioTool.values, hasLength(9));
-    expect(StudioTool.values.map((tool) => tool.keyName).toSet(), hasLength(9));
-    expect(StudioTool.values.map((tool) => tool.label).toSet(), hasLength(9));
-    expect(StudioTool.values.map((tool) => tool.help).toSet(), hasLength(9));
+    // The nine of Color 1.0, then Magie, Formes and Aimant.
+    expect(StudioTool.values, hasLength(12));
+    expect(
+      StudioTool.values.map((tool) => tool.keyName).toSet(),
+      hasLength(12),
+    );
+    expect(StudioTool.values.map((tool) => tool.label).toSet(), hasLength(12));
+    expect(StudioTool.values.map((tool) => tool.help).toSet(), hasLength(12));
     for (final tool in StudioTool.values) {
       expect(tool.help.length, greaterThan(30), reason: tool.name);
       expect(tool.help, endsWith(tool.help.endsWith('!') ? '!' : '.'));
@@ -43,6 +51,10 @@ void main() {
     expect(StudioTool.select.keyName, 'tool-select');
     expect(StudioTool.eraser.keyName, 'tool-eraser');
     expect(StudioTool.fill.keyName, 'tool-fill');
+    expect(StudioTool.magic.keyName, 'tool-magic');
+    expect(StudioTool.shapes.keyName, 'tool-shapes');
+    expect(StudioTool.magnet.keyName, 'tool-magnet');
+    expect(StudioTool.values.indexOf(StudioTool.select), 8);
   });
 
   testWidgets(
@@ -210,25 +222,29 @@ void main() {
         LogicalKeyboardKey.digit8,
         LogicalKeyboardKey.digit9,
       ];
+      // The buttons of the bar, « Formes » with its rectangle first.
       for (var number = 8; number >= 0; number--) {
         await tester.sendKeyEvent(digits[number]);
         await tester.pumpAndSettle();
-        expect(selectedTool(tester), StudioTool.values[number]);
+        expect(selectedTool(tester).group, ToolGroup.values[number]);
       }
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit3);
+      await tester.pumpAndSettle();
+      expect(selectedTool(tester), StudioTool.rectangle);
       // The numeric keypad too.
       await tester.sendKeyEvent(LogicalKeyboardKey.numpad7);
       await tester.pumpAndSettle();
-      expect(selectedTool(tester), StudioTool.fill);
+      expect(selectedTool(tester), StudioTool.eraser);
       // Zero and a number held with Ctrl are not tool keys.
       await tester.sendKeyEvent(LogicalKeyboardKey.digit0);
       await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
       await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
       await tester.pumpAndSettle();
-      expect(selectedTool(tester), StudioTool.fill);
+      expect(selectedTool(tester), StudioTool.eraser);
 
       // A digit typed into a text is a character, not a command.
-      await tester.sendKeyEvent(LogicalKeyboardKey.digit5);
+      await tester.sendKeyEvent(LogicalKeyboardKey.digit4);
       await tester.pumpAndSettle();
       expect(selectedTool(tester), StudioTool.text);
       await studio.click();

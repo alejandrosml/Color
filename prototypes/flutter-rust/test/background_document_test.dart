@@ -119,7 +119,7 @@ void main() {
       final expectedProject = Uint8List.fromList(project);
       final expectedSvg = source.exportSvg();
       source.dispose();
-      expect(_version(project), 3);
+      expect(_version(project), 6);
       final reopened = RustDocument.fromProject(project);
       try {
         project.fillRange(0, project.length, 0);
@@ -130,7 +130,8 @@ void main() {
         expect(reopened.canRedo, isFalse);
         expect(reopened.undo(), isTrue);
         expect(reopened.count, 0);
-        expect(_version(reopened.exportProject()), 3);
+        expect(_version(reopened.exportProject()), 6);
+        expect(_version(reopened.exportLegacyProject()!), 3);
         expect(reopened.copyBackgroundPng(), orderedEquals(_rgba));
         expect(reopened.undo(), isFalse);
         expect(reopened.redo(), isTrue);
@@ -158,7 +159,7 @@ void main() {
       }
     });
 
-    test('vector-only documents still export v2 with absent background', () {
+    test('vector-only documents keep no background, in version 6 as in 2', () {
       final document = RustDocument(width: 32, height: 24);
       try {
         expect(document.backgroundInfo, isNull);
@@ -167,7 +168,8 @@ void main() {
         final project = document.exportProject();
         final reopened = RustDocument.fromProject(project);
         try {
-          expect(_version(project), 2);
+          expect(_version(project), 6);
+          expect(_version(document.exportLegacyProject()!), 2);
           expect(reopened.backgroundInfo, isNull);
           expect(reopened.copyBackgroundPng(), isNull);
           expect(reopened.exportProject(), orderedEquals(project));

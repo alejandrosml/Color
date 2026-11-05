@@ -166,7 +166,12 @@ def version_5_cases(source):
          None),
         ("unknown-version-6.edupaint", portrait, False,
          "Valid checksum and version 2 body announced as version 6. Version 5 exists now: "
-         "unknown-version-5 is rejected as a malformed version 5 file.", None),
+         "unknown-version-5 is rejected as a malformed version 5 file. Version 6 exists "
+         "too since Color 1.1, and this file is rejected as a malformed version 6 file.", None),
+        ("unknown-version-7.edupaint", announced((source / "portrait-v2.edupaint").read_bytes(), 7),
+         False,
+         "Valid checksum and version 2 body announced as version 7: a file of a Color newer "
+         "than 1.1, which reads versions 1 to 6.", None),
     ]
 
 

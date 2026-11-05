@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'fit_to_screen.dart';
 import 'studio_colors.dart';
 import 'studio_text.dart';
+import 'language.dart';
 
 /// How the door was left.
 enum AdultGate {
@@ -72,7 +73,7 @@ class AdultGateQuestion {
   String get text => '$first × $second = ?';
 
   /// As said by a screen reader.
-  String get spoken => 'Combien font $first fois $second ?';
+  String get spoken => trf('Combien font {0} fois {1} ?', [first, second]);
 }
 
 class AdultGateDialog extends StatefulWidget {
@@ -101,13 +102,13 @@ class AdultGateDialog extends StatefulWidget {
   // measured with DejaVu Sans. A test lays the dialog out in windows of
   // several sizes and fails if these no longer hold.
   static const _heights = [
-    (1.0, 475.0),
-    (1.25, 526.0),
-    (1.5, 554.0),
-    (1.75, 585.0),
-    (2.0, 616.0),
-    (2.5, 689.0),
-    (3.0, 769.0),
+    (1.0, 452.0),
+    (1.25, 487.0),
+    (1.5, 506.0),
+    (1.75, 537.0),
+    (2.0, 569.0),
+    (2.5, 636.0),
+    (3.0, 704.0),
   ];
 
   @override
@@ -128,9 +129,11 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
   }
 
   void _digit(int digit) {
-    // The result has two digits: a third one is a slip of the hand.
-    if (_typed.length >= 2) return;
+    if (!mounted || _typed.length >= 2) return;
     setState(() => _typed += '$digit');
+    // Every result has two digits: the second one answers, with nothing
+    // else to press. The right one opens at once.
+    if (_typed.length == 2) _answer();
   }
 
   void _erase() {
@@ -138,8 +141,7 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
     setState(() => _typed = _typed.substring(0, _typed.length - 1));
   }
 
-  void _enter() {
-    if (_typed.isEmpty) return;
+  void _answer() {
     if (int.parse(_typed) == _question.answer) {
       Navigator.pop(context, AdultGate.opened);
       return;
@@ -153,9 +155,8 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
       _typed = '';
       _wrong++;
     });
-    // « Entrer » has just lost its answer and, with it, the focus: it comes
-    // back to the dialog itself, where digits and Entrée are heard, and not
-    // to « Annuler ».
+    // The focus comes back to the dialog itself, where the digits of the
+    // keyboard are heard, and not to « Annuler ».
     _focus.requestFocus();
   }
 
@@ -171,23 +172,16 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
       _erase();
       return KeyEventResult.handled;
     }
-    // Entrée answers when no key of the dialog holds the focus; on a key it
-    // presses that key, as everywhere. A key held down answers once.
-    if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter) {
-      if (!node.hasPrimaryFocus) return KeyEventResult.ignored;
-      if (event is KeyDownEvent) _enter();
-      return KeyEventResult.handled;
-    }
     // The digits as the keyboard writes them, whatever its layout: a French
     // keyboard gives them with Maj, a numeric pad without. Wherever the
-    // focus is in the dialog.
+    // focus is in the dialog. A key held down types once: a hand that rests
+    // on it does not answer for itself.
     final character = event.character;
     final digit = character != null && character.length == 1
         ? int.tryParse(character)
         : null;
     if (digit != null) {
-      _digit(digit);
+      if (event is KeyDownEvent) _digit(digit);
       return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
@@ -230,48 +224,67 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
         key: const Key('adultGate'),
         scrollable: true,
         insetPadding: const EdgeInsets.all(AdultGateDialog._inset),
-        title: const Text('Pour les adultes'),
+        titlePadding: const EdgeInsets.fromLTRB(24, 16, 12, 0),
+        // Giving up, at the top: below are only the keys of the answer.
+        title: Row(
+          children: [
+            Expanded(child: Text(tr('Pour les adultes'))),
+            TextButton(
+              key: const Key('adultGateCancel'),
+              style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
+              onPressed: () => Navigator.pop(context, AdultGate.givenUp),
+              child: Text(tr('Annuler')),
+            ),
+          ],
+        ),
+        contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
         content: SizedBox(
-          width: 320,
+          width: 300,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                'Les options sont réservées aux adultes. Pour entrer, donne le résultat :',
+              Text(
+                tr(
+                  'Les options sont réservées aux adultes. Pour entrer, donne le résultat :',
+                ),
                 style: TextStyle(fontSize: 14, height: 1.4),
               ),
-              const SizedBox(height: 8),
-              Semantics(
-                container: true,
-                label: _question.spoken,
-                excludeSemantics: true,
-                child: Text(
-                  _question.text,
-                  key: const Key('adultGateQuestion'),
-                  style: const TextStyle(
-                    fontSize: 34,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                  ),
-                ),
-              ),
               const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              // The calculation and its answer on one line, as on a
+              // calculator: the second digit answers.
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 6,
                 children: [
+                  Semantics(
+                    container: true,
+                    label: _question.spoken,
+                    excludeSemantics: true,
+                    child: Text(
+                      _question.text,
+                      key: const Key('adultGateQuestion'),
+                      style: const TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ),
                   // What was typed, said again at every change.
                   Semantics(
                     container: true,
                     liveRegion: true,
                     label: _typed.isEmpty
-                        ? 'Aucun chiffre tapé'
-                        : 'Réponse tapée : $_typed',
+                        ? tr('Aucun chiffre tapé')
+                        : trf('Réponse tapée : {0}', [_typed]),
                     excludeSemantics: true,
                     child: Container(
                       key: const Key('adultGateAnswer'),
-                      width: 120,
-                      height: 56,
+                      width: 88,
+                      height: 52,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: studioPreviewBox,
@@ -292,25 +305,22 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  _keyButton(
-                    key: const Key('adultGateErase'),
-                    spoken: 'Effacer le dernier chiffre',
-                    onPressed: _typed.isEmpty ? null : _erase,
-                    child: const Icon(Icons.backspace_outlined, size: 22),
-                  ),
                 ],
               ),
               SizedBox(
-                height: 32,
+                height: 30,
                 child: Center(
                   child: _wrong > 0 && _typed.isEmpty
                       ? Semantics(
                           liveRegion: true,
                           child: Text(
                             _wrong + 1 >= AdultGateDialog.tries
-                                ? 'Ce n’est pas le bon résultat. Dernier essai avec cet autre calcul.'
-                                : 'Ce n’est pas le bon résultat. Voici un autre calcul.',
+                                ? tr(
+                                    'Ce n’est pas le bon résultat. Dernier essai avec cet autre calcul.',
+                                  )
+                                : tr(
+                                    'Ce n’est pas le bon résultat. Voici un autre calcul.',
+                                  ),
                             key: const Key('adultGateWrong'),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
@@ -322,26 +332,40 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
                       : null,
                 ),
               ),
-              // Two rows of keys to click: nothing to type on a keyboard,
-              // nothing to drag, and the whole dialog in view in the
-              // smallest window.
-              for (final row in const [
-                [1, 2, 3, 4, 5],
-                [6, 7, 8, 9, 0],
-              ])
+              // The keys of a calculator: nothing to type on a keyboard,
+              // nothing to drag, nothing to confirm.
+              for (final (index, row) in const [
+                [7, 8, 9],
+                [4, 5, 6],
+                [1, 2, 3],
+                [null, 0, -1],
+              ].indexed)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
+                  padding: EdgeInsets.only(top: index == 0 ? 0 : 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      for (final digit in row) ...[
-                        if (digit != row.first) const SizedBox(width: 8),
-                        _keyButton(
-                          key: Key('adultGateDigit$digit'),
-                          spoken: '$digit',
-                          onPressed: () => _digit(digit),
-                          child: Text('$digit'),
-                        ),
+                      for (final (column, digit) in row.indexed) ...[
+                        if (column > 0) const SizedBox(width: 8),
+                        if (digit == null)
+                          const SizedBox(width: 56, height: 56)
+                        else if (digit < 0)
+                          _keyButton(
+                            key: const Key('adultGateErase'),
+                            spoken: tr('Effacer le dernier chiffre'),
+                            onPressed: _typed.isEmpty ? null : _erase,
+                            child: const Icon(
+                              Icons.backspace_outlined,
+                              size: 22,
+                            ),
+                          )
+                        else
+                          _keyButton(
+                            key: Key('adultGateDigit$digit'),
+                            spoken: '$digit',
+                            onPressed: () => _digit(digit),
+                            child: Text('$digit'),
+                          ),
                       ],
                     ],
                   ),
@@ -349,21 +373,6 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
             ],
           ),
         ),
-        actionsPadding: const EdgeInsets.all(16),
-        actions: [
-          TextButton(
-            key: const Key('adultGateCancel'),
-            style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
-            onPressed: () => Navigator.pop(context, AdultGate.givenUp),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            key: const Key('adultGateEnter'),
-            style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
-            onPressed: _typed.isEmpty ? null : _enter,
-            child: const Text('Entrer'),
-          ),
-        ],
       ),
     ),
   );

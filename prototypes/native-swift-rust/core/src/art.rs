@@ -39,6 +39,8 @@ const MAX_XML_NODES: u32 = 20_000;
 /// handed to the XML reader, which goes one level down the stack per level.
 const MAX_XML_DEPTH: usize = 80;
 const MAX_GROUP_DEPTH: usize = 64;
+/// The longest name of a group the description keeps.
+const MAX_GROUP_NAME: usize = 40;
 /// Digits of the integer part of the largest number a picture may write,
 /// its exponent counted: seven, so under ten million.
 const MAX_NUMBER_DIGITS: i64 = 7;
@@ -54,10 +56,34 @@ const READER_STACK_BYTES: usize = 64 * 1024 * 1024;
 /// tests, which write their descriptions into catalogues/interface.txt.
 #[cfg(test)]
 static INTERFACE: &[(&str, &str)] = &[
+    ("aimant", include_str!("../art/interface/aimant.svg")),
+    ("annuler", include_str!("../art/interface/annuler.svg")),
+    ("calques", include_str!("../art/interface/calques.svg")),
+    ("choisir", include_str!("../art/interface/choisir.svg")),
+    (
+        "enregistrer",
+        include_str!("../art/interface/enregistrer.svg"),
+    ),
+    ("exporter", include_str!("../art/interface/exporter.svg")),
     ("film", include_str!("../art/interface/film.svg")),
+    ("formes", include_str!("../art/interface/formes.svg")),
+    ("galerie", include_str!("../art/interface/galerie.svg")),
+    ("gomme", include_str!("../art/interface/gomme.svg")),
+    ("imprimer", include_str!("../art/interface/imprimer.svg")),
+    ("ligne", include_str!("../art/interface/ligne.svg")),
     ("logo", include_str!("../art/interface/logo.svg")),
+    ("magie", include_str!("../art/interface/magie.svg")),
     ("mascotte", include_str!("../art/interface/mascotte.svg")),
+    ("nouveau", include_str!("../art/interface/nouveau.svg")),
     ("options", include_str!("../art/interface/options.svg")),
+    ("ouvrir", include_str!("../art/interface/ouvrir.svg")),
+    ("ovale", include_str!("../art/interface/ovale.svg")),
+    ("pinceau", include_str!("../art/interface/pinceau.svg")),
+    ("rectangle", include_str!("../art/interface/rectangle.svg")),
+    ("remplir", include_str!("../art/interface/remplir.svg")),
+    ("retablir", include_str!("../art/interface/retablir.svg")),
+    ("tampon", include_str!("../art/interface/tampon.svg")),
+    ("texte", include_str!("../art/interface/texte.svg")),
 ];
 
 /// Why a picture is not handed over.
@@ -437,7 +463,10 @@ fn clip(out: &mut String, clip: &usvg::ClipPath, budget: &mut Budget) -> Result<
 }
 
 // `G <opacity> <matrix>`, its clips, what it holds, then `E`. A group that
-// changes nothing is not written: only what it holds is.
+// changes nothing is not written: only what it holds is — unless it has a
+// name of lowercase letters, digits and hyphens, which it keeps last on its
+// line (Color 1.1): the interface can move such a part of the picture, the
+// raised arm of the companion when it paints.
 fn group(
     out: &mut String,
     group: &usvg::Group,
@@ -457,13 +486,24 @@ fn group(
         return Err(Refusal::Unsupported("a blend mode"));
     }
     let opacity = group.opacity().get();
-    let plain = opacity == 1.0 && group.transform().is_identity() && group.clip_path().is_none();
+    let name = group.id();
+    let named = !name.is_empty()
+        && name.len() <= MAX_GROUP_NAME
+        && name
+            .bytes()
+            .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-');
+    let plain =
+        opacity == 1.0 && group.transform().is_identity() && group.clip_path().is_none() && !named;
     if !plain {
         budget.item()?;
         push(out, "G ")?;
         number(out, opacity)?;
         push(out, " ")?;
         matrix(out, group.transform())?;
+        if named {
+            push(out, " ")?;
+            push(out, name)?;
+        }
         push(out, "\n")?;
         if let Some(outline) = group.clip_path() {
             clip(out, outline, budget)?;
@@ -487,7 +527,7 @@ fn group(
 ///
 /// ```text
 /// P <key> <width> <height>
-/// G <opacity> <matrix>          a group; `E` closes it
+/// G <opacity> <matrix> [<name>] a group; `E` closes it
 /// C                             a clip of the group just opened, then its
 /// K <rule> <outline>            outlines; several clips narrow each other
 /// D <order> <fill> <stroke> <outline>

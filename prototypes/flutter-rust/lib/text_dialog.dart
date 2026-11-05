@@ -7,16 +7,20 @@ import 'fit_to_screen.dart';
 import 'screen_keyboard.dart';
 import 'size_choice.dart';
 import 'text_layout.dart';
+import 'language.dart';
 
-/// What the child confirmed: normalized characters and a size choice.
+/// What the child confirmed: normalized characters, a size choice and the
+/// font of the letters (one of [textFonts]).
 class TextEntry {
-  const TextEntry(this.text, this.size);
+  const TextEntry(this.text, this.size, [this.font = 0]);
   final String text;
   final ObjectSize size;
+  final int font;
 }
 
-/// Says why a text cannot stand on the sheet at a size, or null when it can.
-typedef TextProblem = String? Function(String text, ObjectSize size);
+/// Says why a text cannot stand on the sheet at a size and in a font, or
+/// null when it can.
+typedef TextProblem = String? Function(String text, ObjectSize size, int font);
 
 /// Asks for the characters of a new or existing text. Returns null when the
 /// dialog is cancelled; the caller's drawing is never touched from here.
@@ -29,6 +33,7 @@ Future<TextEntry?> showTextEntryDialog(
   BuildContext context, {
   String initialText = '',
   required ObjectSize initialSize,
+  int initialFont = 0,
   bool editing = false,
   TextProblem? problem,
   bool screenKeyboard = false,
@@ -39,6 +44,7 @@ Future<TextEntry?> showTextEntryDialog(
     child: TextEntryDialog(
       initialText: initialText,
       initialSize: initialSize,
+      initialFont: initialFont,
       editing: editing,
       problem: problem,
       screenKeyboard: screenKeyboard,
@@ -51,12 +57,16 @@ class TextEntryDialog extends StatefulWidget {
     super.key,
     this.initialText = '',
     required this.initialSize,
+    this.initialFont = 0,
     this.editing = false,
     this.problem,
     this.screenKeyboard = false,
   });
   final String initialText;
   final ObjectSize initialSize;
+
+  /// The letters of the text; the keys to click keep those chosen before.
+  final int initialFont;
   final bool editing;
   final TextProblem? problem;
 
@@ -97,10 +107,13 @@ class TextEntryDialog extends StatefulWidget {
     (2.5, 684.0),
     (3.0, 806.0),
   ];
-  static const tooManyLines =
-      'Ton texte a trop de lignes : il peut en avoir $maxTextLines au plus.';
-  static const tooLong =
-      'Ton texte est trop long pour être gardé en entier. Raccourcis-le un peu.';
+  static String get tooManyLines => trf(
+    'Ton texte a trop de lignes : il peut en avoir {0} au plus.',
+    [maxTextLines],
+  );
+  static String get tooLong => tr(
+    'Ton texte est trop long pour être gardé en entier. Raccourcis-le un peu.',
+  );
 
   @override
   State<TextEntryDialog> createState() => _TextEntryDialogState();
@@ -109,6 +122,7 @@ class TextEntryDialog extends StatefulWidget {
 class _TextEntryDialogState extends State<TextEntryDialog> {
   late final _controller = TextEditingController(text: widget.initialText);
   late ObjectSize _size = widget.initialSize;
+  late int _font = widget.initialFont.clamp(0, textFonts.length - 1);
 
   /// Why the last confirmation was not accepted; cleared by the next change.
   String? _problem;
@@ -139,13 +153,13 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
     final problem = switch (textExcess(_controller.text)) {
       TextExcess.lines => TextEntryDialog.tooManyLines,
       TextExcess.length => TextEntryDialog.tooLong,
-      null => widget.problem?.call(text, _size),
+      null => widget.problem?.call(text, _size, _font),
     };
     if (problem != null) {
       setState(() => _problem = problem);
       return;
     }
-    Navigator.pop(context, TextEntry(text, _size));
+    Navigator.pop(context, TextEntry(text, _size, _font));
   }
 
   @override
@@ -172,7 +186,9 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
       key: const Key('textDialog'),
       scrollable: true,
       insetPadding: const EdgeInsets.all(TextEntryDialog._inset),
-      title: Text(widget.editing ? 'Change ton texte' : 'Écris ton texte'),
+      title: Text(
+        widget.editing ? tr('Change ton texte') : tr('Écris ton texte'),
+      ),
       content: SizedBox(
         width: widget.screenKeyboard ? ScreenKeyboard.width + 8 : 440,
         child: Column(
@@ -193,15 +209,17 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
               inputFormatters: [LengthLimitingTextInputFormatter(_limit)],
               // A sign that the letters of the interface do not have is
               // shown in those of the sheet, where it will be drawn.
-              style: const TextStyle(
+              // In the letters chosen, as the sheet will show them.
+              style: TextStyle(
                 fontSize: 20,
-                fontFamilyFallback: [colorTextFontFamily],
+                fontFamily: _font == 0 ? null : textFonts[_font].family,
+                fontFamilyFallback: const [colorTextFontFamily],
               ),
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
-                labelText: 'Ton texte',
-                hintText: 'Écris ici…',
-                helperText: 'La touche Entrée passe à la ligne.',
+                labelText: tr('Ton texte'),
+                hintText: tr('Écris ici…'),
+                helperText: tr('La touche Entrée passe à la ligne.'),
                 helperMaxLines: 3,
                 errorText: _problem,
                 errorMaxLines: 4,
@@ -220,6 +238,8 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
             ],
             if (!widget.screenKeyboard) ...[
               const SizedBox(height: 16),
+              _fontChoice(),
+              const SizedBox(height: 12),
               _sizeChoice(),
             ],
           ],
@@ -235,7 +255,7 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
           : null,
       actions: widget.screenKeyboard
           ? [
-              _sizeChoice(label: 'Taille'),
+              _sizeChoice(label: tr('Taille')),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -249,16 +269,67 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
     ),
   );
 
-  Widget _sizeChoice({String label = 'Taille des lettres'}) => Wrap(
+  // The five fonts of a text, each written in itself.
+  Widget _fontChoice() => Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      Text(tr('Lettres')),
+      for (final (index, face) in textFonts.indexed)
+        Tooltip(
+          message: tr(face.name),
+          excludeFromSemantics: true,
+          child: OutlinedButton(
+            key: Key('textFont-$index'),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(56, 48),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              backgroundColor: index == _font ? _chosen : null,
+              side: BorderSide(
+                color: index == _font ? _chosenLine : _line,
+                width: index == _font ? 2 : 1,
+              ),
+            ),
+            onPressed: () => setState(() {
+              _font = index;
+              _problem = null;
+            }),
+            // Its name and its state on the button, which a screen reader
+            // can press.
+            child: Semantics(
+              selected: index == _font,
+              label: trf('Lettres {0}', [tr(face.name)]),
+              child: ExcludeSemantics(
+                child: Text(
+                  tr('Abc'),
+                  style: TextStyle(
+                    fontFamily: face.family,
+                    fontSize: index == 4 ? 15 : 18,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+    ],
+  );
+
+  static const _chosen = Color(0xffe6f2e8);
+  static const _chosenLine = Color(0xff3f7f4f);
+  static const _line = Color(0xffc9c1b3);
+
+  Widget _sizeChoice({String? label}) => Wrap(
     spacing: 12,
     runSpacing: 8,
     crossAxisAlignment: WrapCrossAlignment.center,
     children: [
-      Text(label),
+      Text(label ?? tr('Taille des lettres')),
       SizeChoiceControl(
         keyPrefix: 'textDialogSize',
         value: _size,
-        what: 'du texte',
+        what: tr('du texte'),
         onChanged: (size) => setState(() {
           _size = size;
           _problem = null;
@@ -271,13 +342,13 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
     key: const Key('cancelText'),
     style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
     onPressed: () => Navigator.pop(context),
-    child: const Text('Annuler'),
+    child: Text(tr('Annuler')),
   );
 
   Widget _confirmButton() => FilledButton(
     key: const Key('confirmText'),
     style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
     onPressed: _text == null ? null : _confirm,
-    child: Text(widget.editing ? 'Changer le texte' : 'Poser le texte'),
+    child: Text(widget.editing ? tr('Changer le texte') : tr('Poser le texte')),
   );
 }

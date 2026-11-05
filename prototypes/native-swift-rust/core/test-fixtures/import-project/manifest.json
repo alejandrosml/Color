@@ -263,11 +263,19 @@
       "bytes": 156,
       "sha256": "be53f1c74d4ddeb28be7889f7d06848bbfafd229e1dbe8f7365ae65054f29110",
       "native_accept": false,
-      "note": "Valid checksum and version 2 body announced as version 6. Version 5 exists now: unknown-version-5 is rejected as a malformed version 5 file.",
+      "note": "Valid checksum and version 2 body announced as version 6. Version 5 exists now: unknown-version-5 is rejected as a malformed version 5 file. Version 6 exists too since Color 1.1, and this file is rejected as a malformed version 6 file.",
+      "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
+    },
+    {
+      "file": "unknown-version-7.edupaint",
+      "bytes": 156,
+      "sha256": "36bdda7ff549203420f60cf29e93c0d2e41bbf13cf5ef8de356e900b1fada4a3",
+      "native_accept": false,
+      "note": "Valid checksum and version 2 body announced as version 7: a file of a Color newer than 1.1, which reads versions 1 to 6.",
       "generator": "tools/make_layered_fixtures.py, independent of the Rust core"
     }
   ],
   "native_accept_count": 10,
-  "native_reject_count": 21,
-  "total_case_bytes": 17789
+  "native_reject_count": 22,
+  "total_case_bytes": 17945
 }

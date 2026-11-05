@@ -30,7 +30,19 @@ void main() {
       ); // The caller's later edit is detached.
       final prepared = await operation;
       try {
-        expect(prepared.document.exportProject(), expected);
+        // What the writer of 1.0 makes of it, byte for byte as an encoder
+        // independent of the core expects; what 1.1 writes, version 6, is the
+        // same drawing.
+        expect(prepared.document.exportLegacyProject(), expected);
+        final saved = prepared.document.exportProject();
+        expect(saved[8], 6);
+        final reopened = RustDocument.fromProject(saved);
+        try {
+          expect(reopened.exportLegacyProject(), expected);
+          expect(reopened.exportProject(), saved);
+        } finally {
+          reopened.dispose();
+        }
       } finally {
         prepared.dispose();
       }
@@ -43,7 +55,7 @@ void main() {
       );
       try {
         expect(
-          prepared.document.exportProject(),
+          prepared.document.exportLegacyProject(),
           await fixture('$name.normalized').readAsBytes(),
         );
       } finally {
@@ -164,7 +176,7 @@ void main() {
       final prepared = await read;
       expect(prepared, isNotNull);
       try {
-        expect(prepared!.document.exportProject(), bytes);
+        expect(prepared!.document.exportLegacyProject(), bytes);
       } finally {
         prepared?.dispose();
       }

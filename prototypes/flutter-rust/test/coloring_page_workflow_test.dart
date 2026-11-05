@@ -164,7 +164,7 @@ void main() {
         expect(document.layers, made.layers);
         expect(document.activeLayer, _drawing);
         expect(document.lockedLayers, {_zones, _lines});
-        expect(document.exportProject()[8], 5);
+        expect(document.exportProject()[8], 6);
         // Reopened, the page is still out of the history.
         expect(document.undoCount, 0);
         for (final index in made.on(_zones)) {
@@ -334,9 +334,10 @@ void main() {
       final made = _Page(house);
       final box = _box(made.objects[outlinedZone(made)]);
       // A point on the left side of the zone's line, and a trait of the
-      // child that passes under that line lower down.
+      // child that passes under that line lower down: beyond the reach of a
+      // finger (Color 1.1), which would choose the nearest element.
       final onLine = Offset(box.left, box.top + 8);
-      final crossing = Offset(box.left, box.top + box.height / 2);
+      final crossing = Offset(box.left, box.top + box.height * .9);
       final studio = StudioDriver(tester);
       await studio.start();
       await studio.tap('newProject');
@@ -837,14 +838,14 @@ void main() {
       await studio.drag(studio.at(100, 300), studio.at(300, 360));
       // One coloured zone and one trait.
       studio.expectCount(2);
-      // The copy of recovery is a project of version 5 too.
+      // The copy of recovery is a project of version 6 too.
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pumpAndSettle();
       expect(studio.recovery.bytes, isNotNull);
-      expect(studio.recovery.bytes![8], 5);
+      expect(studio.recovery.bytes![8], 6);
       await studio.tap('saveProject');
       final saved = studio.files.projects.values.single;
-      expect(saved[8], 5);
+      expect(saved[8], 6);
       // The card of the album counts what the child made too.
       for (
         var attempt = 0;
@@ -898,7 +899,7 @@ void main() {
       expect(studio.recovery.bytes, isNotNull);
       await studio.finish();
       final recovered = studio.recovery.bytes!;
-      expect(recovered[8], 5);
+      expect(recovered[8], 6);
       await tester.pumpWidget(
         EduPaintApp(files: studio.files, recoveryStorage: studio.recovery),
       );

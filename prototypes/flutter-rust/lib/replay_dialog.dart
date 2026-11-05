@@ -43,6 +43,7 @@ import 'rust_document.dart' show whitePaper;
 import 'sheet_images.dart';
 import 'studio_colors.dart';
 import 'viewport.dart';
+import 'language.dart';
 
 /// What a film shows: a sheet and the elements to redraw on it. Everything
 /// is borrowed from the caller; nothing of it is changed or disposed here.
@@ -307,16 +308,17 @@ class ReplayDialog extends StatefulWidget {
   /// Called every time the film reaches its end.
   final VoidCallback? onFinished;
 
-  static const title = 'Ton dessin se refait tout seul';
-  static const sheetLabel = 'Le film de ton dessin';
-  static const startedStatus = 'Le film de ton dessin commence.';
-  static const finishedStatus = 'Ton dessin est fini.';
-  static const emptyStatus =
-      'Ta feuille est encore vide : il n’y a rien à refaire.';
+  static String get title => tr('Ton dessin se refait tout seul');
+  static String get sheetLabel => tr('Le film de ton dessin');
+  static String get startedStatus => tr('Le film de ton dessin commence.');
+  static String get finishedStatus => tr('Ton dessin est fini.');
+  static String get emptyStatus =>
+      tr('Ta feuille est encore vide : il n’y a rien à refaire.');
   // A colouring page on which nothing is coloured nor drawn yet: the page
   // itself is not redrawn.
-  static const pageOnlyStatus =
-      'Tu n’as encore rien colorié ni dessiné sur ta page : il n’y a rien à refaire.';
+  static String get pageOnlyStatus => tr(
+    'Tu n’as encore rien colorié ni dessiné sur ta page : il n’y a rien à refaire.',
+  );
 
   /// The least height of the box of the sheet, in a window so small that
   /// the film must scroll to be seen whole.
@@ -517,7 +519,7 @@ class _ReplayDialogState extends State<ReplayDialog>
         ),
         onPressed: _empty ? null : _play,
         icon: const Icon(Icons.replay),
-        label: const Text('Revoir'),
+        label: Text(tr('Revoir')),
       ),
       FilledButton(
         key: const Key('closeReplay'),
@@ -528,7 +530,7 @@ class _ReplayDialogState extends State<ReplayDialog>
           visualDensity: VisualDensity.standard,
         ),
         onPressed: () => Navigator.pop(context),
-        child: const Text('Revenir au dessin'),
+        child: Text(tr('Revenir au dessin')),
       ),
     ],
   );

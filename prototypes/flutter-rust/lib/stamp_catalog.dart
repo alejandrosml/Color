@@ -4,6 +4,7 @@
 // same paths, so the sheet, the PNG export and the SVG export agree.
 import 'dart:ui';
 
+import 'language.dart';
 import 'rust_document.dart';
 
 /// How one layer of a stamp is coloured.
@@ -102,11 +103,18 @@ class StampArt {
     (layer) => layer.fill.tinted || layer.stroke.tinted,
   );
 
-  /// French name shown under the picture and announced to screen readers.
+  /// Name shown under the picture and announced to screen readers.
   String get label =>
-      _labels[key] ?? '${key[0].toUpperCase()}${key.substring(1)}';
+      (inEnglish ? _ownEnglish[key] : null) ??
+      tr(frenchLabels[key] ?? '${key[0].toUpperCase()}${key.substring(1)}');
 
-  static const _labels = {
+  /// The English of a stamp whose French name says something else elsewhere
+  /// in the interface: « Soleil » is a colour too, « Sunshine ».
+  static const _ownEnglish = {'soleil': 'Sun'};
+
+  /// The French names of the stamps, by key; [label] gives them in the
+  /// language of the interface.
+  static const frenchLabels = {
     'etoile': 'Étoile',
     'coeur': 'Cœur',
     'soleil': 'Soleil',

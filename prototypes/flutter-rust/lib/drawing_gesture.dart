@@ -68,7 +68,9 @@ class ShapeAnchor {
 bool madeOfTwoClicks(VectorKind kind) =>
     kind == VectorKind.line ||
     kind == VectorKind.rectangle ||
-    kind == VectorKind.ellipse;
+    kind == VectorKind.ellipse ||
+    // The shapes of 1.1, drawn in a box like a rectangle.
+    kind == VectorKind.contour;
 
 /// How far a pressed pointer may travel on the screen, in logical pixels,
 /// and still be a click: a hand trembles more on glass than on a mouse.

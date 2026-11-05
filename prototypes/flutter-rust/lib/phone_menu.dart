@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'child_art.dart';
 import 'studio_colors.dart';
+import 'language.dart';
 
 /// One button of the menu. [id] is the key of the button and what the menu
 /// answers when it is chosen.
@@ -146,12 +147,9 @@ class PhoneMenu extends StatelessWidget {
                 ),
                 IconButton(
                   key: const Key('closePhoneMenu'),
-                  tooltip: 'Fermer le menu',
+                  tooltip: tr('Fermer le menu'),
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(
-                    Icons.close,
-                    semanticLabel: 'Fermer le menu',
-                  ),
+                  icon: Icon(Icons.close, semanticLabel: tr('Fermer le menu')),
                 ),
               ],
             ),

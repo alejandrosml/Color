@@ -1,10 +1,175 @@
 // SPDX-License-Identifier: MIT
 import 'dart:math' as math;
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'rust_document.dart';
 import 'stamp_catalog.dart';
 import 'text_layout.dart';
+
+/// The opacity of the marker (felt): strokes laid over each other show
+/// through, as the core's SVG says (MARKER_ALPHA).
+const int markerAlpha = 217;
+
+/// The stops of a gradient: as many as the SVG export writes.
+const int gradientStops = 9;
+
+/// The matrix that turns and mirrors an object as the core does: about the
+/// centre of its box, the mirror first. Null when it does neither.
+Float64List? objectTransform(ObjectLook look, Rect box) {
+  if (!look.transforms) return null;
+  final c = box.center;
+  final cos = math.cos(look.rotation);
+  final sin = math.sin(look.rotation);
+  final sx = look.mirrorX ? -1.0 : 1.0;
+  final sy = look.mirrorY ? -1.0 : 1.0;
+  // p' = c + R·S·(p − c), column-major for Canvas.transform.
+  final a = cos * sx, b = sin * sx, cc = -sin * sy, d = cos * sy;
+  final tx = c.dx - a * c.dx - cc * c.dy;
+  final ty = c.dy - b * c.dx - d * c.dy;
+  return Float64List.fromList([
+    a, b, 0, 0, //
+    cc, d, 0, 0,
+    0, 0, 1, 0,
+    tx, ty, 0, 1,
+  ]);
+}
+
+/// Where point [p] of the sheet is in the object's own drawing, before its
+/// turn and mirror: what a hit test asks.
+Offset untransformedPoint(ObjectLook look, Rect box, Offset p) {
+  if (!look.transforms) return p;
+  final c = box.center;
+  final cos = math.cos(look.rotation);
+  final sin = math.sin(look.rotation);
+  final (dx, dy) = (p.dx - c.dx, p.dy - c.dy);
+  // R⁻¹ then S⁻¹ (S is its own inverse).
+  var u = dx * cos + dy * sin;
+  var v = -dx * sin + dy * cos;
+  if (look.mirrorX) u = -u;
+  if (look.mirrorY) v = -v;
+  return Offset(c.dx + u, c.dy + v);
+}
+
+/// The box that holds [box] once turned and mirrored as [look] says.
+Rect transformedBounds(ObjectLook look, Rect box, [Rect? about]) {
+  if (!look.transforms) return box;
+  final centre = (about ?? box).center;
+  final cos = math.cos(look.rotation);
+  final sin = math.sin(look.rotation);
+  var left = double.infinity, top = double.infinity;
+  var right = double.negativeInfinity, bottom = double.negativeInfinity;
+  for (final corner in [
+    box.topLeft,
+    box.topRight,
+    box.bottomLeft,
+    box.bottomRight,
+  ]) {
+    var u = corner.dx - centre.dx;
+    var v = corner.dy - centre.dy;
+    if (look.mirrorX) u = -u;
+    if (look.mirrorY) v = -v;
+    final x = centre.dx + u * cos - v * sin;
+    final y = centre.dy + u * sin + v * cos;
+    left = math.min(left, x);
+    right = math.max(right, x);
+    top = math.min(top, y);
+    bottom = math.max(bottom, y);
+  }
+  return Rect.fromLTRB(left, top, right, bottom);
+}
+
+/// The paint of the inside of a filled shape: its colour, or its gradient
+/// through Oklab, over the box of its points as SVG's objectBoundingBox.
+Paint insidePaint(StrokeData data, Rect box) {
+  final paint = Paint()
+    ..color = Color(0xff000000 | data.fillRgb!)
+    ..isAntiAlias = true;
+  final look = data.look;
+  if (!look.hasGradient || box.width == 0 || box.height == 0) return paint;
+  final colours = _gradientColours(data.fillRgb!, look.gradientRgb);
+  final stops = [
+    for (var i = 0; i < gradientStops; i++) i / (gradientStops - 1),
+  ];
+  final unitToBox = Float64List.fromList([
+    box.width, 0, 0, 0, //
+    0, box.height, 0, 0,
+    0, 0, 1, 0,
+    box.left, box.top, 0, 1,
+  ]);
+  final [x0, y0, x1, y1] = look.gradientPoints;
+  paint.shader = look.gradient == GradientKind.linear
+      ? Gradient.linear(
+          Offset(x0, y0),
+          Offset(x1, y1),
+          colours,
+          stops,
+          TileMode.clamp,
+          unitToBox,
+        )
+      : Gradient.radial(
+          Offset(x0, y0),
+          math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)),
+          colours,
+          stops,
+          TileMode.clamp,
+          unitToBox,
+        );
+  return paint;
+}
+
+// The colours of a gradient, asked of the core once for each pair.
+final _gradients = <(int, int), List<Color>>{};
+
+List<Color> _gradientColours(int a, int b) {
+  final known = _gradients[(a, b)];
+  if (known != null) return known;
+  if (_gradients.length > 256) _gradients.clear();
+  return _gradients[(a, b)] = List.unmodifiable([
+    for (final rgb in RustDocument.gradientColours(a, b, gradientStops))
+      Color(0xff000000 | rgb),
+  ]);
+}
+
+/// The marks of a stroke as paths, one for each group of marks of one colour
+/// and opacity, as the SVG export writes them.
+List<(Path, Paint)> markPaths(ObjectMarks marks, {int end = -1}) {
+  final count = end < 0 ? marks.length : math.min(end, marks.length);
+  final groups = <(Path, Paint)>[];
+  final p = marks.points;
+  var start = 0;
+  while (start < count) {
+    final group = marks.groups[start];
+    final path = Path();
+    var index = start;
+    while (index < count && marks.groups[index] == group) {
+      final first = marks.firsts[index] * 2;
+      if (marks.shapes[index] == 1) {
+        path.addOval(
+          Rect.fromCircle(
+            center: Offset(p[first], p[first + 1]),
+            radius: marks.radii[index],
+          ),
+        );
+      } else {
+        path.moveTo(p[first], p[first + 1]);
+        for (var k = 1; k < marks.counts[index]; k++) {
+          path.lineTo(p[first + 2 * k], p[first + 2 * k + 1]);
+        }
+        path.close();
+      }
+      index++;
+    }
+    groups.add((
+      path,
+      Paint()
+        ..color = Color(marks.alphas[start] << 24 | marks.rgbs[start])
+        ..isAntiAlias = true,
+    ));
+    start = index;
+  }
+  return groups;
+}
 
 /// A private cached path and paints, independent of the Rust document handle.
 /// The caller supplies the document transform and paper clip before painting.
@@ -61,7 +226,7 @@ final class RenderedElement {
         return RenderedElement._box(
           data,
           controlBounds,
-          TextLayout(text, size: data.width, rgb: data.rgb),
+          TextLayout(text, size: data.width, rgb: data.rgb, font: data.font),
           null,
         );
       }
@@ -85,19 +250,32 @@ final class RenderedElement {
       ..strokeWidth = data.width
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
-    // The inside of a shape, painted before its outline.
-    Paint? insideOf(int? rgb) => rgb == null
-        ? null
-        : (Paint()
-            ..color = Color(0xff000000 | rgb)
-            ..isAntiAlias = true);
     Paint? fill;
     if (data.kind == VectorKind.stroke) {
       if (data.fillRgb != null) {
         throw ArgumentError('Un trait ne peut pas avoir de remplissage.');
       }
+      if (!data.marks.isEmpty) {
+        // Chalk, airbrush, calligraphy, the magic tools, a pressed stroke:
+        // the marks the core made, the same every time.
+        return RenderedElement._marks(
+          data,
+          controlBounds,
+          markPaths(data.marks),
+        );
+      }
+      if (data.look.tool == BrushTool.felt) {
+        stroke
+          ..color = Color(markerAlpha << 24 | data.rgb)
+          ..strokeCap = StrokeCap.square
+          ..strokeJoin = StrokeJoin.bevel;
+      }
       if (points.length == 1) {
-        path.addOval(Rect.fromCircle(center: first, radius: data.width / 2));
+        if (data.look.tool == BrushTool.felt) {
+          path.addRect(Rect.fromCircle(center: first, radius: data.width / 2));
+        } else {
+          path.addOval(Rect.fromCircle(center: first, radius: data.width / 2));
+        }
         stroke.style = PaintingStyle.fill;
       } else {
         path.moveTo(first.dx, first.dy);
@@ -116,12 +294,27 @@ final class RenderedElement {
           'La largeur et la hauteur doivent être non nulles.',
         );
       }
-      path.moveTo(first.dx, first.dy);
-      for (var i = 2; i < c.length; i += 2) {
-        path.lineTo(c[i], c[i + 1]);
+      final rings = data.rings;
+      if (rings == null) {
+        path.moveTo(first.dx, first.dy);
+        for (var i = 2; i < c.length; i += 2) {
+          path.lineTo(c[i], c[i + 1]);
+        }
+        path.close();
+      } else {
+        // The zone of the paint pot: an outer ring and its holes, even-odd.
+        path.fillType = PathFillType.evenOdd;
+        var at = 0;
+        for (final ring in rings) {
+          path.moveTo(c[2 * at], c[2 * at + 1]);
+          for (var k = 1; k < ring; k++) {
+            path.lineTo(c[2 * (at + k)], c[2 * (at + k) + 1]);
+          }
+          path.close();
+          at += ring;
+        }
       }
-      path.close();
-      fill = insideOf(data.fillRgb);
+      fill = data.fillRgb == null ? null : insidePaint(data, controlBounds);
     } else {
       if (points.length != 2) {
         throw ArgumentError('Une forme nécessite deux points.');
@@ -150,7 +343,7 @@ final class RenderedElement {
           } else {
             path.addOval(bounds);
           }
-          fill = insideOf(data.fillRgb);
+          fill = data.fillRgb == null ? null : insidePaint(data, bounds);
         case VectorKind.stroke:
         case VectorKind.text:
         case VectorKind.stamp:
@@ -168,13 +361,35 @@ final class RenderedElement {
     Paint this._stroke,
     this._fill,
   ) : _text = null,
-      _stamp = null;
+      _stamp = null,
+      _markGroups = null,
+      _transform = objectTransform(data.look, controlBounds);
 
   RenderedElement._box(this.data, this.controlBounds, this._text, this._stamp)
     : _path = null,
       _stroke = null,
-      _fill = null;
+      _fill = null,
+      _markGroups = null,
+      _transform = objectTransform(data.look, controlBounds);
+
+  RenderedElement._marks(this.data, this.controlBounds, this._markGroups)
+    : _path = null,
+      _stroke = null,
+      _fill = null,
+      _text = null,
+      _stamp = null,
+      _transform = objectTransform(data.look, controlBounds);
   final StrokeData data;
+
+  /// The paths of the marks of a stroke, by group; null for other elements.
+  final List<(Path, Paint)>? _markGroups;
+
+  /// The turn and mirror of the element about the centre of its box; null
+  /// when it has neither.
+  final Float64List? _transform;
+
+  /// The box of the element as the sheet shows it, turned and mirrored.
+  Rect get shownBounds => transformedBounds(data.look, controlBounds);
 
   /// Control-point bounds observed when this element was prepared, without the
   /// painted stroke width. Fresh for the studio's immutable Rust snapshots;
@@ -191,6 +406,23 @@ final class RenderedElement {
   final StampArt? _stamp;
 
   void paint(Canvas canvas) {
+    final transform = _transform;
+    if (transform != null) {
+      canvas.save();
+      canvas.transform(transform);
+    }
+    _paintUntransformed(canvas);
+    if (transform != null) canvas.restore();
+  }
+
+  void _paintUntransformed(Canvas canvas) {
+    final marks = _markGroups;
+    if (marks != null) {
+      for (final (path, paint) in marks) {
+        canvas.drawPath(path, paint);
+      }
+      return;
+    }
     final text = _text;
     if (text != null) {
       text.paint(canvas, controlBounds.topLeft);
@@ -240,6 +472,31 @@ final class RenderedElement {
     if (!(progress > 0)) return;
     if (progress >= 1) {
       paint(canvas);
+      return;
+    }
+    final transform = _transform;
+    if (transform != null) {
+      canvas.save();
+      canvas.transform(transform);
+    }
+    _paintProgressUntransformed(canvas, progress, overshoot);
+    if (transform != null) canvas.restore();
+  }
+
+  void _paintProgressUntransformed(
+    Canvas canvas,
+    double progress,
+    bool overshoot,
+  ) {
+    if (_markGroups != null) {
+      // The marks appear in the order of the stroke.
+      final marks = data.marks;
+      for (final (path, paint) in markPaths(
+        marks,
+        end: (marks.length * progress).ceil(),
+      )) {
+        canvas.drawPath(path, paint);
+      }
       return;
     }
     final text = _text;
@@ -315,6 +572,11 @@ final class RenderedElement {
       paint(canvas);
       return;
     }
+    final transform = _transform;
+    if (transform != null) {
+      canvas.save();
+      canvas.transform(transform);
+    }
     canvas.drawPath(
       path,
       Paint()
@@ -332,6 +594,7 @@ final class RenderedElement {
       canvas.restore();
     }
     canvas.drawPath(path, _stroke!);
+    if (transform != null) canvas.restore();
   }
 
   // Saves the canvas and scales it around the centre of the box; the caller
@@ -364,7 +627,7 @@ final class RenderedElement {
       line++;
     }
     final origin = controlBounds.topLeft;
-    final lineHeight = colorTextLineHeight * text.size;
+    final lineHeight = text.lineHeight * text.size;
     final top = origin.dy + line * lineHeight;
     // Around the box, room for what a letter may paint outside it.
     final margin = text.size / 2;

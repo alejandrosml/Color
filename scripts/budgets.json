@@ -5,24 +5,24 @@
     "marge": 0.03,
     "entrees": {
       "core-android-arm64": {
-        "reference": 1015800,
-        "mesure": "1.0.1+40, cœur des boutiques (sans SVG, panic = abort), Rust 1.99, NDK 28.2, llvm-strip --strip-unneeded comme Gradle : le cœur arm64 de l'App Bundle, à l'octet près (construire-le-coeur.sh, mobiles_communs.py). Avec llvm-strip sans option : 1 015 480 o ; 1 008 240 o avant les sons d'Android en un seul flux (P-02 : +5 656 o, puis +1 584 o pour sa reprise après la relecture)"
+        "reference": 1229176,
+        "mesure": "1.1.0, cœur des boutiques (sans SVG, avec la compression des projets v6, panic = abort), Rust 1.99, NDK 28.2 (r28c, sous Linux), llvm-strip --strip-unneeded comme Gradle : +21,0 % sur la 1.0.1 (1 015 800 o, la même mesure refaite sur ses sources le 2 novembre 2026, à l'octet près). Ce que la 1.1 ajoute au cœur : le pot qui ferme les trous, la gomme qui coupe, les marques des outils, les formes et l'aimant, le mélange des couleurs, le format v6 et miniz_oxide."
       },
       "core-linux-x86_64": {
-        "reference": 1116120,
-        "mesure": "1.0.1+40, cœur des boutiques tel que la recette Linux le construit, avec la Rust de scripts/rust-reference.json (1.99) ; 1 122 816 o avec Rust 1.97"
+        "reference": 1399000,
+        "mesure": "1.1.0, cœur des boutiques tel que la recette Linux le construit (--no-default-features --features deflate), avec la Rust de scripts/rust-reference.json (1.99) : +25,3 % sur la 1.0.1 (1 116 120 o, mesure refaite sur ses sources le 2 novembre 2026, à l'octet près), pour les mêmes ajouts que le cœur d'Android."
       },
       "android-aab-arm64-v8a": {
-        "reference": 8976445,
-        "mesure": "1.0.1+40, comme preparer-google-play.py la fait (flutter build appbundle --release --split-debug-info, Flutter 3.47.4, cœur Rust 1.99 sans SVG), sous Linux, signée de la clé de débogage : ce qui est commun à toutes les ABI plus les bibliothèques de celle-ci, compressé dans l'App Bundle (8976265 o avant la reprise de P-02)"
+        "reference": null,
+        "mesure": "En attente de sa première mesure pour la 1.1 : le cœur grandit d'environ 20 %, quatre polices de textes s'ajoutent (environ 360 Kio), et l'anglais. La 1.0.1+40 mesurait 8976445 o. La prochaine préparation pour Google Play la donne ; elle s'écrit ici avec sa recette."
       },
       "android-aab-armeabi-v7a": {
-        "reference": 8450691,
-        "mesure": "1.0.1+40, comme preparer-google-play.py la fait (flutter build appbundle --release --split-debug-info, Flutter 3.47.4, cœur Rust 1.99 sans SVG), sous Linux, signée de la clé de débogage : ce qui est commun à toutes les ABI plus les bibliothèques de celle-ci, compressé dans l'App Bundle (8450430 o avant la reprise de P-02)"
+        "reference": null,
+        "mesure": "En attente de sa première mesure pour la 1.1 : le cœur grandit d'environ 20 %, quatre polices de textes s'ajoutent (environ 360 Kio), et l'anglais. La 1.0.1+40 mesurait 8450691 o. La prochaine préparation pour Google Play la donne ; elle s'écrit ici avec sa recette."
       },
       "android-aab-x86_64": {
-        "reference": 9166259,
-        "mesure": "1.0.1+40, comme preparer-google-play.py la fait (flutter build appbundle --release --split-debug-info, Flutter 3.47.4, cœur Rust 1.99 sans SVG), sous Linux, signée de la clé de débogage : ce qui est commun à toutes les ABI plus les bibliothèques de celle-ci, compressé dans l'App Bundle (9162417 o avant la reprise de P-02)"
+        "reference": null,
+        "mesure": "En attente de sa première mesure pour la 1.1 : le cœur grandit d'environ 20 %, quatre polices de textes s'ajoutent (environ 360 Kio), et l'anglais. La 1.0.1+40 mesurait 9166259 o. La prochaine préparation pour Google Play la donne ; elle s'écrit ici avec sa recette."
       },
       "ios-ipa": {
         "reference": null,

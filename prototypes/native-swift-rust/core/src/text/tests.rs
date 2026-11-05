@@ -144,7 +144,15 @@ fn invalid_text_requests_preserve_drawing_and_both_history_directions() {
     let text = "valide";
     unsafe {
         assert_eq!(
-            ep_add_text(doc.0, good.as_ptr(), 0, 20.0, 1, text.as_ptr(), text.len()),
+            ep_add_text(
+                doc.0,
+                good.as_ptr(),
+                0,
+                20.0,
+                FONT_COUNT,
+                text.as_ptr(),
+                text.len()
+            ),
             INVALID,
             "unknown font"
         );

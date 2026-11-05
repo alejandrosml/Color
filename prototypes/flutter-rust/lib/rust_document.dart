@@ -11,11 +11,14 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import 'file_operation_cleanup_exception.dart';
+import 'object_look.dart';
 import 'bounded_project_reader.dart';
 import 'borrowed_isolate_job.dart';
 
+export 'object_look.dart';
+
 /// Bound of layered v4 and v5; v1/v2/v3 retain their smaller native bounds.
-const int maxProjectBytes = 80_711_932;
+const int maxProjectBytes = 85_778_977;
 const int maxBackgroundBytes = 68 * 1024 * 1024;
 const int maxBackgroundDimension = 8192;
 const int maxBackgroundPixels = 16 * 1024 * 1024;
@@ -27,13 +30,22 @@ const double minTextSize = 4;
 const double maxTextSize = 2048;
 const int maxLayers = 16;
 
+/// The fonts a text may have (EpNewObject.param of a text).
+const int textFontCount = 5;
+
+/// Points kept exact by [RustDocument.addObject] (EpNewObject.quant 255);
+/// 0 to 10 round them to 1/2^quant of a unit.
+const int exactPoints = 255;
+
 /// Colour of the sheet of a new document.
 const int whitePaper = 0xffffff;
 
 /// Newest project format that this version of Color reads and writes:
 /// version 5 brought locked layers and closed contours, those of the
-/// colouring pages.
-const int newestProjectVersion = 5;
+/// colouring pages; version 6, of Color 1.1, compressed blocks each with its
+/// check, and what objects gained (turn, mirror, tools, pressures, gradients,
+/// fonts, holes). Color 1.1 writes version 6 only.
+const int newestProjectVersion = 6;
 
 /// The format version announced by the first bytes of a Color project, or
 /// null when they are not the beginning of one. Only a hint to explain a
@@ -145,6 +157,110 @@ final class _EpObjectExtra extends Struct {
   external int param;
   @Size()
   external int textBytes;
+}
+
+final class _EpObjectLook extends Struct {
+  @Float()
+  external double rotation;
+  @Uint32()
+  external int mirror;
+  @Uint32()
+  external int tool;
+  @Uint32()
+  external int seed;
+  @Uint32()
+  external int gradient;
+  @Uint32()
+  external int gradientRgb;
+  @Array(4)
+  external Array<Float> gradientPoints;
+}
+
+final class _EpNewObject extends Struct {
+  external Pointer<_EpPoint> points;
+  @Size()
+  external int count;
+  external _EpObjectStyle style;
+  @Uint32()
+  external int rgb;
+  @Float()
+  external double width;
+  @Uint32()
+  external int param;
+  external Pointer<Uint8> text;
+  @Size()
+  external int textLength;
+  external _EpObjectLook look;
+  external Pointer<Uint8> pressures;
+  external Pointer<Uint32> rings;
+  @Size()
+  external int ringCount;
+  @Uint32()
+  external int quant;
+  @Uint32()
+  external int placement;
+  @Size()
+  external int above;
+}
+
+final class _EpMark extends Struct {
+  @Uint32()
+  external int shape;
+  @Uint32()
+  external int rgb;
+  @Uint32()
+  external int alpha;
+  @Uint32()
+  external int group;
+  @Uint32()
+  external int first;
+  @Uint32()
+  external int count;
+  @Float()
+  external double radius;
+}
+
+/// The core's tool number of a zone poured by the paint pot.
+const _zoneTool = 32;
+
+void _writeLook(_EpObjectLook target, ObjectLook look) {
+  target.rotation = look.rotation;
+  target.mirror = look.mirrorBits;
+  target.tool = look.zone ? _zoneTool : look.tool.code;
+  target.seed = look.seed;
+  target.gradient = look.gradient.index;
+  target.gradientRgb = look.gradientRgb;
+  for (var i = 0; i < 4; i++) {
+    target.gradientPoints[i] = look.gradientPoints.length == 4
+        ? look.gradientPoints[i]
+        : 0;
+  }
+}
+
+ObjectLook? _readLook(_EpObjectLook source) {
+  final zone = source.tool == _zoneTool;
+  final tool = zone ? BrushTool.round : BrushTool.fromCode(source.tool);
+  if (tool == null ||
+      source.mirror < 0 ||
+      source.mirror > 3 ||
+      source.gradient < 0 ||
+      source.gradient >= GradientKind.values.length ||
+      !source.rotation.isFinite) {
+    return null;
+  }
+  return ObjectLook(
+    rotation: source.rotation,
+    mirrorX: source.mirror & 1 != 0,
+    mirrorY: source.mirror & 2 != 0,
+    tool: tool,
+    zone: zone,
+    seed: source.seed,
+    gradient: GradientKind.values[source.gradient],
+    gradientRgb: source.gradientRgb,
+    gradientPoints: List<double>.unmodifiable([
+      for (var i = 0; i < 4; i++) source.gradientPoints[i],
+    ]),
+  );
 }
 
 /// One layer of the stack, bottom first. [id] is stable within a document.
@@ -260,8 +376,33 @@ class StrokeData {
     this.layer = 0,
     this.text,
     this.stamp,
-  }) : points = DocumentPoints.of(points);
+    this.look = ObjectLook.plain,
+    this.pressures,
+    this.rings,
+    this.font = 0,
+    ObjectMarks? marks,
+  }) : points = DocumentPoints.of(points),
+       marks = marks ?? ObjectMarks.empty;
   final DocumentPoints points;
+
+  /// Turn, mirror, tool and gradient (Color 1.1).
+  final ObjectLook look;
+
+  /// The pressure of each point of a freehand stroke drawn with a stylus,
+  /// 1 to 255 (the width there is width × p / 255); null otherwise.
+  final Uint8List? pressures;
+
+  /// The point count of each ring of a contour with holes (the zone of the
+  /// paint pot), filled by the even-odd rule; null for a single ring.
+  final Uint32List? rings;
+
+  /// The font of a text: 0 DejaVu Sans, 1 Atkinson Hyperlegible, 2 Comic
+  /// Neue, 3 Fredoka, 4 Playwrite France Traditionnelle.
+  final int font;
+
+  /// What the screen paints for a stroke of a tool of Color 1.1, or of a
+  /// stylus: empty for a stroke painted as a line, as in 1.0.
+  final ObjectMarks marks;
 
   /// x then y of each point, in single precision: what loops over every
   /// point read. See [DocumentPoints].
@@ -292,6 +433,160 @@ class StrokeData {
   /// colouring page, white when the page is made, once the paint pot has
   /// coloured it.
   bool get colouredInside => fillRgb != null && fillRgb != whitePaper;
+}
+
+/// Everything a new object is, for [RustDocument.addObjects].
+class NewObject {
+  NewObject(
+    this.kind,
+    this.points, {
+    required this.rgb,
+    required this.width,
+    this.fillRgb,
+    this.look = ObjectLook.plain,
+    this.pressures,
+    this.rings,
+    this.param = 0,
+    this.text,
+    this.quant = exactPoints,
+    this.bottom = false,
+    this.above,
+  });
+  final VectorKind kind;
+  final List<DocumentPoint> points;
+  final int rgb;
+  final double width;
+  final int? fillRgb;
+  final ObjectLook look;
+  final Uint8List? pressures;
+  final List<int>? rings;
+  final int param;
+  final String? text;
+  final int quant;
+
+  /// At the bottom of the active layer, under what it holds; else on top.
+  final bool bottom;
+
+  /// Just above this object of the active layer, whatever [bottom] says: an
+  /// object added alone, as the paint pot pours a zone over an earlier one.
+  final int? above;
+
+  bool get valid =>
+      points.isNotEmpty &&
+      points.length <= 100000 &&
+      rgb >= 0 &&
+      rgb <= 0xffffff &&
+      width.isFinite &&
+      points.every((p) => p.x.isFinite && p.y.isFinite) &&
+      (fillRgb == null || (fillRgb! >= 0 && fillRgb! <= 0xffffff)) &&
+      (pressures == null || pressures!.length == points.length) &&
+      (text == null ||
+          (text!.isNotEmpty && utf8.encode(text!).length <= maxTextBytes)) &&
+      (quant == exactPoints || (quant >= 0 && quant <= 10)) &&
+      (above == null || above! >= 0);
+
+  // Fills [target], borrowing from [arena] what lives as long as the call.
+  void _write(_EpNewObject target, Arena arena) {
+    final buffer = arena<_EpPoint>(points.length);
+    for (var i = 0; i < points.length; i++) {
+      buffer[i].x = points[i].x;
+      buffer[i].y = points[i].y;
+    }
+    target.points = buffer;
+    target.count = points.length;
+    target.style.kind = kind.index;
+    target.style.fillEnabled = fillRgb == null ? 0 : 1;
+    target.style.fillRgb = fillRgb ?? 0;
+    target.rgb = rgb;
+    target.width = width;
+    target.param = param;
+    final encoded = text == null ? null : utf8.encode(text!);
+    if (encoded != null) {
+      final bytes = arena<Uint8>(encoded.length);
+      bytes.asTypedList(encoded.length).setAll(0, encoded);
+      target.text = bytes;
+      target.textLength = encoded.length;
+    } else {
+      target.text = nullptr;
+      target.textLength = 0;
+    }
+    _writeLook(target.look, look);
+    final pressed = pressures;
+    if (pressed != null) {
+      final bytes = arena<Uint8>(pressed.length);
+      bytes.asTypedList(pressed.length).setAll(0, pressed);
+      target.pressures = bytes;
+    } else {
+      target.pressures = nullptr;
+    }
+    final kept = rings;
+    if (kept != null && kept.isNotEmpty) {
+      final counts = arena<Uint32>(kept.length);
+      counts.asTypedList(kept.length).setAll(0, kept);
+      target.rings = counts;
+      target.ringCount = kept.length;
+    } else {
+      target.rings = nullptr;
+      target.ringCount = 0;
+    }
+    target.quant = quant;
+    final over = above;
+    target.placement = over != null ? 2 : (bottom ? 1 : 0);
+    target.above = over ?? 0;
+  }
+}
+
+/// The most corners of a magnet shape.
+const int maxShapeCorners = 12;
+
+/// The shapes of Color 1.1 drawn in a box; the index is the core's number.
+enum NewShape { triangle, star, heart, diamond, hexagon, arrow }
+
+/// What a stroke of the magnet tool became: a line (its ends), a broken line
+/// (kind stroke, its corners), a rectangle or an ellipse (its box's corners,
+/// an ellipse turned by [rotation]), or a polygon (contour, its corners).
+class RecognisedShape {
+  const RecognisedShape(this.kind, this.points, this.rotation);
+  final VectorKind kind;
+  final List<DocumentPoint> points;
+  final double rotation;
+}
+
+/// What a damaged project gave: its [document], the layers that were lost
+/// (bit i for the layer at position i of its table, emptied) and whether its
+/// image was lost.
+class DamagedProjectRescue {
+  const DamagedProjectRescue(
+    this.document, {
+    required this.lostLayers,
+    required this.lostImage,
+  });
+  final RustDocument document;
+  final int lostLayers;
+  final bool lostImage;
+
+  /// How many layers were emptied.
+  int get lostLayerCount {
+    var count = 0;
+    for (var bits = lostLayers; bits != 0; bits >>= 1) {
+      count += bits & 1;
+    }
+    return count;
+  }
+}
+
+/// What the paint pot fills: nothing (the point is on ink), the sheet's own
+/// colour (no line closes anything), or the rings of a zone, in pixels of
+/// the mask: the outer one and those of its holes, filled even-odd.
+class FillZone {
+  const FillZone.onInk() : points = null, rings = null, wholeSheet = false;
+  const FillZone.wholeSheet() : points = null, rings = null, wholeSheet = true;
+  const FillZone.rings(DocumentPoints this.points, Uint32List this.rings)
+    : wholeSheet = false;
+  final DocumentPoints? points;
+  final Uint32List? rings;
+  final bool wholeSheet;
+  bool get onInk => points == null && !wholeSheet;
 }
 
 class RustCoreException implements Exception {
@@ -719,6 +1014,284 @@ class _Bindings {
         Int32 Function(Pointer<Utf8>, Uint32),
         int Function(Pointer<Utf8>, int)
       >('ep_sync_path');
+
+  // Color 1.1.
+  late final projectBound = library
+      .lookupFunction<
+        Size Function(Pointer<_EpDocument>),
+        int Function(Pointer<_EpDocument>)
+      >('ep_project_bound');
+  late final writeProject = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<_EpDocument>,
+          Pointer<Uint8>,
+          Size,
+          Uint32,
+          Pointer<Size>,
+        ),
+        int Function(
+          Pointer<_EpDocument>,
+          Pointer<Uint8>,
+          int,
+          int,
+          Pointer<Size>,
+        )
+      >('ep_write_project');
+  late final snapshotProjectBound = library
+      .lookupFunction<
+        Size Function(Pointer<_EpExportSnapshot>),
+        int Function(Pointer<_EpExportSnapshot>)
+      >('ep_export_snapshot_project_bound');
+  late final snapshotWriteProject = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<_EpExportSnapshot>,
+          Pointer<Uint8>,
+          Size,
+          Uint32,
+          Pointer<Size>,
+        ),
+        int Function(
+          Pointer<_EpExportSnapshot>,
+          Pointer<Uint8>,
+          int,
+          int,
+          Pointer<Size>,
+        )
+      >('ep_export_snapshot_write_project');
+  late final fromDamagedProject = library
+      .lookupFunction<
+        Pointer<_EpDocument> Function(
+          Pointer<Uint8>,
+          Size,
+          Pointer<Uint32>,
+          Pointer<Int32>,
+        ),
+        Pointer<_EpDocument> Function(
+          Pointer<Uint8>,
+          int,
+          Pointer<Uint32>,
+          Pointer<Int32>,
+        )
+      >('ep_document_from_damaged_project');
+  late final addObject = library
+      .lookupFunction<
+        Int32 Function(Pointer<_EpDocument>, Pointer<_EpNewObject>),
+        int Function(Pointer<_EpDocument>, Pointer<_EpNewObject>)
+      >('ep_add_object');
+  late final addObjects = library
+      .lookupFunction<
+        Int32 Function(Pointer<_EpDocument>, Pointer<_EpNewObject>, Size),
+        int Function(Pointer<_EpDocument>, Pointer<_EpNewObject>, int)
+      >('ep_add_objects');
+  late final objectLook = library
+      .lookupFunction<
+        Int32 Function(Pointer<_EpDocument>, Size, Pointer<_EpObjectLook>),
+        int Function(Pointer<_EpDocument>, int, Pointer<_EpObjectLook>)
+      >('ep_object_look');
+  late final setObjectPaint = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<_EpDocument>,
+          Size,
+          Pointer<_EpObjectStyle>,
+          Pointer<_EpObjectLook>,
+        ),
+        int Function(
+          Pointer<_EpDocument>,
+          int,
+          Pointer<_EpObjectStyle>,
+          Pointer<_EpObjectLook>,
+        )
+      >('ep_set_object_paint');
+  late final objectPressureCount = library
+      .lookupFunction<
+        Size Function(Pointer<_EpDocument>, Size),
+        int Function(Pointer<_EpDocument>, int)
+      >('ep_object_pressure_count');
+  late final copyPressures = library
+      .lookupFunction<
+        Size Function(Pointer<_EpDocument>, Size, Pointer<Uint8>, Size),
+        int Function(Pointer<_EpDocument>, int, Pointer<Uint8>, int)
+      >('ep_copy_pressures');
+  late final objectRingCount = library
+      .lookupFunction<
+        Size Function(Pointer<_EpDocument>, Size),
+        int Function(Pointer<_EpDocument>, int)
+      >('ep_object_ring_count');
+  late final copyRings = library
+      .lookupFunction<
+        Size Function(Pointer<_EpDocument>, Size, Pointer<Uint32>, Size),
+        int Function(Pointer<_EpDocument>, int, Pointer<Uint32>, int)
+      >('ep_copy_rings');
+  late final objectMarkCount = library
+      .lookupFunction<
+        Size Function(Pointer<_EpDocument>, Size, Pointer<Size>),
+        int Function(Pointer<_EpDocument>, int, Pointer<Size>)
+      >('ep_object_mark_count');
+  late final copyObjectMarks = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<_EpDocument>,
+          Size,
+          Pointer<_EpMark>,
+          Size,
+          Pointer<_EpPoint>,
+          Size,
+        ),
+        int Function(
+          Pointer<_EpDocument>,
+          int,
+          Pointer<_EpMark>,
+          int,
+          Pointer<_EpPoint>,
+          int,
+        )
+      >('ep_copy_object_marks');
+  late final strokeMarks = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<_EpPoint>,
+          Size,
+          Pointer<Uint8>,
+          Float,
+          Uint32,
+          Uint32,
+          Uint32,
+          Size,
+          Pointer<_EpMark>,
+          Size,
+          Pointer<_EpPoint>,
+          Size,
+          Pointer<Size>,
+          Pointer<Size>,
+        ),
+        int Function(
+          Pointer<_EpPoint>,
+          int,
+          Pointer<Uint8>,
+          double,
+          int,
+          int,
+          int,
+          int,
+          Pointer<_EpMark>,
+          int,
+          Pointer<_EpPoint>,
+          int,
+          Pointer<Size>,
+          Pointer<Size>,
+        )
+      >('ep_stroke_marks');
+  late final mixColours = library
+      .lookupFunction<
+        Uint32 Function(Uint32, Uint32, Float),
+        int Function(int, int, double)
+      >('ep_mix_colours');
+  late final gradientColours = library
+      .lookupFunction<
+        Int32 Function(Uint32, Uint32, Uint32, Pointer<Uint32>),
+        int Function(int, int, int, Pointer<Uint32>)
+      >('ep_gradient_colours');
+  late final erase = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<_EpDocument>,
+          Pointer<_EpPoint>,
+          Size,
+          Float,
+          Pointer<Size>,
+          Size,
+          Pointer<Size>,
+          Size,
+          Uint32,
+        ),
+        int Function(
+          Pointer<_EpDocument>,
+          Pointer<_EpPoint>,
+          int,
+          double,
+          Pointer<Size>,
+          int,
+          Pointer<Size>,
+          int,
+          int,
+        )
+      >('ep_erase');
+  late final fillZone = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<Uint8>,
+          Uint32,
+          Uint32,
+          Uint32,
+          Uint32,
+          Uint32,
+          Pointer<_EpPoint>,
+          Size,
+          Pointer<Uint32>,
+          Size,
+          Pointer<Size>,
+          Pointer<Size>,
+        ),
+        int Function(
+          Pointer<Uint8>,
+          int,
+          int,
+          int,
+          int,
+          int,
+          Pointer<_EpPoint>,
+          int,
+          Pointer<Uint32>,
+          int,
+          Pointer<Size>,
+          Pointer<Size>,
+        )
+      >('ep_fill_zone');
+  late final shapeOutline = library
+      .lookupFunction<
+        Int32 Function(
+          Uint32,
+          _EpPoint,
+          _EpPoint,
+          Pointer<_EpPoint>,
+          Size,
+          Pointer<Size>,
+        ),
+        int Function(
+          int,
+          _EpPoint,
+          _EpPoint,
+          Pointer<_EpPoint>,
+          int,
+          Pointer<Size>,
+        )
+      >('ep_shape_outline');
+  late final recogniseShape = library
+      .lookupFunction<
+        Int32 Function(
+          Pointer<_EpDocument>,
+          Pointer<_EpPoint>,
+          Size,
+          Pointer<Uint32>,
+          Pointer<_EpPoint>,
+          Size,
+          Pointer<Size>,
+          Pointer<Float>,
+        ),
+        int Function(
+          Pointer<_EpDocument>,
+          Pointer<_EpPoint>,
+          int,
+          Pointer<Uint32>,
+          Pointer<_EpPoint>,
+          int,
+          Pointer<Size>,
+          Pointer<Float>,
+        )
+      >('ep_recognise_shape');
 }
 
 /// How far [keepOnDisk] goes.
@@ -781,6 +1354,8 @@ const processCoreLibrary = '<application>';
 const coreFunctionNames = <String>[
   'ep_active_layer',
   'ep_add_layer',
+  'ep_add_object',
+  'ep_add_objects',
   'ep_add_shape',
   'ep_add_stamp',
   'ep_add_stroke',
@@ -790,12 +1365,16 @@ const coreFunctionNames = <String>[
   'ep_background_info',
   'ep_constrain_object_movement',
   'ep_copy_background_png',
+  'ep_copy_object_marks',
   'ep_copy_object_text',
   'ep_copy_points',
+  'ep_copy_pressures',
   'ep_copy_project',
+  'ep_copy_rings',
   'ep_copy_sound_wav',
   'ep_document_free',
   'ep_document_from_background_png',
+  'ep_document_from_damaged_project',
   'ep_document_from_page',
   'ep_document_from_project',
   'ep_document_height',
@@ -803,24 +1382,36 @@ const coreFunctionNames = <String>[
   'ep_document_new',
   'ep_document_width',
   'ep_duplicate_object',
+  'ep_erase',
   'ep_export_snapshot_copy_project',
   'ep_export_snapshot_export_svg',
   'ep_export_snapshot_free',
   'ep_export_snapshot_new',
+  'ep_export_snapshot_project_bound',
   'ep_export_snapshot_project_size',
+  'ep_export_snapshot_write_project',
   'ep_export_svg',
+  'ep_fill_zone',
+  'ep_gradient_colours',
   'ep_layer_count',
   'ep_layer_info',
   'ep_layer_locked',
+  'ep_mix_colours',
   'ep_move_object',
   'ep_object_extra',
+  'ep_object_look',
+  'ep_object_mark_count',
+  'ep_object_pressure_count',
   'ep_object_revision',
+  'ep_object_ring_count',
   'ep_object_style',
   'ep_page_catalog',
   'ep_page_count',
   'ep_paper_color',
   'ep_picture_from_svg',
+  'ep_project_bound',
   'ep_project_size',
+  'ep_recognise_shape',
   'ep_redo',
   'ep_redo_count',
   'ep_remove_layer',
@@ -831,9 +1422,11 @@ const coreFunctionNames = <String>[
   'ep_set_active_layer',
   'ep_set_layer_visible',
   'ep_set_object_layer',
+  'ep_set_object_paint',
   'ep_set_object_style',
   'ep_set_paper_color',
   'ep_set_text',
+  'ep_shape_outline',
   'ep_sound_count',
   'ep_sound_names',
   'ep_sound_play',
@@ -843,10 +1436,12 @@ const coreFunctionNames = <String>[
   'ep_string_free',
   'ep_stroke_count',
   'ep_stroke_info',
+  'ep_stroke_marks',
   'ep_sync_path',
   'ep_third_party_notices',
   'ep_undo',
   'ep_undo_count',
+  'ep_write_project',
 ];
 
 /// Those of [coreFunctionNames] that [library] does not have.
@@ -932,6 +1527,57 @@ class RustDocument {
     } catch (_) {
       document.dispose();
       rethrow;
+    }
+  }
+
+  /// What can be saved of a version 6 file whose final check fails (Color
+  /// 1.1): the layers whose blocks are intact, the damaged ones empty, the
+  /// image left out if it was damaged. Null when nothing can be saved or the
+  /// file is not damaged; the image, if kept, is the caller's to decode, as
+  /// for [RustDocument.fromProject].
+  static DamagedProjectRescue? fromDamagedProject(
+    Uint8List bytes, {
+    String? libraryPath,
+  }) {
+    if (bytes.length < 36 || bytes.length > maxProjectBytes) return null;
+    final path = libraryPath ?? defaultLibraryPath;
+    final bindings = _Bindings(openCoreLibrary(path), path);
+    final buffer = calloc<Uint8>(bytes.length);
+    final lost = calloc<Uint32>();
+    final status = calloc<Int32>();
+    Pointer<_EpDocument> handle = nullptr;
+    try {
+      buffer.asTypedList(bytes.length).setAll(0, bytes);
+      handle = bindings.fromDamagedProject(buffer, bytes.length, lost, status);
+      if (handle == nullptr) {
+        if (status.value == -2) {
+          throw const RustCoreException('le sauvetage du projet', -2);
+        }
+        return null;
+      }
+      final lostBits = lost.value;
+      final document = RustDocument._(
+        bindings,
+        handle,
+        bindings.width(handle),
+        bindings.height(handle),
+      );
+      handle = nullptr;
+      try {
+        document._refresh();
+      } catch (_) {
+        document.dispose();
+        rethrow;
+      }
+      return DamagedProjectRescue(
+        document,
+        lostLayers: lostBits & 0xffff,
+        lostImage: lostBits & 0x10000 != 0,
+      );
+    } finally {
+      calloc.free(status);
+      calloc.free(lost);
+      calloc.free(buffer);
     }
   }
 
@@ -1612,12 +2258,15 @@ class RustDocument {
     required String text,
     required int rgb,
     required double size,
+    int font = 0,
   }) {
     _checkAlive();
     final encoded = utf8.encode(text);
     if (!_validBox(first, second) ||
         rgb < 0 ||
         rgb > 0xffffff ||
+        font < 0 ||
+        font >= textFontCount ||
         !size.isFinite ||
         encoded.isEmpty ||
         encoded.length > maxTextBytes) {
@@ -1634,7 +2283,7 @@ class RustDocument {
         points,
         rgb,
         size,
-        0,
+        font,
         bytes,
         encoded.length,
       );
@@ -1655,12 +2304,16 @@ class RustDocument {
     required String text,
     required int rgb,
     required double size,
+    int? font,
   }) {
     _checkIndex(index);
     final encoded = utf8.encode(text);
+    final kept = font ?? _strokes[index].font;
     if (!_validBox(first, second) ||
         rgb < 0 ||
         rgb > 0xffffff ||
+        kept < 0 ||
+        kept >= textFontCount ||
         !size.isFinite ||
         encoded.isEmpty ||
         encoded.length > maxTextBytes) {
@@ -1679,7 +2332,7 @@ class RustDocument {
           points,
           rgb,
           size,
-          0,
+          kept,
           bytes,
           encoded.length,
         ),
@@ -1715,6 +2368,423 @@ class RustDocument {
       calloc.free(points);
     }
     _refresh();
+  }
+
+  /// Adds any object with what Color 1.1 gives it, in one undoable command:
+  /// its [look], the [pressures] of a stylus (freehand, one a point), the
+  /// [rings] of a contour with holes, its points rounded to 1/2^[quant] of a
+  /// unit (or exact), on top of the active layer or, [bottom], under what it
+  /// holds (the zone of the paint pot). [param] is a text's font or a
+  /// stamp's drawing; [text] the characters of a text.
+  void addObject(
+    VectorKind kind,
+    List<DocumentPoint> points, {
+    required int rgb,
+    required double width,
+    int? fillRgb,
+    ObjectLook look = ObjectLook.plain,
+    Uint8List? pressures,
+    List<int>? rings,
+    int param = 0,
+    String? text,
+    int quant = exactPoints,
+    bool bottom = false,
+    int? above,
+  }) => addObjects([
+    NewObject(
+      kind,
+      points,
+      rgb: rgb,
+      width: width,
+      fillRgb: fillRgb,
+      look: look,
+      pressures: pressures,
+      rings: rings,
+      param: param,
+      text: text,
+      quant: quant,
+      bottom: bottom,
+      above: above,
+    ),
+  ]);
+
+  /// Adds [objects] (1 to 16) in order, as one command: one undo takes them
+  /// all away (a stroke and its mirror). Nothing changes unless all can join.
+  void addObjects(List<NewObject> objects) {
+    _checkAlive();
+    if (objects.isEmpty ||
+        objects.length > 16 ||
+        objects.any((o) => !o.valid)) {
+      throw ArgumentError('Objet non valide. Le document est inchangé.');
+    }
+    using((arena) {
+      final native = arena<_EpNewObject>(objects.length);
+      for (var i = 0; i < objects.length; i++) {
+        objects[i]._write(native[i], arena);
+      }
+      final result = objects.length == 1
+          ? _bindings.addObject(_handle, native)
+          : _bindings.addObjects(_handle, native, objects.length);
+      if (result != 0) throw RustCoreException('cet objet', result);
+    });
+    _refresh();
+  }
+
+  /// Replaces the fill and the look of object [index] in one undoable
+  /// command; its outline colour and width stay. On a locked layer only the
+  /// colour and gradient of a fill it already has may change. False when
+  /// nothing changed.
+  bool setObjectPaint(int index, {int? fillRgb, required ObjectLook look}) {
+    _checkIndex(index);
+    if (fillRgb != null && (fillRgb < 0 || fillRgb > 0xffffff)) {
+      throw ArgumentError('Remplissage invalide.');
+    }
+    final style = calloc<_EpObjectStyle>();
+    final native = calloc<_EpObjectLook>();
+    try {
+      style.ref.kind = _strokes[index].kind.index;
+      style.ref.fillEnabled = fillRgb == null ? 0 : 1;
+      style.ref.fillRgb = fillRgb ?? 0;
+      _writeLook(native.ref, look);
+      return _finishObjectChange(
+        _bindings.setObjectPaint(_handle, index, style, native),
+        'le changement de peinture',
+      );
+    } finally {
+      calloc.free(native);
+      calloc.free(style);
+    }
+  }
+
+  /// One rub of the eraser along [path] (centres, [radius] in sheet units):
+  /// the lines of the objects of [cut] it reaches are cut, the objects of
+  /// [removed] go whole. [merge] joins the last rub when nothing was undone
+  /// since: true for every call of a gesture after its first. Returns the
+  /// number of objects changed.
+  int erase(
+    List<DocumentPoint> path,
+    double radius, {
+    List<int> cut = const [],
+    List<int> removed = const [],
+    bool merge = false,
+  }) {
+    _checkAlive();
+    if (path.isEmpty ||
+        path.length > 100000 ||
+        !radius.isFinite ||
+        radius <= 0 ||
+        path.any((p) => !p.x.isFinite || !p.y.isFinite)) {
+      throw ArgumentError('Gomme non valide.');
+    }
+    final points = calloc<_EpPoint>(path.length);
+    Pointer<Size> cutBuffer = nullptr;
+    Pointer<Size> removedBuffer = nullptr;
+    try {
+      for (var i = 0; i < path.length; i++) {
+        points[i].x = path[i].x;
+        points[i].y = path[i].y;
+      }
+      if (cut.isNotEmpty) {
+        cutBuffer = calloc<Size>(cut.length);
+        for (var i = 0; i < cut.length; i++) {
+          cutBuffer[i] = cut[i];
+        }
+      }
+      if (removed.isNotEmpty) {
+        removedBuffer = calloc<Size>(removed.length);
+        for (var i = 0; i < removed.length; i++) {
+          removedBuffer[i] = removed[i];
+        }
+      }
+      final result = _bindings.erase(
+        _handle,
+        points,
+        path.length,
+        radius,
+        cutBuffer,
+        cut.length,
+        removedBuffer,
+        removed.length,
+        merge ? 1 : 0,
+      );
+      if (result < 0) throw RustCoreException('la gomme', result);
+      if (result > 0) _refresh();
+      return result;
+    } finally {
+      calloc.free(removedBuffer);
+      calloc.free(cutBuffer);
+      calloc.free(points);
+    }
+  }
+
+  /// What the stroke [points], drawn with the magnet tool, becomes by
+  /// geometric fitting, kept on this sheet; null when it looks like nothing
+  /// simple and stays as drawn.
+  RecognisedShape? recogniseShape(List<DocumentPoint> points) {
+    _checkAlive();
+    if (points.isEmpty || points.length > 100000) return null;
+    final input = calloc<_EpPoint>(points.length);
+    final kind = calloc<Uint32>();
+    final output = calloc<_EpPoint>(maxShapeCorners);
+    final count = calloc<Size>();
+    final rotation = calloc<Float>();
+    try {
+      for (var i = 0; i < points.length; i++) {
+        input[i].x = points[i].x;
+        input[i].y = points[i].y;
+      }
+      final result = _bindings.recogniseShape(
+        _handle,
+        input,
+        points.length,
+        kind,
+        output,
+        maxShapeCorners,
+        count,
+        rotation,
+      );
+      if (result < 0) throw RustCoreException('la forme aimantée', result);
+      if (result == 0) return null;
+      if (kind.value != 0 &&
+              kind.value != VectorKind.line.index &&
+              kind.value != VectorKind.rectangle.index &&
+              kind.value != VectorKind.ellipse.index &&
+              kind.value != VectorKind.contour.index ||
+          count.value < 2 ||
+          count.value > maxShapeCorners) {
+        throw StateError('Forme aimantée incompatible avec le contrat C.');
+      }
+      return RecognisedShape(
+        VectorKind.values[kind.value],
+        List.unmodifiable([
+          for (var i = 0; i < count.value; i++)
+            DocumentPoint(output[i].x, output[i].y),
+        ]),
+        rotation.value,
+      );
+    } finally {
+      calloc.free(rotation);
+      calloc.free(count);
+      calloc.free(output);
+      calloc.free(kind);
+      calloc.free(input);
+    }
+  }
+
+  /// a and b mixed as paint mixes: [amount] 0 is a, 1 is b; blue and yellow
+  /// give green (Kubelka–Munk of one constant, in the core).
+  static int mixColours(int a, int b, double amount, {String? libraryPath}) {
+    if (a < 0 || a > 0xffffff || b < 0 || b > 0xffffff || !amount.isFinite) {
+      throw ArgumentError('Couleurs à mélanger invalides.');
+    }
+    return _process(libraryPath).mixColours(a, b, amount.clamp(0.0, 1.0));
+  }
+
+  /// [count] colours (2 to 64) evenly along a gradient from a to b, through
+  /// Oklab: a first, b last.
+  static List<int> gradientColours(
+    int a,
+    int b,
+    int count, {
+    String? libraryPath,
+  }) {
+    final out = calloc<Uint32>(count < 1 ? 1 : count);
+    try {
+      final result = _process(libraryPath).gradientColours(a, b, count, out);
+      if (result != 0) throw RustCoreException('le dégradé', result);
+      return List.unmodifiable(out.asTypedList(count));
+    } finally {
+      calloc.free(out);
+    }
+  }
+
+  /// The marks a stroke being drawn shows from its segment [from] on: those
+  /// the object will keep, the first ones unchanged as it grows. Null for a
+  /// tool painted as a line.
+  static ObjectMarks? strokeMarks(
+    List<DocumentPoint> points, {
+    Uint8List? pressures,
+    required double width,
+    required int rgb,
+    required BrushTool tool,
+    int seed = 0,
+    int from = 0,
+    String? libraryPath,
+  }) {
+    if (points.isEmpty ||
+        points.length > 100000 ||
+        (pressures != null && pressures.length != points.length)) {
+      return null;
+    }
+    if (!tool.paintsMarks && pressures == null) return null;
+    final bindings = _process(libraryPath);
+    final input = calloc<_EpPoint>(points.length);
+    Pointer<Uint8> pressed = nullptr;
+    final needed = calloc<Size>(2);
+    try {
+      for (var i = 0; i < points.length; i++) {
+        input[i].x = points[i].x;
+        input[i].y = points[i].y;
+      }
+      if (pressures != null) {
+        pressed = calloc<Uint8>(pressures.length);
+        pressed.asTypedList(pressures.length).setAll(0, pressures);
+      }
+      int call(
+        Pointer<_EpMark> marks,
+        int markRoom,
+        Pointer<_EpPoint> out,
+        int pointRoom,
+      ) => bindings.strokeMarks(
+        input,
+        points.length,
+        pressed,
+        width,
+        rgb,
+        tool.code,
+        seed,
+        from,
+        marks,
+        markRoom,
+        out,
+        pointRoom,
+        needed,
+        needed + 1,
+      );
+      final first = call(nullptr, 0, nullptr, 0);
+      if (first == -2) throw const RustCoreException('les marques', -2);
+      final (markCount, pointCount) = (needed[0], needed[1]);
+      if (markCount == 0) return ObjectMarks.empty;
+      return _copyMarks(
+        markCount,
+        pointCount,
+        (marks, out) => call(marks, markCount, out, pointCount),
+      );
+    } finally {
+      calloc.free(needed);
+      calloc.free(pressed);
+      calloc.free(input);
+    }
+  }
+
+  /// The outline of one of the shapes of 1.1 in the box of corners [a] and
+  /// [b], as the points of a contour.
+  static List<DocumentPoint> shapeOutline(
+    NewShape shape,
+    DocumentPoint a,
+    DocumentPoint b, {
+    String? libraryPath,
+  }) {
+    final bindings = _process(libraryPath);
+    final first = calloc<_EpPoint>();
+    final second = calloc<_EpPoint>();
+    final count = calloc<Size>();
+    Pointer<_EpPoint> out = nullptr;
+    try {
+      first.ref
+        ..x = a.x
+        ..y = a.y;
+      second.ref
+        ..x = b.x
+        ..y = b.y;
+      bindings.shapeOutline(
+        shape.index,
+        first.ref,
+        second.ref,
+        nullptr,
+        0,
+        count,
+      );
+      if (count.value < 3 || count.value > 1440) {
+        throw ArgumentError('Forme sans largeur ni hauteur.');
+      }
+      out = calloc<_EpPoint>(count.value);
+      final result = bindings.shapeOutline(
+        shape.index,
+        first.ref,
+        second.ref,
+        out,
+        count.value,
+        count,
+      );
+      if (result != 0) throw RustCoreException('cette forme', result);
+      return List.unmodifiable([
+        for (var i = 0; i < count.value; i++) DocumentPoint(out[i].x, out[i].y),
+      ]);
+    } finally {
+      calloc.free(out);
+      calloc.free(count);
+      calloc.free(second);
+      calloc.free(first);
+    }
+  }
+
+  /// The zone the paint pot fills from pixel ([x], [y]) of [mask], a [width]
+  /// × [height] image of the drawing's ink (128 or more is ink): gaps
+  /// narrower than twice [radius] pixels plugged (0: the plain flood fill).
+  static FillZone fillZone(
+    Uint8List mask,
+    int width,
+    int height,
+    int x,
+    int y,
+    int radius, {
+    String? libraryPath,
+  }) {
+    if (width < 1 ||
+        height < 1 ||
+        width > 4096 ||
+        height > 4096 ||
+        mask.length != width * height) {
+      throw ArgumentError('Masque invalide.');
+    }
+    final bindings = _process(libraryPath);
+    // Room for the most a zone may hold, so that the core finds it once.
+    const pointRoom = 100000, ringRoom = 4096;
+    final native = calloc<Uint8>(mask.length);
+    final counts = calloc<Size>(2);
+    final points = calloc<_EpPoint>(pointRoom);
+    final rings = calloc<Uint32>(ringRoom);
+    try {
+      native.asTypedList(mask.length).setAll(0, mask);
+      final result = bindings.fillZone(
+        native,
+        width,
+        height,
+        x,
+        y,
+        radius,
+        points,
+        pointRoom,
+        rings,
+        ringRoom,
+        counts,
+        counts + 1,
+      );
+      if (result == 0) return const FillZone.onInk();
+      if (result == 2) return const FillZone.wholeSheet();
+      final (pointCount, ringCount) = (counts[0], counts[1]);
+      if (result != 1 ||
+          pointCount < 3 ||
+          pointCount > pointRoom ||
+          ringCount < 1 ||
+          ringCount > ringRoom) {
+        throw RustCoreException('le pot de peinture', result);
+      }
+      return FillZone.rings(
+        DocumentPoints.adopt(
+          Float32List.fromList(
+            points.cast<Float>().asTypedList(pointCount * 2),
+          ),
+        ),
+        Uint32List.fromList(rings.asTypedList(ringCount)),
+      );
+    } finally {
+      calloc.free(rings);
+      calloc.free(points);
+      calloc.free(counts);
+      calloc.free(native);
+    }
   }
 
   void _checkLayerPosition(int position) {
@@ -2076,21 +3146,51 @@ class RustDocument {
     }
   }
 
-  /// Exact serialized project size, without serializing or copying its data.
-  /// Native metadata traversal is bounded by the document's object limit.
+  /// The room a project of this drawing needs, a little more than its bytes
+  /// (version 6, ep_project_bound), without writing it.
   int get projectByteLength {
     _checkAlive();
-    final size = _bindings.projectSize(_handle);
-    if (size < 36 || size > maxProjectBytes) {
+    final size = _bindings.projectBound(_handle);
+    if (size < 36 || size > 2 * maxProjectBytes) {
       throw StateError('Taille du projet incompatible avec le contrat C.');
     }
     return size;
   }
 
-  /// Returns an independent binary project with vectors, dimensions and any PNG.
-  /// Undo remains available after reopening; redo history is not persisted.
+  /// Returns an independent binary project of version 6, its blocks
+  /// compressed where that makes them smaller: vectors, dimensions, layers,
+  /// everything Color 1.1 adds, and any PNG. Undo remains available after
+  /// reopening; redo history is not persisted.
   Uint8List exportProject() {
-    final size = projectByteLength;
+    final bound = projectByteLength;
+    final buffer = calloc<Uint8>(bound);
+    final length = calloc<Size>();
+    try {
+      final result = _bindings.writeProject(_handle, buffer, bound, 1, length);
+      if (result != 0) {
+        throw RustCoreException('l’enregistrement du projet', result);
+      }
+      if (length.value < 36 || length.value > bound) {
+        throw StateError('Taille du projet incompatible avec le contrat C.');
+      }
+      return Uint8List.fromList(buffer.asTypedList(length.value));
+    } finally {
+      calloc.free(length);
+      calloc.free(buffer);
+    }
+  }
+
+  /// The project as Color 1.0 wrote it: the oldest of versions 2 to 5 that
+  /// keeps the drawing (ep_copy_project), or null when only version 6 keeps
+  /// it. What Color 1.1 saves is [exportProject]; this one serves the checks
+  /// of the core.
+  Uint8List? exportLegacyProject() {
+    _checkAlive();
+    final size = _bindings.projectSize(_handle);
+    if (size == 0) return null;
+    if (size < 36 || size > maxProjectBytes) {
+      throw StateError('Taille du projet incompatible avec le contrat C.');
+    }
     final buffer = calloc<Uint8>(size);
     try {
       final result = _bindings.copyProject(_handle, buffer, size);
@@ -2140,22 +3240,35 @@ Future<int> _prepareProjectFile(_ProjectFileRequest request) async {
     request.libraryPath,
   );
   final snapshot = Pointer<_EpExportSnapshot>.fromAddress(request.address);
-  final size = bindings.snapshotProjectSize(snapshot);
-  if (size < 36 || size > maxProjectBytes) {
+  final bound = bindings.snapshotProjectBound(snapshot);
+  if (bound < 36 || bound > 2 * maxProjectBytes) {
     throw StateError('Taille du projet incompatible avec le contrat C.');
   }
   final temporary = File(request.temporaryPath);
   Pointer<Uint8> bytes = nullptr;
+  Pointer<Size> written = nullptr;
+  var size = 0;
   RandomAccessFile? handle;
   var created = false;
   Object? failure;
   StackTrace? failureStack;
   final cleanupErrors = <Object>[];
   try {
-    bytes = calloc<Uint8>(size);
-    final status = bindings.snapshotCopyProject(snapshot, bytes, size);
+    bytes = calloc<Uint8>(bound);
+    written = calloc<Size>();
+    final status = bindings.snapshotWriteProject(
+      snapshot,
+      bytes,
+      bound,
+      1,
+      written,
+    );
     if (status != 0) {
       throw RustCoreException('la copie de récupération', status);
+    }
+    size = written.value;
+    if (size < 36 || size > bound) {
+      throw StateError('Taille du projet incompatible avec le contrat C.');
     }
     await temporary.parent.create(recursive: true);
     await temporary.create(exclusive: true);
@@ -2186,6 +3299,7 @@ Future<int> _prepareProjectFile(_ProjectFileRequest request) async {
       }
     }
     calloc.free(bytes);
+    calloc.free(written);
     if (failure != null && created) {
       try {
         await temporary.delete();
@@ -2244,16 +3358,28 @@ TransferableTypedData _serializeExportSnapshot(_ExportRequest request) {
       bindings.freeString(text);
     }
   }
-  final size = bindings.snapshotProjectSize(snapshot);
-  if (size < 36 || size > maxProjectBytes) {
+  final bound = bindings.snapshotProjectBound(snapshot);
+  if (bound < 36 || bound > 2 * maxProjectBytes) {
     throw StateError('Taille du projet incompatible avec le contrat C.');
   }
-  final bytes = calloc<Uint8>(size);
+  final bytes = calloc<Uint8>(bound);
+  final written = calloc<Size>();
   try {
-    final status = bindings.snapshotCopyProject(snapshot, bytes, size);
+    final status = bindings.snapshotWriteProject(
+      snapshot,
+      bytes,
+      bound,
+      1,
+      written,
+    );
     if (status != 0) throw RustCoreException('la copie du projet', status);
+    final size = written.value;
+    if (size < 36 || size > bound) {
+      throw StateError('Taille du projet incompatible avec le contrat C.');
+    }
     return TransferableTypedData.fromList([bytes.asTypedList(size)]);
   } finally {
+    calloc.free(written);
     calloc.free(bytes);
   }
 }
@@ -2335,9 +3461,13 @@ _DocumentCache _readDocumentCache(
   final info = calloc<_EpStrokeInfo>();
   Pointer<_EpObjectStyle> style = nullptr;
   Pointer<_EpObjectExtra> extra = nullptr;
+  Pointer<_EpObjectLook> lookBuffer = nullptr;
+  Pointer<Size> markPoints = nullptr;
   try {
     style = calloc<_EpObjectStyle>();
     extra = calloc<_EpObjectExtra>();
+    lookBuffer = calloc<_EpObjectLook>();
+    markPoints = calloc<Size>();
     for (var index = 0; index < count; index++) {
       final revision = bindings.objectRevision(handle, index);
       if (revision == 0 || revisions.containsKey(revision)) {
@@ -2402,6 +3532,15 @@ _DocumentCache _readDocumentCache(
         // One block, as the core holds them: two floats a point.
         final coordinates = Float32List(length * 2)
           ..setAll(0, points.cast<Float>().asTypedList(length * 2));
+        if (bindings.objectLook(handle, index, lookBuffer) != 0) {
+          throw StateError('Impossible de lire l’allure de l’objet $index.');
+        }
+        final look = _readLook(lookBuffer.ref);
+        if (look == null ||
+            (look.tool != BrushTool.round && kind != VectorKind.stroke) ||
+            (look.hasGradient && style.ref.fillEnabled != 1)) {
+          throw StateError('Allure incompatible avec le contrat C.');
+        }
         snapshot.add(
           StrokeData(
             DocumentPoints.adopt(coordinates),
@@ -2412,6 +3551,17 @@ _DocumentCache _readDocumentCache(
             layer: extra.ref.layer,
             text: text,
             stamp: kind == VectorKind.stamp ? extra.ref.param : null,
+            look: look,
+            pressures: kind == VectorKind.stroke
+                ? _readPressures(bindings, handle, index, length)
+                : null,
+            rings: kind == VectorKind.contour
+                ? _readRings(bindings, handle, index, length)
+                : null,
+            font: kind == VectorKind.text ? extra.ref.param : 0,
+            marks: kind == VectorKind.stroke
+                ? _readMarks(bindings, handle, index, markPoints)
+                : null,
           ),
         );
         revisions[revision] = snapshot.last;
@@ -2423,6 +3573,8 @@ _DocumentCache _readDocumentCache(
     calloc.free(info);
     calloc.free(style);
     calloc.free(extra);
+    calloc.free(lookBuffer);
+    calloc.free(markPoints);
   }
   // The small layer table is read after every change: visibility and order
   // are not object revisions.
@@ -2489,6 +3641,139 @@ _DocumentCache _readDocumentCache(
     activeLayer,
     paperRgb,
   );
+}
+
+Uint8List? _readPressures(
+  _Bindings bindings,
+  Pointer<_EpDocument> handle,
+  int index,
+  int length,
+) {
+  final count = bindings.objectPressureCount(handle, index);
+  if (count == 0) return null;
+  if (count != length) {
+    throw StateError('Pressions incompatibles avec le contrat C.');
+  }
+  final buffer = calloc<Uint8>(count);
+  try {
+    if (bindings.copyPressures(handle, index, buffer, count) != count) {
+      throw StateError('Copie de pressions incomplète.');
+    }
+    return Uint8List.fromList(buffer.asTypedList(count));
+  } finally {
+    calloc.free(buffer);
+  }
+}
+
+Uint32List? _readRings(
+  _Bindings bindings,
+  Pointer<_EpDocument> handle,
+  int index,
+  int length,
+) {
+  final count = bindings.objectRingCount(handle, index);
+  if (count == 0) return null;
+  if (count < 2 || count > 4096) {
+    throw StateError('Anneaux incompatibles avec le contrat C.');
+  }
+  final buffer = calloc<Uint32>(count);
+  try {
+    if (bindings.copyRings(handle, index, buffer, count) != count) {
+      throw StateError('Copie d’anneaux incomplète.');
+    }
+    final rings = Uint32List.fromList(buffer.asTypedList(count));
+    var total = 0;
+    for (final ring in rings) {
+      if (ring < 3) throw StateError('Anneau incompatible avec le contrat C.');
+      total += ring;
+    }
+    if (total != length) {
+      throw StateError('Anneaux incompatibles avec le contrat C.');
+    }
+    return rings;
+  } finally {
+    calloc.free(buffer);
+  }
+}
+
+ObjectMarks? _readMarks(
+  _Bindings bindings,
+  Pointer<_EpDocument> handle,
+  int index,
+  Pointer<Size> pointCount,
+) {
+  final count = bindings.objectMarkCount(handle, index, pointCount);
+  if (count == 0) return null;
+  return _copyMarks(count, pointCount.value, (marks, points) {
+    return bindings.copyObjectMarks(
+      handle,
+      index,
+      marks,
+      count,
+      points,
+      pointCount.value,
+    );
+  });
+}
+
+// Copies marks the core writes into buffers of the given sizes.
+ObjectMarks _copyMarks(
+  int count,
+  int pointCount,
+  int Function(Pointer<_EpMark> marks, Pointer<_EpPoint> points) write,
+) {
+  if (count < 0 ||
+      count > 400000 ||
+      pointCount < count ||
+      pointCount > 2000000) {
+    throw StateError('Marques incompatibles avec le contrat C.');
+  }
+  final marks = calloc<_EpMark>(count);
+  final points = calloc<_EpPoint>(pointCount);
+  try {
+    final status = write(marks, points);
+    if (status == -2) throw const RustCoreException('les marques', -2);
+    if (status != 0) throw StateError('Copie de marques incomplète.');
+    final shapes = Uint32List(count);
+    final rgbs = Uint32List(count);
+    final alphas = Uint32List(count);
+    final groups = Uint32List(count);
+    final firsts = Uint32List(count);
+    final counts = Uint32List(count);
+    final radii = Float32List(count);
+    for (var i = 0; i < count; i++) {
+      final mark = marks[i];
+      if (mark.shape > 1 ||
+          mark.first + mark.count > pointCount ||
+          mark.count < 1 ||
+          mark.alpha < 1 ||
+          mark.alpha > 255) {
+        throw StateError('Marque incompatible avec le contrat C.');
+      }
+      shapes[i] = mark.shape;
+      rgbs[i] = mark.rgb;
+      alphas[i] = mark.alpha;
+      groups[i] = mark.group;
+      firsts[i] = mark.first;
+      counts[i] = mark.count;
+      radii[i] = mark.radius;
+    }
+    return ObjectMarks(
+      shapes: shapes,
+      rgbs: rgbs,
+      alphas: alphas,
+      groups: groups,
+      firsts: firsts,
+      counts: counts,
+      radii: radii,
+      points: Float32List.fromList(
+        points.cast<Float>().asTypedList(pointCount * 2),
+      ),
+    );
+  } finally {
+    calloc.free(marks);
+    calloc.free(points);
+  }
 }
 
 final class _ProjectLoadRequest {
@@ -2728,7 +4013,8 @@ void main(List<String> arguments) {
                 'true,false,true' &&
             !coloured.isLockedLayer(coloured.activeLayer) &&
             coloured.unlockedPaintOrder.isEmpty &&
-            coloured.exportProject()[8] == 5,
+            coloured.exportProject()[8] == 6 &&
+            coloured.exportLegacyProject()?[8] == 5,
         'a colouring page makes its own document, locked, with nothing to undo',
       );
       var pageKept = false;
@@ -2914,7 +4200,10 @@ void main(List<String> arguments) {
         'exact SVG primitives, reversed corners',
       );
       final shapeBytes = shapes.exportProject();
-      check(shapeBytes[8] == 2, 'new project version 2');
+      check(
+        shapeBytes[8] == 6 && shapes.exportLegacyProject()?[8] == 2,
+        'version 6 written; the writer of 1.0 keeps version 2',
+      );
       final loadedShapes = RustDocument.fromProject(
         shapeBytes,
         libraryPath: libraryPath,
@@ -2979,7 +4268,8 @@ void main(List<String> arguments) {
         'legacy v1 imported as freehand',
       );
       check(
-        loadedLegacy.exportProject()[8] == 2 &&
+        loadedLegacy.exportProject()[8] == 6 &&
+            loadedLegacy.exportLegacyProject()?[8] == 2 &&
             loadedLegacy.exportSvg().contains('M12.5 34.25 L1200 800 '),
         'legacy project upgraded without changing geometry',
       );
@@ -3041,7 +4331,10 @@ void main(List<String> arguments) {
         'layer groups, escaped text lines and scaled stamp in SVG',
       );
       final layeredBytes = layered.exportProject();
-      check(layeredBytes[8] == 4, 'layers, text and stamps use project 4');
+      check(
+        layeredBytes[8] == 6 && layered.exportLegacyProject()?[8] == 4,
+        'layers, text and stamps: version 6, project 4 for the writer of 1.0',
+      );
       final reopenedLayers = RustDocument.fromProject(
         layeredBytes,
         libraryPath: libraryPath,
@@ -3087,7 +4380,7 @@ void main(List<String> arguments) {
       check(
         layered.count == 2 &&
             layered.layers.length == 1 &&
-            layered.exportProject()[8] == 2 &&
+            layered.exportLegacyProject()?[8] == 2 &&
             layered.undo() &&
             layered.count == 4 &&
             layered.exportSvg().contains('<g id="calque-2">') == false,
@@ -3123,7 +4416,7 @@ void main(List<String> arguments) {
             !sheet.setPaperColor(whitePaper) &&
             sheet.setPaperColor(0xa8d8f0) &&
             sheet.paperRgb == 0xa8d8f0 &&
-            sheet.exportProject()[8] == 4 &&
+            sheet.exportLegacyProject()?[8] == 4 &&
             sheet.exportSvg().contains(
               '<rect width="100%" height="100%" fill="#a8d8f0"/>',
             ),
@@ -3141,7 +4434,7 @@ void main(List<String> arguments) {
       check(
         sheet.undo() &&
             sheet.paperRgb == whitePaper &&
-            sheet.exportProject()[8] == 2,
+            sheet.exportLegacyProject()?[8] == 2,
         'sheet colour is one undoable command',
       );
       check(

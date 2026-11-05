@@ -291,3 +291,30 @@ fn the_rainbow_is_four_bows_and_has_no_cloud_at_its_feet() {
         assert!(!colours[..index].contains(colour), "{colour:?} twice");
     }
 }
+
+/// The catalogue is what the SVG files of art/tampons/ draw (Color 1.1):
+/// one file per stamp, numbered by its identifier, each layer a path with
+/// the same data. tools/make_stamp_catalog.py writes it from them.
+#[test]
+fn the_catalogue_is_what_the_files_of_the_stamps_draw() {
+    let folder = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("art/tampons");
+    let mut names: Vec<String> = std::fs::read_dir(&folder)
+        .unwrap()
+        .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+        .filter(|name| name.ends_with(".svg"))
+        .collect();
+    names.sort();
+    assert_eq!(names.len(), STAMPS.len(), "a file for each stamp");
+    for (index, (name, stamp)) in names.iter().zip(STAMPS).enumerate() {
+        assert_eq!(name, &format!("{index:02}-{}.svg", stamp.key));
+        let svg = std::fs::read_to_string(folder.join(name)).unwrap();
+        assert_eq!(svg.matches("<path ").count(), stamp.layers.len(), "{name}");
+        let mut rest = svg.as_str();
+        for layer in stamp.layers {
+            let at = rest
+                .find(&format!("d=\"{}\"", layer.path))
+                .unwrap_or_else(|| panic!("{name}: a layer is not in its file"));
+            rest = &rest[at + 1..];
+        }
+    }
+}

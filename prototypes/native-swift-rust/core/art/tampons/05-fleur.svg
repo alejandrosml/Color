@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Fleur », n° 5. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Fleur</title>
+  <path d="M 65 27 C 65 35.28 58.28 42 50 42 C 41.72 42 35 35.28 35 27 C 35 18.72 41.72 12 50 12 C 58.28 12 65 18.72 65 27 Z M 84.92 38.5 C 84.92 46.78 78.2 53.5 69.92 53.5 C 61.63 53.5 54.92 46.78 54.92 38.5 C 54.92 30.22 61.63 23.5 69.92 23.5 C 78.2 23.5 84.92 30.22 84.92 38.5 Z M 84.92 61.5 C 84.92 69.78 78.2 76.5 69.92 76.5 C 61.63 76.5 54.92 69.78 54.92 61.5 C 54.92 53.22 61.63 46.5 69.92 46.5 C 78.2 46.5 84.92 53.22 84.92 61.5 Z M 65 73 C 65 81.28 58.28 88 50 88 C 41.72 88 35 81.28 35 73 C 35 64.72 41.72 58 50 58 C 58.28 58 65 64.72 65 73 Z M 45.08 61.5 C 45.08 69.78 38.37 76.5 30.08 76.5 C 21.8 76.5 15.08 69.78 15.08 61.5 C 15.08 53.22 21.8 46.5 30.08 46.5 C 38.37 46.5 45.08 53.22 45.08 61.5 Z M 45.08 38.5 C 45.08 46.78 38.37 53.5 30.08 53.5 C 21.8 53.5 15.08 46.78 15.08 38.5 C 15.08 30.22 21.8 23.5 30.08 23.5 C 38.37 23.5 45.08 30.22 45.08 38.5 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 63 50 C 63 57.18 57.18 63 50 63 C 42.82 63 37 57.18 37 50 C 37 42.82 42.82 37 50 37 C 57.18 37 63 42.82 63 50 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 49 46 C 49 47.66 47.66 49 46 49 C 44.34 49 43 47.66 43 46 C 43 44.34 44.34 43 46 43 C 47.66 43 49 44.34 49 46 Z" fill="#fffcf0"/>
+</svg>

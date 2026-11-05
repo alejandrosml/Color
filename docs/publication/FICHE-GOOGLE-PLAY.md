@@ -36,6 +36,13 @@
 - Notes de version : « Première version de Color. »
 - Signature de l'application par Google Play (« Play App Signing ») : accepter. Google garde la clé qui signe Color ; ta clé d'envoi ne sert qu'à lui confier les fichiers.
 
+## La version 1.1
+
+- Notes de version (500 caractères par langue au plus), en français : « Nouveaux outils : formes, aimant, magie (arc-en-ciel, herbe, briques, confettis, miroir), pinceau à cinq pointes, gomme qui coupe, pot avec dégradés, mélangeur de couleurs, quatre écritures de plus, diaporama de Mes dessins. Plus facile à toucher. Color parle anglais. Un dessin abîmé s'ouvre quand même. Les dessins enregistrés avec la 1.1 ne s'ouvrent plus avec les versions précédentes. »
+- En anglais (« en-GB » ou « en-US ») : « New tools: shapes, magnet, magic (rainbow, grass, bricks, confetti, mirror), five brush tips, an eraser that cuts lines, a paint pot with gradients, a colour mixer, four more fonts, a slideshow of My drawings. Easier to touch. Color speaks English. A damaged drawing still opens. Drawings saved with 1.1 no longer open in earlier versions. »
+- La fiche en anglais : nom « Color », description courte « A drawing studio for children: brushes, stamps, colouring pages. », description complète : celle de l'App Store en anglais ([FICHE-APP-STORE.md](FICHE-APP-STORE.md)).
+- Les tailles de l'App Bundle de la 1.1 ne sont pas encore mesurées : la préparation les donne et ne s'arrête pas (`scripts/budgets.json`) ; on les écrit ensuite dans ce fichier.
+
 ## Avant la production : 12 testeurs, 14 jours
 
 Un compte personnel créé après le 13 novembre 2023 doit d'abord publier Color en **test fermé**, avec **au moins 12 testeurs** inscrits **14 jours d'affilée**. Ensuite seulement, le tableau de bord de la Play Console propose de demander l'accès à la production. Les testeurs : des personnes de ton entourage avec un téléphone ou une tablette Android et un compte Google ; tu ajoutes leurs adresses dans la liste du test fermé, ils acceptent l'invitation et installent Color depuis le lien du test.

@@ -6,11 +6,47 @@
 //! so that an export and the sheet place every line at the same height.
 use super::*;
 
-/// Line height of font 0 (DejaVu Sans), as a multiple of the text size.
-const LINE_HEIGHT: f64 = 1.2;
-/// Distance from the top of a line to its baseline: the line height shared
-/// between ascent and descent in the font's own 1901:483 proportion.
-const BASELINE: f64 = LINE_HEIGHT * 1901.0 / 2384.0;
+/// What the SVG export needs of each font of a text, and what the interface
+/// lays its lines out with (text_layout.dart): its families for a viewer that
+/// lacks it, the line height as a multiple of the size, and the distance from
+/// the top of a line to its baseline — the line height shared between ascent
+/// and descent in the font's own proportion.
+pub(crate) struct Font {
+    pub families: &'static str,
+    pub line_height: f64,
+    pub baseline: f64,
+}
+
+pub(crate) const FONTS: [Font; FONT_COUNT as usize] = [
+    // DejaVu Sans: its hhea metrics, 1901 above and 483 below.
+    Font {
+        families: "'DejaVu Sans', Verdana, sans-serif",
+        line_height: 1.2,
+        baseline: 1.2 * 1901.0 / 2384.0,
+    },
+    Font {
+        families: "'Atkinson Hyperlegible', Verdana, sans-serif",
+        line_height: 1.2,
+        baseline: 1.2 * 950.0 / 1240.0,
+    },
+    Font {
+        families: "'Comic Neue', 'Comic Sans MS', cursive",
+        line_height: 1.2,
+        baseline: 1.2 * 900.0 / 1150.0,
+    },
+    Font {
+        families: "Fredoka, 'Arial Rounded MT Bold', sans-serif",
+        line_height: 1.2,
+        baseline: 1.2 * 974.0 / 1210.0,
+    },
+    // The school hand of France: its loops need the font's own line height,
+    // 1927 above and 925 below for a size of 1000.
+    Font {
+        families: "'Playwrite FR Trad', cursive",
+        line_height: 2.852,
+        baseline: 2.852 * 1927.0 / 2852.0,
+    },
+];
 
 /// Whether a character leaves a mark by itself. White space does not, nor do
 /// the characters that Unicode asks a renderer to ignore when nothing else
@@ -46,7 +82,7 @@ pub(super) fn leaves_a_mark(character: char) -> bool {
 /// one character that leaves a mark. Only characters valid in XML 1.0 are
 /// accepted, and no other control or line/paragraph separator: the caller
 /// normalizes them.
-pub(super) fn valid_text(bytes: &[u8]) -> bool {
+pub(crate) fn valid_text(bytes: &[u8]) -> bool {
     if bytes.is_empty() || bytes.len() > MAX_TEXT_BYTES {
         return false;
     }
@@ -89,19 +125,23 @@ pub(super) fn write_text_svg(
     y: f64,
     size: f32,
     rgb: u32,
+    font: u32,
 ) -> Option<()> {
     let text = std::str::from_utf8(text).ok()?;
+    let font = FONTS.get(font as usize)?;
+    // The families are fixed text with single quotes: no escape needed in
+    // this attribute between double quotes.
     writeln!(
         result,
-        "<text font-family=\"'DejaVu Sans', Verdana, sans-serif\" font-size=\"{}\" fill=\"#{:06x}\" xml:space=\"preserve\">",
-        size, rgb
+        "<text font-family=\"{}\" font-size=\"{}\" fill=\"#{:06x}\" xml:space=\"preserve\">",
+        font.families, size, rgb
     )
     .ok()?;
     for (index, line) in text.split('\n').enumerate() {
         if line.is_empty() {
             continue;
         }
-        let baseline = y + (index as f64 * LINE_HEIGHT + BASELINE) * f64::from(size);
+        let baseline = y + (index as f64 * font.line_height + font.baseline) * f64::from(size);
         write!(result, "<tspan x=\"{}\" y=\"{}\">", x, baseline).ok()?;
         for character in line.chars() {
             match character {
@@ -118,7 +158,7 @@ pub(super) fn write_text_svg(
 }
 
 // Copies the caller's characters only after every scalar check has passed.
-unsafe fn checked_text<'a>(utf8: *const u8, length: usize) -> Option<&'a [u8]> {
+pub(crate) unsafe fn checked_text<'a>(utf8: *const u8, length: usize) -> Option<&'a [u8]> {
     if utf8.is_null() || !(1..=MAX_TEXT_BYTES).contains(&length) {
         return None;
     }
@@ -198,7 +238,14 @@ pub unsafe extern "C" fn ep_set_text(
     {
         return INVALID;
     }
-    let points = unsafe { slice::from_raw_parts(box_points, 2) };
+    let given = unsafe { slice::from_raw_parts(box_points, 2) };
+    // The new box keeps the fineness of the text (Color 1.1), as when it was
+    // added; an exact text keeps its corners bit for bit.
+    let quant = stroke.extras.quant;
+    let points = [given[0], given[1]].map(|point| EpPoint {
+        x: quantized(point.x, quant),
+        y: quantized(point.y, quant),
+    });
     if points.iter().any(|point| {
         !point.x.is_finite()
             || !point.y.is_finite()
@@ -206,7 +253,7 @@ pub unsafe extern "C" fn ep_set_text(
             || point.y < 0.0
             || point.x > doc.width as f32
             || point.y > doc.height as f32
-    }) || !valid_shape_points(KIND_TEXT, points)
+    }) || !valid_shape_points(KIND_TEXT, &points)
     {
         return INVALID;
     }
@@ -233,6 +280,7 @@ pub unsafe extern "C" fn ep_set_text(
     }
     let revision = doc.issue_revision();
     let stroke = &mut doc.strokes[index];
+    let before = usize::from(stroke.needs_v6());
     let previous = Edit::Text {
         index,
         points: [stroke.points[0], stroke.points[1]],
@@ -250,6 +298,8 @@ pub unsafe extern "C" fn ep_set_text(
     stroke.width = size;
     stroke.param = font;
     stroke.revision = revision;
+    let after = usize::from(stroke.needs_v6());
+    doc.active_v6 = doc.active_v6 - before + after;
     doc.active_text_bytes = active_without + text.len();
     doc.commit_text_edit(previous, 0, 0, text.len());
     1

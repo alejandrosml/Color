@@ -15,6 +15,8 @@ const _samples = [
   'ÉÈÊËÀÂÙÛÜÇÎÏÔÖŒÆŸ éèêëàâùûüçîïôöœæÿ áíóúñãõäìò',
   'fi fl ffi ffl ﬁ ﬂ',
   'azertyuiop qsdfghjklm wxcvbn’-., ?!:;()+=♥★ -×÷<>€%"/@',
+  // The English keyboard of Color 1.1.
+  r'qwertyuiop asdfghjkl’ zxcvbnm-., $ £',
   'Ελληνικά: αβγδε ΑΒΓΔΕ ἀρχή',
   'Кириллица: привет мир ЖЩЮЯ',
   '← ↑ → ↓ ⇒ ∞ ≠ ≤ ≥ ∑ √ ■ □ ● ○ ☺ ☼ ✓ ✔ ✿ ❤',

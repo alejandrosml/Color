@@ -21,6 +21,7 @@ fn capture(document: &EpDocument) -> Result<EpExportSnapshot, i32> {
     let mut text_bytes = 0usize;
     let mut extended = 0usize;
     let mut contours = 0usize;
+    let mut v6 = 0usize;
     for stroke in &document.strokes {
         point_count = point_count
             .checked_add(stroke.points.len())
@@ -44,6 +45,8 @@ fn capture(document: &EpDocument) -> Result<EpExportSnapshot, i32> {
         text.try_reserve_exact(stroke.text.len())
             .map_err(|_| ALLOCATION_FAILURE)?;
         text.extend_from_slice(&stroke.text);
+        let extras = stroke.extras.try_clone()?;
+        v6 += usize::from(stroke.needs_v6());
         strokes.push(Stroke {
             points,
             rgb: stroke.rgb,
@@ -55,12 +58,14 @@ fn capture(document: &EpDocument) -> Result<EpExportSnapshot, i32> {
             layer: stroke.layer,
             param: stroke.param,
             text,
+            extras,
         });
     }
     if point_count != document.active_points
         || text_bytes != document.active_text_bytes
         || extended != document.active_extended
         || contours != document.active_contours
+        || v6 != document.active_v6
     {
         return Err(INVALID);
     }
@@ -83,6 +88,7 @@ fn capture(document: &EpDocument) -> Result<EpExportSnapshot, i32> {
             retained_text_bytes: text_bytes,
             active_extended: extended,
             active_contours: contours,
+            active_v6: v6,
             paper: document.paper,
         },
     })
@@ -180,6 +186,36 @@ pub unsafe extern "C" fn ep_export_snapshot_export_svg(
         return ptr::null_mut();
     };
     svg(&snapshot.drawing).map_or(ptr::null_mut(), CString::into_raw)
+}
+
+/// ep_project_bound of the captured drawing; 0 for NULL.
+///
+/// # Safety
+/// Non-null snapshot must remain live/aligned until this read completes.
+#[no_mangle]
+pub unsafe extern "C" fn ep_export_snapshot_project_bound(
+    snapshot: *const EpExportSnapshot,
+) -> usize {
+    unsafe { snapshot.as_ref() }.map_or(0, |snapshot| project_v6::bound(&snapshot.drawing))
+}
+
+/// ep_write_project of the captured drawing: same output and status.
+///
+/// # Safety
+/// As ep_export_snapshot_copy_project; non-null `out_length` must be
+/// writable, aligned and disjoint from the output bytes.
+#[no_mangle]
+pub unsafe extern "C" fn ep_export_snapshot_write_project(
+    snapshot: *const EpExportSnapshot,
+    out_bytes: *mut u8,
+    capacity: usize,
+    compress: u32,
+    out_length: *mut usize,
+) -> i32 {
+    let Some(snapshot) = (unsafe { snapshot.as_ref() }) else {
+        return INVALID;
+    };
+    unsafe { project_v6::write_into(&snapshot.drawing, out_bytes, capacity, compress, out_length) }
 }
 
 #[cfg(test)]

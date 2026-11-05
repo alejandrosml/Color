@@ -314,6 +314,8 @@ def main():
                'le cœur est compilé par cargo, depuis son dossier, sans réseau')
         expect(sum('--no-default-features' in build for build in builds) == 1,
                'une fois avec son lecteur de SVG pour les tests, une fois sans pour l’application')
+        expect(sum('--no-default-features --features deflate' in build for build in builds) == 1,
+               'l’application compresse ses projets (version 6 du format)')
         expect('target=' + str(local / 'macos-color-cargo-target') + ']' in builds[0]
                and (local / 'macos-color-cargo-target').is_dir()
                and not (travail / 'Color-0.7.0+28-sources' / 'Color' / 'prototypes' / 'native-swift-rust'

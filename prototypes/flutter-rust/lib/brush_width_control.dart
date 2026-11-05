@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
+import 'language.dart';
+
 /// A bounded desktop control without Material Slider's value-indicator overlay.
 class BrushWidthControl extends StatefulWidget {
   const BrushWidthControl({
@@ -52,7 +54,7 @@ class _BrushWidthControlState extends State<BrushWidthControl> {
     if (_enabled) widget.onChangeEnd?.call();
   }
 
-  String _units(double value) => '${value.round()} unités de document';
+  String _units(double value) => trf('{0} unités de document', [value.round()]);
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +95,7 @@ class _BrushWidthControlState extends State<BrushWidthControl> {
         // document units, focus and adjustment actions; retain pointer input.
         excludeSemantics: true,
         slider: true,
-        label: 'Épaisseur du pinceau',
+        label: tr('Épaisseur du pinceau'),
         value: _units(widget.value),
         increasedValue: canIncrease ? _units(widget.value + 1) : null,
         decreasedValue: canDecrease ? _units(widget.value - 1) : null,

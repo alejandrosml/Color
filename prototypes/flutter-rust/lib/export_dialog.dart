@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'fit_to_screen.dart';
 import 'png_export.dart';
+import 'language.dart';
 
 /// What the child chose in « Emporter ton dessin ».
 enum ExportChoice { png, largePng, svg }
@@ -21,7 +22,7 @@ Future<ExportChoice?> showExportDialog(
     builder: (dialogContext) => FitDialog(
       child: StatefulBuilder(
         builder: (context, update) => AlertDialog(
-          title: const Text('Emporter ton dessin'),
+          title: Text(tr('Emporter ton dessin')),
           content: SizedBox(
             width: 420,
             child: SingleChildScrollView(
@@ -29,8 +30,10 @@ Future<ExportChoice?> showExportDialog(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Choisis une image à partager. Pour continuer ton dessin plus tard, enregistre aussi le projet Color.',
+                  Text(
+                    tr(
+                      'Choisis une image à partager. Pour continuer ton dessin plus tard, enregistre aussi le projet Color.',
+                    ),
                   ),
                   const SizedBox(height: 20),
                   FilledButton.icon(
@@ -47,19 +50,22 @@ Future<ExportChoice?> showExportDialog(
                           )
                         : null,
                     icon: const Icon(Icons.image_outlined),
-                    label: const Text('Image PNG'),
+                    label: Text(tr('Image PNG')),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Pour partager et imprimer · ${width * (large ? 2 : 1)} × ${height * (large ? 2 : 1)} pixels',
+                    trf('Pour partager et imprimer · {0} × {1} pixels', [
+                      width * (large ? 2 : 1),
+                      height * (large ? 2 : 1),
+                    ]),
                     style: const TextStyle(fontSize: 12),
                   ),
                   CheckboxListTile(
                     key: const Key('pngScale2'),
                     contentPadding: EdgeInsets.zero,
                     controlAffinity: ListTileControlAffinity.leading,
-                    title: const Text(
-                      'Grand format (×2)',
+                    title: Text(
+                      tr('Grand format (×2)'),
                       style: TextStyle(fontSize: 14),
                     ),
                     value: large,
@@ -75,8 +81,10 @@ Future<ExportChoice?> showExportDialog(
                         : null,
                   ),
                   if (!canExportDocumentPng(width: width, height: height))
-                    const Text(
-                      'Cette feuille est trop grande pour une image PNG. Choisis le format SVG.',
+                    Text(
+                      tr(
+                        'Cette feuille est trop grande pour une image PNG. Choisis le format SVG.',
+                      ),
                       style: TextStyle(fontSize: 12),
                     ),
                   const SizedBox(height: 12),
@@ -85,13 +93,15 @@ Future<ExportChoice?> showExportDialog(
                     onPressed: () =>
                         Navigator.pop(dialogContext, ExportChoice.svg),
                     icon: const Icon(Icons.zoom_out_map),
-                    label: const Text('Image vectorielle SVG'),
+                    label: Text(tr('Image vectorielle SVG')),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     hasBackground
-                        ? 'Les traits restent vectoriels. Ton image de fond garde sa résolution.'
-                        : 'Pour agrandir sans perdre en netteté.',
+                        ? tr(
+                            'Les traits restent vectoriels. Ton image de fond garde sa résolution.',
+                          )
+                        : tr('Pour agrandir sans perdre en netteté.'),
                     style: const TextStyle(fontSize: 12),
                   ),
                 ],
@@ -101,7 +111,7 @@ Future<ExportChoice?> showExportDialog(
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Annuler'),
+              child: Text(tr('Annuler')),
             ),
           ],
         ),

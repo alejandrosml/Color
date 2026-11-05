@@ -1,7 +1,7 @@
 name: edupaint_flutter_study
 description: "Color : interface Flutter et cœur Rust partagé."
 publish_to: none
-version: 1.0.1+40
+version: 1.1.0+41
 environment:
   sdk: ^3.13.3
 dependencies:
@@ -26,6 +26,10 @@ flutter:
   assets:
     # Shown with the other licences, from « À propos ».
     - fonts/LICENCE-DejaVu.txt
+    - fonts/LICENCE-Atkinson.txt
+    - fonts/LICENCE-ComicNeue.txt
+    - fonts/LICENCE-Fredoka.txt
+    - fonts/LICENCE-PlaywriteFRTrad.txt
   fonts:
     # Font 0 of text objects: every platform lays out the same glyphs, for
     # the characters it has. A subset of DejaVu Sans made by
@@ -34,3 +38,18 @@ flutter:
     - family: ColorSans
       fonts:
         - asset: fonts/DejaVuSans.ttf
+    # Fonts 1 to 4 of texts (Color 1.1): Latin subsets made by
+    # scripts/preparer-les-polices.py from the whole fonts in fonts/source/,
+    # which are not carried. SIL Open Font License, no reserved name.
+    - family: ColorAtkinson
+      fonts:
+        - asset: fonts/AtkinsonHyperlegible.ttf
+    - family: ColorComic
+      fonts:
+        - asset: fonts/ComicNeue.ttf
+    - family: ColorFredoka
+      fonts:
+        - asset: fonts/Fredoka.ttf
+    - family: ColorPlaywrite
+      fonts:
+        - asset: fonts/PlaywriteFRTrad.ttf

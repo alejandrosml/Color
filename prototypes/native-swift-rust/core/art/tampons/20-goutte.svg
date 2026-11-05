@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Goutte », n° 20. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Goutte</title>
+  <path d="M 50 6 C 36 28 20 46 20 62 C 20 80 34 93 50 93 C 66 93 80 80 80 62 C 80 46 64 28 50 6 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 43 62 C 43 67.52 40.76 72 38 72 C 35.24 72 33 67.52 33 62 C 33 56.48 35.24 52 38 52 C 40.76 52 43 56.48 43 62 Z" fill="#efbebb" data-fill="claire"/>
+</svg>

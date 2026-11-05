@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Ligne », une ligne et ses deux petits cercles. Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Ligne</title>
+  <line x1="14" y1="49" x2="50" y2="15" fill="none" stroke="#293d4b" stroke-width="8.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="14" y1="49" x2="50" y2="15" fill="none" stroke="#43ac9c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="14" cy="49" rx="6.5" ry="6.5" fill="#ffcd62" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="50" cy="15" rx="6.5" ry="6.5" fill="#ed8c88" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

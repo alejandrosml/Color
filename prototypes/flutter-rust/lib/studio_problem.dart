@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'language.dart';
+
 /// A bounded presentation value; never retains the originating exception.
 class StudioProblem {
   StudioProblem._(this.message, this.details, this.detailsTruncated);
@@ -11,7 +13,7 @@ class StudioProblem {
     try {
       raw = error.toString();
     } catch (_) {
-      raw = 'Le diagnostic de ce problème n’est pas disponible.';
+      raw = tr('Le diagnostic de ce problème n’est pas disponible.');
     }
     final truncated = raw.length > detailsLimit;
     var end = truncated ? detailsLimit : raw.length;
@@ -57,7 +59,7 @@ class StudioProblemDialog extends StatelessWidget {
         key: const Key('problemDetailsDialog'),
         scrollable: true,
         insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        title: const Text('Détails du problème'),
+        title: Text(tr('Détails du problème')),
         content: SizedBox(
           width: 520,
           child: Column(
@@ -66,13 +68,15 @@ class StudioProblemDialog extends StatelessWidget {
             children: [
               Text(problem.message),
               const SizedBox(height: 16),
-              const Text(
-                'Ces informations peuvent aider à comprendre le problème.',
+              Text(
+                tr('Ces informations peuvent aider à comprendre le problème.'),
               ),
               if (problem.detailsTruncated) ...[
                 const SizedBox(height: 12),
-                const Text(
-                  'Le diagnostic est très long : seul son début est affiché.',
+                Text(
+                  tr(
+                    'Le diagnostic est très long : seul son début est affiché.',
+                  ),
                   key: Key('problemDetailsTruncated'),
                 ),
               ],
@@ -92,7 +96,7 @@ class StudioProblemDialog extends StatelessWidget {
             key: const Key('closeProblemDetails'),
             autofocus: true,
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Fermer les détails'),
+            child: Text(tr('Fermer les détails')),
           ),
         ],
       ),
@@ -119,19 +123,19 @@ class StudioStartupProblem extends StatelessWidget {
               children: [
                 const Icon(Icons.draw_outlined, size: 42),
                 const SizedBox(height: 20),
-                const Text(
-                  'Color n’a pas pu démarrer.',
+                Text(
+                  tr('Color n’a pas pu démarrer.'),
                   style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Tu peux consulter les détails pour demander de l’aide.',
+                Text(
+                  tr('Tu peux consulter les détails pour demander de l’aide.'),
                 ),
                 const SizedBox(height: 20),
                 OutlinedButton(
                   key: const Key('startupProblemDetails'),
                   onPressed: onDetails,
-                  child: const Text('Détails'),
+                  child: Text(tr('Détails')),
                 ),
               ],
             ),

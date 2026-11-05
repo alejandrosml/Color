@@ -28,7 +28,11 @@ final class _Draw extends _Instruction {
 /// The beginning of a group: what it holds is placed, clipped and, when the
 /// group is not opaque, painted as a whole before it is laid on the rest.
 final class _Open extends _Instruction {
-  _Open(this.opacity, this.matrix);
+  _Open(this.opacity, this.matrix, [this.name]);
+
+  /// The name the group has in its SVG file, for a part of the picture the
+  /// interface may move; null for most groups.
+  final String? name;
   final double opacity;
   final Float64List? matrix;
   final clips = <Path>[];
@@ -90,10 +94,15 @@ class VectorPicture {
       switch (letter) {
         case 'G':
           final fields = line.split(' ');
-          if (fields.length != 3) throw _unreadable;
+          // A name, last, for a part of the picture that may move.
+          if (fields.length != 3 && fields.length != 4) throw _unreadable;
           final opacity = _number(fields[1]);
           if (opacity < 0 || opacity > 1) throw _unreadable;
-          final group = _Open(opacity, _matrix(fields[2]));
+          final name = fields.length == 4 ? fields[3] : null;
+          if (name != null && !RegExp(r'^[a-z0-9-]{1,40}$').hasMatch(name)) {
+            throw _unreadable;
+          }
+          final group = _Open(opacity, _matrix(fields[2]), name);
           open.add(group);
           instructions.add(group);
         case 'C':
@@ -378,7 +387,21 @@ class VectorPicture {
   /// thumbnail keeps lines that can be seen. The reduction is that of the
   /// whole picture; a group that scales its content is not counted. Zero
   /// draws every stroke at its own width.
-  void paint(Canvas canvas, Rect bounds, {double minimumStroke = 0}) {
+  /// The names of the groups of the picture that may move, in their order.
+  Iterable<String> get parts => [
+    for (final instruction in _instructions)
+      if (instruction case _Open(:final name?)) name,
+  ];
+
+  /// Paints the picture in [bounds]; [moves] moves the named groups of the
+  /// picture, each by its matrix in the units of the picture, after its own
+  /// transform: how the companion stands up and paints.
+  void paint(
+    Canvas canvas,
+    Rect bounds, {
+    double minimumStroke = 0,
+    Map<String, Float64List> moves = const {},
+  }) {
     if (bounds.isEmpty) return;
     final scale = bounds.width / width < bounds.height / height
         ? bounds.width / width
@@ -411,9 +434,11 @@ class VectorPicture {
           if (strokeFirst && stroke != null) drawStroke(path, stroke);
           if (fill != null) canvas.drawPath(path, fill);
           if (!strokeFirst && stroke != null) drawStroke(path, stroke);
-        case _Open(:final opacity, :final matrix, :final clips):
+        case _Open(:final opacity, :final matrix, :final clips, :final name):
           canvas.save();
           if (matrix != null) canvas.transform(matrix);
+          final move = moves[name];
+          if (move != null) canvas.transform(move);
           for (final clip in clips) {
             canvas.clipPath(clip);
           }

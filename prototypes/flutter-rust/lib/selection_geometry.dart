@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'document_renderer.dart' show transformedBounds, untransformedPoint;
 import 'rust_document.dart';
 import 'stamp_catalog.dart';
 
@@ -19,6 +20,18 @@ Rect objectBounds(StrokeData object, {bool includeStroke = false}) {
   }
   final bounds = Rect.fromLTRB(left, top, right, bottom);
   return includeStroke ? bounds.inflate(object.outlineRadius) : bounds;
+}
+
+/// The box of [object] as the sheet shows it: turned and mirrored about the
+/// centre of the box of its points, [includeStroke] adding half its outline.
+Rect shownBounds(
+  StrokeData object, {
+  bool includeStroke = false,
+  Rect? points,
+}) {
+  final box = points ?? objectBounds(object);
+  final painted = includeStroke ? box.inflate(object.outlineRadius) : box;
+  return transformedBounds(object.look, painted, box);
 }
 
 Offset clampObjectMovement(
@@ -68,6 +81,9 @@ bool _covers(
   bool insides = true,
 }) {
   final radius = object.outlineRadius + reach;
+  // A turned or mirrored object is tested in its own drawing: turns and
+  // mirrors keep distances.
+  position = untransformedPoint(object.look, bounds, position);
   if (!bounds.inflate(radius + .000001).contains(position)) return false;
   // x then y of each point, read in place.
   final c = object.coordinates;
@@ -127,20 +143,27 @@ bool _covers(
       }
       return _ellipseDistance(relative, rx, ry) <= radius;
     case VectorKind.contour:
-      if (insides && object.fillRgb != null && _insideContour(position, c)) {
+      if (insides &&
+          object.fillRgb != null &&
+          _insideContour(position, c, object.rings)) {
         return true;
       }
-      // Its sides, the last one going back to the first point.
-      for (var i = 0; i < count; i++) {
-        final next = i + 1 < count ? i + 1 : 0;
-        if (_segmentDistance(
-              position,
-              Offset(c[2 * i], c[2 * i + 1]),
-              Offset(c[2 * next], c[2 * next + 1]),
-            ) <=
-            radius) {
-          return true;
+      // The sides of each ring, its last one going back to its first point.
+      var start = 0;
+      for (final ring in object.rings ?? [count]) {
+        for (var i = 0; i < ring; i++) {
+          final from = start + i;
+          final next = start + (i + 1 < ring ? i + 1 : 0);
+          if (_segmentDistance(
+                position,
+                Offset(c[2 * from], c[2 * from + 1]),
+                Offset(c[2 * next], c[2 * next + 1]),
+              ) <=
+              radius) {
+            return true;
+          }
         }
+        start += ring;
       }
       return false;
   }
@@ -156,30 +179,51 @@ bool _insideEllipse(Offset relative, double rx, double ry) =>
 /// inside of a contour is painted: of the sides that cross the horizontal
 /// line of the position on its right, those that go up are not as many as
 /// those that go down.
-bool _insideContour(Offset position, Float32List c) {
+///
+/// A contour with [rings], the zone of the paint pot, is painted by the
+/// even-odd rule: inside when the windings of its rings add up to an odd
+/// number of crossings.
+bool _insideContour(Offset position, Float32List c, [Uint32List? rings]) {
   final x = position.dx;
   final y = position.dy;
   final count = c.length >> 1;
   var winding = 0;
-  for (var i = 0; i < count; i++) {
-    final next = i + 1 < count ? i + 1 : 0;
-    final fromX = c[2 * i], fromY = c[2 * i + 1];
-    final toX = c[2 * next], toY = c[2 * next + 1];
-    // Positive when the position lies on the left of the side.
-    final side = (toX - fromX) * (y - fromY) - (x - fromX) * (toY - fromY);
-    if (fromY <= y) {
-      if (toY > y && side > 0) winding++;
-    } else if (toY <= y && side < 0) {
-      winding--;
+  var crossings = 0;
+  var start = 0;
+  for (final ring in rings ?? [count]) {
+    for (var i = 0; i < ring; i++) {
+      final at = start + i;
+      final next = start + (i + 1 < ring ? i + 1 : 0);
+      final fromX = c[2 * at], fromY = c[2 * at + 1];
+      final toX = c[2 * next], toY = c[2 * next + 1];
+      // Positive when the position lies on the left of the side.
+      final side = (toX - fromX) * (y - fromY) - (x - fromX) * (toY - fromY);
+      if (fromY <= y) {
+        if (toY > y && side > 0) {
+          winding++;
+          crossings++;
+        }
+      } else if (toY <= y && side < 0) {
+        winding--;
+        crossings++;
+      }
     }
+    start += ring;
   }
-  return winding != 0;
+  return rings == null ? winding != 0 : crossings.isOdd;
 }
 
 /// Whether [object], a hollow rectangle, oval or contour, encloses
 /// [position]: where poured paint would go. Any other element encloses
 /// nothing.
 bool _encloses(StrokeData object, Rect bounds, Offset position) =>
+    _enclosesUnturned(
+      object,
+      bounds,
+      untransformedPoint(object.look, bounds, position),
+    );
+
+bool _enclosesUnturned(StrokeData object, Rect bounds, Offset position) =>
     switch (object.kind) {
       VectorKind.rectangle => bounds.contains(position),
       VectorKind.ellipse => _insideEllipse(
@@ -189,7 +233,7 @@ bool _encloses(StrokeData object, Rect bounds, Offset position) =>
       ),
       VectorKind.contour =>
         bounds.contains(position) &&
-            _insideContour(position, object.coordinates),
+            _insideContour(position, object.coordinates, object.rings),
       VectorKind.stroke ||
       VectorKind.line ||
       VectorKind.text ||
@@ -326,8 +370,70 @@ int? hitTestObjects(
     if (exact != null) return indexAt(exact);
   }
   if (tolerancePixels <= precisePixels) return null;
-  final near = frontmost(tolerancePixels / scale, boxes: !inkOnly);
+  // Beside every element, the nearest answers (Color 1.1): the smallest
+  // reach at which one is found, to half a pixel, then the frontmost there.
+  final far = tolerancePixels / scale;
+  if (frontmost(far, boxes: !inkOnly) == null) return null;
+  var (low, high) = (precise, far);
+  while (high - low > .5 / scale) {
+    final middle = (low + high) / 2;
+    if (frontmost(middle, boxes: !inkOnly) == null) {
+      low = middle;
+    } else {
+      high = middle;
+    }
+  }
+  final near = frontmost(high, boxes: !inkOnly);
   return near == null ? null : indexAt(near);
+}
+
+/// The reach of a pointer beside the elements, in pixels of the screen: two
+/// millimetres for a mouse or a stylus, three and a half for a finger
+/// (Color 1.1). A pixel of Flutter is about 1/160 inch on a telephone or a
+/// tablet, 1/96 on a computer.
+double reachPixels({required bool touch, required bool touchScreen}) {
+  final perMillimetre = touchScreen ? 160 / 25.4 : 96 / 25.4;
+  return (touch ? 3.5 : 2.0) * perMillimetre;
+}
+
+/// Whether the eraser cuts [object] rather than taking it whole: a trait, a
+/// line, the outline of a hollow rectangle, oval or shape (Color 1.1).
+/// Filled shapes, the zones of the paint pot, texts and stamps go whole.
+bool erasesByCutting(StrokeData object) => switch (object.kind) {
+  VectorKind.stroke || VectorKind.line => true,
+  VectorKind.rectangle || VectorKind.ellipse => object.fillRgb == null,
+  VectorKind.contour => object.fillRgb == null && object.rings == null,
+  VectorKind.text || VectorKind.stamp => false,
+};
+
+/// What the eraser reaches at [point], [reach] units around it, frontmost
+/// first: the traits and outlines it cuts, down to the first element it
+/// would take whole, which hides what lies behind it; that element is
+/// [whole] when nothing in front of it is cut. What [shielded] says is out of
+/// reach is passed over. [paintOrder] as for [hitTestObjects].
+({List<int> cut, int? whole}) eraserTargets(
+  List<StrokeData> objects,
+  DocumentPoint point, {
+  required double reach,
+  required List<int> paintOrder,
+  Rect? Function(int index, StrokeData object)? preparedBounds,
+  bool Function(StrokeData object)? shielded,
+}) {
+  final position = Offset(point.x, point.y);
+  final cut = <int>[];
+  for (var rank = paintOrder.length - 1; rank >= 0; rank--) {
+    final index = paintOrder[rank];
+    final object = objects[index];
+    if (shielded?.call(object) ?? false) continue;
+    final bounds = preparedBounds?.call(index, object) ?? objectBounds(object);
+    if (!_covers(object, bounds, position, reach, boxes: true)) continue;
+    if (erasesByCutting(object)) {
+      cut.add(index);
+    } else {
+      return (cut: cut, whole: cut.isEmpty ? index : null);
+    }
+  }
+  return (cut: cut, whole: null);
 }
 
 /// The colour seen on [object] at [point], which lies on it: the outline of a
@@ -341,9 +447,10 @@ int colourOfObjectAt(
 }) {
   if (object.kind == VectorKind.stamp) {
     final art = stampArtOf(object);
+    final box = objectBounds(object);
     return art?.inkAt(
-          Offset(point.x, point.y),
-          objectBounds(object),
+          untransformedPoint(object.look, box, Offset(point.x, point.y)),
+          box,
           object.rgb,
           precisePixels / scale,
         ) ??
@@ -356,6 +463,8 @@ int colourOfObjectAt(
     object.rgb,
     object.width,
     kind: object.kind,
+    look: object.look.withGradient(GradientKind.none),
+    rings: object.rings,
   );
   // A narrow tolerance: on the screen the border is exactly as wide as drawn.
   return hitTestObjects([hollow], point, scale: scale, tolerancePixels: 1) ==

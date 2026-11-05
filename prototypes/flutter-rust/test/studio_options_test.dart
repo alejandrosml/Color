@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:edupaint_flutter_study/recovery_location.dart';
+import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:edupaint_flutter_study/studio_tool.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -173,6 +174,8 @@ void main() {
         holdFree: true,
         screenKeyboard: true,
         guarded: true,
+        steadyHand: true,
+        language: LanguageChoice.english,
       );
       await storage.write(chosen);
       expect(await storage.read(), chosen);
@@ -184,6 +187,11 @@ void main() {
         'holdFree': true,
         'screenKeyboard': true,
         'guarded': true,
+        'steadyHand': true,
+        'touchShift': [0, 0],
+        'keyboardPointer': false,
+        'language': 'en',
+        'companionReacts': false,
       });
       // Nothing is left beside the file. By their names: Windows lists a
       // folder with its own separator.

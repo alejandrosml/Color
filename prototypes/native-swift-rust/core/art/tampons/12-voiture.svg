@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Voiture », n° 12. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Voiture</title>
+  <path d="M 8 68 L 8 54 C 8 49 12 46 17 46 L 27 46 L 38 28 L 67 28 L 80 46 L 87 47 C 91 48 93 51 93 55 L 93 68 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 40 33 L 51 33 L 51 46 L 33 46 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 56 33 L 65 33 L 74 46 L 56 46 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 40 68 C 40 74.08 35.08 79 29 79 C 22.92 79 18 74.08 18 68 C 18 61.92 22.92 57 29 57 C 35.08 57 40 61.92 40 68 Z" fill="#293d4b" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 83 68 C 83 74.08 78.08 79 72 79 C 65.92 79 61 74.08 61 68 C 61 61.92 65.92 57 72 57 C 78.08 57 83 61.92 83 68 Z" fill="#293d4b" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 33.5 68 C 33.5 70.49 31.49 72.5 29 72.5 C 26.51 72.5 24.5 70.49 24.5 68 C 24.5 65.51 26.51 63.5 29 63.5 C 31.49 63.5 33.5 65.51 33.5 68 Z" fill="#fffcf0"/>
+  <path d="M 76.5 68 C 76.5 70.49 74.49 72.5 72 72.5 C 69.51 72.5 67.5 70.49 67.5 68 C 67.5 65.51 69.51 63.5 72 63.5 C 74.49 63.5 76.5 65.51 76.5 68 Z" fill="#fffcf0"/>
+  <path d="M 90.5 54 C 90.5 55.66 89.38 57 88 57 C 86.62 57 85.5 55.66 85.5 54 C 85.5 52.34 86.62 51 88 51 C 89.38 51 90.5 52.34 90.5 54 Z" fill="#ffcd62"/>
+</svg>

@@ -190,6 +190,78 @@ impl Owned {
             bytes
         }
     }
+    /// The project of version 6 (Color 1.1), its blocks compressed or not.
+    pub fn v6(&self, compress: bool) -> Vec<u8> {
+        unsafe {
+            let mut bytes = vec![0; ep_project_bound(self.0)];
+            let mut length = 0;
+            assert_eq!(
+                ep_write_project(
+                    self.0,
+                    bytes.as_mut_ptr(),
+                    bytes.len(),
+                    u32::from(compress),
+                    &mut length
+                ),
+                0
+            );
+            bytes.truncate(length);
+            bytes
+        }
+    }
+    /// Adds an object through ep_add_object.
+    pub fn add(&self, spec: &Spec<'_>) -> i32 {
+        let object = Self::new_object(spec);
+        unsafe { ep_add_object(self.0, &object) }
+    }
+    /// Several objects added as one command.
+    pub fn add_all(&self, specs: &[Spec<'_>]) -> i32 {
+        let objects: Vec<EpNewObject> = specs.iter().map(Self::new_object).collect();
+        unsafe { ep_add_objects(self.0, objects.as_ptr(), objects.len()) }
+    }
+    pub fn new_object(spec: &Spec<'_>) -> EpNewObject {
+        EpNewObject {
+            points: spec.points.as_ptr(),
+            count: spec.points.len(),
+            style: EpObjectStyle {
+                kind: spec.kind,
+                fill_enabled: u32::from(spec.fill.is_some()),
+                fill_rgb: spec.fill.unwrap_or(0),
+            },
+            rgb: spec.rgb,
+            width: spec.width,
+            param: spec.param,
+            text: if spec.text.is_empty() {
+                ptr::null()
+            } else {
+                spec.text.as_ptr()
+            },
+            text_length: spec.text.len(),
+            look: spec.look,
+            pressures: if spec.pressures.is_empty() {
+                ptr::null()
+            } else {
+                spec.pressures.as_ptr()
+            },
+            rings: if spec.rings.is_empty() {
+                ptr::null()
+            } else {
+                spec.rings.as_ptr()
+            },
+            ring_count: spec.rings.len(),
+            quant: spec.quant,
+            placement: match spec.above {
+                Some(_) => 2,
+                None => u32::from(spec.bottom),
+            },
+            above: spec.above.unwrap_or(0),
+        }
+    }
+    pub fn look(&self, index: usize) -> EpObjectLook {
+        let mut look = EpObjectLook::default();
+        assert_eq!(unsafe { ep_object_look(self.0, index, &mut look) }, 0);
+        look
+    }
     pub fn try_from_project(bytes: &[u8]) -> Result<Self, i32> {
         let mut status = 99;
         let result = unsafe { ep_document_from_project(bytes.as_ptr(), bytes.len(), &mut status) };
@@ -240,27 +312,35 @@ impl Owned {
                 .filter(|s| s.style.kind == KIND_CONTOUR)
                 .count()
         );
-        for edit in &document.history {
-            match edit {
-                Edit::Presence {
-                    detached: Some(stroke),
-                    ..
-                } => {
-                    points += stroke.points.len();
-                    text += stroke.text.len();
-                    objects += 1;
-                }
-                Edit::LayerPresence { detached, .. } => {
-                    for (_, stroke) in detached {
-                        points += stroke.points.len();
-                        text += stroke.text.len();
-                        objects += 1;
+        assert_eq!(
+            document.active_v6,
+            document.strokes.iter().filter(|s| s.needs_v6()).count()
+        );
+        fn count(edits: &[Edit], points: &mut usize, text: &mut usize, objects: &mut usize) {
+            for edit in edits {
+                match edit {
+                    Edit::Presence {
+                        detached: Some(stroke),
+                        ..
+                    } => {
+                        *points += stroke.points.len();
+                        *text += stroke.text.len();
+                        *objects += 1;
                     }
+                    Edit::LayerPresence { detached, .. } => {
+                        for (_, stroke) in detached {
+                            *points += stroke.points.len();
+                            *text += stroke.text.len();
+                            *objects += 1;
+                        }
+                    }
+                    Edit::Text { text: other, .. } => *text += other.len(),
+                    Edit::Batch { edits, .. } => count(edits, points, text, objects),
+                    _ => {}
                 }
-                Edit::Text { text: other, .. } => text += other.len(),
-                _ => {}
             }
         }
+        count(&document.history, &mut points, &mut text, &mut objects);
         assert_eq!(document.retained_points, points);
         assert_eq!(document.retained_text_bytes, text);
         assert_eq!(document.retained_objects, objects);
@@ -376,4 +456,42 @@ pub(crate) fn locked_project(mut bytes: Vec<u8>, positions: &[usize]) -> Vec<u8>
         put_u32(&mut bytes, flags, word | 2);
     }
     resealed(bytes)
+}
+
+/// One object for `Owned::add`: a freehand stroke of fineness 4 unless said
+/// otherwise.
+pub(crate) struct Spec<'a> {
+    pub points: &'a [EpPoint],
+    pub kind: u32,
+    pub fill: Option<u32>,
+    pub rgb: u32,
+    pub width: f32,
+    pub param: u32,
+    pub text: &'a str,
+    pub look: EpObjectLook,
+    pub pressures: &'a [u8],
+    pub rings: &'a [u32],
+    pub quant: u32,
+    pub bottom: bool,
+    pub above: Option<usize>,
+}
+
+impl Default for Spec<'_> {
+    fn default() -> Self {
+        Self {
+            points: &[],
+            kind: 0,
+            fill: None,
+            rgb: 0x0012_3456,
+            width: 3.0,
+            param: 0,
+            text: "",
+            look: PLAIN_LOOK,
+            pressures: &[],
+            rings: &[],
+            quant: 4,
+            bottom: false,
+            above: None,
+        }
+    }
 }

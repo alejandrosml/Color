@@ -8,6 +8,7 @@ import 'studio_colors.dart';
 import 'studio_text.dart';
 import 'text_layout.dart' show colorTextFontFamily;
 import 'platform_words.dart';
+import 'language.dart';
 
 /// Which keys the keyboard shows above its last row.
 enum _Page { letters, accents, signs }
@@ -45,9 +46,15 @@ class _ScreenKeyboardState extends State<ScreenKeyboard> {
   // The keys of a French keyboard, in its order. Every page has three rows
   // of ten keys, so that no key moves when the page changes.
   static const _letters = ['azertyuiop', 'qsdfghjklm', 'wxcvbn’-.,'];
+  // An English keyboard in English (Color 1.1), with the same three rows of
+  // ten keys.
+  static const _englishLetters = ['qwertyuiop', 'asdfghjkl’', 'zxcvbnm-.,'];
   // The letters of French first, then those of first names from elsewhere.
   static const _accents = ['éèêëàâùûüç', 'îïôöœæÿ«»…', 'áíóúñãõäìò'];
   static const _signs = ['1234567890', '?!:;()+=♥★', '-×÷<>€%"/@'];
+  // British, as the English of Color is: the pound where French has the
+  // euro.
+  static const _englishSigns = ['1234567890', '?!:;()+=♥★', '-×÷<>£%"/@'];
 
   var _page = _Page.letters;
   // Capitals for the next letter only, as on a telephone.
@@ -159,7 +166,9 @@ class _ScreenKeyboardState extends State<ScreenKeyboard> {
           _key(
             key: Key('key-${_shown(String.fromCharCode(rune))}'),
             spoken:
-                _spokenNames[String.fromCharCode(rune)] ??
+                (inEnglish ? _englishNames : _spokenNames)[String.fromCharCode(
+                  rune,
+                )] ??
                 _shown(String.fromCharCode(rune)),
             onPressed: () => _type(_shown(String.fromCharCode(rune))),
             // In the letters of the sheet: the key shows what it will write,
@@ -204,6 +213,35 @@ class _ScreenKeyboardState extends State<ScreenKeyboard> {
     '@': 'arobase',
   };
 
+  static const _englishNames = {
+    '’': 'apostrophe',
+    '-': 'hyphen',
+    '.': 'full stop',
+    ',': 'comma',
+    '?': 'question mark',
+    '!': 'exclamation mark',
+    ':': 'colon',
+    ';': 'semicolon',
+    '(': 'opening parenthesis',
+    ')': 'closing parenthesis',
+    '+': 'plus',
+    '=': 'equals',
+    '♥': 'heart',
+    '★': 'star',
+    '«': 'opening quotation mark',
+    '»': 'closing quotation mark',
+    '…': 'ellipsis',
+    '×': 'times',
+    '÷': 'divided by',
+    '<': 'less than',
+    '>': 'greater than',
+    '£': 'pound sign',
+    '%': 'percent',
+    '"': 'straight quotation mark',
+    '/': 'slash',
+    '@': 'at sign',
+  };
+
   Widget _pageKey(_Page page, String label, String spoken) => _key(
     key: Key('keys-${page.name}'),
     spoken: spoken,
@@ -221,15 +259,15 @@ class _ScreenKeyboardState extends State<ScreenKeyboard> {
     child: ExcludeFocus(
       child: Semantics(
         container: true,
-        label: forTouch('Clavier à cliquer'),
+        label: forTouch(tr('Clavier à cliquer')),
         child: Column(
           key: const Key('screenKeyboard'),
           mainAxisSize: MainAxisSize.min,
           children: [
             for (final row in switch (_page) {
-              _Page.letters => _letters,
+              _Page.letters => inEnglish ? _englishLetters : _letters,
               _Page.accents => _accents,
-              _Page.signs => _signs,
+              _Page.signs => inEnglish ? _englishSigns : _signs,
             })
               _row(row),
             Row(
@@ -237,21 +275,21 @@ class _ScreenKeyboardState extends State<ScreenKeyboard> {
               children: [
                 _key(
                   key: const Key('key-capitals'),
-                  spoken: 'Majuscule pour la prochaine lettre',
+                  spoken: tr('Majuscule pour la prochaine lettre'),
                   chosen: _capitals,
                   onPressed: () => setState(() => _capitals = !_capitals),
                   child: const Icon(Icons.arrow_upward_rounded, size: 22),
                 ),
                 const SizedBox(width: ScreenKeyboard._gap),
-                _pageKey(_Page.letters, 'abc', 'Les lettres'),
+                _pageKey(_Page.letters, 'abc', tr('Les lettres')),
                 const SizedBox(width: ScreenKeyboard._gap),
-                _pageKey(_Page.accents, 'éàç', 'Les lettres accentuées'),
+                _pageKey(_Page.accents, 'éàç', tr('Les lettres accentuées')),
                 const SizedBox(width: ScreenKeyboard._gap),
-                _pageKey(_Page.signs, '123', 'Les chiffres et les signes'),
+                _pageKey(_Page.signs, '123', tr('Les chiffres et les signes')),
                 const SizedBox(width: ScreenKeyboard._gap),
                 _key(
                   key: const Key('key-space'),
-                  spoken: 'Espace',
+                  spoken: tr('Espace'),
                   width: 132,
                   onPressed: () => _type(' '),
                   child: const Icon(Icons.space_bar_rounded, size: 24),
@@ -259,7 +297,7 @@ class _ScreenKeyboardState extends State<ScreenKeyboard> {
                 const SizedBox(width: ScreenKeyboard._gap),
                 _key(
                   key: const Key('key-newline'),
-                  spoken: 'À la ligne',
+                  spoken: tr('À la ligne'),
                   width: 56,
                   onPressed: () => _type('\n'),
                   child: const Icon(Icons.keyboard_return_rounded, size: 22),
@@ -267,7 +305,7 @@ class _ScreenKeyboardState extends State<ScreenKeyboard> {
                 const SizedBox(width: ScreenKeyboard._gap),
                 _key(
                   key: const Key('key-erase'),
-                  spoken: 'Effacer',
+                  spoken: tr('Effacer'),
                   width: 56,
                   onPressed: _erase,
                   child: const Icon(Icons.backspace_outlined, size: 20),

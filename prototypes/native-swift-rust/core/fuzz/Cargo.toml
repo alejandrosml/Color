@@ -13,8 +13,9 @@ license = "MIT"
 [workspace]
 
 [dependencies]
-# The core without its only dependency: the reader of projects needs none.
-edupaint_core = { path = "..", default-features = false }
+# The core of the stores, without the reading of SVG files: the reader of
+# projects needs only miniz_oxide, for the compressed blocks of version 6.
+edupaint_core = { path = "..", default-features = false, features = ["deflate"] }
 
 [profile.release]
 debug-assertions = true

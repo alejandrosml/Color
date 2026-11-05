@@ -70,16 +70,21 @@ void main() {
     expect(results, {36, 42, 48, 54, 49, 56, 63, 64, 72, 81});
   });
 
-  testWidgets('the right result opens the door', (tester) async {
+  testWidgets('the right result opens the door at its second digit', (
+    tester,
+  ) async {
     final answers = await open(tester, random: math.Random(1));
-    // Nothing to answer with yet.
-    expect(
-      tester
-          .widget<FilledButton>(find.byKey(const Key('adultGateEnter')))
-          .onPressed,
-      isNull,
-    );
-    await answerAdultGate(tester);
+    final (first, second) = adultGateNumbers(tester);
+    final answer = '${first * second}';
+    // One digit: nothing answered yet, and no key to confirm.
+    await tester.tap(find.byKey(Key('adultGateDigit${answer[0]}')));
+    await tester.pumpAndSettle();
+    expect(typed(answer[0]), findsOneWidget);
+    expect(find.byKey(const Key('adultGateEnter')), findsNothing);
+    expect(answers, isEmpty);
+    // The second one answers: the door is gone at once.
+    await tester.tap(find.byKey(Key('adultGateDigit${answer[1]}')));
+    await tester.pumpAndSettle();
     expect(find.byKey(const Key('adultGate')), findsNothing);
     expect(answers, [AdultGate.opened]);
   });
@@ -139,7 +144,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('the keys erase, and take no third digit', (tester) async {
+  testWidgets('a first digit can be erased before it answers', (tester) async {
     final answers = await open(tester, random: math.Random(3));
     expect(
       tester
@@ -147,17 +152,14 @@ void main() {
           .onPressed,
       isNull,
     );
-    for (final digit in [1, 0, 7]) {
-      await tester.tap(find.byKey(Key('adultGateDigit$digit')));
-      await tester.pump();
-    }
-    expect(typed('10'), findsOneWidget);
-    await tester.tap(find.byKey(const Key('adultGateErase')));
+    await tester.tap(find.byKey(const Key('adultGateDigit1')));
     await tester.pump();
     expect(typed('1'), findsOneWidget);
     await tester.tap(find.byKey(const Key('adultGateErase')));
     await tester.pump();
     expect(typed('…'), findsOneWidget);
+    // Nothing was answered: no wrong result counted.
+    expect(find.byKey(const Key('adultGateWrong')), findsNothing);
     await answerAdultGate(tester);
     expect(answers, [AdultGate.opened]);
   });
@@ -177,16 +179,11 @@ void main() {
         character: digit,
       );
     }
-    await tester.pump();
-    expect(typed(answer), findsOneWidget);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
     await tester.pumpAndSettle();
     expect(answers, [AdultGate.opened]);
   });
 
-  testWidgets('digits and Entrée are heard wherever the focus is', (
-    tester,
-  ) async {
+  testWidgets('digits are heard wherever the focus is', (tester) async {
     final answers = await open(tester, random: math.Random(8));
     Future<void> type(int number) async {
       for (final digit in '$number'.split('')) {
@@ -195,51 +192,41 @@ void main() {
           character: digit,
         );
       }
-      await tester.pump();
+      await tester.pumpAndSettle();
     }
 
-    // The focus on « Annuler » : a digit typed is still a digit of the
-    // answer, and Entrée on that button is that button.
+    // The focus on « Annuler »: a digit typed is still a digit of the
+    // answer, and a wrong one brings another calculation.
     await tester.sendKeyEvent(LogicalKeyboardKey.tab);
     await tester.pump();
     await type(wrongAdultGateAnswer(tester));
-    expect(typed('…'), findsNothing);
-    // Entrée on « Entrer », reached with Tab: a wrong answer.
-    final enter = tester.widget<FilledButton>(
-      find.byKey(const Key('adultGateEnter')),
-    );
-    expect(enter.onPressed, isNotNull);
-    Focus.of(tester.element(find.text('Entrer'))).requestFocus();
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
     expect(find.byKey(const Key('adultGateWrong')), findsOneWidget);
     expect(answers, isEmpty);
-    // The button lost its answer and the focus: the next digits and the
-    // next Entrée answer the new calculation — they do not cancel.
+    // The focus came back to the dialog: the next digits answer the new
+    // calculation — they do not cancel.
     final (first, second) = adultGateNumbers(tester);
     await type(first * second);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pumpAndSettle();
     expect(answers, [AdultGate.opened]);
   });
 
-  testWidgets('Entrée held down answers once', (tester) async {
+  testWidgets('a key held down types once', (tester) async {
     final answers = await open(tester, random: math.Random(9));
-    await tester.sendKeyEvent(LogicalKeyboardKey.digit1, character: '1');
-    await tester.sendKeyEvent(LogicalKeyboardKey.digit1, character: '1');
-    await tester.sendKeyDownEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyDownEvent(LogicalKeyboardKey.digit1, character: '1');
     for (var repeat = 0; repeat < 5; repeat++) {
-      await tester.sendKeyRepeatEvent(LogicalKeyboardKey.enter);
+      await tester.sendKeyRepeatEvent(
+        LogicalKeyboardKey.digit1,
+        character: '1',
+      );
     }
-    await tester.sendKeyUpEvent(LogicalKeyboardKey.enter);
+    await tester.sendKeyUpEvent(LogicalKeyboardKey.digit1);
     await tester.pumpAndSettle();
-    // One wrong answer, not three: the door is still there.
-    expect(find.byKey(const Key('adultGate')), findsOneWidget);
-    expect(find.textContaining('Dernier essai'), findsNothing);
+    // One digit, not an answer: no wrong result, the door still there.
+    expect(typed('1'), findsOneWidget);
+    expect(find.byKey(const Key('adultGateWrong')), findsNothing);
     expect(answers, isEmpty);
     await tester.tap(find.byKey(const Key('adultGateCancel')));
     await tester.pumpAndSettle();
+    expect(answers, [AdultGate.givenUp]);
   });
 
   testWidgets('every key is large, named and in view in windows of all sizes', (
@@ -269,7 +256,6 @@ void main() {
           for (var digit = 0; digit <= 9; digit++) 'adultGateDigit$digit',
           'adultGateErase',
           'adultGateCancel',
-          'adultGateEnter',
         ]) {
           final box = tester.getSize(find.byKey(Key(key)));
           expect(box.width, greaterThanOrEqualTo(48), reason: '$key, $where');
@@ -283,11 +269,14 @@ void main() {
           await tester.tap(find.byKey(const Key('adultGateErase')));
           await tester.pump();
         }
-        expect(
-          tester.getRect(find.byKey(const Key('adultGateEnter'))).bottom,
-          lessThanOrEqualTo(size.height),
-          reason: where,
-        );
+        // The lowest keys, the last row of the calculator, in view.
+        for (final key in ['adultGateDigit0', 'adultGateErase']) {
+          expect(
+            tester.getRect(find.byKey(Key(key))).bottom,
+            lessThanOrEqualTo(size.height),
+            reason: '$key, $where',
+          );
+        }
         await tester.tap(find.byKey(const Key('adultGateCancel')));
         await tester.pumpAndSettle();
       }

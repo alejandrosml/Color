@@ -44,6 +44,27 @@ pub use sound::*;
 mod stamps;
 pub use stamps::*;
 mod text;
+// Rotation, mirror, gradient, tools and pressures of Color 1.1.
+mod look;
+pub use look::*;
+// The eraser of Color 1.1, which cuts strokes.
+mod erase;
+pub use erase::*;
+// The zone the paint pot fills, small gaps closed.
+mod fill;
+pub use fill::*;
+// The marks of the brushes and magic tools of Color 1.1.
+mod marks;
+pub use marks::*;
+// The mixer, as paint mixes, and the gradients through Oklab.
+mod colours;
+pub use colours::*;
+// The new shapes in their box, and the magnet shapes.
+mod shapes;
+pub use shapes::*;
+// Version 6 of the project: blocks, compression, a damaged file read again.
+mod project_v6;
+pub use project_v6::{ep_document_from_damaged_project, ep_project_bound, ep_write_project};
 pub use text::*;
 #[cfg(test)]
 mod contour_tests;
@@ -116,6 +137,13 @@ pub const MAX_PROJECT_BYTES: usize = LAYERED_PROJECT_HEADER_BYTES
     + MAX_TOTAL_TEXT_BYTES
     + MAX_BACKGROUND_BYTES
     + 4;
+/// The largest file any reader of the core accepts: version 6 can be a
+/// little larger than the bound of version 5 (pressures, varints).
+pub const MAX_READ_PROJECT_BYTES: usize = if project_v6::MAX_BYTES > MAX_PROJECT_BYTES {
+    project_v6::MAX_BYTES
+} else {
+    MAX_PROJECT_BYTES
+};
 const INVALID: i32 = -1;
 const ALLOCATION_FAILURE: i32 = -2;
 
@@ -142,6 +170,197 @@ pub struct EpObjectStyle {
     pub kind: u32,
     pub fill_enabled: u32, // exactly 0 or 1; only rectangles/ellipses/contours may fill
     pub fill_rgb: u32,     // 24-bit RGB; zero when fill is disabled
+}
+
+/// What version 6 of the project adds to an object (Color 1.1). All zero is
+/// "nothing added": the object looks as it did before 1.1.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
+pub struct EpObjectLook {
+    /// Radians in ]−π, π], about the centre of the object's box, after the
+    /// mirror; positive turns clockwise on the sheet, whose y axis goes down.
+    pub rotation: f32,
+    /// Bit 0 left-right, bit 1 top-bottom.
+    pub mirror: u32,
+    /// The tool of a freehand stroke: 0 round, 1 felt, 2 calligraphy, 3 chalk,
+    /// 4 airbrush, 16 rainbow, 17 grass, 18 bricks, 19 confetti.
+    pub tool: u32,
+    /// The seed of the scattered marks of chalk, airbrush, grass and
+    /// confetti; zero for every other tool.
+    pub seed: u32,
+    /// 0 none, 1 linear, 2 radial: only for a filled rectangle, ellipse or
+    /// contour, whose fill colour is the gradient's first colour.
+    pub gradient: u32,
+    /// The second colour of the gradient, 0x00RRGGBB; zero without one.
+    pub gradient_rgb: u32,
+    /// x0, y0, x1, y1 as fractions of the object's box; zeros without one.
+    pub gradient_points: [f32; 4],
+}
+
+/// Everything a new object is, for `ep_add_object` (Color 1.1). Pointers are
+/// read during the call only.
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct EpNewObject {
+    pub points: *const EpPoint,
+    pub count: usize,
+    pub style: EpObjectStyle,
+    pub rgb: u32,
+    pub width: f32,
+    /// The font of a text (0 to 4), the drawing of a stamp, else zero.
+    pub param: u32,
+    /// UTF-8 of a text, `text_length` bytes; NULL for every other kind.
+    pub text: *const u8,
+    pub text_length: usize,
+    pub look: EpObjectLook,
+    /// NULL, or one pressure per point (1 to 255) for a freehand stroke.
+    pub pressures: *const u8,
+    /// NULL, or the point counts of the rings of a contour with holes.
+    pub rings: *const u32,
+    pub ring_count: usize,
+    /// 0 to 10: points are rounded to 1/2^quant unit; 255 keeps them exact.
+    pub quant: u32,
+    /// 0 on top of the active layer, 1 at its bottom (under its drawing),
+    /// 2 just above the object `above` of the active layer (an object added
+    /// alone): where the paint pot pours a zone over an earlier one.
+    pub placement: u32,
+    /// With placement 2, the index of that object; else ignored.
+    pub above: usize,
+}
+
+/// The fineness that keeps coordinates as they come, bit for bit.
+const EXACT_QUANT: u8 = 255;
+/// The finest rounding: 16 384 × 2^10 = 2^24, every multiple is a float32.
+const MAX_QUANT: u8 = 10;
+/// The fonts of a text: DejaVu Sans, Atkinson Hyperlegible, Comic Neue,
+/// Fredoka, Playwrite FR Trad.
+const FONT_COUNT: u32 = 5;
+const MAX_RINGS: usize = 4096;
+
+const TOOL_ROUND: u32 = 0;
+const TOOL_FELT: u32 = 1;
+const TOOL_CALLIGRAPHY: u32 = 2;
+const TOOL_CHALK: u32 = 3;
+const TOOL_AIRBRUSH: u32 = 4;
+const TOOL_RAINBOW: u32 = 16;
+const TOOL_GRASS: u32 = 17;
+const TOOL_BRICKS: u32 = 18;
+const TOOL_CONFETTI: u32 = 19;
+/// Not a brush: the mark of a zone poured by the paint pot, a contour that
+/// a later pour may paint over or within.
+pub(crate) const TOOL_ZONE: u32 = 32;
+
+const PLAIN_LOOK: EpObjectLook = EpObjectLook {
+    rotation: 0.0,
+    mirror: 0,
+    tool: TOOL_ROUND,
+    seed: 0,
+    gradient: 0,
+    gradient_rgb: 0,
+    gradient_points: [0.0; 4],
+};
+
+fn known_tool(tool: u32) -> bool {
+    matches!(
+        tool,
+        TOOL_ROUND
+            | TOOL_FELT
+            | TOOL_CALLIGRAPHY
+            | TOOL_CHALK
+            | TOOL_AIRBRUSH
+            | TOOL_RAINBOW
+            | TOOL_GRASS
+            | TOOL_BRICKS
+            | TOOL_CONFETTI
+    )
+}
+
+/// The tools whose marks are scattered: they need their seed.
+fn scattering_tool(tool: u32) -> bool {
+    matches!(
+        tool,
+        TOOL_CHALK | TOOL_AIRBRUSH | TOOL_GRASS | TOOL_CONFETTI
+    )
+}
+
+/// Whether `look` fits an object of this kind and fill. Rotation, mirror and
+/// gradient are shared by every kind that may have them; the tool and its
+/// seed belong to freehand strokes only, but for the mark of a zone that the
+/// paint pot poured, which only a contour carries.
+fn valid_look(kind: u32, fill_enabled: u32, look: &EpObjectLook) -> bool {
+    let turned = look.rotation.is_finite()
+        && look.rotation > -std::f32::consts::PI
+        && look.rotation <= std::f32::consts::PI;
+    let tool = match look.tool {
+        TOOL_ROUND => true,
+        TOOL_ZONE => kind == KIND_CONTOUR,
+        tool => kind == 0 && known_tool(tool),
+    } && (scattering_tool(look.tool) || look.seed == 0);
+    let gradient = match look.gradient {
+        0 => look.gradient_rgb == 0 && look.gradient_points == [0.0; 4],
+        1 | 2 => {
+            let [x0, y0, x1, y1] = look.gradient_points;
+            fill_enabled == 1
+                && look.gradient_rgb <= 0x00ff_ffff
+                && look.gradient_points.iter().all(|v| (0.0..=1.0).contains(v))
+                && (x0 != x1 || y0 != y1)
+        }
+        _ => false,
+    };
+    turned && look.mirror <= 3 && tool && gradient
+}
+
+/// What version 6 adds to an object, beside its look: its pressures, the
+/// rings of a contour with holes, the fineness of its coordinates.
+struct Extras {
+    look: EpObjectLook,
+    /// One byte per point (1 to 255) for a freehand stroke, or none.
+    pressures: Vec<u8>,
+    /// The point counts of the rings of a contour with holes; empty for a
+    /// contour of one ring and every other kind.
+    rings: Vec<u32>,
+    /// Coordinates are multiples of 1/2^quant unit, or exact (EXACT_QUANT).
+    quant: u8,
+}
+
+impl Extras {
+    const fn plain() -> Self {
+        Self {
+            look: PLAIN_LOOK,
+            pressures: Vec::new(),
+            rings: Vec::new(),
+            quant: EXACT_QUANT,
+        }
+    }
+
+    fn try_clone(&self) -> Result<Self, i32> {
+        let mut pressures = Vec::new();
+        pressures
+            .try_reserve_exact(self.pressures.len())
+            .map_err(|_| ALLOCATION_FAILURE)?;
+        pressures.extend_from_slice(&self.pressures);
+        let mut rings = Vec::new();
+        rings
+            .try_reserve_exact(self.rings.len())
+            .map_err(|_| ALLOCATION_FAILURE)?;
+        rings.extend_from_slice(&self.rings);
+        Ok(Self {
+            look: self.look,
+            pressures,
+            rings,
+            quant: self.quant,
+        })
+    }
+}
+
+/// Rounds `value` to a multiple of 1/2^quant. Exact in float32 for the
+/// coordinates of a sheet (at most 16 384 × 2^10 = 2^24).
+fn quantized(value: f32, quant: u8) -> f32 {
+    if quant == EXACT_QUANT {
+        return value;
+    }
+    let scale = f64::from(1u32 << quant);
+    ((f64::from(value) * scale).round() / scale) as f32
 }
 
 /// Immutable background metadata; visible-object indices remain vector-only.
@@ -179,9 +398,10 @@ fn valid_width(kind: u32, width: f32) -> bool {
 }
 
 // `param` is the font of a text, the catalogue entry of a stamp, else zero.
+// Projects of versions 4 and 5 know only the first font (their reader says so).
 fn valid_param(kind: u32, param: u32) -> bool {
     match kind {
-        KIND_TEXT => param == 0,
+        KIND_TEXT => param < FONT_COUNT,
         KIND_STAMP => (param as usize) < STAMPS.len(),
         _ => param == 0,
     }
@@ -203,6 +423,8 @@ struct Stroke {
     param: u32,
     // Validated UTF-8 of a text object; empty (never allocated) otherwise.
     text: Vec<u8>,
+    // What version 6 adds: look, pressures, rings, fineness.
+    extras: Extras,
 }
 
 impl Stroke {
@@ -219,7 +441,17 @@ impl Stroke {
             layer: 0,
             param: 0,
             text: Vec::new(),
+            extras: Extras::plain(),
         }
+    }
+
+    // What only a project of version 6 can keep: a look, pressures, the
+    // rings of a contour with holes, a font other than DejaVu Sans.
+    fn needs_v6(&self) -> bool {
+        self.extras.look != PLAIN_LOOK
+            || !self.extras.pressures.is_empty()
+            || !self.extras.rings.is_empty()
+            || (self.style.kind == KIND_TEXT && self.param != 0)
     }
 
     fn extended(&self) -> bool {
@@ -393,6 +625,13 @@ enum Edit {
     Paper {
         rgb: u32,
     },
+    // Replaced paint (Color 1.1): the fill and the look of an object.
+    Paint {
+        index: usize,
+        style: EpObjectStyle,
+        look: EpObjectLook,
+        revision: u64,
+    },
     Style {
         index: usize,
         rgb: u32,
@@ -434,6 +673,15 @@ enum Edit {
         position: usize,
         visible: bool,
     },
+    // Several commands undone and redone as one (Color 1.1): a rub of the
+    // eraser that cuts strokes, a stroke replaced by the shape it draws.
+    // Kept in the order they apply next: undo info last command first; each
+    // application reverses the list, ready for the other direction.
+    Batch {
+        edits: Vec<Edit>,
+        // What made the batch: ERASER_BATCH (erase.rs) for a rub of the eraser.
+        kind: u8,
+    },
 }
 
 /// Opaque to C; its fields are never exposed through the ABI.
@@ -460,6 +708,9 @@ pub struct EpDocument {
     active_extended: usize,
     // Visible closed contours: their presence requires project v5.
     active_contours: usize,
+    // Visible objects that only project v6 keeps (Stroke::needs_v6): the
+    // older writer refuses a drawing that has one.
+    active_v6: usize,
     // Colour of the sheet under the drawing, 24-bit RGB. Not white needs v4.
     paper: u32,
 }
@@ -500,6 +751,7 @@ impl EpDocument {
             retained_text_bytes: 0,
             active_extended: 0,
             active_contours: 0,
+            active_v6: 0,
             paper: WHITE_PAPER,
         }
     }
@@ -507,20 +759,27 @@ impl EpDocument {
     // Geometry and characters owned only by the redo branch: (points, objects,
     // text bytes). An undone layer edit owns no object, by construction.
     fn redo_payload(&self) -> (usize, usize, usize) {
-        self.history[self.cursor..]
-            .iter()
-            .fold((0, 0, 0), |(points, objects, text), edit| match edit {
-                Edit::Presence {
-                    detached: Some(stroke),
-                    ..
-                } => (
-                    points + stroke.points.len(),
-                    objects + 1,
-                    text + stroke.text.len(),
-                ),
-                Edit::Text { text: other, .. } => (points, objects, text + other.len()),
-                _ => (points, objects, text),
-            })
+        fn payload(edits: &[Edit]) -> (usize, usize, usize) {
+            edits
+                .iter()
+                .fold((0, 0, 0), |(points, objects, text), edit| match edit {
+                    Edit::Presence {
+                        detached: Some(stroke),
+                        ..
+                    } => (
+                        points + stroke.points.len(),
+                        objects + 1,
+                        text + stroke.text.len(),
+                    ),
+                    Edit::Text { text: other, .. } => (points, objects, text + other.len()),
+                    Edit::Batch { edits, .. } => {
+                        let (p, o, t) = payload(edits);
+                        (points + p, objects + o, text + t)
+                    }
+                    _ => (points, objects, text),
+                })
+        }
+        payload(&self.history[self.cursor..])
     }
 
     fn prepare_edit(
@@ -584,6 +843,7 @@ impl EpDocument {
         self.active_text_bytes += stroke.text.len();
         self.active_extended += usize::from(stroke.extended());
         self.active_contours += usize::from(stroke.style.kind == KIND_CONTOUR);
+        self.active_v6 += usize::from(stroke.needs_v6());
     }
 
     fn count_detached(&mut self, stroke: &Stroke) {
@@ -591,10 +851,19 @@ impl EpDocument {
         self.active_text_bytes -= stroke.text.len();
         self.active_extended -= usize::from(stroke.extended());
         self.active_contours -= usize::from(stroke.style.kind == KIND_CONTOUR);
+        self.active_v6 -= usize::from(stroke.needs_v6());
     }
 
     fn apply_history(&mut self, slot: usize) {
-        match &mut self.history[slot] {
+        // The command leaves its slot while it applies: a batch applies its
+        // commands the same way. The stand-in is never applied.
+        let mut edit = std::mem::replace(&mut self.history[slot], Edit::Order { from: 0, to: 0 });
+        self.apply_edit(&mut edit);
+        self.history[slot] = edit;
+    }
+
+    fn apply_edit(&mut self, edit: &mut Edit) {
+        match edit {
             Edit::Presence { index, detached } => {
                 let index = *index;
                 if let Some(stroke) = detached.take() {
@@ -603,9 +872,7 @@ impl EpDocument {
                 } else {
                     let stroke = self.strokes.remove(index);
                     self.count_detached(&stroke);
-                    if let Edit::Presence { detached, .. } = &mut self.history[slot] {
-                        *detached = Some(stroke);
-                    }
+                    *detached = Some(stroke);
                 }
             }
             Edit::Move {
@@ -634,6 +901,19 @@ impl EpDocument {
                 std::mem::swap(&mut stroke.revision, revision);
             }
             Edit::Paper { rgb } => std::mem::swap(&mut self.paper, rgb),
+            Edit::Paint {
+                index,
+                style,
+                look,
+                revision,
+            } => {
+                let stroke = &mut self.strokes[*index];
+                let before = usize::from(stroke.needs_v6());
+                std::mem::swap(&mut stroke.style, style);
+                std::mem::swap(&mut stroke.extras.look, look);
+                std::mem::swap(&mut stroke.revision, revision);
+                self.active_v6 = self.active_v6 - before + usize::from(stroke.needs_v6());
+            }
             Edit::Style {
                 index,
                 rgb,
@@ -658,6 +938,8 @@ impl EpDocument {
                 revision,
             } => {
                 let stroke = &mut self.strokes[*index];
+                // The font decides whether the text needs version 6.
+                let before = usize::from(stroke.needs_v6());
                 self.active_text_bytes = self.active_text_bytes - stroke.text.len() + text.len();
                 std::mem::swap(&mut stroke.points[0], &mut points[0]);
                 std::mem::swap(&mut stroke.points[1], &mut points[1]);
@@ -667,6 +949,7 @@ impl EpDocument {
                 std::mem::swap(&mut stroke.param, param);
                 std::mem::swap(&mut stroke.text, text);
                 std::mem::swap(&mut stroke.revision, revision);
+                self.active_v6 = self.active_v6 - before + usize::from(stroke.needs_v6());
             }
             Edit::ObjectLayer {
                 from,
@@ -680,13 +963,19 @@ impl EpDocument {
                 std::mem::swap(&mut stroke.revision, revision);
                 std::mem::swap(from, to);
             }
-            Edit::LayerPresence { .. } => self.apply_layer_presence(slot),
+            Edit::LayerPresence { .. } => self.apply_layer_presence(edit),
             Edit::LayerOrder { from, to } => {
                 reorder_layers(&mut self.layers[..self.layer_count], *from, *to);
                 std::mem::swap(from, to);
             }
             Edit::LayerVisibility { position, visible } => {
                 std::mem::swap(&mut self.layers[*position].visible, visible);
+            }
+            Edit::Batch { edits, .. } => {
+                for inner in edits.iter_mut() {
+                    self.apply_edit(inner);
+                }
+                edits.reverse();
             }
         }
     }
@@ -964,7 +1253,8 @@ fn valid_new_object(
         && (style.kind == 0 || valid_shape_points(style.kind, points))
 }
 
-// Shared by every constructor of a visible object. `text` is already checked
+// Shared by every constructor of a visible object before 1.1: exact points,
+// nothing of version 6, on top of the active layer. `text` is already checked
 // by the caller and is empty unless the object is a text.
 #[allow(clippy::too_many_arguments)]
 unsafe fn add_object(
@@ -980,64 +1270,346 @@ unsafe fn add_object(
     let Some(doc) = (unsafe { document.as_mut() }) else {
         return INVALID;
     };
-    if points.is_null()
-        || !(1..=MAX_STROKE_POINTS).contains(&count)
-        || doc.strokes.len() >= MAX_STROKES
-        || count > MAX_TOTAL_POINTS - doc.active_points
-        || text.len() > MAX_TOTAL_TEXT_BYTES - doc.active_text_bytes
-        // The active layer is never locked; should that ever break, nothing
-        // new joins the page.
-        || doc.locked(doc.active_layer)
-    {
+    if points.is_null() || !(1..=MAX_STROKE_POINTS).contains(&count) {
         return INVALID;
     }
     // count is bounded above, so the byte span cannot exceed isize::MAX.
     let input = unsafe { slice::from_raw_parts(points, count) };
-    if !valid_new_object(doc, input, rgb, width, style, param, text) {
-        return INVALID;
+    add_new_object(
+        doc,
+        &NewObject {
+            points: input,
+            rgb,
+            width,
+            style,
+            param,
+            text,
+            look: PLAIN_LOOK,
+            pressures: &[],
+            rings: &[],
+            quant: EXACT_QUANT,
+            bottom: false,
+            above: None,
+        },
+    )
+}
+
+/// One new object, as the interface asks for it (ep_add_object) or as the
+/// older constructors do (add_object).
+struct NewObject<'a> {
+    points: &'a [EpPoint],
+    rgb: u32,
+    width: f32,
+    style: EpObjectStyle,
+    param: u32,
+    text: &'a [u8],
+    look: EpObjectLook,
+    pressures: &'a [u8],
+    rings: &'a [u32],
+    quant: u8,
+    // At the bottom of the active layer, under what it holds; else on top.
+    bottom: bool,
+    // Just above this object of the active layer, which then wins over
+    // `bottom`: for an object added alone.
+    above: Option<usize>,
+}
+
+// Whether the pressures and the rings fit the object: pressures, one per
+// point and never zero, for a freehand stroke; rings, at least two of three
+// points or more that add up to all the points, for a contour.
+fn valid_extras(kind: u32, count: usize, pressures: &[u8], rings: &[u32]) -> bool {
+    let pressures_fit = pressures.is_empty()
+        || (kind == 0 && pressures.len() == count && pressures.iter().all(|&p| p != 0));
+    let rings_fit = rings.is_empty()
+        || (kind == KIND_CONTOUR
+            && (2..=MAX_RINGS).contains(&rings.len())
+            && rings.iter().all(|&ring| ring >= 3)
+            && rings.iter().map(|&ring| ring as usize).sum::<usize>() == count);
+    pressures_fit && rings_fit
+}
+
+// The object as the document will hold it, checked against what it is and
+// against the document as it is now (the limits of a whole drawing are the
+// caller's), with every allocation it needs; revision 0 until it joins.
+fn new_stroke(doc: &EpDocument, object: &NewObject<'_>) -> Result<Stroke, i32> {
+    let count = object.points.len();
+    let text = object.text;
+    if !(1..=MAX_STROKE_POINTS).contains(&count)
+        // The active layer is never locked; should that ever break, nothing
+        // new joins the page.
+        || doc.locked(doc.active_layer)
+        || !(object.quant <= MAX_QUANT || object.quant == EXACT_QUANT)
+        || !valid_look(object.style.kind, object.style.fill_enabled, &object.look)
+        || !valid_extras(object.style.kind, count, object.pressures, object.rings)
+    {
+        return Err(INVALID);
     }
     let mut owned_points = Vec::new();
-    if owned_points.try_reserve_exact(count).is_err() {
-        return ALLOCATION_FAILURE;
+    owned_points
+        .try_reserve_exact(count)
+        .map_err(|_| ALLOCATION_FAILURE)?;
+    // Rounded on arrival: the document holds the numbers the project will
+    // write, and an object never moved reads back bit for bit.
+    owned_points.extend(object.points.iter().map(|point| EpPoint {
+        x: quantized(point.x, object.quant),
+        y: quantized(point.y, object.quant),
+    }));
+    if !valid_new_object(
+        doc,
+        &owned_points,
+        object.rgb,
+        object.width,
+        object.style,
+        object.param,
+        text,
+    ) {
+        return Err(INVALID);
     }
-    owned_points.extend_from_slice(input);
     let mut owned_text = Vec::new();
-    if owned_text.try_reserve_exact(text.len()).is_err() {
+    owned_text
+        .try_reserve_exact(text.len())
+        .map_err(|_| ALLOCATION_FAILURE)?;
+    owned_text.extend_from_slice(text);
+    let mut pressures = Vec::new();
+    pressures
+        .try_reserve_exact(object.pressures.len())
+        .map_err(|_| ALLOCATION_FAILURE)?;
+    pressures.extend_from_slice(object.pressures);
+    let mut rings = Vec::new();
+    rings
+        .try_reserve_exact(object.rings.len())
+        .map_err(|_| ALLOCATION_FAILURE)?;
+    rings.extend_from_slice(object.rings);
+    Ok(Stroke {
+        points: owned_points,
+        rgb: object.rgb,
+        width: object.width,
+        style: object.style,
+        scale: 1.0,
+        translation: [0.0; 2],
+        revision: 0,
+        layer: doc.active_layer,
+        param: object.param,
+        text: owned_text,
+        extras: Extras {
+            look: object.look,
+            pressures,
+            rings,
+            quant: object.quant,
+        },
+    })
+}
+
+// Where a new object of the active layer goes: on top of it, under what it
+// holds, or just above one of its objects.
+fn new_object_index(doc: &EpDocument, bottom: bool, above: Option<usize>) -> usize {
+    let layer = doc.active_layer;
+    if let Some(index) = above {
+        index + 1
+    } else if bottom {
+        doc.strokes
+            .iter()
+            .position(|stroke| stroke.layer == layer)
+            .unwrap_or(doc.strokes.len())
+    } else {
+        doc.strokes.len()
+    }
+}
+
+/// What several objects added together are, undone and redone in one step.
+const ADD_BATCH: u8 = 2;
+
+// Adds the objects in order, as one command when there are several; nothing
+// changes unless all of them can join.
+fn add_new_objects(doc: &mut EpDocument, objects: &[NewObject<'_>]) -> i32 {
+    let mut made = Vec::new();
+    if made.try_reserve_exact(objects.len()).is_err() {
         return ALLOCATION_FAILURE;
     }
-    owned_text.extend_from_slice(text);
-    if let Err(status) = doc.prepare_text_edit(count, 1, text.len(), true) {
+    let (mut points, mut text) = (0usize, 0usize);
+    for object in objects {
+        match new_stroke(doc, object) {
+            Ok(stroke) => {
+                points += stroke.points.len();
+                text += stroke.text.len();
+                made.push((stroke, object.bottom, object.above));
+            }
+            Err(status) => return status,
+        }
+    }
+    // Above an object of the active layer, and alone: the index then still
+    // names that object when the new one joins.
+    let above_fits = |above: Option<usize>| {
+        above.is_none_or(|index| {
+            objects.len() == 1
+                && doc
+                    .strokes
+                    .get(index)
+                    .is_some_and(|stroke| stroke.layer == doc.active_layer)
+        })
+    };
+    if objects.is_empty()
+        || !objects.iter().all(|object| above_fits(object.above))
+        || objects.len() > MAX_STROKES - doc.strokes.len()
+        || points > MAX_TOTAL_POINTS - doc.active_points
+        || text > MAX_TOTAL_TEXT_BYTES - doc.active_text_bytes
+        || doc
+            .next_revision
+            .checked_add(objects.len() as u64)
+            .is_none()
+    {
+        return INVALID;
+    }
+    if let Err(status) = doc.prepare_text_edit(points, objects.len(), text, true) {
         return status;
     }
-    let needed = doc.strokes.len() + 1;
+    let needed = doc.strokes.len() + objects.len();
     if let Err(status) = reserve_bounded(&mut doc.strokes, needed, MAX_STROKES) {
         return status;
     }
-    let index = doc.strokes.len();
-    let revision = doc.issue_revision();
-    doc.strokes.push(Stroke {
-        points: owned_points,
-        rgb,
-        width,
-        style,
-        scale: 1.0,
-        translation: [0.0; 2],
-        revision,
-        layer: doc.active_layer,
-        param,
-        text: owned_text,
-    });
-    doc.count_attached(index);
-    doc.commit_text_edit(
-        Edit::Presence {
+    let mut edits = Vec::new();
+    if objects.len() > 1 && edits.try_reserve_exact(objects.len()).is_err() {
+        return ALLOCATION_FAILURE;
+    }
+    for (mut stroke, bottom, above) in made {
+        let index = new_object_index(doc, bottom, above);
+        stroke.revision = doc.issue_revision();
+        doc.strokes.insert(index, stroke);
+        doc.count_attached(index);
+        edits.push(Edit::Presence {
             index,
             detached: None,
-        },
-        count,
-        1,
-        text.len(),
-    );
+        });
+    }
+    let edit = if edits.len() == 1 {
+        edits.pop().expect("one edit")
+    } else {
+        // Undone from the last object added back to the first.
+        edits.reverse();
+        Edit::Batch {
+            edits,
+            kind: ADD_BATCH,
+        }
+    };
+    doc.commit_text_edit(edit, points, objects.len(), text);
     0
+}
+
+fn add_new_object(doc: &mut EpDocument, object: &NewObject<'_>) -> i32 {
+    add_new_objects(doc, std::slice::from_ref(object))
+}
+
+/// Adds any object, with what version 6 adds to it (Color 1.1): a look, the
+/// pressures of a freehand stroke, the rings of a contour with holes, the
+/// fineness of its points, and its place on the active layer. The points are
+/// rounded to 1/2^quant unit before they are checked, as ep_add_stroke,
+/// ep_add_shape, ep_add_text and ep_add_stamp check theirs; a contour may be
+/// added here. Returns 0, -1 for an invalid object or a limit, -2 when memory
+/// is missing; on error nothing changes.
+///
+/// # Safety
+/// Non-null `document` must be live, aligned and exclusively accessible.
+/// Non-null `object` must be one initialized EpNewObject whose non-null
+/// pointers address `count` points, `text_length` bytes, `count` pressures
+/// and `ring_count` ring lengths, initialized, disjoint from the document and
+/// unchanged during the call.
+#[no_mangle]
+pub unsafe extern "C" fn ep_add_object(
+    document: *mut EpDocument,
+    object: *const EpNewObject,
+) -> i32 {
+    let (Some(doc), Some(object)) = (unsafe { document.as_mut() }, unsafe { object.as_ref() })
+    else {
+        return INVALID;
+    };
+    match unsafe { new_object_of(object) } {
+        Some(object) => add_new_object(doc, &object),
+        None => INVALID,
+    }
+}
+
+/// Adds `count` objects (1 to 16) as one command: one undo takes them all
+/// away, one redo brings them all back; in order, each on top of the active
+/// layer or at its bottom as its placement says. Returns 0, -1 when one of
+/// them is invalid or a limit is reached, -2 when memory is missing; on error
+/// nothing changes. What each object is, as for ep_add_object.
+///
+/// # Safety
+/// Non-null `document` must be live, aligned and exclusively accessible;
+/// non-null `objects` must address `count` EpNewObject as ep_add_object
+/// requires of one.
+#[no_mangle]
+pub unsafe extern "C" fn ep_add_objects(
+    document: *mut EpDocument,
+    objects: *const EpNewObject,
+    count: usize,
+) -> i32 {
+    let Some(doc) = (unsafe { document.as_mut() }) else {
+        return INVALID;
+    };
+    if objects.is_null() || !(1..=MAX_OBJECTS_AT_ONCE).contains(&count) {
+        return INVALID;
+    }
+    let mut converted = Vec::with_capacity(count);
+    for object in unsafe { slice::from_raw_parts(objects, count) } {
+        match unsafe { new_object_of(object) } {
+            Some(object) => converted.push(object),
+            None => return INVALID,
+        }
+    }
+    add_new_objects(doc, &converted)
+}
+
+/// The most objects ep_add_objects adds at once.
+const MAX_OBJECTS_AT_ONCE: usize = 16;
+
+// What the C description of a new object holds, its pointers read, or None
+// when they do not fit.
+//
+// # Safety
+// As ep_add_object requires of its object.
+unsafe fn new_object_of(object: &EpNewObject) -> Option<NewObject<'_>> {
+    if object.points.is_null()
+        || !(1..=MAX_STROKE_POINTS).contains(&object.count)
+        || object.quant > u32::from(u8::MAX)
+        || object.placement > 2
+        || (object.ring_count != 0 && object.rings.is_null())
+        || object.ring_count > MAX_RINGS
+    {
+        return None;
+    }
+    let points = unsafe { slice::from_raw_parts(object.points, object.count) };
+    let text: &[u8] = if object.style.kind == KIND_TEXT {
+        unsafe { text::checked_text(object.text, object.text_length) }?
+    } else if object.text.is_null() && object.text_length == 0 {
+        &[]
+    } else {
+        return None;
+    };
+    let pressures: &[u8] = if object.pressures.is_null() {
+        &[]
+    } else {
+        unsafe { slice::from_raw_parts(object.pressures, object.count) }
+    };
+    let rings: &[u32] = if object.ring_count == 0 {
+        &[]
+    } else {
+        unsafe { slice::from_raw_parts(object.rings, object.ring_count) }
+    };
+    Some(NewObject {
+        points,
+        rgb: object.rgb,
+        width: object.width,
+        style: object.style,
+        param: object.param,
+        text,
+        look: object.look,
+        pressures,
+        rings,
+        quant: object.quant as u8,
+        bottom: object.placement == 1,
+        above: (object.placement == 2).then_some(object.above),
+    })
 }
 
 // A line needs two distinct points; a box (rectangle, ellipse, text, stamp)
@@ -1311,6 +1883,10 @@ pub unsafe extern "C" fn ep_duplicate_object(
         return ALLOCATION_FAILURE;
     }
     text.extend_from_slice(&stroke.text);
+    let extras = match stroke.extras.try_clone() {
+        Ok(extras) => extras,
+        Err(status) => return status,
+    };
     // The copy stays on its source's layer, in front of that layer's objects.
     let mut duplicate = Stroke {
         points,
@@ -1323,6 +1899,7 @@ pub unsafe extern "C" fn ep_duplicate_object(
         layer: stroke.layer,
         param: stroke.param,
         text,
+        extras,
     };
     if let Err(status) = doc.prepare_text_edit(count, 1, text_bytes, true) {
         return status;
@@ -1381,6 +1958,8 @@ pub unsafe extern "C" fn ep_set_object_style(
         || !valid_width(style.kind, width)
         || (stroke.extended() && width != stroke.width)
         || !valid_style(style)
+        // A gradient lives in a fill: ep_set_object_paint removes both.
+        || (stroke.extras.look.gradient != 0 && fill_enabled != 1)
     {
         return INVALID;
     }
@@ -1584,6 +2163,11 @@ fn svg_capacity(doc: &EpDocument) -> Option<usize> {
             KIND_STAMP => stamp_svg_bytes(stroke.param),
             _ => 0,
         })?;
+        // A transform, a gradient, the rings of a contour; the marks of a
+        // tool grow the text as they come.
+        if stroke.needs_v6() {
+            capacity = capacity.checked_add(1024)?;
+        }
     }
     if let Some(background) = &doc.background {
         capacity = capacity
@@ -1600,7 +2184,208 @@ fn svg_capacity(doc: &EpDocument) -> Option<usize> {
     Some(capacity)
 }
 
-fn write_object_svg(result: &mut String, stroke: &Stroke) -> Option<()> {
+/// The object as SVG: before 1.1, as it always was; with a gradient, its
+/// definition first; turned or mirrored, inside a group that does it about
+/// the centre of its box.
+fn write_object_svg(result: &mut String, stroke: &Stroke, index: usize) -> Option<()> {
+    let look = &stroke.extras.look;
+    if look.gradient != 0 {
+        write_gradient_svg(result, stroke, index)?;
+    }
+    let turned = look.rotation != 0.0 || look.mirror != 0;
+    if turned {
+        let (low, high) = visible_box(stroke);
+        let (cx, cy) = ((low.x + high.x) / 2.0, (low.y + high.y) / 2.0);
+        let sx = if look.mirror & 1 != 0 { -1 } else { 1 };
+        let sy = if look.mirror & 2 != 0 { -1 } else { 1 };
+        writeln!(
+            result,
+            "<g transform=\"translate({} {}) rotate({}) scale({} {}) translate({} {})\">",
+            cx,
+            cy,
+            look.rotation.to_degrees(),
+            sx,
+            sy,
+            -cx,
+            -cy
+        )
+        .ok()?;
+    }
+    write_plain_object_svg(result, stroke, index)?;
+    if turned {
+        result.push_str("</g>\n");
+    }
+    Some(())
+}
+
+/// The box of an object's visible points, which its mirror and rotation turn
+/// about and its gradient spans.
+pub(crate) fn visible_box(stroke: &Stroke) -> (EpPoint, EpPoint) {
+    let mut low = EpPoint {
+        x: f32::INFINITY,
+        y: f32::INFINITY,
+    };
+    let mut high = EpPoint {
+        x: f32::NEG_INFINITY,
+        y: f32::NEG_INFINITY,
+    };
+    for index in 0..stroke.points.len() {
+        let point = stroke.point_at(index);
+        low.x = low.x.min(point.x);
+        low.y = low.y.min(point.y);
+        high.x = high.x.max(point.x);
+        high.y = high.y.max(point.y);
+    }
+    (low, high)
+}
+
+// A gradient spans the box of its object: x0, y0, x1, y1 are fractions of it,
+// as SVG's objectBoundingBox units are. Its colours come through Oklab.
+fn write_gradient_svg(result: &mut String, stroke: &Stroke, index: usize) -> Option<()> {
+    let look = &stroke.extras.look;
+    let [x0, y0, x1, y1] = look.gradient_points;
+    result.push_str("<defs>");
+    if look.gradient == 1 {
+        write!(
+            result,
+            "<linearGradient id=\"degrade-{}\" x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\">",
+            index + 1,
+            x0,
+            y0,
+            x1,
+            y1
+        )
+        .ok()?;
+    } else {
+        let radius = (x1 - x0).hypot(y1 - y0);
+        write!(
+            result,
+            "<radialGradient id=\"degrade-{}\" cx=\"{}\" cy=\"{}\" r=\"{}\">",
+            index + 1,
+            x0,
+            y0,
+            radius
+        )
+        .ok()?;
+    }
+    for stop in 0..colours::GRADIENT_STOPS {
+        let t = stop as f64 / (colours::GRADIENT_STOPS - 1) as f64;
+        write!(
+            result,
+            "<stop offset=\"{}\" stop-color=\"#{:06x}\"/>",
+            t,
+            colours::gradient_colour(stroke.style.fill_rgb, look.gradient_rgb, t)
+        )
+        .ok()?;
+    }
+    result.push_str(if look.gradient == 1 {
+        "</linearGradient></defs>\n"
+    } else {
+        "</radialGradient></defs>\n"
+    });
+    Some(())
+}
+
+// Each group of marks is one path, its circles as two arcs turning the same
+// way as its polygons: overlapping marks add up, as on the sheet.
+fn write_marks_svg(result: &mut String, marks: &marks::Marks) -> Option<()> {
+    let mut start = 0;
+    while start < marks.marks.len() {
+        let group = marks.marks[start].group;
+        let end = marks.marks[start..]
+            .iter()
+            .position(|mark| mark.group != group)
+            .map_or(marks.marks.len(), |offset| start + offset);
+        result.push_str("<path d=\"");
+        for mark in &marks.marks[start..end] {
+            let points = &marks.points[mark.first as usize..(mark.first + mark.count) as usize];
+            if mark.shape == marks::CIRCLE {
+                let (c, r) = (points[0], mark.radius);
+                write!(
+                    result,
+                    "M{} {} A{} {} 0 1 1 {} {} A{} {} 0 1 1 {} {} Z ",
+                    c.x + r,
+                    c.y,
+                    r,
+                    r,
+                    c.x - r,
+                    c.y,
+                    r,
+                    r,
+                    c.x + r,
+                    c.y
+                )
+                .ok()?;
+            } else {
+                for (corner, point) in points.iter().enumerate() {
+                    write!(
+                        result,
+                        "{}{} {} ",
+                        if corner == 0 { 'M' } else { 'L' },
+                        point.x,
+                        point.y
+                    )
+                    .ok()?;
+                }
+                result.push_str("Z ");
+            }
+        }
+        let first = &marks.marks[start];
+        write!(result, "\" fill=\"#{:06x}\"", first.rgb).ok()?;
+        if first.alpha != 255 {
+            write!(result, " fill-opacity=\"{}\"", first.alpha as f32 / 255.0).ok()?;
+        }
+        result.push_str("/>\n");
+        start = end;
+    }
+    Some(())
+}
+
+/// The opacity of the marker: strokes laid over each other show through.
+pub(crate) const MARKER_ALPHA: u32 = 217;
+
+// The marker: a square tip, bevelled corners, a little transparent; a dot of
+// it is its square.
+fn write_marker_svg(result: &mut String, stroke: &Stroke) -> Option<()> {
+    let opacity = MARKER_ALPHA as f32 / 255.0;
+    if stroke.points.len() == 1 {
+        let point = stroke.point_at(0);
+        let half = stroke.width / 2.0;
+        return writeln!(
+            result,
+            "<rect x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" fill=\"#{:06x}\" fill-opacity=\"{}\"/>",
+            point.x - half,
+            point.y - half,
+            stroke.width,
+            stroke.width,
+            stroke.rgb,
+            opacity
+        )
+        .ok();
+    }
+    result.push_str("<path d=\"");
+    for index in 0..stroke.points.len() {
+        let point = stroke.point_at(index);
+        write!(
+            result,
+            "{}{} {} ",
+            if index == 0 { 'M' } else { 'L' },
+            point.x,
+            point.y
+        )
+        .ok()?;
+    }
+    writeln!(
+        result,
+        "\" fill=\"none\" stroke=\"#{:06x}\" stroke-width=\"{}\" stroke-opacity=\"{}\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\"/>",
+        stroke.rgb, stroke.width, opacity
+    )
+    .ok()
+}
+
+// The object as SVG, before its mirror and rotation (write_object_svg puts
+// them around it). `index` names its gradient.
+fn write_plain_object_svg(result: &mut String, stroke: &Stroke, index: usize) -> Option<()> {
     if stroke.style.kind == KIND_TEXT || stroke.style.kind == KIND_STAMP {
         let a = stroke.point_at(0);
         let b = stroke.point_at(1);
@@ -1609,7 +2394,15 @@ fn write_object_svg(result: &mut String, stroke: &Stroke) -> Option<()> {
         let width = f64::from(a.x.max(b.x)) - x;
         let height = f64::from(a.y.max(b.y)) - y;
         return if stroke.style.kind == KIND_TEXT {
-            write_text_svg(result, &stroke.text, x, y, stroke.width, stroke.rgb)
+            write_text_svg(
+                result,
+                &stroke.text,
+                x,
+                y,
+                stroke.width,
+                stroke.rgb,
+                stroke.param,
+            )
         } else {
             write_stamp_svg(result, stroke.param, stroke.rgb, x, y, width, height)
         };
@@ -1644,30 +2437,53 @@ fn write_object_svg(result: &mut String, stroke: &Stroke) -> Option<()> {
             )
             .ok()?,
             // The freehand path of all its points, closed back to the first,
-            // with the fill and outline of the other shapes.
+            // with the fill and outline of the other shapes; a contour with
+            // holes closes each of its rings, filled by the even-odd rule.
             KIND_CONTOUR => {
                 result.push_str("<path d=\"");
-                for index in 0..stroke.points.len() {
-                    let point = stroke.point_at(index);
+                let mut ring_end = stroke
+                    .extras
+                    .rings
+                    .first()
+                    .map_or(usize::MAX, |&r| r as usize);
+                let mut rings = stroke.extras.rings.iter().skip(1);
+                let mut starts_ring = true;
+                for point_index in 0..stroke.points.len() {
+                    let point = stroke.point_at(point_index);
                     write!(
                         result,
                         "{}{} {} ",
-                        if index == 0 { 'M' } else { 'L' },
+                        if starts_ring { 'M' } else { 'L' },
                         point.x,
                         point.y
                     )
                     .ok()?;
+                    starts_ring = false;
+                    if point_index + 1 == ring_end && point_index + 1 < stroke.points.len() {
+                        result.push_str("Z ");
+                        starts_ring = true;
+                        ring_end += rings.next().map_or(usize::MAX - ring_end, |&r| r as usize);
+                    }
                 }
                 result.push_str("Z\"");
+                if !stroke.extras.rings.is_empty() {
+                    result.push_str(" fill-rule=\"evenodd\"");
+                }
             }
             _ => return None, // Internal invariant, never accepted from files.
         }
-        if stroke.style.fill_enabled == 1 {
+        if stroke.extras.look.gradient != 0 {
+            write!(result, " fill=\"url(#degrade-{})\"", index + 1).ok()?;
+        } else if stroke.style.fill_enabled == 1 {
             write!(result, " fill=\"#{:06x}\"", stroke.style.fill_rgb).ok()?;
         } else {
             write!(result, " fill=\"none\"").ok()?;
         }
         writeln!(result, " stroke=\"#{:06x}\" stroke-width=\"{}\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", stroke.rgb, stroke.width).ok()?;
+    } else if marks::has_marks(stroke.extras.look.tool, !stroke.extras.pressures.is_empty()) {
+        write_marks_svg(result, &marks::of_object(stroke).ok()?)?;
+    } else if stroke.extras.look.tool == TOOL_FELT {
+        write_marker_svg(result, stroke)?;
     } else if stroke.points.len() == 1 {
         let point = stroke.point_at(0);
         writeln!(
@@ -1730,15 +2546,20 @@ fn svg(doc: &EpDocument) -> Option<CString> {
     }
     if doc.single_plain_layer() {
         // Unchanged output for every drawing without layers.
-        for stroke in &doc.strokes {
-            write_object_svg(&mut result, stroke)?;
+        for (index, stroke) in doc.strokes.iter().enumerate() {
+            write_object_svg(&mut result, stroke, index)?;
         }
     } else {
         // Bottom to top; a hidden layer is left out, as on the sheet.
         for layer in doc.layers().iter().filter(|layer| layer.visible) {
             writeln!(result, "<g id=\"calque-{}\">", u32::from(layer.id) + 1).ok()?;
-            for stroke in doc.strokes.iter().filter(|s| s.layer == layer.id) {
-                write_object_svg(&mut result, stroke)?;
+            for (index, stroke) in doc
+                .strokes
+                .iter()
+                .enumerate()
+                .filter(|(_, s)| s.layer == layer.id)
+            {
+                write_object_svg(&mut result, stroke, index)?;
             }
             result.push_str("</g>\n");
         }
@@ -1936,6 +2757,11 @@ fn crc32_combine(mut left: u32, right: u32, mut right_len: usize) -> u32 {
 }
 
 fn project_size(doc: &EpDocument) -> usize {
+    // What only version 6 keeps cannot be written by the older writer: its
+    // size is then 0, and ep_copy_project refuses (ep_write_project writes it).
+    if doc.active_v6 != 0 {
+        return 0;
+    }
     // Invariants are established by add/load and preserved by history moves.
     if doc.needs_layered_project() {
         return LAYERED_PROJECT_HEADER_BYTES
@@ -1955,8 +2781,10 @@ fn project_size(doc: &EpDocument) -> usize {
             .map_or(0, |background| 16 + background.bytes.len())
 }
 
-/// Returns the exact byte count for the visible drawing, or zero for NULL.
-/// Redo is intentionally excluded. No allocation or mutation occurs.
+/// Returns the exact byte count of the visible drawing in the oldest version
+/// of 2 to 5 that keeps it, or zero for NULL and for a drawing that only
+/// version 6 keeps (ep_write_project). Redo is intentionally excluded. No
+/// allocation or mutation occurs.
 ///
 /// # Safety
 /// Non-null `document` must be live, aligned, and not concurrently accessed.
@@ -1991,7 +2819,7 @@ pub unsafe extern "C" fn ep_copy_project(
 // Only the output requires exclusive access; all drawing data is read-only.
 unsafe fn copy_project(doc: &EpDocument, out_bytes: *mut u8, capacity: usize) -> i32 {
     let size = project_size(doc);
-    if out_bytes.is_null() || capacity < size {
+    if size == 0 || out_bytes.is_null() || capacity < size {
         return INVALID;
     }
     // Use only the bounded size, not a potentially unbounded caller capacity.
@@ -2426,6 +3254,8 @@ fn validate_project(bytes: &[u8]) -> Result<ProjectHeader, i32> {
             || (!listed && count != 2)
             || !valid_width(style.kind, width)
             || !valid_param(style.kind, record.param)
+            // Versions 4 and 5 have one font, DejaVu Sans.
+            || (style.kind == KIND_TEXT && record.param != 0)
             || !header.layers[..header.layer_count]
                 .iter()
                 .any(|layer| layer.id == record.layer)
@@ -2482,6 +3312,11 @@ fn validate_project(bytes: &[u8]) -> Result<ProjectHeader, i32> {
 }
 
 fn load_project(bytes: &[u8]) -> Result<EpDocument, i32> {
+    if bytes.get(..8) == Some(PROJECT_MAGIC.as_slice())
+        && bytes.get(8..10) == Some(project_v6::VERSION.to_le_bytes().as_slice())
+    {
+        return project_v6::load(bytes);
+    }
     let header = validate_project(bytes)?;
     let mut document = EpDocument {
         width: header.width,
@@ -2501,6 +3336,7 @@ fn load_project(bytes: &[u8]) -> Result<EpDocument, i32> {
         retained_text_bytes: header.text_bytes,
         active_extended: header.extended,
         active_contours: header.contours,
+        active_v6: 0,
         paper: header.paper,
     };
     document
@@ -2540,6 +3376,7 @@ fn load_project(bytes: &[u8]) -> Result<EpDocument, i32> {
             layer: record.layer,
             param: record.param,
             text,
+            extras: Extras::plain(),
         });
         // What a locked layer holds is a colouring page, which is not in
         // the history, as when ep_document_from_page made it: undo never
@@ -2580,11 +3417,12 @@ pub unsafe extern "C" fn ep_document_from_project(
     length: usize,
     out_status: *mut i32,
 ) -> *mut EpDocument {
-    let result = if bytes.is_null() || !(PROJECT_MIN_BYTES..=MAX_PROJECT_BYTES).contains(&length) {
-        Err(INVALID)
-    } else {
-        load_project(unsafe { slice::from_raw_parts(bytes, length) })
-    };
+    let result =
+        if bytes.is_null() || !(PROJECT_MIN_BYTES..=MAX_READ_PROJECT_BYTES).contains(&length) {
+            Err(INVALID)
+        } else {
+            load_project(unsafe { slice::from_raw_parts(bytes, length) })
+        };
     let (pointer, status) = match result {
         Ok(document) => {
             // On failure the local document (with every partial allocation) drops.
@@ -3925,11 +4763,13 @@ mod tests {
                 ep_document_from_project(ptr::null(), PROJECT_MIN_BYTES, &mut status).is_null()
             );
             assert_eq!(status, INVALID);
-            // The length guard must run before attempting to read the buffer.
+            // The length guard must run before attempting to read the buffer:
+            // beyond the largest file any reader accepts (version 6 may be a
+            // little larger than version 5), never a byte read.
             assert!(ep_document_from_project(output.as_ptr(), usize::MAX, &mut status).is_null());
             assert!(ep_document_from_project(
                 output.as_ptr(),
-                MAX_PROJECT_BYTES + 1,
+                MAX_READ_PROJECT_BYTES + 1,
                 ptr::null_mut()
             )
             .is_null());

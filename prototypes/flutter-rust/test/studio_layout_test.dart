@@ -176,7 +176,7 @@ void main() {
                 child: SizedBox(
                   height: height,
                   child: StudioToolBar(
-                    selected: StudioTool.brush,
+                    selected: ToolGroup.brush,
                     onSelected: (_) {},
                   ),
                 ),

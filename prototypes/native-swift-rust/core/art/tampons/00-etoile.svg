@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Étoile », n° 0. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Étoile</title>
+  <path d="M 50 10 L 60.58 38.44 L 90.9 39.71 L 67.12 58.56 L 75.27 87.79 L 50 71 L 24.73 87.79 L 32.88 58.56 L 9.1 39.71 L 39.42 38.44 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 45 44 C 45 46.21 43.21 48 41 48 C 38.79 48 37 46.21 37 44 C 37 41.79 38.79 40 41 40 C 43.21 40 45 41.79 45 44 Z" fill="#efbebb" data-fill="claire"/>
+</svg>

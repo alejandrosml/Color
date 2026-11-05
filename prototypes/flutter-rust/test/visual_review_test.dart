@@ -103,6 +103,11 @@ void main() {
 
   Future<void> tap(WidgetTester tester, String key) async {
     final control = find.byKey(Key(key));
+    // The rectangle and the oval are chosen in « Formes ».
+    if (control.evaluate().isEmpty &&
+        (key == 'tool-rectangle' || key == 'tool-ellipse')) {
+      await tap(tester, 'tool-shapes');
+    }
     await tester.ensureVisible(control);
     await tester.pumpAndSettle();
     await tester.tap(control);
@@ -478,11 +483,11 @@ void main() {
           .data!;
       final numbers = RegExp(r'\d').allMatches(question).toList();
       final answer = int.parse(numbers[0][0]!) * int.parse(numbers[1][0]!);
-      for (final digit in '$answer'.split('')) {
-        await tap(tester, 'adultGateDigit$digit');
-      }
+      // The first digit of the answer; the second one answers, and the
+      // options open at once.
+      await tap(tester, 'adultGateDigit${'$answer'[0]}');
       await shot(tester, '32-options-le-calcul-repondu');
-      await tap(tester, 'adultGateEnter');
+      await tap(tester, 'adultGateDigit${'$answer'[1]}');
       await tester.pump(const Duration(milliseconds: 450));
       await shot(tester, '33-options-le-dialogue');
       await tap(tester, 'level-child');

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Oiseau », n° 21. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Oiseau</title>
+  <path d="M 24 58 L 4 46 L 8 68 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 42 80 L 40 93 M 56 80 L 58 93" fill="none" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 79 52 C 79 68.02 66.02 81 50 81 C 33.98 81 21 68.02 21 52 C 21 35.98 33.98 23 50 23 C 66.02 23 79 35.98 79 52 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 30 52 C 34 44 50 44 56 54 C 52 68 36 68 30 52 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 76 44 L 95 50 L 76 57 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 69 42 C 69 45.31 66.31 48 63 48 C 59.69 48 57 45.31 57 42 C 57 38.69 59.69 36 63 36 C 66.31 36 69 38.69 69 42 Z" fill="#fffcf0"/>
+  <path d="M 67 42 C 67 43.66 65.66 45 64 45 C 62.34 45 61 43.66 61 42 C 61 40.34 62.34 39 64 39 C 65.66 39 67 40.34 67 42 Z" fill="#293d4b"/>
+</svg>

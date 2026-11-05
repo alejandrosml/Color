@@ -4,7 +4,9 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:edupaint_flutter_study/country_signs.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
+import 'package:edupaint_flutter_study/kept_colours.dart';
 import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/options_dialog.dart';
@@ -28,6 +30,8 @@ class StudioDriver {
     this.printer,
     this.options,
     this.sounds,
+    this.countrySigns = _inFrance,
+    this.keptColours,
   }) : files = files ?? MemoryFiles(),
        recovery = recovery ?? MemoryRecovery();
   final WidgetTester tester;
@@ -48,6 +52,16 @@ class StudioDriver {
 
   /// What hears the sounds. Without one the studio is silent.
   final SoundPlayer? sounds;
+
+  /// Where the device says it is: in France unless a test says otherwise,
+  /// so that the paint pot closes small gaps.
+  final Future<CountrySigns> Function() countrySigns;
+
+  /// The colours kept from an earlier session; none without them.
+  final KeptColours? keptColours;
+
+  static Future<CountrySigns> _inFrance() async =>
+      CountrySigns(codes: const ['FR'], timeZones: const ['Europe/Paris']);
 
   /// Whether the studio stands on a telephone's screen.
   bool phone = false;
@@ -92,6 +106,8 @@ class StudioDriver {
         printer: printer ?? printWithSystemPanel,
         options: options,
         sounds: sounds ?? const SilentSounds(),
+        countrySigns: countrySigns,
+        keptColours: keptColours,
       ),
     );
     await tester.pumpAndSettle();
@@ -153,8 +169,20 @@ class StudioDriver {
   /// Opens the « … » menu of the header when the action [key] waits there
   /// rather than on the line, as a person would before choosing it; on a
   /// telephone, the menu where every action of the drawing waits.
+  /// The choices of « Formes »: they are shown once its button is chosen.
+  static final _inShapes = {
+    'tool-rectangle',
+    'tool-ellipse',
+    'tool-magnet',
+    for (final shape in NewShape.values) 'shape-${shape.name}',
+  };
+
   Future<void> reveal(String key) async {
     if (find.byKey(Key(key)).evaluate().isNotEmpty) return;
+    if (_inShapes.contains(key)) {
+      await tap('tool-shapes');
+      return;
+    }
     if (phone) {
       if (phoneMenuEntries.contains(key)) await openPhoneMenu();
       return;
@@ -206,6 +234,24 @@ class StudioDriver {
   /// Presses and releases at [at], relative to the centre of the sheet.
   Future<void> click([Offset at = Offset.zero]) async {
     await tester.tapAt(sheetCenter + at);
+    await tester.pumpAndSettle();
+  }
+
+  /// Presses and releases the paint pot at [at], then waits for what it
+  /// pours: on the paper the pot reads the drawing as an image, which the
+  /// engine makes outside the test's clock.
+  Future<void> pour([Offset at = Offset.zero]) async {
+    await tester.tapAt(sheetCenter + at);
+    await tester.pump();
+    final pouring = find.byKey(const Key('pouring'));
+    for (var attempt = 0; attempt < 300; attempt++) {
+      if (pouring.evaluate().isEmpty) break;
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pump();
+    }
+    expect(pouring, findsNothing);
     await tester.pumpAndSettle();
   }
 
@@ -353,13 +399,12 @@ double bottom(StrokeData object) =>
   return (int.parse(match![1]!), int.parse(match[2]!));
 }
 
-/// Types [answer] on the keys of the door and presses « Entrer ».
+/// Types [answer] on the keys of the door: its second digit answers.
 Future<void> typeAtAdultGate(WidgetTester tester, int answer) async {
   for (final digit in '$answer'.split('')) {
     await tester.tap(find.byKey(Key('adultGateDigit$digit')));
     await tester.pump();
   }
-  await tester.tap(find.byKey(const Key('adultGateEnter')));
   await tester.pumpAndSettle();
 }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Aimant », un aimant qui tire une forme droite. Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Aimant</title>
+  <path d="M 7 50 L 7 30 L 7.29 26.7 L 8.15 23.5 L 9.55 20.5 L 11.45 17.79 L 13.79 15.45 L 16.5 13.55 L 19.5 12.15 L 22.7 11.29 L 26 11 L 29.3 11.29 L 32.5 12.15 L 35.5 13.55 L 38.21 15.45 L 40.55 17.79 L 42.45 20.5 L 43.85 23.5 L 44.71 26.7 L 45 30 L 45 50 L 34.5 50 L 34.5 30 L 34.37 28.52 L 33.99 27.09 L 33.36 25.75 L 32.51 24.54 L 31.46 23.49 L 30.25 22.64 L 28.91 22.01 L 27.48 21.63 L 26 21.5 L 24.52 21.63 L 23.09 22.01 L 21.75 22.64 L 20.54 23.49 L 19.49 24.54 L 18.64 25.75 L 18.01 27.09 L 17.63 28.52 L 17.5 30 L 17.5 50 Z" fill="#ed8c88" stroke="#293d4b" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 7 43 L 17.5 43 L 17.5 50 L 7 50 Z" fill="#fffcf0" stroke="#293d4b" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M 34.5 43 L 45 43 L 45 50 L 34.5 50 Z" fill="#fffcf0" stroke="#293d4b" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M 46 47 L 58 45 L 60 57 L 48 59 Z" fill="#b7e6d2" stroke="#293d4b" stroke-width="2.2" stroke-linejoin="round"/>
+  <path d="M 50 38 C 53 35 56 35 59 37" fill="none" stroke="#43ac9c" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M 48 31 C 52 27 57 27 61 30" fill="none" stroke="#43ac9c" stroke-width="2.5" stroke-linecap="round"/>
+</svg>

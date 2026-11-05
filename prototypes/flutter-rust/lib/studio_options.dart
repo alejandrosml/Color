@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'app_folders.dart';
 import 'recovery_location.dart';
 import 'studio_tool.dart';
+import 'language.dart';
 
 /// How much of Color is shown.
 enum InterfaceLevel {
@@ -22,17 +23,22 @@ enum InterfaceLevel {
   /// All of Color.
   full('complete', 'Complète');
 
-  const InterfaceLevel(this.code, this.label);
+  const InterfaceLevel(this.code, this.frenchLabel);
 
   /// The name written in the options file; never translated or changed.
   final String code;
-  final String label;
+  final String frenchLabel;
+  String get label => tr(frenchLabel);
 
   /// One sentence for the adult who chooses: for whom, and what is shown.
   String get description => switch (this) {
-    InterfaceLevel.toddler => 'Pour les tout-petits : quatre outils, de grandes couleurs, presque rien à lire.',
-    InterfaceLevel.child => 'Pour les enfants : tous les outils pour dessiner, sans les calques ni les exports.',
-    InterfaceLevel.full => 'Pour les plus grands : tout Color.',
+    InterfaceLevel.toddler => tr(
+      'Pour les tout-petits : quatre outils, de grandes couleurs, presque rien à lire.',
+    ),
+    InterfaceLevel.child => tr(
+      'Pour les enfants : tous les outils pour dessiner, sans les calques ni les exports.',
+    ),
+    InterfaceLevel.full => tr('Pour les plus grands : tout Color.'),
   };
 }
 
@@ -46,6 +52,12 @@ class StudioOptions {
     this.holdFree = false,
     this.screenKeyboard = false,
     this.guarded = false,
+    this.steadyHand = false,
+    this.touchShiftX = 0,
+    this.touchShiftY = 0,
+    this.keyboardPointer = false,
+    this.language = LanguageChoice.device,
+    this.companionReacts = false,
   });
 
   /// What a file that says nothing, or nothing readable, stands for: Color
@@ -67,6 +79,32 @@ class StudioOptions {
   /// The text dialog shows keys to click.
   final bool screenKeyboard;
 
+  /// The brush follows the pointer at the end of a little string (Color
+  /// 1.1): a hand that trembles draws a calm trait.
+  final bool steadyHand;
+
+  /// What « Régler le toucher » found (Color 1.1): where a finger meant to
+  /// touch, from where it touched, in logical pixels, at most [maxTouchShift]
+  /// each way. Only fingers are shifted; a mouse or a stylus never.
+  final double touchShiftX;
+  final double touchShiftY;
+
+  static const maxTouchShift = 40.0;
+
+  /// A pointer on the sheet moved by the arrows of the keyboard or a
+  /// gamepad, Entrée or the button A pressing and releasing it (Color 1.1):
+  /// for a child who cannot hold a mouse.
+  final bool keyboardPointer;
+
+  /// The language of the interface (Color 1.1): that of the device, by
+  /// default, or the one chosen.
+  final LanguageChoice language;
+
+  /// The companion beside the help stands up and paints when the child has
+  /// saved a drawing or taken a new sheet (Color 1.1); touched, it always
+  /// does.
+  final bool companionReacts;
+
   /// A multiplication keeps the door of « Options », so that the youngest
   /// do not open them by chance. Off until an adult switches it on: by
   /// default everything is within reach.
@@ -79,6 +117,12 @@ class StudioOptions {
     bool? holdFree,
     bool? screenKeyboard,
     bool? guarded,
+    bool? steadyHand,
+    double? touchShiftX,
+    double? touchShiftY,
+    bool? keyboardPointer,
+    LanguageChoice? language,
+    bool? companionReacts,
   }) => StudioOptions(
     level: level ?? this.level,
     printing: printing ?? this.printing,
@@ -86,6 +130,12 @@ class StudioOptions {
     holdFree: holdFree ?? this.holdFree,
     screenKeyboard: screenKeyboard ?? this.screenKeyboard,
     guarded: guarded ?? this.guarded,
+    steadyHand: steadyHand ?? this.steadyHand,
+    touchShiftX: touchShiftX ?? this.touchShiftX,
+    touchShiftY: touchShiftY ?? this.touchShiftY,
+    keyboardPointer: keyboardPointer ?? this.keyboardPointer,
+    language: language ?? this.language,
+    companionReacts: companionReacts ?? this.companionReacts,
   );
 
   /// The tools of the bar, in its order.
@@ -97,6 +147,12 @@ class StudioOptions {
           StudioTool.eraser,
         ]
       : StudioTool.values;
+
+  /// The buttons of the bar, in its order: those that hold [tools].
+  List<ToolGroup> get groups => [
+    for (final group in ToolGroup.values)
+      if (group.tools.any(tools.contains)) group,
+  ];
 
   bool get _toddler => level == InterfaceLevel.toddler;
   bool get _full => level == InterfaceLevel.full;
@@ -140,6 +196,11 @@ class StudioOptions {
     'holdFree': holdFree,
     'screenKeyboard': screenKeyboard,
     'guarded': guarded,
+    'steadyHand': steadyHand,
+    'touchShift': [touchShiftX, touchShiftY],
+    'keyboardPointer': keyboardPointer,
+    'language': language.key,
+    'companionReacts': companionReacts,
   };
 
   /// What a decoded options file says. Whatever is missing, of another type
@@ -150,6 +211,16 @@ class StudioOptions {
     bool flag(String key, bool fallback) {
       final value = json[key];
       return value is bool ? value : fallback;
+    }
+
+    // A shift of the touch is two numbers, each within its bounds.
+    final shift = json['touchShift'];
+    double shiftAt(int index) {
+      if (shift is! List || shift.length != 2) return 0;
+      final value = shift[index];
+      return value is num && value.isFinite
+          ? value.toDouble().clamp(-maxTouchShift, maxTouchShift)
+          : 0;
     }
 
     final code = json['level'];
@@ -163,6 +234,12 @@ class StudioOptions {
       holdFree: flag('holdFree', defaults.holdFree),
       screenKeyboard: flag('screenKeyboard', defaults.screenKeyboard),
       guarded: flag('guarded', defaults.guarded),
+      steadyHand: flag('steadyHand', defaults.steadyHand),
+      touchShiftX: shiftAt(0),
+      touchShiftY: shiftAt(1),
+      keyboardPointer: flag('keyboardPointer', defaults.keyboardPointer),
+      language: LanguageChoice.fromKey(json['language']),
+      companionReacts: flag('companionReacts', defaults.companionReacts),
     );
   }
 
@@ -174,11 +251,29 @@ class StudioOptions {
       other.sounds == sounds &&
       other.holdFree == holdFree &&
       other.screenKeyboard == screenKeyboard &&
-      other.guarded == guarded;
+      other.guarded == guarded &&
+      other.steadyHand == steadyHand &&
+      other.touchShiftX == touchShiftX &&
+      other.touchShiftY == touchShiftY &&
+      other.keyboardPointer == keyboardPointer &&
+      other.language == language &&
+      other.companionReacts == companionReacts;
 
   @override
-  int get hashCode =>
-      Object.hash(level, printing, sounds, holdFree, screenKeyboard, guarded);
+  int get hashCode => Object.hash(
+    level,
+    printing,
+    sounds,
+    holdFree,
+    screenKeyboard,
+    guarded,
+    steadyHand,
+    touchShiftX,
+    touchShiftY,
+    keyboardPointer,
+    language,
+    companionReacts,
+  );
 
   @override
   String toString() => 'StudioOptions(${toJson()})';

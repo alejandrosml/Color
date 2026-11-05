@@ -77,7 +77,7 @@ void main() {
       try {
         expect(document.layers.map((layer) => layer.id), [0, 1]);
         expect(document.activeLayer, 1);
-        expect(document.exportProject()[8], 4);
+        expect(document.exportProject()[8], 6);
       } finally {
         document.dispose();
       }

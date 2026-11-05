@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Chat », n° 8. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Chat</title>
+  <path d="M 18 44 L 14 12 L 38 24 C 46 21 54 21 62 24 L 86 12 L 82 44 C 90 62 76 86 50 86 C 24 86 10 62 18 44 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 21 22 L 33 28 L 23 36 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 79 22 L 67 28 L 77 36 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 40 52 C 40 55.31 38.21 58 36 58 C 33.79 58 32 55.31 32 52 C 32 48.69 33.79 46 36 46 C 38.21 46 40 48.69 40 52 Z" fill="#293d4b"/>
+  <path d="M 68 52 C 68 55.31 66.21 58 64 58 C 61.79 58 60 55.31 60 52 C 60 48.69 61.79 46 64 46 C 66.21 46 68 48.69 68 52 Z" fill="#293d4b"/>
+  <path d="M 45 62 L 55 62 L 50 68 Z" fill="#ed8c88" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 50 68 C 50 74 43 76 40 72 M 50 68 C 50 74 57 76 60 72" fill="none" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 28 64 L 8 60 M 28 69 L 9 73 M 72 64 L 92 60 M 72 69 L 91 73" fill="none" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

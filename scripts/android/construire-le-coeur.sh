@@ -41,7 +41,7 @@ for paire in aarch64-linux-android:arm64-v8a:aarch64-linux-android \
   export "$VARIABLE=$OUTILS/$CLANG"
   echo "Cœur pour Android, $ABI…"
   # Le cœur des boutiques ne lit aucun SVG : ni usvg ni ses lecteurs (R-01).
-  "$CARGO" rustc --release --lib --offline --frozen --no-default-features \
+  "$CARGO" rustc --release --lib --offline --frozen --no-default-features --features deflate \
     --target "$CIBLE" --crate-type cdylib -- \
     -C link-arg=-Wl,-soname,libedupaint_core.so \
     -C link-arg=-Wl,-z,max-page-size=16384

@@ -7,15 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Future<StudioTool?> pump(
+  Future<ToolGroup?> pump(
     WidgetTester tester, {
     required Size size,
     bool horizontal = false,
     double textScale = 1,
-    StudioTool selected = StudioTool.brush,
+    ToolGroup selected = ToolGroup.brush,
     bool enabled = true,
   }) async {
-    StudioTool? chosen;
+    ToolGroup? chosen;
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = size;
     tester.platformDispatcher.textScaleFactorTestValue = textScale;
@@ -58,14 +58,14 @@ void main() {
     return chosen;
   }
 
-  Rect rect(WidgetTester tester, StudioTool tool) =>
+  Rect rect(WidgetTester tester, ToolGroup tool) =>
       tester.getRect(find.byKey(Key(tool.keyName)));
 
   // Every button lies whole inside the window and overlaps no other.
   void expectAllInView(WidgetTester tester, Size window) {
-    final rects = [for (final tool in StudioTool.values) rect(tester, tool)];
+    final rects = [for (final tool in ToolGroup.values) rect(tester, tool)];
     for (final (index, box) in rects.indexed) {
-      final tool = StudioTool.values[index];
+      final tool = ToolGroup.values[index];
       expect(box.left, greaterThanOrEqualTo(0), reason: tool.name);
       expect(box.top, greaterThanOrEqualTo(0), reason: tool.name);
       // Shared widths are divisions: allow their last binary digit.
@@ -94,14 +94,14 @@ void main() {
     await pump(tester, size: window);
     expectAllInView(tester, window);
     final columns = {
-      for (final tool in StudioTool.values) rect(tester, tool).left,
+      for (final tool in ToolGroup.values) rect(tester, tool).left,
     };
     expect(columns, hasLength(1));
-    expect(rect(tester, StudioTool.brush).height, 80);
-    expect(rect(tester, StudioTool.brush).width, 76);
+    expect(rect(tester, ToolGroup.brush).height, 80);
+    expect(rect(tester, ToolGroup.brush).width, 76);
     expect(find.text('OUTILS'), findsOneWidget);
     // In the order of the number keys, top to bottom.
-    final tops = [for (final tool in StudioTool.values) rect(tester, tool).top];
+    final tops = [for (final tool in ToolGroup.values) rect(tester, tool).top];
     expect(tops, [...tops]..sort());
   });
 
@@ -113,9 +113,9 @@ void main() {
     await pump(tester, size: window);
     expectAllInView(tester, window);
     expect({
-      for (final tool in StudioTool.values) rect(tester, tool).left,
+      for (final tool in ToolGroup.values) rect(tester, tool).left,
     }, hasLength(1));
-    final height = rect(tester, StudioTool.brush).height;
+    final height = rect(tester, ToolGroup.brush).height;
     expect(height, greaterThanOrEqualTo(60));
     expect(height, lessThan(80));
   });
@@ -128,27 +128,28 @@ void main() {
       await pump(tester, size: window);
       expectAllInView(tester, window);
       final columns = {
-        for (final tool in StudioTool.values) rect(tester, tool).left,
+        for (final tool in ToolGroup.values) rect(tester, tool).left,
       };
       expect(columns, hasLength(2));
       // Reading order: left then right, row after row.
       expect(
-        rect(tester, StudioTool.brush).top,
-        rect(tester, StudioTool.line).top,
+        rect(tester, ToolGroup.brush).top,
+        rect(tester, ToolGroup.line).top,
       );
       expect(
-        rect(tester, StudioTool.brush).left,
-        lessThan(rect(tester, StudioTool.line).left),
+        rect(tester, ToolGroup.brush).left,
+        lessThan(rect(tester, ToolGroup.line).left),
       );
       expect(
-        rect(tester, StudioTool.rectangle).top,
-        greaterThan(rect(tester, StudioTool.brush).top),
+        rect(tester, ToolGroup.shapes).top,
+        greaterThan(rect(tester, ToolGroup.brush).top),
       );
+      // The ninth, alone in the last row, under the first.
       expect(
-        rect(tester, StudioTool.select).left,
-        rect(tester, StudioTool.brush).left,
+        rect(tester, ToolGroup.magic).left,
+        rect(tester, ToolGroup.brush).left,
       );
-      expect(rect(tester, StudioTool.brush).height, greaterThanOrEqualTo(60));
+      expect(rect(tester, ToolGroup.brush).height, greaterThanOrEqualTo(60));
     });
   }
 
@@ -156,8 +157,8 @@ void main() {
     tester,
   ) async {
     await pump(tester, size: const Size(400, 300));
-    expect(rect(tester, StudioTool.brush).height, greaterThanOrEqualTo(60));
-    final last = find.byKey(Key(StudioTool.select.keyName));
+    expect(rect(tester, ToolGroup.brush).height, greaterThanOrEqualTo(60));
+    final last = find.byKey(Key(ToolGroup.values.last.keyName));
     await tester.ensureVisible(last);
     await tester.pumpAndSettle();
     expect(tester.getRect(last).bottom, lessThanOrEqualTo(300));
@@ -170,7 +171,7 @@ void main() {
     const window = Size(400, 900);
     await pump(tester, size: window, textScale: 2);
     expectAllInView(tester, window);
-    for (final tool in StudioTool.values) {
+    for (final tool in ToolGroup.values) {
       final name = find.descendant(
         of: find.byKey(Key(tool.keyName)),
         matching: find.text(tool.label),
@@ -185,7 +186,7 @@ void main() {
     const window = Size(1000, 200);
     await pump(tester, size: window, horizontal: true);
     expectAllInView(tester, window);
-    for (final tool in StudioTool.values) {
+    for (final tool in ToolGroup.values) {
       expect(find.text(tool.label), findsOneWidget);
     }
     expect(find.byKey(const Key('toolsScroll')), findsNothing);
@@ -201,7 +202,7 @@ void main() {
       expect(find.byKey(const Key('toolsScroll')), findsNothing);
       // The names are no longer written, and are still announced.
       final handle = tester.ensureSemantics();
-      for (final tool in StudioTool.values) {
+      for (final tool in ToolGroup.values) {
         expect(find.text(tool.label), findsNothing);
         expect(
           tester.getSemantics(find.byKey(Key(tool.keyName))).label,
@@ -218,8 +219,8 @@ void main() {
   ) async {
     await pump(tester, size: const Size(360, 200), horizontal: true);
     expect(find.byKey(const Key('toolsScroll')), findsOneWidget);
-    expect(rect(tester, StudioTool.brush).width, 48);
-    final last = find.byKey(Key(StudioTool.select.keyName));
+    expect(rect(tester, ToolGroup.brush).width, 48);
+    final last = find.byKey(Key(ToolGroup.values.last.keyName));
     await tester.ensureVisible(last);
     await tester.pumpAndSettle();
     expect(tester.getRect(last).right, lessThanOrEqualTo(360));
@@ -229,12 +230,12 @@ void main() {
   testWidgets('choosing reports the tool and a busy studio disables the bar', (
     tester,
   ) async {
-    StudioTool? chosen;
+    ToolGroup? chosen;
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
           body: StudioToolBar(
-            selected: StudioTool.brush,
+            selected: ToolGroup.brush,
             horizontal: true,
             onSelected: (tool) => chosen = tool,
           ),
@@ -242,19 +243,19 @@ void main() {
       ),
     );
     await tester.tap(find.byKey(const Key('tool-eraser')));
-    expect(chosen, StudioTool.eraser);
+    expect(chosen, ToolGroup.eraser);
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
           body: StudioToolBar(
-            selected: StudioTool.brush,
+            selected: ToolGroup.brush,
             horizontal: true,
             onSelected: null,
           ),
         ),
       ),
     );
-    for (final tool in StudioTool.values) {
+    for (final tool in ToolGroup.values) {
       expect(
         tester.widget<OutlinedButton>(find.byKey(Key(tool.keyName))).onPressed,
         isNull,

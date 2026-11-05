@@ -36,6 +36,11 @@ void main() {
 
   Future<void> tap(WidgetTester tester, String key) async {
     final control = find.byKey(Key(key));
+    // The rectangle and the oval are chosen in « Formes ».
+    if (control.evaluate().isEmpty &&
+        (key == 'tool-rectangle' || key == 'tool-ellipse')) {
+      await tap(tester, 'tool-shapes');
+    }
     await tester.ensureVisible(control);
     await tester.tap(control);
     if (key == 'openProject') {

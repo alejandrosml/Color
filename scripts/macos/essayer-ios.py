@@ -226,6 +226,17 @@ def main():
                     ' « Open Developer Tool », « Simulator ».')
     journal.say('Journal et captures : ' + str(journal.folder))
     subprocess.call(['/usr/bin/open', str(journal.captures)])
+    # The simulators stay open for the person's own trial, then shut down:
+    # left on, they keep the sound of the Mac busy (Color 1.1).
+    try:
+        input('\nQuand tu as fini d’essayer, appuie sur Entrée ici : les simulateurs'
+              ' s’arrêteront. ')
+    except EOFError:
+        pass
+    for udid in (ipad, iphone):
+        code, said = output(SIMCTL + ['shutdown', udid])
+        journal.keep('simulateur %s arrêté : code %d %s' % (udid, code, said.strip()))
+    journal.say('Les simulateurs sont arrêtés.')
 
 
 def open_simulator_window(journal):

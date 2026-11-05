@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Pinceau », le pinceau, sa pointe trempée de couleur. Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Pinceau</title>
+  <path d="M 29 33 L 45 9 C 49 3 58 10 54 15 L 37 39 Z" fill="#9a82c9" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 27 31 L 39 40 L 33 47 L 21 39 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 22 39 C 9 37 15 52 6 54 C 22 61 33 54 33 47 Z" fill="#43ac9c" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 14 52 Q 21 53 25 47" fill="none" stroke="#b7e6d2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="48" cy="13" r="1.7" fill="#fffcf0"/>
+</svg>

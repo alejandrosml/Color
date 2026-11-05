@@ -42,6 +42,61 @@ typedef struct EpObjectExtra {
     size_t text_bytes; /* UTF-8 length of a text, zero otherwise */
 } EpObjectExtra;
 
+/* What version 6 of the project adds to an object (Color 1.1). All zero is
+ * "nothing added": the object looks as it did before 1.1. */
+typedef struct EpObjectLook {
+    float rotation;          /* radians in ]-pi, pi], about the centre of the
+                                object's box, after the mirror; positive turns
+                                clockwise on the sheet (y goes down) */
+    uint32_t mirror;         /* bit 0 left-right, bit 1 top-bottom */
+    uint32_t tool;           /* freehand only: 0 round, 1 felt, 2 calligraphy,
+                                3 chalk, 4 airbrush, 16 rainbow, 17 grass,
+                                18 bricks, 19 confetti; and 32 on a contour,
+                                a zone poured by the paint pot */
+    uint32_t seed;           /* chalk, airbrush, grass, confetti; else 0 */
+    uint32_t gradient;       /* 0 none, 1 linear, 2 radial; filled objects */
+    uint32_t gradient_rgb;   /* 0x00RRGGBB of the second colour, else 0 */
+    float gradient_points[4];/* x0, y0, x1, y1 as fractions of the box (0..1) */
+} EpObjectLook;
+
+/* Everything a new object is, for ep_add_object. Pointers are read during the
+ * call only and must address initialized values disjoint from the document. */
+typedef struct EpNewObject {
+    const EpPoint *points;
+    size_t count;
+    EpObjectStyle style;
+    uint32_t rgb;
+    float width;
+    uint32_t param;          /* font of a text (0..4), drawing of a stamp, 0 */
+    const uint8_t *text;     /* UTF-8 of a text, else NULL */
+    size_t text_length;
+    EpObjectLook look;
+    const uint8_t *pressures;/* NULL, or count pressures 1..255 (freehand) */
+    const uint32_t *rings;   /* NULL, or ring_count point counts (contour) */
+    size_t ring_count;
+    uint32_t quant;          /* 0..10: points rounded to 1/2^quant unit;
+                                255 keeps them exact */
+    uint32_t placement;      /* 0 on top of the active layer, 1 at its bottom,
+                                2 just above the object `above` of the active
+                                layer (an object added alone) */
+    size_t above;            /* placement 2: that object's index; else 0 */
+} EpNewObject;
+
+/* One mark of a freehand stroke drawn with a tool of Color 1.1 or with a
+ * pressure: a polygon of `count` points from `first` (clockwise on the sheet,
+ * whose y goes down), or a circle (shape 1) of centre points[first]. Marks of
+ * one group follow each other, share rgb and alpha, and are filled together as
+ * one path by the non-zero rule. Coordinates are before mirror and rotation. */
+typedef struct EpMark {
+    uint32_t shape;  /* 0 polygon, 1 circle */
+    uint32_t rgb;
+    uint32_t alpha;  /* 1..255 */
+    uint32_t group;
+    uint32_t first;
+    uint32_t count;
+    float radius;
+} EpMark;
+
 /* Immutable normalized PNG background, separate from vector object indices. */
 typedef struct EpBackgroundInfo {
     uint32_t width;
@@ -437,6 +492,143 @@ int32_t ep_copy_project(const EpDocument *document, uint8_t *out_bytes, size_t c
  */
 EpDocument *ep_document_from_project(const uint8_t *bytes, size_t length, int32_t *out_status);
 
+/* VERSION 6 (Color 1.1, docs/FORMAT-PROJET.md). ep_project_size and
+ * ep_copy_project keep writing versions 2 to 5, and refuse (0, -1) a drawing
+ * that only version 6 keeps; ep_document_from_project reads 1 to 6.
+ * EP_MAX_READ_PROJECT_BYTES bounds every file the readers accept. */
+#define EP_MAX_READ_PROJECT_BYTES ((size_t)85778977)
+/* Capacity ep_write_project may need: a little more than it writes; 0 NULL. */
+size_t ep_project_bound(const EpDocument *document);
+/* Writes version 6 into out_bytes (capacity >= ep_project_bound) and its
+ * length into out_length. compress 1 compresses each layer's objects when that
+ * makes them smaller (memory is borrowed for it; without it a block is kept as
+ * it is); 0 writes every block as it is, allocating nothing. 0 success, -1
+ * NULL / capacity below the bound / compress not 0 or 1. */
+int32_t ep_write_project(const EpDocument *document, uint8_t *out_bytes,
+                         size_t capacity, uint32_t compress, size_t *out_length);
+/* Reads again a version 6 file whose final CRC fails: header, document and
+ * layer blocks must be intact; a damaged layer of objects is left empty and a
+ * damaged image left out. Optional out_lost: bit i for the layer at position
+ * i of the table, bit 16 for the image; 0 when only the final CRC was
+ * damaged and the whole drawing is given back. NULL (status -1) when nothing
+ * can be saved or the file is not damaged; -2 allocation failure. */
+EpDocument *ep_document_from_damaged_project(const uint8_t *bytes, size_t length,
+                                             uint32_t *out_lost, int32_t *out_status);
+
+/* OBJECTS OF COLOR 1.1. ep_add_object adds any kind, contours included, with
+ * its look, pressures, rings, fineness and place: points are rounded first,
+ * then checked as ep_add_stroke/ep_add_shape/ep_add_text/ep_add_stamp check
+ * theirs. 0 success, -1 invalid/limits, -2 allocation; failure changes nothing. */
+int32_t ep_add_object(EpDocument *document, const EpNewObject *object);
+/* count (1..16) objects as one command: one undo takes them all away (a
+ * stroke and its mirror). In order, each where its placement says. 0, -1 one
+ * invalid or a limit, -2 allocation; failure changes nothing. */
+int32_t ep_add_objects(EpDocument *document, const EpNewObject *objects, size_t count);
+/* 0, or -1 NULL / index outside the drawing. */
+int32_t ep_object_look(const EpDocument *document, size_t index, EpObjectLook *out_look);
+/* Replaces fill and look in one undoable command; style.kind must be the
+ * object's, outline colour and width stay. 1 changed, 0 same, -1 invalid, -2
+ * allocation. On a locked layer only the colour and gradient of an existing
+ * fill may change. ep_set_object_style refuses to take away the fill of an
+ * object with a gradient. */
+int32_t ep_set_object_paint(EpDocument *document, size_t index,
+                            const EpObjectStyle *style, const EpObjectLook *look);
+/* Pressures of a freehand stroke: count (its point count) or 0; copy returns
+ * the count, or 0 with nothing written. Width at a point: width * p / 255. */
+size_t ep_object_pressure_count(const EpDocument *document, size_t index);
+size_t ep_copy_pressures(const EpDocument *document, size_t index,
+                         uint8_t *out_pressures, size_t capacity);
+/* Rings of a contour with holes (filled by the even-odd rule): their count (2
+ * or more) or 0; copy returns the count, or 0 with nothing written. */
+size_t ep_object_ring_count(const EpDocument *document, size_t index);
+size_t ep_copy_rings(const EpDocument *document, size_t index,
+                     uint32_t *out_rings, size_t capacity);
+
+/* MARKS of the tools of Color 1.1 (chalk, airbrush, calligraphy, rainbow,
+ * grass, bricks, confetti) and of pressed strokes: what the screen paints,
+ * the SVG export writes and the film reveals. An object painted as before
+ * (any kind but a freehand stroke, a round stroke without pressures, the
+ * marker) has none: count 0. out_point_count is optional. */
+size_t ep_object_mark_count(const EpDocument *document, size_t index, size_t *out_point_count);
+/* 0, -1 NULL / index / capacities below the counts (nothing written), -2. */
+int32_t ep_copy_object_marks(const EpDocument *document, size_t index,
+                             EpMark *out_marks, size_t mark_capacity,
+                             EpPoint *out_points, size_t point_capacity);
+/* The marks of a stroke being drawn, from its segment `from` on: those it will
+ * keep, its first marks unchanged as it grows. pressures NULL or count bytes.
+ * Writes and returns 0 when they fit; else writes nothing and returns -1;
+ * the counts needed are always written to the non-NULL count outputs. -1 also
+ * for NULL points, an unknown tool, a width outside 0.1..512; -2 memory. */
+int32_t ep_stroke_marks(const EpPoint *points, size_t count, const uint8_t *pressures,
+                        float width, uint32_t rgb, uint32_t tool, uint32_t seed,
+                        size_t from, EpMark *out_marks, size_t mark_capacity,
+                        EpPoint *out_points, size_t point_capacity,
+                        size_t *out_mark_count, size_t *out_point_count);
+
+/* COLOURS. a and b mixed as paint (Kubelka-Munk of one constant, reflectance
+ * curves under D65): amount 0 is a, 1 is b; blue and yellow give green. A
+ * NaN amount or colours beyond 24 bits give a. */
+uint32_t ep_mix_colours(uint32_t a, uint32_t b, float amount);
+/* count (2..64) colours evenly along a gradient from a to b through Oklab,
+ * a first, b last. 0, or -1 bad colours / count / NULL output. */
+int32_t ep_gradient_colours(uint32_t a, uint32_t b, uint32_t count, uint32_t *out_colours);
+
+/* THE ERASER THAT CUTS. One rub along path (count centres, radius in units
+ * of the sheet): the lines of the objects of cut that it reaches are cut
+ * (freehand strokes, lines, outlines of hollow rectangles and ellipses; a
+ * turned or mirrored object is baked first; pieces keep tool, seed and
+ * pressures), the objects of removed go whole. Indices are those before the
+ * call; one of a locked or hidden layer, or out of the drawing, refuses all.
+ * merge = 1 joins the last command when it is a rub and nothing was undone
+ * since: the interface passes 1 for every call of a gesture after the first,
+ * so that one undo brings the gesture back. Returns the number of objects
+ * changed (0 touched nothing), -1 invalid / limits, -2 memory; on error
+ * nothing changes. cut and removed may be NULL when their count is 0. */
+int32_t ep_erase(EpDocument *document, const EpPoint *path, size_t count, float radius,
+                 const size_t *cut, size_t cut_count, const size_t *removed,
+                 size_t removed_count, uint32_t merge);
+
+/* THE PAINT POT THAT CLOSES SMALL GAPS. mask: width x height bytes (1..4096
+ * each side), the drawing's ink at 128 or more; (x, y) the touched pixel;
+ * radius 0..64 pixels: gaps narrower than twice the radius are plugged at
+ * their narrowest, never crossed (0: the plain flood fill, ink only). Writes
+ * the outline of the zone, a pixel under the ink: its rings' points in pixel
+ * coordinates (a pixel's centre at x + 0.5), and each ring's point count, the
+ * outer ring and those of its holes, filled even-odd. Returns 1 written; 0 on
+ * ink; 2 when the zone is all the paper of the sheet, no line closing
+ * anything: the sheet's own colour is what to change; -1 invalid or
+ * capacities below the counts (always written to the non-NULL count outputs
+ * when there is an outline); -2 memory. About a dozen bytes a pixel at most,
+ * under 100 ms for 2048 x 1536 on a laptop at a radius of 24: keep the mask
+ * near the screen's size. */
+int32_t ep_fill_zone(const uint8_t *mask, uint32_t width, uint32_t height, uint32_t x,
+                     uint32_t y, uint32_t radius, EpPoint *out_points, size_t point_capacity,
+                     uint32_t *out_rings, size_t ring_capacity, size_t *out_point_count,
+                     size_t *out_ring_count);
+
+/* THE SHAPES OF 1.1, drawn in a box as contours (kind 6): 0 triangle, 1 star,
+ * 2 heart, 3 diamond, 4 hexagon, 5 arrow (pointing from a's side towards
+ * b's). The outline touches the four sides of the box of corners a and b,
+ * clockwise on the sheet; curves within a tenth of a unit, 1440 points at
+ * most. 0 written; -1 unknown shape, a box without width or height, or a
+ * capacity below the count (written to non-NULL out_count when valid). */
+int32_t ep_shape_outline(uint32_t shape, EpPoint a, EpPoint b, EpPoint *out_points,
+                         size_t capacity, size_t *out_count);
+
+/* THE MAGNET SHAPES. What a stroke drawn with the magnet tool becomes once
+ * the finger is lifted, by geometric fitting only (nothing while drawing,
+ * nothing by holding still or drawing over it again): out_kind 1 a line (its
+ * ends, level or upright when nearly so), 2 a rectangle (its box's corners;
+ * square when nearly so), 3 an ellipse (its box's corners and out_rotation,
+ * its turn about its centre, clockwise in radians; a circle when nearly so),
+ * 6 a polygon of 3 to 12 corners (a turned rectangle among them), 0 a broken
+ * line of 2 to 6 straight pieces (its corners). Points are kept on the sheet
+ * of document. Returns 1 recognised, 0 nothing simple (keep the stroke as
+ * drawn), -1 NULL / count / a capacity below 12. */
+int32_t ep_recognise_shape(const EpDocument *document, const EpPoint *points, size_t count,
+                           uint32_t *out_kind, EpPoint *out_points, size_t capacity,
+                           size_t *out_count, float *out_rotation);
+
 /* Transactionally fills an already-owned candidate, retaining its address and
  * owner. Returns 0 on success, -1 invalid input, -2 allocation failure. Failure
  * preserves all previous content/history. The caller must exclusively borrow
@@ -490,6 +682,11 @@ int32_t ep_export_snapshot_copy_project(const EpExportSnapshot *snapshot,
                                        uint8_t *out_bytes, size_t capacity);
 /* Same SVG as ep_export_svg at capture time. NULL failure, owned UTF-8 otherwise. */
 char *ep_export_snapshot_export_svg(const EpExportSnapshot *snapshot);
+/* ep_project_bound and ep_write_project of the captured drawing. */
+size_t ep_export_snapshot_project_bound(const EpExportSnapshot *snapshot);
+int32_t ep_export_snapshot_write_project(const EpExportSnapshot *snapshot,
+                                         uint8_t *out_bytes, size_t capacity,
+                                         uint32_t compress, size_t *out_length);
 
 /* SOUNDS. Small sounds of the interface. Most are rendered by this core from
  * recipes of its own: sine partials, envelopes and the noise of its own
@@ -573,7 +770,9 @@ int32_t ep_sound_play(uint32_t id);
  * the stores are built without it and read no SVG at all.
  * A picture is described as ASCII text, one instruction per line:
  *   P <key> <width> <height>   opens a picture; X ends it
- *   G <opacity> <matrix|->     opens a group; E ends it
+ *   G <opacity> <matrix|-> [<name>]  opens a group; E ends it. A group
+ *                              named in its SVG (id of a-z, 0-9 and -) keeps
+ *                              its name, for the interface to move it
  *   C, then K <n|e> <outline>  clips of the group just opened: several C
  *                              sections intersect, the K outlines of one C
  *                              are joined

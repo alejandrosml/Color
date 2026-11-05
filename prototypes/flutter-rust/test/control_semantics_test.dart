@@ -48,12 +48,13 @@ void main() {
       final handle = tester.ensureSemantics();
       final studio = StudioDriver(tester);
       await studio.start();
-      for (final tool in StudioTool.values) {
+      // The buttons of the bar.
+      for (final tool in ToolGroup.values) {
         control(
           tester,
           tool.keyName,
           label: tool.label,
-          selected: tool == StudioTool.brush,
+          selected: tool == ToolGroup.brush,
         );
       }
       await activate(tester, 'tool-eraser');
@@ -64,16 +65,41 @@ void main() {
       tester.view.physicalSize = const Size(700, 620);
       await tester.pumpAndSettle();
       expect(find.text('Gomme'), findsNothing);
-      for (final tool in StudioTool.values) {
+      for (final tool in ToolGroup.values) {
         control(
           tester,
           tool.keyName,
           label: tool.label,
-          selected: tool == StudioTool.eraser,
+          selected: tool == ToolGroup.eraser,
         );
       }
       await activate(tester, 'tool-fill');
       control(tester, 'tool-fill', label: 'Remplir', selected: true);
+      handle.dispose();
+      await studio.finish();
+    },
+    skip: !available,
+  );
+
+  testWidgets(
+    'the choices of a tool of 1.1 announce their name and state, and press',
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      final studio = StudioDriver(tester);
+      await studio.start();
+      control(tester, 'brushTip-round', label: 'Rond', selected: true);
+      control(tester, 'brushTip-chalk', label: 'Craie', selected: false);
+      await activate(tester, 'brushTip-chalk');
+      control(tester, 'brushTip-chalk', label: 'Craie', selected: true);
+      await activate(tester, 'tool-shapes');
+      control(tester, 'tool-rectangle', label: 'Rectangle', selected: true);
+      await activate(tester, 'shape-heart');
+      control(tester, 'shape-heart', label: 'Cœur', selected: true);
+      control(tester, 'tool-rectangle', label: 'Rectangle', selected: false);
+      await activate(tester, 'tool-fill');
+      control(tester, 'pour-linear', label: 'Dégradé', selected: false);
+      await activate(tester, 'pour-linear');
+      control(tester, 'pour-linear', label: 'Dégradé', selected: true);
       handle.dispose();
       await studio.finish();
     },

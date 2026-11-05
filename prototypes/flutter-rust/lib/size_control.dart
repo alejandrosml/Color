@@ -6,6 +6,7 @@ import 'child_art.dart';
 import 'size_choice.dart';
 import 'stamp_catalog.dart';
 import 'stamp_dialog.dart';
+import 'language.dart';
 
 /// The width of a trait or of an outline: a slider and the number it shows.
 class OutlineWidthControl extends StatelessWidget {
@@ -43,8 +44,8 @@ class OutlineWidthControl extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Expanded(
-                  child: Text('Épaisseur', style: TextStyle(fontSize: 11)),
+                Expanded(
+                  child: Text(tr('Épaisseur'), style: TextStyle(fontSize: 11)),
                 ),
                 Text('${shown.round()}', style: const TextStyle(fontSize: 11)),
               ],
@@ -64,7 +65,7 @@ class OutlineWidthControl extends StatelessWidget {
   Widget _line() => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      const Text('Épaisseur', style: TextStyle(fontSize: 11)),
+      Text(tr('Épaisseur'), style: TextStyle(fontSize: 11)),
       const SizedBox(width: 8),
       SizedBox(
         width: narrow ? 80 : 100,
@@ -126,7 +127,7 @@ class PlacedSizeControl extends StatelessWidget {
     ),
     // Named on the button itself, which keeps its own action.
     child: Semantics(
-      label: 'Tampon ${stamp?.label ?? ''} · choisir un autre tampon',
+      label: trf('Tampon {0} · choisir un autre tampon', [stamp?.label ?? '']),
       excludeSemantics: true,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -148,7 +149,7 @@ class PlacedSizeControl extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (forStamp) ...[_stampButton(), const SizedBox(height: 8)],
-            const Text('Taille', style: TextStyle(fontSize: 11)),
+            Text(tr('Taille'), style: TextStyle(fontSize: 11)),
             const SizedBox(height: 4),
             SizeChoiceControl(
               value: size,
@@ -162,7 +163,7 @@ class PlacedSizeControl extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (forStamp) ...[_stampButton(), const SizedBox(width: 10)],
-            const Text('Taille', style: TextStyle(fontSize: 11)),
+            Text(tr('Taille'), style: TextStyle(fontSize: 11)),
             const SizedBox(width: 8),
             SizeChoiceControl(
               value: size,

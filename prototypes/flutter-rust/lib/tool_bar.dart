@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'child_art.dart';
 import 'studio_colors.dart';
 import 'studio_tool.dart';
+import 'language.dart';
 
 /// The tools, as a column beside the sheet or as a row above it in a narrow
 /// window. Every tool keeps a full-size target: the bar scrolls rather than
@@ -16,20 +17,20 @@ class StudioToolBar extends StatelessWidget {
     this.horizontal = false,
     this.rail = false,
     this.leading,
-    this.tools = StudioTool.values,
+    this.tools = ToolGroup.values,
     this.large = false,
   });
 
-  final StudioTool selected;
+  final ToolGroup selected;
 
-  /// The tools shown, in their order: the simplest interface has four.
-  final List<StudioTool> tools;
+  /// The buttons shown, in their order: the simplest interface has four.
+  final List<ToolGroup> tools;
 
   /// Larger buttons, for the few tools of the simplest interface.
   final bool large;
 
   /// Null while the studio is busy: the buttons are then disabled.
-  final ValueChanged<StudioTool>? onSelected;
+  final ValueChanged<ToolGroup>? onSelected;
   final bool horizontal;
 
   /// The narrow rail of a telephone, beside the sheet: the pictures of the
@@ -96,7 +97,7 @@ class StudioToolBar extends StatelessWidget {
   }) => _columnLayout(
     maxHeight,
     textScale,
-    count: count ?? StudioTool.values.length,
+    count: count ?? ToolGroup.values.length,
     large: large,
   ).columns;
 
@@ -111,7 +112,7 @@ class StudioToolBar extends StatelessWidget {
     final layout = _columnLayout(
       maxHeight,
       textScale,
-      count: count ?? StudioTool.values.length,
+      count: count ?? ToolGroup.values.length,
       large: large,
     );
     return _padding +
@@ -121,7 +122,7 @@ class StudioToolBar extends StatelessWidget {
 
   // In the row of a narrow window a button may keep only its picture: its
   // name is then a tooltip and stays the name read by a screen reader.
-  Widget _button(StudioTool tool, {double height = 80, bool label = true}) {
+  Widget _button(ToolGroup tool, {double height = 80, bool label = true}) {
     final isSelected = tool == selected;
     final side = railButton(large);
     final button = OutlinedButton(
@@ -336,9 +337,9 @@ class StudioToolBar extends StatelessWidget {
                 children: [
                   Padding(
                     padding: EdgeInsets.only(top: 5, bottom: roomy ? 14 : 8),
-                    child: const Text(
-                      'OUTILS',
-                      style: TextStyle(
+                    child: Text(
+                      tr('OUTILS'),
+                      style: const TextStyle(
                         fontSize: 10,
                         letterSpacing: 1.5,
                         color: studioCaption,

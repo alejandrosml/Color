@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'rust_document.dart' show maxTextSize, minTextSize;
 import 'studio_colors.dart';
+import 'language.dart';
 
 /// Three concrete sizes instead of a number to type or a technical slider.
 enum ObjectSize {
@@ -12,8 +13,9 @@ enum ObjectSize {
   medium('Moyen'),
   large('Grand');
 
-  const ObjectSize(this.label);
-  final String label;
+  const ObjectSize(this.frenchLabel);
+  final String frenchLabel;
+  String get label => tr(frenchLabel);
 }
 
 /// Sizes are chosen for a sheet whose shorter side measures 800 units and
@@ -133,7 +135,7 @@ class SizeChoiceControl extends StatelessWidget {
       // Named and marked as chosen on the button itself: a screen
       // reader then announces, and activates, one single control.
       child: Semantics(
-        label: 'Taille $what : ${size.label}',
+        label: trf('Taille {0} : {1}', [what, size.label]),
         selected: size == value,
         // A growing dot reads the same in every language and text size.
         child: Container(

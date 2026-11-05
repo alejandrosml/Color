@@ -21,6 +21,7 @@ import android.print.PrintJob
 import android.print.PrintManager
 import android.print.pdf.PrintedPdfDocument
 import android.provider.OpenableColumns
+import android.telephony.TelephonyManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -28,6 +29,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.ByteBuffer
+import java.util.TimeZone
 import java.util.concurrent.Executors
 
 /**
@@ -75,6 +77,16 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+        // What the device says of its country, for the paint pot
+        // (lib/country_signs.dart): the SIM's, the network's, the region of
+        // the settings, and the time zone. No permission is needed for them.
+        MethodChannel(messenger, "org.edupaint/country").setMethodCallHandler { call, result ->
+            if (call.method != "signs") {
+                result.notImplemented()
+            } else {
+                result.success(countrySigns())
+            }
+        }
         MethodChannel(messenger, "org.edupaint/files").setMethodCallHandler { call, result ->
             if (call.method != "saveAs") {
                 result.notImplemented()
@@ -87,6 +99,22 @@ class MainActivity : FlutterActivity() {
                 )
             }
         }
+    }
+
+    private fun countrySigns(): Map<String, Any> {
+        val codes = mutableListOf<String>()
+        val phone = getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+        try {
+            phone?.simCountryIso?.takeIf { it.isNotBlank() }?.let { codes.add(it) }
+            phone?.networkCountryIso?.takeIf { it.isNotBlank() }?.let { codes.add(it) }
+        } catch (_: Exception) {
+            // A device without telephony gives no sign of it.
+        }
+        val locales = resources.configuration.locales
+        if (!locales.isEmpty) {
+            locales[0].country.takeIf { it.isNotBlank() }?.let { codes.add(it) }
+        }
+        return mapOf("codes" to codes, "timeZone" to TimeZone.getDefault().id)
     }
 
     // « Imprimer » : the print panel of Android, one page, the drawing as

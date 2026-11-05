@@ -21,7 +21,8 @@
 //!   -C llvm-args=-sanitizer-coverage-inline-8bit-counters \
 //!   -C llvm-args=-sanitizer-coverage-trace-compares" \
 //! cargo run --release --offline --manifest-path fuzz/Cargo.toml -- \
-//!   --seconds 1800 --corpus fuzz/corpus test-fixtures/import-project
+//!   --seconds 1800 --corpus fuzz/corpus \
+//!   test-fixtures/import-project test-fixtures/project-v6
 //! ```
 //!
 //! Every input that reaches new code is kept in the corpus folder, named
@@ -33,9 +34,15 @@
 //! `fuzz/crashes/` before the process stops, and `--run <file>` plays one
 //! input again. Each input is read as
 //! it is, and once more with its declared length and its CRC32 made right,
-//! so that the mutations go past the checks of the header into the records.
-//! What is read is then written back, read again and written again: the
-//! two writings must be the same bytes.
+//! so that the mutations go past the checks of the header into the records;
+//! a file of version 6 (Color 1.1) has the CRC of its header and of each of
+//! its blocks made right too, and is read a third time with only its last
+//! CRC wrong, for the reader of damaged files to go through blocks that are
+//! all intact. What is read is then written back in the older format and in
+//! version 6, stored and compressed, read again and written again: each two
+//! writings must be the same bytes, and every writing the same drawing. The
+//! reader of damaged files reads every input as well: never a sound file,
+//! and what it saves is a sound drawing.
 #![deny(unsafe_op_in_unsafe_fn)]
 
 use std::collections::HashSet;
@@ -47,8 +54,10 @@ use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, AtomicUsize, Ordering}
 use std::time::{Duration, Instant};
 
 use edupaint_core::{
-    ep_copy_project, ep_document_free, ep_document_from_project, ep_export_svg, ep_project_size,
-    ep_string_free,
+    ep_copy_project, ep_document_free, ep_document_from_damaged_project, ep_document_from_project,
+    ep_export_snapshot_free, ep_export_snapshot_new, ep_export_snapshot_project_bound,
+    ep_export_snapshot_write_project, ep_export_svg, ep_layer_count, ep_project_bound,
+    ep_project_size, ep_string_free, ep_write_project, EpDocument,
 };
 
 // The tables of counters that LLVM hands over before main, one per module
@@ -276,8 +285,20 @@ fn crc32(bytes: &[u8]) -> u32 {
     !crc
 }
 
+/// Whether [input] says it is a project of version 6: its blocks have CRCs
+/// of their own, and its header one too.
+fn is_v6(input: &[u8]) -> bool {
+    input.len() >= 36 && input[8..10] == 6u16.to_le_bytes()
+}
+
+// The layout of version 6, as docs/FORMAT-PROJET.md describes it.
+const V6_HEADER_BYTES: usize = 32;
+const V6_BLOCK_HEADER_BYTES: usize = 20;
+
 /// The same input with its declared length (bytes 12 to 15) and its CRC32
-/// (the last four bytes) made right, when it is long enough to have them.
+/// (the last four bytes) made right, when it is long enough to have them;
+/// for version 6, the CRC of the header (bytes 28 to 31) and that of every
+/// block that fits too.
 fn made_right(input: &[u8]) -> Option<Vec<u8>> {
     if input.len() < 20 {
         return None;
@@ -286,16 +307,46 @@ fn made_right(input: &[u8]) -> Option<Vec<u8>> {
     let length = fixed.len() as u32;
     fixed[12..16].copy_from_slice(&length.to_le_bytes());
     let end = fixed.len() - 4;
+    if is_v6(&fixed) {
+        let mut cursor = V6_HEADER_BYTES;
+        while cursor + V6_BLOCK_HEADER_BYTES <= end {
+            let mut word = [0u8; 4];
+            word.copy_from_slice(&fixed[cursor + 4..cursor + 8]);
+            let stored = u32::from_le_bytes(word) as usize;
+            let payload = cursor + V6_BLOCK_HEADER_BYTES;
+            if stored > end - payload {
+                break;
+            }
+            let crc = crc32(&fixed[payload..payload + stored]);
+            fixed[cursor + 16..cursor + 20].copy_from_slice(&crc.to_le_bytes());
+            cursor = payload + stored;
+        }
+        let header = crc32(&fixed[..28]);
+        fixed[28..32].copy_from_slice(&header.to_le_bytes());
+    }
     let crc = crc32(&fixed[..end]);
     fixed[end..].copy_from_slice(&crc.to_le_bytes());
     Some(fixed)
 }
 
-/// The project that a document writes, or None.
+/// A file of version 6 made right but for its last CRC: damaged where
+/// nothing else is, for the reader of damaged files.
+fn damaged_at_its_end(fixed: &[u8]) -> Option<Vec<u8>> {
+    if !is_v6(fixed) {
+        return None;
+    }
+    let mut damaged = fixed.to_vec();
+    let last = damaged.len() - 1;
+    damaged[last] ^= 0x20;
+    Some(damaged)
+}
+
+/// The project that a document writes in the older format, or None when
+/// its drawing needs version 6.
 ///
 /// # Safety
 /// `document` is a live document of the core.
-unsafe fn written(document: *const edupaint_core::EpDocument) -> Option<Vec<u8>> {
+unsafe fn written(document: *const EpDocument) -> Option<Vec<u8>> {
     let size = unsafe { ep_project_size(document) };
     if size == 0 {
         return None;
@@ -304,12 +355,136 @@ unsafe fn written(document: *const edupaint_core::EpDocument) -> Option<Vec<u8>>
     (unsafe { ep_copy_project(document, bytes.as_mut_ptr(), size) } == 0).then_some(bytes)
 }
 
-/// Reads [input] as a project and, when it is one, writes it, reads that
-/// and writes it again: the two writings must be the same bytes. Exports it
-/// as SVG too. Panics on any broken promise.
-fn read(input: &[u8]) {
+/// The project of version 6 that a document writes, stored or compressed:
+/// every drawing has one.
+///
+/// # Safety
+/// `document` is a live document of the core.
+unsafe fn written_v6(document: *const EpDocument, compress: bool) -> Vec<u8> {
+    let bound = unsafe { ep_project_bound(document) };
+    let mut bytes = vec![0u8; bound];
+    let mut length = 0usize;
+    let status = unsafe {
+        ep_write_project(
+            document,
+            bytes.as_mut_ptr(),
+            bound,
+            u32::from(compress),
+            &mut length,
+        )
+    };
+    assert_eq!(status, 0, "a drawing that version 6 does not write");
+    assert!(
+        (36..=bound).contains(&length),
+        "a length of {length} for a bound of {bound}"
+    );
+    bytes.truncate(length);
+    bytes
+}
+
+/// What the snapshot of a document writes in version 6, compressed.
+///
+/// # Safety
+/// `document` is a live document of the core.
+unsafe fn snapshot_v6(document: *const EpDocument) -> Option<Vec<u8>> {
     let mut status = 0i32;
-    let document = unsafe { ep_document_from_project(input.as_ptr(), input.len(), &mut status) };
+    let snapshot = unsafe { ep_export_snapshot_new(document, &mut status) };
+    if snapshot.is_null() {
+        assert!(status == -2, "a snapshot refused: {status}");
+        return None;
+    }
+    let bound = unsafe { ep_export_snapshot_project_bound(snapshot) };
+    let mut bytes = vec![0u8; bound];
+    let mut length = 0usize;
+    let written = unsafe {
+        ep_export_snapshot_write_project(snapshot, bytes.as_mut_ptr(), bound, 1, &mut length)
+    };
+    unsafe { ep_export_snapshot_free(snapshot) };
+    assert_eq!(written, 0, "a snapshot that version 6 does not write");
+    bytes.truncate(length);
+    Some(bytes)
+}
+
+/// A document read soundly from [bytes], or None with a status that says
+/// why: invalid, or memory missing.
+fn sound(bytes: &[u8]) -> Option<*mut EpDocument> {
+    let mut status = 99i32;
+    let document = unsafe { ep_document_from_project(bytes.as_ptr(), bytes.len(), &mut status) };
+    if document.is_null() {
+        assert!(
+            status == -1 || status == -2,
+            "status {status} without a document"
+        );
+        return None;
+    }
+    assert_eq!(status, 0, "a document with status {status}");
+    Some(document)
+}
+
+/// The reader of damaged files refuses [bytes], which are sound.
+fn not_damaged(bytes: &[u8]) {
+    let mut lost = 99u32;
+    let mut status = 99i32;
+    let document = unsafe {
+        ep_document_from_damaged_project(bytes.as_ptr(), bytes.len(), &mut lost, &mut status)
+    };
+    if !document.is_null() {
+        unsafe { ep_document_free(document) };
+        panic!("a sound file read as a damaged one");
+    }
+    assert!(status == -1 || status == -2, "status {status}");
+}
+
+/// Writes what a sound file gave, in the older format and in version 6,
+/// reads each writing again and writes it again: the same bytes each time,
+/// and the same drawing whichever way it was written.
+fn written_back(document: *mut EpDocument) {
+    let svg = unsafe { ep_export_svg(document) };
+    if !svg.is_null() {
+        unsafe { ep_string_free(svg) };
+    }
+    let older = unsafe { written(document) };
+    let stored = unsafe { written_v6(document, false) };
+    let compressed = unsafe { written_v6(document, true) };
+    let snapshot = unsafe { snapshot_v6(document) };
+    unsafe { ep_document_free(document) };
+    if let Some(snapshot) = snapshot {
+        assert_eq!(snapshot, compressed, "a snapshot writes another file");
+    }
+    for (bytes, compress) in [(&stored, false), (&compressed, true)] {
+        not_damaged(bytes);
+        let again = sound(bytes).expect("a project of version 6 written by the core is refused");
+        let same = unsafe { written_v6(again, compress) };
+        let other = unsafe { written_v6(again, false) };
+        let older_again = unsafe { written(again) };
+        unsafe { ep_document_free(again) };
+        assert_eq!(&same, bytes, "a second writing of version 6 differs");
+        assert_eq!(other, stored, "compressed, another drawing");
+        assert_eq!(older_again, older, "version 6 kept another drawing");
+    }
+    let Some(older) = older else {
+        return;
+    };
+    let again = sound(&older).expect("a project written by the core is refused");
+    let second = unsafe { written(again) };
+    let stored_again = unsafe { written_v6(again, false) };
+    unsafe { ep_document_free(again) };
+    assert_eq!(Some(&older), second.as_ref(), "a second writing differs");
+    assert_eq!(
+        stored_again, stored,
+        "the older format kept another drawing"
+    );
+}
+
+/// What the reader of damaged files saves of [input]: a sound drawing,
+/// with only lost layers it has; when it lost nothing, the drawing that the
+/// file holds once its last CRC is made right.
+fn rescued(input: &[u8]) {
+    let mut lost = 99u32;
+    let mut status = 99i32;
+    let document = unsafe {
+        ep_document_from_damaged_project(input.as_ptr(), input.len(), &mut lost, &mut status)
+    };
     if document.is_null() {
         assert!(
             status == -1 || status == -2,
@@ -317,24 +492,41 @@ fn read(input: &[u8]) {
         );
         return;
     }
-    assert_eq!(status, 0, "a document with status {status}");
-    let svg = unsafe { ep_export_svg(document) };
-    if !svg.is_null() {
-        unsafe { ep_string_free(svg) };
-    }
-    let first = unsafe { written(document) };
-    unsafe { ep_document_free(document) };
-    let Some(first) = first else {
-        return;
-    };
-    let again = unsafe { ep_document_from_project(first.as_ptr(), first.len(), &mut status) };
+    assert_eq!(status, 0, "a rescued document with status {status}");
+    let layers = unsafe { ep_layer_count(document) };
     assert!(
-        !again.is_null(),
-        "a project written by the core is refused: {status}"
+        lost & !((1 << 16) | ((1u32 << layers) - 1)) == 0,
+        "lost {lost:#x} of {layers} layers"
     );
-    let second = unsafe { written(again) };
+    let stored = unsafe { written_v6(document, false) };
+    unsafe { ep_document_free(document) };
+    let again = sound(&stored).expect("what was rescued does not read again");
+    let same = unsafe { written_v6(again, false) };
     unsafe { ep_document_free(again) };
-    assert_eq!(Some(&first), second.as_ref(), "a second writing differs");
+    assert_eq!(same, stored, "a rescued drawing written twice differs");
+    if lost == 0 {
+        let mut whole = input.to_vec();
+        let end = whole.len() - 4;
+        let crc = crc32(&whole[..end]);
+        whole[end..].copy_from_slice(&crc.to_le_bytes());
+        let read = sound(&whole).expect("nothing lost, yet the whole file is refused");
+        let written = unsafe { written_v6(read, false) };
+        unsafe { ep_document_free(read) };
+        assert_eq!(written, stored, "nothing lost, yet another drawing");
+    }
+}
+
+/// Reads [input] with both readers. A sound one is written back as
+/// `written_back` says, and the other reader refuses it; panics on any
+/// broken promise.
+fn read(input: &[u8]) {
+    match sound(input) {
+        Some(document) => {
+            not_damaged(input);
+            written_back(document);
+        }
+        None => rescued(input),
+    }
 }
 
 // The input being read, for the hook that writes it out if the core panics
@@ -513,22 +705,31 @@ impl Fuzzer {
     /// Reads [input], and the same with its length and its CRC made right;
     /// keeps each one that reached new code.
     fn try_input(&mut self, input: &[u8]) {
-        *CURRENT.lock().unwrap() = input.to_vec();
-        observed(input);
-        self.executions += 1;
-        let new = self.coverage.take();
+        let new = self.reads_new(input);
         if let Some(fixed) = made_right(input) {
-            *CURRENT.lock().unwrap() = fixed.clone();
-            observed(&fixed);
-            self.executions += 1;
-            if self.coverage.take() && self.known.insert(name_of(&fixed)) {
-                save(&self.folder, &fixed);
-                self.corpus.push(fixed);
+            if let Some(damaged) = damaged_at_its_end(&fixed) {
+                self.keep_if_new(damaged);
             }
+            self.keep_if_new(fixed);
         }
         if new && self.known.insert(name_of(input)) {
             save(&self.folder, input);
             self.corpus.push(input.to_vec());
+        }
+    }
+
+    /// Reads [input]: true when it reached code no input had reached.
+    fn reads_new(&mut self, input: &[u8]) -> bool {
+        *CURRENT.lock().unwrap() = input.to_vec();
+        observed(input);
+        self.executions += 1;
+        self.coverage.take()
+    }
+
+    fn keep_if_new(&mut self, input: Vec<u8>) {
+        if self.reads_new(&input) && self.known.insert(name_of(&input)) {
+            save(&self.folder, &input);
+            self.corpus.push(input);
         }
     }
 }
@@ -613,6 +814,9 @@ fn main() {
         *CURRENT.lock().unwrap() = input.clone();
         read(&input);
         if let Some(fixed) = made_right(&input) {
+            if let Some(damaged) = damaged_at_its_end(&fixed) {
+                read(&damaged);
+            }
             read(&fixed);
         }
         println!("{} read without a panic", path.display());
@@ -633,6 +837,16 @@ fn main() {
     let mut seeds = inputs_of(&options.corpus);
     for folder in &options.seeds {
         seeds.extend(inputs_of(folder));
+    }
+    // Every sound seed of an older version also as version 6 writes it,
+    // stored and compressed: the records of version 6 to start from.
+    let older: Vec<Vec<u8>> = seeds.iter().filter(|seed| !is_v6(seed)).cloned().collect();
+    for seed in older {
+        if let Some(document) = sound(&seed) {
+            seeds.push(unsafe { written_v6(document, false) });
+            seeds.push(unsafe { written_v6(document, true) });
+            unsafe { ep_document_free(document) };
+        }
     }
     let seeded = seeds.len();
     for seed in seeds {

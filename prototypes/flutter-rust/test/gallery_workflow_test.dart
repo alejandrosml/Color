@@ -541,7 +541,7 @@ void main() {
       await saveWithCard(studio, gallery, 1);
       await blueTrait(studio);
       files.projects[_saved] = File(
-        'test/fixtures/project-open/unknown-version-6.edupaint',
+        'test/fixtures/project-open/unknown-version-7.edupaint',
       ).readAsBytesSync();
 
       await reopen(studio, _saved);

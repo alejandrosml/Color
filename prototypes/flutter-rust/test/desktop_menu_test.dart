@@ -2,6 +2,7 @@
 // The menus that Color gives to the menu bar of the Mac: the same commands
 // as the buttons of the studio, with the keys that a Mac expects.
 import 'package:edupaint_flutter_study/desktop_menu.dart';
+import 'package:edupaint_flutter_study/language.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
@@ -78,6 +79,29 @@ void main() {
           expect(keys.add(name), isTrue, reason: item.label);
         }
       }
+    }
+  }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
+
+  testWidgets('the menu bar speaks the language just chosen', (tester) async {
+    Widget menu() => Directionality(
+      textDirection: TextDirection.ltr,
+      child: EduPaintDesktopMenu(
+        onPrint: () {},
+        onNew: () {},
+        child: const SizedBox.shrink(),
+      ),
+    );
+    await tester.pumpWidget(menu());
+    expect(menuNamed(tester, 'Fichier'), isNotNull);
+    appLanguage.value = AppLanguage.english;
+    try {
+      // The same commands offered: the menus are made again all the same.
+      await tester.pumpWidget(menu());
+      final file = entries(menuNamed(tester, 'File'));
+      expect(file.first.label, 'New');
+      expect(file.last.label, 'Print…');
+    } finally {
+      appLanguage.value = AppLanguage.french;
     }
   }, variant: TargetPlatformVariant.only(TargetPlatform.macOS));
 

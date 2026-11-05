@@ -25,12 +25,13 @@ void main() {
   Finder key(String name) => find.byKey(Key(name));
 
   // The tools that the bar shows, in its order.
-  List<StudioTool> shownTools(WidgetTester tester) => [
-    for (final tool in StudioTool.values)
+  // The buttons of the bar.
+  List<ToolGroup> shownTools(WidgetTester tester) => [
+    for (final tool in ToolGroup.values)
       if (key(tool.keyName).evaluate().isNotEmpty) tool,
   ];
 
-  StudioTool selectedTool(WidgetTester tester) {
+  ToolGroup selectedTool(WidgetTester tester) {
     for (final tool in shownTools(tester)) {
       final selected = tester
           .getSemantics(key(tool.keyName))
@@ -234,16 +235,16 @@ void main() {
         options: store,
       );
       await studio.start(size: const Size(1280, 800));
-      expect(shownTools(tester), StudioTool.values);
+      expect(shownTools(tester), ToolGroup.values);
       expect(find.byType(StudioInspector), findsOneWidget);
 
       await choose(studio, 'level-toddler');
       expect(store.value.level, InterfaceLevel.toddler);
       expect(shownTools(tester), [
-        StudioTool.brush,
-        StudioTool.stamp,
-        StudioTool.fill,
-        StudioTool.eraser,
+        ToolGroup.brush,
+        ToolGroup.stamp,
+        ToolGroup.fill,
+        ToolGroup.eraser,
       ]);
       // What needs a file panel, a format or a second thought is gone.
       for (final gone in [
@@ -297,16 +298,17 @@ void main() {
       }
       expect(tester.getSize(key('color-e83d48')), const Size.square(60));
 
-      // Drawing works as ever: a colour, a size, a trait.
-      await studio.tap('color-e83d48');
-      await studio.tap('brush-large');
-      await studio.drag(const Offset(-80, -40), const Offset(60, 30));
-      // A stamp, then the pot on the sheet, then the eraser on the stamp.
-      await studio.tap('tool-stamp');
-      await studio.click(const Offset(120, 60));
+      // Drawing works as ever: the pot on the bare sheet, a colour, a size,
+      // a trait, a stamp, then the eraser on the stamp.
       await studio.tap('tool-fill');
       await studio.tap('color-3370d1');
       await studio.click(const Offset(-200, 120));
+      await studio.tap('tool-stroke');
+      await studio.tap('color-e83d48');
+      await studio.tap('brush-large');
+      await studio.drag(const Offset(-80, -40), const Offset(60, 30));
+      await studio.tap('tool-stamp');
+      await studio.click(const Offset(120, 60));
       final document = await studio.saved();
       addTearDown(document.dispose);
       expect(document.strokes, hasLength(2));
@@ -322,10 +324,10 @@ void main() {
       // The numbers follow the four tools; the others answer nothing.
       await tester.sendKeyEvent(LogicalKeyboardKey.digit2);
       await tester.pumpAndSettle();
-      expect(selectedTool(tester), StudioTool.stamp);
+      expect(selectedTool(tester), ToolGroup.stamp);
       await tester.sendKeyEvent(LogicalKeyboardKey.digit9);
       await tester.pumpAndSettle();
-      expect(selectedTool(tester), StudioTool.stamp);
+      expect(selectedTool(tester), ToolGroup.stamp);
       // No key reaches what the interface no longer shows.
       studio.files.openPath = '/drawings/ailleurs.edupaint';
       studio.files.svg = null;
@@ -356,7 +358,7 @@ void main() {
       addTearDown(store.dispose);
       final studio = StudioDriver(tester, options: store);
       await studio.start(size: const Size(1280, 800));
-      expect(shownTools(tester), StudioTool.values);
+      expect(shownTools(tester), ToolGroup.values);
       for (final gone in ['exportImage', 'layersButton']) {
         expect(key(gone), findsNothing, reason: gone);
       }
@@ -406,13 +408,13 @@ void main() {
       await choose(studio, 'level-toddler');
       // « Choisir » is not one of the four: the pinceau takes over, and the
       // element is no longer chosen.
-      expect(selectedTool(tester), StudioTool.brush);
+      expect(selectedTool(tester), ToolGroup.brush);
       expect(key('duplicateSelection'), findsNothing);
 
       await choose(studio, 'level-full');
       // The sheet came back whole when its controls went away.
       expect(find.text('Toute la feuille'), findsOneWidget);
-      expect(selectedTool(tester), StudioTool.brush);
+      expect(selectedTool(tester), ToolGroup.brush);
       studio.expectCount(1);
       await studio.finish();
     },

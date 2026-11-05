@@ -240,6 +240,7 @@ fn independent_rejected_version_5_fixtures_leave_a_candidate_untouched() {
         fixture!("contour-in-v4.edupaint"),
         fixture!("locked-in-v4.edupaint"),
         fixture!("unknown-version-6.edupaint"),
+        fixture!("unknown-version-7.edupaint"),
     ];
     for input in cases {
         assert_eq!(

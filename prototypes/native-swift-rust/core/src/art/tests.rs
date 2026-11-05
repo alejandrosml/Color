@@ -86,13 +86,47 @@ fn every_picture_of_the_interface_reads_on_its_grid() {
         );
         assert_eq!(out.lines().last(), Some("X"));
         let mut drawn = 0;
-        for line in out.lines().filter(|line| line.starts_with("D ")) {
-            drawn += 1;
-            // Every number of every outline lies on the grid, strokes aside.
-            let outline = line.splitn(5, ' ').nth(4).unwrap();
-            for token in outline.split(' ') {
-                if let Ok(value) = token.parse::<f32>() {
-                    assert!((-beyond..=side + beyond).contains(&value), "{key}: {value}");
+        // The placements of the groups open around each outline: a part of
+        // a picture may be drawn about its own origin, then turned or moved
+        // into place (the pot of « Remplir », the gomme).
+        let mut placements: Vec<[f32; 6]> = vec![[1.0, 0.0, 0.0, 1.0, 0.0, 0.0]];
+        for line in out.lines() {
+            if let Some(group) = line.strip_prefix("G ") {
+                let outer = *placements.last().unwrap();
+                let own = match group.split(' ').nth(1).unwrap() {
+                    "-" => [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                    numbers => {
+                        let n: Vec<f32> = numbers.split(';').map(|n| n.parse().unwrap()).collect();
+                        [n[0], n[1], n[2], n[3], n[4], n[5]]
+                    }
+                };
+                let [a, b, c, d, e, f] = outer;
+                let [p, q, r, s, t, u] = own;
+                placements.push([
+                    a * p + c * q,
+                    b * p + d * q,
+                    a * r + c * s,
+                    b * r + d * s,
+                    a * t + c * u + e,
+                    b * t + d * u + f,
+                ]);
+            } else if line == "E" {
+                placements.pop();
+            } else if line.starts_with("D ") {
+                drawn += 1;
+                // Every point of every outline lies on the grid once placed,
+                // strokes aside.
+                let [a, b, c, d, e, f] = *placements.last().unwrap();
+                let outline = line.splitn(5, ' ').nth(4).unwrap();
+                let numbers: Vec<f32> = outline
+                    .split(' ')
+                    .filter_map(|token| token.parse::<f32>().ok())
+                    .collect();
+                for point in numbers.chunks(2) {
+                    let (x, y) = (point[0], point[1]);
+                    for value in [a * x + c * y + e, b * x + d * y + f] {
+                        assert!((-beyond..=side + beyond).contains(&value), "{key}: {value}");
+                    }
                 }
             }
         }

@@ -4,6 +4,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class _NonlinearScale extends TextScaler {
 
 Widget _withScale(EduPaintApp app, TextScaler scaler) => Builder(
   builder: (context) {
-    final actual = app.build(context) as MaterialApp;
+    final actual = app.materialApp(AppLanguage.french);
     return MaterialApp(
       theme: actual.theme,
       localizationsDelegates: actual.localizationsDelegates,

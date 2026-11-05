@@ -7,6 +7,7 @@ import 'child_art.dart';
 import 'rust_document.dart' show VectorKind;
 import 'studio_colors.dart';
 import 'platform_words.dart';
+import 'language.dart';
 
 /// Where the chosen element goes among the others.
 enum SelectionOrder { front, back, layerUp, layerDown }
@@ -32,6 +33,8 @@ class SelectionToolbar extends StatelessWidget {
     required this.onEditText,
     required this.onDuplicate,
     required this.onDelete,
+    this.onTurn,
+    this.onMirror,
     this.showHint = true,
   });
 
@@ -67,6 +70,11 @@ class SelectionToolbar extends StatelessWidget {
   final VoidCallback? onEditText;
   final VoidCallback? onDuplicate;
   final VoidCallback? onDelete;
+
+  /// Turn the chosen element an eighth of a turn, clockwise; show it in a
+  /// mirror, left and right swapped (Color 1.1).
+  final VoidCallback? onTurn;
+  final VoidCallback? onMirror;
 
   bool get _canChangeOrder =>
       canBringForward || canSendBackward || canMoveLayerUp || canMoveLayerDown;
@@ -126,10 +134,12 @@ class SelectionToolbar extends StatelessWidget {
   double _namedWidth(BuildContext context) {
     double name(String text) => _nameWidth(context, text);
     final written = [
-      56 + name('Ordre'),
-      if (selectedKind == VectorKind.text) 38 + name('Modifier'),
-      38 + name('Copier'),
-      38 + name('Effacer'),
+      56 + name(tr('Ordre')),
+      if (selectedKind == VectorKind.text) 38 + name(tr('Modifier')),
+      38 + name(tr('Tourner')),
+      38 + name(tr('Miroir')),
+      38 + name(tr('Copier')),
+      38 + name(tr('Effacer')),
       100.0,
     ];
     return written.fold(0.0, (sum, width) => sum + width) +
@@ -161,17 +171,17 @@ class SelectionToolbar extends StatelessWidget {
             child: Text(
               forTouch(
                 selectedKind == null
-                    ? 'Clique un élément pour le choisir.'
+                    ? tr('Clique un élément pour le choisir.')
                     : carried
-                    ? 'Bouge pour le déplacer. Clique pour le poser.'
-                    : '${clickMoves ? 'Clique-le pour le prendre.' : 'Glisse pour déplacer.'} '
+                    ? tr('Bouge pour le déplacer. Clique pour le poser.')
+                    : '${clickMoves ? tr('Clique-le pour le prendre.') : tr('Glisse pour déplacer.')} '
                           '${selectedKind == VectorKind.text
-                              ? 'Modifier change les mots.'
+                              ? tr('Modifier change les mots.')
                               : keepsOwnColours
-                              ? 'Ce tampon garde ses couleurs.'
+                              ? tr('Ce tampon garde ses couleurs.')
                               : selectedKind == VectorKind.stamp
-                              ? 'Clique une couleur pour le colorier.'
-                              : 'Une couleur cliquée le change aussitôt.'}',
+                              ? tr('Clique une couleur pour le colorier.')
+                              : tr('Une couleur cliquée le change aussitôt.')}',
               ),
               // Two lines at most: a longer sentence must not make the
               // row taller, and the sheet smaller, when an element is chosen.
@@ -191,7 +201,7 @@ class SelectionToolbar extends StatelessWidget {
           enabled: _canChangeOrder,
           child: PopupMenuButton<SelectionOrder>(
             key: const Key('selectionOrder'),
-            tooltip: 'Ordre des éléments',
+            tooltip: tr('Ordre des éléments'),
             enabled: _canChangeOrder,
             // Native menu commands can edit the document while this popup is
             // open: the studio resolves the intent against its current state.
@@ -201,13 +211,13 @@ class SelectionToolbar extends StatelessWidget {
                 key: const Key('bringSelectionToFront'),
                 value: SelectionOrder.front,
                 enabled: canBringForward,
-                child: const Text('Tout devant'),
+                child: Text(tr('Tout devant')),
               ),
               PopupMenuItem<SelectionOrder>(
                 key: const Key('sendSelectionToBack'),
                 value: SelectionOrder.back,
                 enabled: canSendBackward,
-                child: const Text('Tout derrière'),
+                child: Text(tr('Tout derrière')),
               ),
               // Offered only when the drawing has several layers.
               if (hasSeveralLayers) ...[
@@ -215,13 +225,13 @@ class SelectionToolbar extends StatelessWidget {
                   key: const Key('moveSelectionLayerUp'),
                   value: SelectionOrder.layerUp,
                   enabled: canMoveLayerUp,
-                  child: const Text('Vers le calque du dessus'),
+                  child: Text(tr('Vers le calque du dessus')),
                 ),
                 PopupMenuItem<SelectionOrder>(
                   key: const Key('moveSelectionLayerDown'),
                   value: SelectionOrder.layerDown,
                   enabled: canMoveLayerDown,
-                  child: const Text('Vers le calque du dessous'),
+                  child: Text(tr('Vers le calque du dessous')),
                 ),
               ],
             ],
@@ -235,7 +245,7 @@ class SelectionToolbar extends StatelessWidget {
                     Icons.layers_outlined,
                     size: 18,
                     // Without its written name, the picture carries it.
-                    semanticLabel: named ? null : 'Ordre',
+                    semanticLabel: named ? null : tr('Ordre'),
                     color: _canChangeOrder
                         ? studioInk
                         : Theme.of(context).disabledColor,
@@ -243,7 +253,7 @@ class SelectionToolbar extends StatelessWidget {
                   if (named) ...[
                     const SizedBox(width: 4),
                     Text(
-                      'Ordre',
+                      tr('Ordre'),
                       style: TextStyle(
                         fontSize: 12,
                         color: _canChangeOrder
@@ -261,21 +271,35 @@ class SelectionToolbar extends StatelessWidget {
         if (selectedKind == VectorKind.text)
           _action(
             key: 'editSelectionText',
-            name: 'Modifier',
+            name: tr('Modifier'),
             icon: Icons.edit_outlined,
             onPressed: onEditText,
             named: named,
           ),
         _action(
+          key: 'turnSelection',
+          name: tr('Tourner'),
+          icon: Icons.rotate_right_rounded,
+          onPressed: onTurn,
+          named: named,
+        ),
+        _action(
+          key: 'mirrorSelection',
+          name: tr('Miroir'),
+          icon: Icons.flip_rounded,
+          onPressed: onMirror,
+          named: named,
+        ),
+        _action(
           key: 'duplicateSelection',
-          name: 'Copier',
+          name: tr('Copier'),
           icon: Icons.copy_rounded,
           onPressed: onDuplicate,
           named: named,
         ),
         _action(
           key: 'deleteSelection',
-          name: 'Effacer',
+          name: tr('Effacer'),
           icon: Icons.delete_outline_rounded,
           onPressed: onDelete,
           named: named,
@@ -286,25 +310,25 @@ class SelectionToolbar extends StatelessWidget {
           children: [
             IconButton.outlined(
               key: const Key('shrinkSelection'),
-              tooltip: 'Plus petit',
+              tooltip: tr('Plus petit'),
               style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
               onPressed: onShrink,
-              icon: const Icon(
+              icon: Icon(
                 Icons.remove,
                 size: 20,
-                semanticLabel: 'Rendre l’élément plus petit',
+                semanticLabel: tr('Rendre l’élément plus petit'),
               ),
             ),
             const SizedBox(width: 4),
             IconButton.outlined(
               key: const Key('growSelection'),
-              tooltip: 'Plus grand',
+              tooltip: tr('Plus grand'),
               style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
               onPressed: onGrow,
-              icon: const Icon(
+              icon: Icon(
                 Icons.add,
                 size: 20,
-                semanticLabel: 'Rendre l’élément plus grand',
+                semanticLabel: tr('Rendre l’élément plus grand'),
               ),
             ),
           ],

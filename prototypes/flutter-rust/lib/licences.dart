@@ -9,12 +9,22 @@ import 'package:flutter/services.dart';
 
 import 'color_identity.dart';
 import 'rust_document.dart';
+import 'language.dart';
 
 /// The line that separates two notices, as in the NOTICES file of Flutter.
 final _rule = '-' * 80;
 
 /// Where the licence of the font of the sheet is kept in the application.
 const fontLicenceAsset = 'fonts/LICENCE-DejaVu.txt';
+
+/// The fonts of texts and where each licence is kept, font 0 first.
+const fontLicences = <(String, String)>[
+  ('DejaVu Sans', fontLicenceAsset),
+  ('Atkinson Hyperlegible', 'fonts/LICENCE-Atkinson.txt'),
+  ('Comic Neue', 'fonts/LICENCE-ComicNeue.txt'),
+  ('Fredoka', 'fonts/LICENCE-Fredoka.txt'),
+  ('Playwrite France Traditionnelle', 'fonts/LICENCE-PlaywriteFRTrad.txt'),
+];
 
 /// The notices of [text], one entry per library: the lines before the first
 /// empty line name the library, the rest is its notice. What does not have
@@ -31,6 +41,11 @@ List<LicenseEntry> coreLicenceEntries(String text) {
         .split('\n')
         .map((name) => name.trim())
         .where((name) => name.isNotEmpty)
+        // The heading of the recordings, in the language of the interface;
+        // the names of libraries are names.
+        .map(
+          (name) => name == 'Sons enregistrés' ? tr('Sons enregistrés') : name,
+        )
         .toList();
     final notice = part.substring(split + 2).trim();
     if (names.isEmpty || notice.isEmpty) continue;
@@ -70,14 +85,18 @@ Stream<LicenseEntry> _licences() async* {
     // A core that cannot name its libraries: nothing of it is shown.
   }
   yield* Stream.fromIterable(coreLicenceEntries(text));
-  try {
-    final font = await (_bundle ?? rootBundle).loadString(fontLicenceAsset);
+  for (final (name, asset) in fontLicences) {
+    String font;
+    try {
+      font = await (_bundle ?? rootBundle).loadString(asset);
+    } catch (_) {
+      // The file is not in this bundle: nothing to show for it.
+      continue;
+    }
     if (font.trim().isNotEmpty) {
-      yield LicenseEntryWithLineBreaks(const [
-        'DejaVu Sans (police des textes)',
+      yield LicenseEntryWithLineBreaks([
+        trf('{0} (police des textes)', [name]),
       ], font.trim());
     }
-  } catch (_) {
-    // The file is not in this bundle: nothing to show for it.
   }
 }

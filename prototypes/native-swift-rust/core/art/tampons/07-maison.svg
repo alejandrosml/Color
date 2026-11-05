@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Maison », n° 7. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Maison</title>
+  <path d="M 22 46 L 78 46 L 78 91 L 22 91 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 10 49 L 50 13 L 90 49 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 44 64 L 58 64 L 58 91 L 44 91 Z" fill="#9a6b4a" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 27 56 L 39 56 L 39 68 L 27 68 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 63 56 L 73 56 L 73 68 L 63 68 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 56.8 78 C 56.8 78.99 55.99 79.8 55 79.8 C 54.01 79.8 53.2 78.99 53.2 78 C 53.2 77.01 54.01 76.2 55 76.2 C 55.99 76.2 56.8 77.01 56.8 78 Z" fill="#ffcd62"/>
+</svg>

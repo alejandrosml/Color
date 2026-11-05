@@ -9,6 +9,7 @@ import 'dart:math' as math;
 
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:edupaint_flutter_study/stroke_input.dart';
+import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:edupaint_flutter_study/studio_painters.dart';
 import 'package:edupaint_flutter_study/viewport.dart';
 import 'package:flutter/gestures.dart';
@@ -21,6 +22,23 @@ Duration _ms(num milliseconds) =>
     Duration(microseconds: (milliseconds * 1000).round());
 
 void main() {
+  test('the string holds the brush until the pointer pulls it tight', () {
+    final string = StringStabilizer(length: 10);
+    expect(string.pull(0, 0), (0, 0));
+    // A tremble shorter than the string: the brush does not move.
+    expect(string.pull(6, -4), (0, 0));
+    expect(string.pull(-3, 7), (0, 0));
+    // Pulled: it follows, the string's length behind.
+    final (x, y) = string.pull(30, 0);
+    expect(x, closeTo(20, 1e-9));
+    expect(y, closeTo(0, 1e-9));
+    final (x2, y2) = string.pull(30, 40);
+    expect(
+      math.sqrt((30 - x2) * (30 - x2) + (40 - y2) * (40 - y2)),
+      closeTo(10, 1e-9),
+    );
+  });
+
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
   group('the 1€ filter', () {
@@ -244,6 +262,44 @@ void main() {
       expect(drawn, lessThan(raw * .8));
       // The end is where the finger left, not where the filter was.
       expect(points.last.x, closeTo(600 + samples.last.dx / scale, .01));
+      await studio.finish();
+    }, skip: !available);
+
+    testWidgets('with « Trait tranquille » a trembling hand draws calm', (
+      tester,
+    ) async {
+      final studio = StudioDriver(
+        tester,
+        options: StudioOptionsStore.memory(
+          const StudioOptions(steadyHand: true),
+        ),
+      );
+      await studio.start();
+      final gesture = await tester.startGesture(
+        studio.sheetCenter + studio.at(200, 400),
+        kind: PointerDeviceKind.mouse,
+      );
+      // Along the sheet, trembling three units up and down at each step.
+      for (var i = 1; i <= 60; i++) {
+        await gesture.moveTo(
+          studio.sheetCenter +
+              studio.at(200 + i * 10.0, 400 + (i.isOdd ? 3 : -3)),
+        );
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+      final document = await studio.saved();
+      try {
+        final points = document.strokes.single.points;
+        // After its first point, the trait no longer trembles.
+        for (final point in points.skip(3)) {
+          expect(point.y, closeTo(400, 1.5));
+        }
+        expect(points.last.x, greaterThan(700));
+      } finally {
+        document.dispose();
+      }
       await studio.finish();
     }, skip: !available);
 

@@ -74,8 +74,44 @@ final class SheetDraft {
   double width;
   int? fillRgb;
 
-  /// The drawing of a stamp.
+  /// The drawing of a stamp, and how it is turned and mirrored.
   int stamp;
+  ObjectLook stampLook = ObjectLook.plain;
+
+  /// What a trait is drawn with (Color 1.1), and the seed of its scattered
+  /// marks.
+  BrushTool tool = BrushTool.round;
+  int seed = 0;
+
+  /// The pressure of each point of a trait drawn with a stylus, 1 to 255;
+  /// null without one.
+  List<int>? pressures;
+
+  /// The marks of the trait so far, as the core makes them, group by group:
+  /// those of a tool of 1.1 or of a stylus. Empty for a trait painted as a
+  /// line.
+  final List<(Path, Paint)> marks = [];
+
+  /// How many segments of the trait already have their marks in [marks].
+  int markedSegments = 0;
+
+  /// The width of the sheet when the trait is drawn twice, the second time
+  /// in the mirror of the middle of the sheet; null otherwise.
+  double? mirrorWidth;
+
+  /// The shape of 1.1 being drawn in its box (kind contour).
+  NewShape? shape;
+
+  /// Forgets what the last trait was drawn with.
+  void resetLook() {
+    tool = BrushTool.round;
+    seed = 0;
+    pressures = null;
+    marks.clear();
+    markedSegments = 0;
+    mirrorWidth = null;
+    shape = null;
+  }
 }
 
 class DocumentPainter extends CustomPainter {
@@ -97,6 +133,7 @@ class DocumentPainter extends CustomPainter {
     this.anchorRgb = 0,
     this.anchorWidth = 1,
     this.anchorFillRgb,
+    this.anchorShape = NewShape.star,
     this.images,
     this.pixelRatio = 1,
     this.viewMoving = false,
@@ -144,6 +181,9 @@ class DocumentPainter extends CustomPainter {
   final int anchorRgb;
   final double anchorWidth;
   final int? anchorFillRgb;
+
+  /// The shape of 1.1 that two clicks are making.
+  final NewShape anchorShape;
 
   Offset _onScreen(DocumentPoint point) => Offset(
     viewport.left + point.x * viewport.scale,
@@ -302,14 +342,47 @@ class DocumentPainter extends CustomPainter {
     final points = drawn.points;
     if (stroke != null && points.isNotEmpty) {
       if (drawn.kind == VectorKind.stroke) {
-        _drawStroke(
-          canvas,
-          stroke,
-          Offset(points.first.x, points.first.y),
-          points.length == 1,
-          Color(0xff000000 | drawn.rgb),
-          drawn.width,
-        );
+        void trait() {
+          if (drawn.marks.isNotEmpty || drawn.tool.paintsMarks) {
+            for (final (path, paint) in drawn.marks) {
+              canvas.drawPath(path, paint);
+            }
+          } else {
+            _drawStroke(
+              canvas,
+              stroke,
+              Offset(points.first.x, points.first.y),
+              points.length == 1,
+              Color(0xff000000 | drawn.rgb),
+              drawn.width,
+              felt: drawn.tool == BrushTool.felt,
+            );
+          }
+        }
+
+        trait();
+        final mirror = drawn.mirrorWidth;
+        if (mirror != null) {
+          canvas.save();
+          canvas.translate(mirror, 0);
+          canvas.scale(-1, 1);
+          trait();
+          canvas.restore();
+        }
+      } else if (drawn.kind == VectorKind.contour) {
+        final shape = drawn.shape;
+        if (shape != null &&
+            isUsableShape(drawn.kind, points.first, points.last)) {
+          RenderedElement(
+            StrokeData(
+              RustDocument.shapeOutline(shape, points.first, points.last),
+              drawn.rgb,
+              drawn.width,
+              kind: VectorKind.contour,
+              fillRgb: drawn.fillRgb,
+            ),
+          ).paint(canvas);
+        }
       } else if (isUsableShape(drawn.kind, points.first, points.last)) {
         RenderedElement(
           drawn.kind == VectorKind.stamp
@@ -319,6 +392,7 @@ class DocumentPainter extends CustomPainter {
                   1,
                   kind: VectorKind.stamp,
                   stamp: drawn.stamp,
+                  look: drawn.stampLook,
                 )
               : StrokeData(
                   points,
@@ -335,7 +409,9 @@ class DocumentPainter extends CustomPainter {
         isUsableShape(waiting.kind, waiting.start, hovered)) {
       RenderedElement(
         StrokeData(
-          [waiting.start, hovered],
+          waiting.kind == VectorKind.contour
+              ? RustDocument.shapeOutline(anchorShape, waiting.start, hovered)
+              : [waiting.start, hovered],
           anchorRgb,
           anchorWidth,
           kind: waiting.kind,
@@ -351,23 +427,37 @@ class DocumentPainter extends CustomPainter {
     Offset first,
     bool single,
     Color color,
-    double width,
-  ) {
+    double width, {
+    bool felt = false,
+  }) {
     final paint = Paint()
       ..color = color
       ..isAntiAlias = true;
     if (single) {
-      canvas.drawCircle(first, width / 2, paint);
+      if (felt) {
+        canvas.drawRect(
+          Rect.fromCircle(center: first, radius: width / 2),
+          paint..color = color.withAlpha(markerAlpha),
+        );
+      } else {
+        canvas.drawCircle(first, width / 2, paint);
+      }
       return;
     }
     paint
       ..style = PaintingStyle.stroke
       ..strokeWidth = width
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
+      ..strokeCap = felt ? StrokeCap.square : StrokeCap.round
+      ..strokeJoin = felt ? StrokeJoin.bevel : StrokeJoin.round;
+    // The marker shows through, the trait once: its pieces are painted
+    // opaque together, then laid on the sheet at the marker's opacity.
+    if (felt) {
+      canvas.saveLayer(null, Paint()..color = color.withAlpha(markerAlpha));
+    }
     for (final piece in stroke.pieces) {
       canvas.drawPath(piece, paint);
     }
+    if (felt) canvas.restore();
   }
 
   @override
@@ -385,26 +475,47 @@ class DocumentPainter extends CustomPainter {
       old.anchorRgb != anchorRgb ||
       old.anchorWidth != anchorWidth ||
       old.anchorFillRgb != anchorFillRgb ||
+      old.anchorShape != anchorShape ||
       !identical(old.images, images) ||
       old.pixelRatio != pixelRatio ||
       old.viewMoving != viewMoving;
 }
 
 class ToolPreviewPainter extends CustomPainter {
-  ToolPreviewPainter(this.color, this.width, this.kind, this.fillColor);
+  ToolPreviewPainter(
+    this.color,
+    this.width,
+    this.kind,
+    this.fillColor, {
+    this.shape = NewShape.star,
+  });
   final VectorKind kind;
   final Color? fillColor;
   final Color color;
   final double width;
+
+  /// The shape shown for a contour, the kind « Formes » draws.
+  final NewShape shape;
+
   @override
   void paint(Canvas canvas, Size size) {
     if (kind != VectorKind.stroke) {
+      final a = DocumentPoint(size.width * .2, size.height * .25);
+      final b = DocumentPoint(size.width * .8, size.height * .75);
+      List<DocumentPoint> points;
+      if (kind == VectorKind.contour) {
+        try {
+          points = RustDocument.shapeOutline(shape, a, b);
+        } catch (_) {
+          // Without the core there is nothing exact to show.
+          return;
+        }
+      } else {
+        points = [a, b];
+      }
       RenderedElement(
         StrokeData(
-          [
-            DocumentPoint(size.width * .2, size.height * .25),
-            DocumentPoint(size.width * .8, size.height * .75),
-          ],
+          points,
           color.toARGB32() & 0xffffff,
           (width / 2).clamp(2, 8).toDouble(),
           kind: kind,
@@ -447,5 +558,56 @@ class ToolPreviewPainter extends CustomPainter {
       color != old.color ||
       width != old.width ||
       kind != old.kind ||
-      fillColor != old.fillColor;
+      fillColor != old.fillColor ||
+      shape != old.shape;
+}
+
+/// The pointer of the keyboard or the gamepad (Color 1.1): a ring with a
+/// cross, filled while it is pressed.
+class KeyPointerPainter extends CustomPainter {
+  const KeyPointerPainter({required this.pressed});
+  final bool pressed;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centre = size.center(Offset.zero);
+    final radius = size.shortestSide / 2 - 2;
+    final halo = Paint()
+      ..color = const Color(0xffffffff)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5;
+    final ink = Paint()
+      ..color = studioGreen
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawCircle(centre, radius, halo);
+    canvas.drawCircle(centre, radius, ink);
+    for (final (a, b) in [
+      (
+        Offset(centre.dx - radius - 3, centre.dy),
+        Offset(centre.dx - 4, centre.dy),
+      ),
+      (
+        Offset(centre.dx + 4, centre.dy),
+        Offset(centre.dx + radius + 3, centre.dy),
+      ),
+      (
+        Offset(centre.dx, centre.dy - radius - 3),
+        Offset(centre.dx, centre.dy - 4),
+      ),
+      (
+        Offset(centre.dx, centre.dy + 4),
+        Offset(centre.dx, centre.dy + radius + 3),
+      ),
+    ]) {
+      canvas.drawLine(a, b, halo);
+      canvas.drawLine(a, b, ink);
+    }
+    if (pressed) {
+      canvas.drawCircle(centre, radius / 2, Paint()..color = studioGreen);
+    }
+  }
+
+  @override
+  bool shouldRepaint(KeyPointerPainter old) => old.pressed != pressed;
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Soleil », n° 2. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Soleil</title>
+  <path d="M 80.38 43.84 L 96 50 L 80.38 56.16 Z M 75.84 67.13 L 82.53 82.53 L 67.13 75.84 Z M 56.16 80.38 L 50 96 L 43.84 80.38 Z M 32.87 75.84 L 17.47 82.53 L 24.16 67.13 Z M 19.62 56.16 L 4 50 L 19.62 43.84 Z M 24.16 32.87 L 17.47 17.47 L 32.87 24.16 Z M 43.84 19.62 L 50 4 L 56.16 19.62 Z M 67.13 24.16 L 82.53 17.47 L 75.84 32.87 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 75 50 C 75 63.81 63.81 75 50 75 C 36.19 75 25 63.81 25 50 C 25 36.19 36.19 25 50 25 C 63.81 25 75 36.19 75 50 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 45 46 C 45 47.66 43.66 49 42 49 C 40.34 49 39 47.66 39 46 C 39 44.34 40.34 43 42 43 C 43.66 43 45 44.34 45 46 Z" fill="#293d4b"/>
+  <path d="M 61 46 C 61 47.66 59.66 49 58 49 C 56.34 49 55 47.66 55 46 C 55 44.34 56.34 43 58 43 C 59.66 43 61 44.34 61 46 Z" fill="#293d4b"/>
+  <path d="M 40 56 C 44 63 56 63 60 56" fill="none" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

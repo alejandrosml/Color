@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Magie », une baguette et ses étoiles. Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Magie</title>
+  <path d="M 15.65 53.65 L 38.65 30.65 L 33.35 25.35 L 10.35 48.35 Z" fill="#9a82c9" stroke="#293d4b" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 30.83 38.47 L 34.05 35.25 L 28.75 29.95 L 25.53 33.17 Z" fill="#fffcf0" stroke="#293d4b" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 42.5 8.5 L 45.67 17.13 L 54.86 17.48 L 47.64 23.17 L 50.14 32.02 L 42.5 26.9 L 34.86 32.02 L 37.36 23.17 L 30.14 17.48 L 39.33 17.13 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M 55 34 L 56.7 38.3 L 61 40 L 56.7 41.7 L 55 46 L 53.3 41.7 L 49 40 L 53.3 38.3 Z" fill="#ed8c88" stroke="#293d4b" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 19 9.5 L 20.56 13.44 L 24.5 15 L 20.56 16.56 L 19 20.5 L 17.44 16.56 L 13.5 15 L 17.44 13.44 Z" fill="#43ac9c" stroke="#293d4b" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M 56 4 L 57.13 6.87 L 60 8 L 57.13 9.13 L 56 12 L 54.87 9.13 L 52 8 L 54.87 6.87 Z" fill="#b7e6d2" stroke="#293d4b" stroke-width="1.8" stroke-linejoin="round"/>
+</svg>

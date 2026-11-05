@@ -25,9 +25,40 @@ enum EduArt {
   eraser,
   gallery,
   printer,
-  // Kept as SVG files in the core: see vector_art.dart.
   options,
   film,
+  magic,
+  shapes,
+  magnet;
+
+  /// The SVG file of the core that draws it, `art/interface/<key>.svg` (Color
+  /// 1.1: every picture of the interface is a file; see vector_art.dart).
+  String get svgKey => switch (this) {
+    brush => 'pinceau',
+    newPage => 'nouveau',
+    folder => 'ouvrir',
+    save => 'enregistrer',
+    exportImage => 'exporter',
+    undo => 'annuler',
+    redo => 'retablir',
+    mascot => 'mascotte',
+    line => 'ligne',
+    rectangle => 'rectangle',
+    ellipse => 'ovale',
+    select => 'choisir',
+    text => 'texte',
+    stamp => 'tampon',
+    layers => 'calques',
+    fill => 'remplir',
+    eraser => 'gomme',
+    gallery => 'galerie',
+    printer => 'imprimer',
+    options => 'options',
+    film => 'film',
+    magic => 'magie',
+    shapes => 'formes',
+    magnet => 'aimant',
+  };
 }
 
 /// Original, resolution-independent artwork for a labelled control or helper.
@@ -106,15 +137,11 @@ class _EduArtPainter extends CustomPainter {
     if (outline) canvas.drawOval(rect, _stroke());
   }
 
-  // A picture kept as an SVG file, on the same grid of 64 units. Without
-  // the catalogue of the core — a library older than this interface — a
-  // plain shape stands for it: a control is never an empty place.
+  // A picture made as an SVG file from the start, on the same grid of 64
+  // units: without the catalogue of the core — a library older than this
+  // interface — a plain shape stands for it: a control is never an empty
+  // place.
   void _picture(Canvas canvas, String key) {
-    final picture = VectorArtCatalog.instance?[key];
-    if (picture != null) {
-      picture.paint(canvas, const Rect.fromLTWH(0, 0, 64, 64));
-      return;
-    }
     switch (key) {
       case 'film':
         _rounded(canvas, const Rect.fromLTWH(8, 14, 48, 36), 6, paper);
@@ -127,6 +154,49 @@ class _EduArtPainter extends CustomPainter {
             ..close(),
           teal,
         );
+      case 'magie':
+        // A star.
+        final star = Path();
+        for (var i = 0; i < 10; i++) {
+          final radius = i.isEven ? 24.0 : 10.0;
+          final angle = -math.pi / 2 + math.pi * i / 5;
+          final x = 32 + radius * math.cos(angle);
+          final y = 34 + radius * math.sin(angle);
+          i == 0 ? star.moveTo(x, y) : star.lineTo(x, y);
+        }
+        _shape(canvas, star..close(), sunshine);
+      case 'formes':
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(32, 10)
+            ..lineTo(56, 52)
+            ..lineTo(8, 52)
+            ..close(),
+          teal,
+        );
+      case 'aimant':
+        _shape(
+          canvas,
+          Path()
+            ..moveTo(12, 54)
+            ..lineTo(12, 30)
+            ..arcToPoint(
+              const Offset(52, 30),
+              radius: const Radius.circular(20),
+            )
+            ..lineTo(52, 54)
+            ..lineTo(40, 54)
+            ..lineTo(40, 30)
+            ..arcToPoint(
+              const Offset(24, 30),
+              radius: const Radius.circular(8),
+              clockwise: false,
+            )
+            ..lineTo(24, 54)
+            ..close(),
+          coral,
+        );
       default:
         // A wheel: a disc with its hub.
         _oval(canvas, const Rect.fromLTWH(10, 10, 44, 44), purple);
@@ -138,6 +208,15 @@ class _EduArtPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 64, size.height / 64);
+    // The SVG file of the picture, as the core describes it. The drawings
+    // below are those of before, which the files repeat shape for shape:
+    // they stand in for them only with a core that has no catalogue.
+    final picture = VectorArtCatalog.instance?[art.svgKey];
+    if (picture != null) {
+      picture.paint(canvas, const Rect.fromLTWH(0, 0, 64, 64));
+      canvas.restore();
+      return;
+    }
     switch (art) {
       case EduArt.brush:
         _brush(canvas);
@@ -157,15 +236,9 @@ class _EduArtPainter extends CustomPainter {
         _history(canvas);
       case EduArt.mascot:
         // The companion of the window is the study « Debout pour peindre »
-        // of the logo, chosen by the owner on 8 October 2026: the core draws
-        // it from its SVG. The drawing of before stands in for it when the
-        // core has no such picture.
-        final companion = VectorArtCatalog.instance?['mascotte'];
-        if (companion != null) {
-          companion.paint(canvas, const Rect.fromLTWH(0, 0, 64, 64));
-        } else {
-          _mascot(canvas);
-        }
+        // of the logo, chosen by the owner on 8 October 2026; without the
+        // core, the drawing of before.
+        _mascot(canvas);
       case EduArt.line:
         _line(canvas);
       case EduArt.rectangle:
@@ -190,6 +263,12 @@ class _EduArtPainter extends CustomPainter {
         _picture(canvas, 'options');
       case EduArt.film:
         _picture(canvas, 'film');
+      case EduArt.magic:
+        _picture(canvas, 'magie');
+      case EduArt.shapes:
+        _picture(canvas, 'formes');
+      case EduArt.magnet:
+        _picture(canvas, 'aimant');
       case EduArt.select:
         _shape(
           canvas,

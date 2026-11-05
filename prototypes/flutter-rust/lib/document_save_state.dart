@@ -135,6 +135,24 @@ final class DocumentSaveState {
     _mutation = Object();
   }
 
+  /// After a native edit that joined the newest step instead of making one,
+  /// as the eraser does all along one gesture: the counts stay, but the state
+  /// at this position is a new one, so a mark here names it no more. Undo
+  /// still returns to the parent of the step, which nothing changed.
+  void amendSucceeded({required int undoCount, required int redoCount}) {
+    _expectCounts(undoCount, redoCount, _cursor, _length - _cursor);
+    if (_cursor == 0 || _length != _cursor) {
+      // Nothing to join, or a redo branch the native side would have kept.
+      _reliable = false;
+      throw StateError('History tracking is out of sync; do not assume clean.');
+    }
+    final saved = _saved;
+    final pending = _pending?._mark;
+    if (saved != null && saved.depth == _cursor) saved.reachable = false;
+    if (pending != null && pending.depth == _cursor) pending.reachable = false;
+    _mutation = Object();
+  }
+
   void undoSucceeded({required int undoCount, required int redoCount}) {
     _expectCounts(undoCount, redoCount, _cursor - 1, _length - _cursor + 1);
     _cursor--;

@@ -17,9 +17,12 @@ fn text(pointer: *mut c_char) -> String {
 
 #[test]
 fn every_core_serves_the_pictures_and_the_pages() {
-    assert_eq!(ep_art_count(), 4);
+    assert_eq!(ep_art_count(), 25);
     let art = text(ep_art_catalog());
-    assert_eq!(art.lines().filter(|line| line.starts_with("P ")).count(), 4);
+    assert_eq!(
+        art.lines().filter(|line| line.starts_with("P ")).count(),
+        25
+    );
     assert!(art.is_ascii() && art.ends_with("X\n"));
     let count = ep_page_count();
     assert_eq!(count, 12);

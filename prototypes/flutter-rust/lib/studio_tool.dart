@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 import 'child_art.dart';
 import 'rust_document.dart' show VectorKind;
+import 'language.dart';
 
 /// What the pointer does on the sheet. Drawing tools create one kind of
-/// object; the others act on the objects already there. The order is the
-/// order of the buttons, and of the number keys 1 to 9.
+/// object; the others act on the objects already there. The bar shows them
+/// by [ToolGroup]: the nine of Color 1.0 keep their order, the rectangle and
+/// the oval now chosen in « Formes ».
 enum StudioTool {
   brush(
     'Pinceau',
@@ -59,25 +61,123 @@ enum StudioTool {
     EduArt.select,
     null,
     'Clique un élément, puis glisse pour le déplacer. Clique une couleur ou change l’épaisseur : il change aussitôt. Échap annule le déplacement.',
+  ),
+  // Color 1.1: after the nine of 1.0, which keep their number keys.
+  magic(
+    'Magie',
+    EduArt.magic,
+    VectorKind.stroke,
+    'Choisis une magie près des couleurs, puis glisse sur ta feuille : un arc-en-ciel, de l’herbe, des briques, des confettis, ou un miroir qui dessine deux fois !',
+  ),
+  shapes(
+    'Formes',
+    EduArt.shapes,
+    VectorKind.contour,
+    'Choisis une forme près des couleurs, puis glisse pour la dessiner : triangle, étoile, cœur, losange, hexagone ou flèche.',
+  ),
+  magnet(
+    'Aimant',
+    EduArt.magnet,
+    VectorKind.stroke,
+    'Dessine une forme à main levée : quand tu lèves le doigt, elle devient toute droite. Un rond devient un cercle, une boîte un rectangle !',
   );
 
-  const StudioTool(this.label, this.art, this.kind, this.help);
+  const StudioTool(this.frenchLabel, this.art, this.kind, this.frenchHelp);
 
-  /// Name on the button, and the tool's title in the inspector.
-  final String label;
+  /// Name on the button, and the tool's title in the inspector, in French;
+  /// [label] gives it in the language of the interface.
+  final String frenchLabel;
   final EduArt art;
 
   /// The kind of object this tool draws; null for a tool that draws nothing.
   final VectorKind? kind;
 
   /// One or two sentences that say what to do, shown beside the sheet and in
-  /// « Comment faire ? ».
-  final String help;
+  /// « Comment faire ? », in French; [help] gives them in the language of the
+  /// interface.
+  final String frenchHelp;
 
-  /// Stable key of the tool's button: `tool-stroke`, `tool-select`…
-  String get keyName => 'tool-${kind?.name ?? name}';
+  String get label => tr(frenchLabel);
+  String get help => tr(frenchHelp);
 
-  /// Rectangles and ovals can be filled.
+  /// Stable key of the tool's button: `tool-stroke`, `tool-select`… The
+  /// tools of 1.1, two of which draw strokes too, by their own names. The
+  /// rectangle, the oval and the magnet keep theirs in the choices of
+  /// « Formes », whose button is `tool-shapes`.
+  String get keyName => switch (this) {
+    magic || shapes || magnet => 'tool-$name',
+    _ => 'tool-${kind?.name ?? name}',
+  };
+
+  /// The button of the bar that holds this tool.
+  ToolGroup get group => ToolGroup.of(this);
+
+  /// Rectangles, ovals and the shapes of 1.1 can be filled.
   bool get drawsFillableShape =>
-      kind == VectorKind.rectangle || kind == VectorKind.ellipse;
+      kind == VectorKind.rectangle ||
+      kind == VectorKind.ellipse ||
+      this == shapes;
+}
+
+/// The buttons of the tool bar, in its order and that of the number keys 1
+/// to 9, as Tux Paint has them: one for each tool, but « Formes », which
+/// holds the rectangle, the oval, the shapes of Color 1.1 and the magnet,
+/// chosen where the help is written.
+enum ToolGroup {
+  brush([StudioTool.brush]),
+  line([StudioTool.line]),
+  shapes([
+    StudioTool.rectangle,
+    StudioTool.ellipse,
+    StudioTool.shapes,
+    StudioTool.magnet,
+  ]),
+  text([StudioTool.text]),
+  stamp([StudioTool.stamp]),
+  fill([StudioTool.fill]),
+  eraser([StudioTool.eraser]),
+  select([StudioTool.select]),
+  magic([StudioTool.magic]);
+
+  const ToolGroup(this.tools);
+
+  /// The tools of the button; the first is chosen when none was before.
+  final List<StudioTool> tools;
+
+  static ToolGroup of(StudioTool tool) {
+    for (final group in values) {
+      if (group.tools.contains(tool)) return group;
+    }
+    throw StateError('Outil sans bouton : $tool');
+  }
+
+  String get label => this == shapes ? tr('Formes') : tools.first.label;
+  EduArt get art => this == shapes ? EduArt.shapes : tools.first.art;
+
+  /// Stable key of the button: that of its tool, `tool-shapes` for
+  /// « Formes ».
+  String get keyName => this == shapes ? 'tool-shapes' : tools.first.keyName;
+
+  /// What the button does, in « Comment faire ? ».
+  String get help => this == shapes
+      ? tr(
+          'Choisis une forme près des couleurs : un rectangle, un ovale, un triangle, une étoile, un cœur… ou l’aimant, qui redresse ce que tu dessines.',
+        )
+      : tools.first.help;
+}
+
+/// The magic of the « Magie » tool.
+enum Magic {
+  rainbow('Arc-en-ciel'),
+  grass('Herbe'),
+  bricks('Briques'),
+  confetti('Confettis'),
+
+  /// Each stroke drawn twice, the second one in the mirror of the middle of
+  /// the sheet.
+  mirror('Miroir');
+
+  const Magic(this.frenchLabel);
+  final String frenchLabel;
+  String get label => tr(frenchLabel);
 }

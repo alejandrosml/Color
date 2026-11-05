@@ -23,7 +23,8 @@ void main() {
       expect(document.paperRgb, whitePaper);
       document.addStroke(const [DocumentPoint(5, 6)], rgb: 0x112233, width: 3);
       final plain = document.exportProject();
-      expect(plain[8], 2);
+      expect(plain[8], 6);
+      expect(document.exportLegacyProject()![8], 2);
       expect(document.setPaperColor(whitePaper), isFalse);
       expect(document.undoCount, 1);
       expect(document.setPaperColor(0xa8d8f0), isTrue);
@@ -35,7 +36,8 @@ void main() {
       expect(identical(document.strokes.single, before), isTrue);
       expect(document.paperRgb, 0);
       final bytes = document.exportProject();
-      expect(bytes[8], 4);
+      expect(bytes[8], 6);
+      expect(document.exportLegacyProject()![8], 4);
       expect(
         document.exportSvg(),
         contains('<rect width="100%" height="100%" fill="#000000"/>'),

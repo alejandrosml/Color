@@ -4,13 +4,14 @@ import 'package:flutter/material.dart';
 import 'french.dart';
 import 'rust_document.dart' show LayerData, maxLayers;
 import 'studio_colors.dart';
+import 'language.dart';
 
 /// The interface offers eight layers to draw on; a project may hold up to
 /// sixteen layers, the locked ones of a colouring page included.
 const int maxInterfaceLayers = 8;
 
 /// The name of a locked layer: it holds a colouring page.
-const String pageLayerName = 'Page';
+String get pageLayerName => tr('Page');
 
 /// The name of the layer [id] among [layers]: [pageLayerName] for a locked
 /// layer; otherwise « Calque » and a number that stays the same while the
@@ -23,7 +24,7 @@ String layerName(int id, List<LayerData> layers) {
     if (layer.id == id) return pageLayerName;
     if (layer.id < id) lockedBefore++;
   }
-  return 'Calque ${id + 1 - lockedBefore}';
+  return trf('Calque {0}', [id + 1 - lockedBefore]);
 }
 
 /// Whether the layer at position [from] in [layers] may move to position
@@ -108,22 +109,26 @@ class _LayersDialogState extends State<LayersDialog> {
       key: const Key('layersDialog'),
       scrollable: true,
       insetPadding: const EdgeInsets.all(16),
-      title: const Text('Mes calques'),
+      title: Text(tr('Mes calques')),
       content: SizedBox(
         width: 480,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Les calques sont des feuilles transparentes posées l’une sur '
-              'l’autre. Celui du haut de la liste passe devant les autres.',
+            Text(
+              tr(
+                'Les calques sont des feuilles transparentes posées l’une sur '
+                'l’autre. Celui du haut de la liste passe devant les autres.',
+              ),
             ),
             if (drawable < layers.length) ...[
               const SizedBox(height: 8),
-              const Text(
-                'La page à colorier est verrouillée : tu peux la cacher et '
-                'la montrer, mais pas la changer.',
+              Text(
+                tr(
+                  'La page à colorier est verrouillée : tu peux la cacher et '
+                  'la montrer, mais pas la changer.',
+                ),
                 key: Key('lockedPageNote'),
               ),
             ],
@@ -140,7 +145,9 @@ class _LayersDialogState extends State<LayersDialog> {
               label: Text(
                 // A project made elsewhere may hold more than this panel
                 // lets one add: say the number there really is.
-                full ? 'Tu as déjà $drawable calques' : 'Ajouter un calque',
+                full
+                    ? trf('Tu as déjà {0} calques', [drawable])
+                    : tr('Ajouter un calque'),
               ),
             ),
           ],
@@ -152,7 +159,7 @@ class _LayersDialogState extends State<LayersDialog> {
           key: const Key('closeLayers'),
           style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
           onPressed: () => Navigator.pop(context),
-          child: const Text('Revenir au dessin'),
+          child: Text(tr('Revenir au dessin')),
         ),
       ],
     );
@@ -172,7 +179,7 @@ class _LayersDialogState extends State<LayersDialog> {
     // nothing more. The core would refuse the rest anyway.
     final locked = layer.locked;
     // How the buttons name it in their sentence.
-    final named = locked ? 'la page' : name;
+    final named = locked ? tr('la page') : name;
     final isActive = layer.id == active;
     final choose = isActive || locked
         ? null
@@ -198,10 +205,10 @@ class _LayersDialogState extends State<LayersDialog> {
               button: !locked,
               selected: isActive,
               label: locked
-                  ? 'Page à colorier, verrouillée'
+                  ? tr('Page à colorier, verrouillée')
                   : isActive
-                  ? '$name, tu dessines sur ce calque'
-                  : 'Dessiner sur $name',
+                  ? trf('{0}, tu dessines sur ce calque', [name])
+                  : trf('Dessiner sur {0}', [name]),
               // The row's parts are replaced by this one name: its action
               // must be given again, or a screen reader could not choose.
               onTap: choose,
@@ -244,9 +251,11 @@ class _LayersDialogState extends State<LayersDialog> {
                                 // made, not what the child did: a locked
                                 // layer shows no count.
                                 locked
-                                    ? 'verrouillée${layer.visible ? '' : ' · cachée'}'
-                                    : '${elementCount(layer.objectCount)}${layer.visible ? '' : ' · caché'}'
-                                          '${isActive ? ' · tu dessines ici' : ''}',
+                                    ? trf('verrouillée{0}', [
+                                        layer.visible ? '' : tr(' · cachée'),
+                                      ])
+                                    : '${elementCount(layer.objectCount)}${layer.visible ? '' : tr(' · caché')}'
+                                          '${isActive ? tr(' · tu dessines ici') : ''}',
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(fontSize: 12),
@@ -266,7 +275,9 @@ class _LayersDialogState extends State<LayersDialog> {
             icon: layer.visible
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
-            label: layer.visible ? 'Cacher $named' : 'Montrer $named',
+            label: layer.visible
+                ? trf('Cacher {0}', [named])
+                : trf('Montrer {0}', [named]),
             // The sheet always keeps one visible layer to draw on; the page
             // is not one, and may always be hidden.
             onPressed: !locked && layer.visible && visibleDrawable == 1
@@ -279,7 +290,7 @@ class _LayersDialogState extends State<LayersDialog> {
           _iconButton(
             key: 'layer-up-${layer.id}',
             icon: Icons.arrow_upward,
-            label: 'Passer $named devant',
+            label: trf('Passer {0} devant', [named]),
             onPressed: canMoveLayer(layers, position, position + 1)
                 ? () => _run(() => actions.move(position, position + 1))
                 : null,
@@ -287,7 +298,7 @@ class _LayersDialogState extends State<LayersDialog> {
           _iconButton(
             key: 'layer-down-${layer.id}',
             icon: Icons.arrow_downward,
-            label: 'Passer $named derrière',
+            label: trf('Passer {0} derrière', [named]),
             onPressed: canMoveLayer(layers, position, position - 1)
                 ? () => _run(() => actions.move(position, position - 1))
                 : null,
@@ -295,7 +306,7 @@ class _LayersDialogState extends State<LayersDialog> {
           _iconButton(
             key: 'layer-delete-${layer.id}',
             icon: Icons.delete_outline_rounded,
-            label: 'Effacer $named',
+            label: trf('Effacer {0}', [named]),
             // The page stays, and so does one layer to draw on.
             onPressed: locked || drawable == 1
                 ? null

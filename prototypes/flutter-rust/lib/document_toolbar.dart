@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'child_art.dart';
 import 'studio_colors.dart';
+import 'language.dart';
 
 /// The line above the sheet: the name of the drawing and what it holds, then
 /// the view, the filling of shapes, the film of the drawing, the layers and
@@ -79,17 +80,17 @@ class DocumentToolbar extends StatelessWidget {
           ],
           if (showFill)
             Semantics(
-              label: 'Remplir la forme',
+              label: tr('Remplir la forme'),
               child: nameFill
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         fillCheckbox,
-                        const Text('Remplir', style: TextStyle(fontSize: 12)),
+                        Text(tr('Remplir'), style: TextStyle(fontSize: 12)),
                       ],
                     )
                   : Tooltip(
-                      message: 'Remplir',
+                      message: tr('Remplir'),
                       excludeFromSemantics: true,
                       child: fillCheckbox,
                     ),
@@ -98,10 +99,10 @@ class DocumentToolbar extends StatelessWidget {
             const SizedBox(width: 10),
             IconButton.outlined(
               key: const Key('replayDrawing'),
-              tooltip: 'Revoir ton dessin se faire tout seul',
+              tooltip: tr('Revoir ton dessin se faire tout seul'),
               onPressed: onReplay,
               icon: Semantics(
-                label: 'Revoir ton dessin se faire tout seul',
+                label: tr('Revoir ton dessin se faire tout seul'),
                 child: const EduIllustration(art: EduArt.film, size: 28),
               ),
             ),
@@ -110,10 +111,10 @@ class DocumentToolbar extends StatelessWidget {
             const SizedBox(width: 10),
             IconButton.outlined(
               key: const Key('layersButton'),
-              tooltip: 'Calques',
+              tooltip: tr('Calques'),
               onPressed: onLayers,
               icon: Semantics(
-                label: 'Calques : tu dessines sur $activeLayerName',
+                label: trf('Calques : tu dessines sur {0}', [activeLayerName]),
                 child: const EduIllustration(art: EduArt.layers, size: 28),
               ),
             ),
@@ -123,7 +124,7 @@ class DocumentToolbar extends StatelessWidget {
             key: const Key('undo'),
             onPressed: onUndo,
             icon: Semantics(
-              label: 'Annuler le dernier geste',
+              label: tr('Annuler le dernier geste'),
               child: const EduIllustration(art: EduArt.undo, size: 28),
             ),
           ),
@@ -132,7 +133,7 @@ class DocumentToolbar extends StatelessWidget {
             key: const Key('redo'),
             onPressed: onRedo,
             icon: Semantics(
-              label: 'Rétablir le geste annulé',
+              label: tr('Rétablir le geste annulé'),
               child: const EduIllustration(art: EduArt.redo, size: 28),
             ),
           ),

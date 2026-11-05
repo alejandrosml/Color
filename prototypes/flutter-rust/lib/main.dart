@@ -46,6 +46,7 @@ import 'layers_dialog.dart';
 import 'studio_colors.dart';
 import 'studio_tool.dart';
 import 'tool_bar.dart';
+import 'tool_variants.dart';
 import 'view_controls.dart';
 import 'studio_header.dart';
 import 'selection_toolbar.dart';
@@ -71,6 +72,11 @@ import 'device_self_test.dart';
 import 'fit_to_screen.dart';
 import 'phone_menu.dart';
 import 'platform_words.dart';
+import 'country_signs.dart';
+import 'kept_colours.dart';
+import 'paint_pot.dart';
+import 'language.dart';
+import 'companion.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -83,12 +89,23 @@ Future<void> main() async {
   // The options are read before the first frame: a studio set for a small
   // child never shows the whole interface first.
   final options = await StudioOptionsStore.open();
-  runApp(EduPaintApp(options: options, sounds: SystemSounds()));
+  // And in the language they ask for, from the first frame.
+  appLanguage.value = languageOf(options.value.language);
+  final kept = await KeptColours.open();
+  runApp(
+    EduPaintApp(options: options, sounds: SystemSounds(), keptColours: kept),
+  );
 }
 
 /// Builds of the studio, for the tests that count them.
 @visibleForTesting
 int debugStudioBuilds = 0;
+
+/// Where the seeds of the marks of « Magie » come from, in the tests that
+/// compare pictures: the same seeds, the same grass. Null draws them at
+/// random, as Color does.
+@visibleForTesting
+math.Random Function()? debugMarkSeeds;
 
 class EduPaintApp extends StatelessWidget {
   const EduPaintApp({
@@ -99,9 +116,19 @@ class EduPaintApp extends StatelessWidget {
     this.printer = printWithSystemPanel,
     this.options,
     this.sounds = const SilentSounds(),
+    this.countrySigns = readCountrySigns,
+    this.keptColours,
   });
   final StudioFiles files;
   final ProjectStorage? recoveryStorage;
+
+  /// Where the device says it is: the paint pot closes small gaps only
+  /// where that is allowed (lib/country_signs.dart).
+  final Future<CountrySigns> Function() countrySigns;
+
+  /// The colours chosen last, kept from one session to the next; without
+  /// them the recent colours last as long as the studio.
+  final KeptColours? keptColours;
 
   /// What « Imprimer » asks: by default the print panel of the system.
   final StudioPrinter printer;
@@ -118,11 +145,23 @@ class EduPaintApp extends StatelessWidget {
   /// recovery is injected gets no album unless one is injected too.
   final GalleryStorage? gallery;
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) => ValueListenableBuilder<AppLanguage>(
+    // A change of language builds the studio again, in the new one: its
+    // state, the drawing first, is kept.
+    valueListenable: appLanguage,
+    builder: (context, language, _) => materialApp(language),
+  );
+
+  /// The application in [language], as [build] makes it.
+  @visibleForTesting
+  MaterialApp materialApp(AppLanguage language) => MaterialApp(
     title: 'Color',
-    // French is the only language currently provided by the app.
+    // French, in which Color is written, and English (Color 1.1).
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    supportedLocales: const [Locale('fr')],
+    supportedLocales: [
+      for (final language in AppLanguage.values) language.locale,
+    ],
+    locale: language.locale,
     debugShowCheckedModeBanner: false,
     // On a tablet or a telephone: inside the safe area, and scaled down
     // whole on a screen smaller than the studio needs.
@@ -175,6 +214,8 @@ class EduPaintApp extends StatelessWidget {
       printer: printer,
       options: options,
       sounds: sounds,
+      countrySigns: countrySigns,
+      keptColours: keptColours,
     ),
   );
 }
@@ -188,6 +229,8 @@ class DrawingStudio extends StatefulWidget {
     this.printer = printWithSystemPanel,
     this.options,
     this.sounds = const SilentSounds(),
+    this.countrySigns = readCountrySigns,
+    this.keptColours,
   });
   final StudioFiles files;
   final ProjectStorage? recoveryStorage;
@@ -195,11 +238,15 @@ class DrawingStudio extends StatefulWidget {
   final StudioPrinter printer;
   final StudioOptionsStore? options;
   final SoundPlayer sounds;
+  final Future<CountrySigns> Function() countrySigns;
+  final KeptColours? keptColours;
   @override
   State<DrawingStudio> createState() => _DrawingStudioState();
 }
 
-enum _HistoryChange { edit, undo, redo }
+/// What a native command did to the history: a new step, one undone, one
+/// redone, or changes joined to the newest step (the eraser along a gesture).
+enum _HistoryChange { edit, undo, redo, amend }
 
 /// What goes on with the pointer while no button is held, between the click
 /// that began it and the click that ends it: a trait, the move of the chosen
@@ -221,7 +268,19 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// of the gesture makes it again, and the images with it.
   bool _paintedMoving = false;
   final _viewRebuild = ValueNotifier<int>(0);
-  final _recentColors = RecentPaintColors();
+
+  // Each change makes the companion stand up and paint (lib/companion.dart).
+  final _companionCue = ValueNotifier<int>(0);
+
+  /// The companion answers what the child just did, when the options say
+  /// it may.
+  void _react() {
+    if (_options.companionReacts) _companionCue.value++;
+  }
+
+  late final _recentColors = RecentPaintColors(
+    initial: widget.keptColours?.colours ?? const [],
+  );
   ViewTransform? _view;
   // The view kept its size during a gesture although its room changed.
   bool _viewWaits = false;
@@ -250,6 +309,9 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// The 1€ filter of a trait drawn with a finger or a pen, whose samples
   /// tremble; null for a mouse or a trackpad, which do not.
   OneEuroFilter? _steady;
+
+  /// The string of « Trait tranquille », for the trait in progress.
+  StringStabilizer? _string;
 
   /// Where the pointer of a filtered trait is, as it is: the trait ends
   /// there, not where its filter was.
@@ -316,6 +378,18 @@ class _DrawingStudioState extends State<DrawingStudio>
   Offset? _eraserLast;
   // What this eraser gesture has uncovered: out of its reach until it ends.
   final _eraserShield = Set<StrokeData>.identity();
+  // Color 1.1: the eraser cuts traits as it rubs. Where the press began, and
+  // the traits under it, which a click takes whole; whether the press became
+  // a rub; whether this gesture already made its one step for Annuler.
+  DocumentPoint? _eraserPress;
+  List<int> _eraserPressCut = const [];
+  bool _eraserRubbed = false;
+  bool _eraserCommitted = false;
+  Duration? _eraserHeardAt;
+  final _eraserClock = Stopwatch()..start();
+
+  /// The radius of the eraser on the screen, in logical pixels.
+  static const _eraserPixels = 10.0;
   // The panels are put away to leave the whole window to the sheet.
   bool _bigSheet = false;
   int? _selectedIndex;
@@ -338,11 +412,65 @@ class _DrawingStudioState extends State<DrawingStudio>
   // Where the pointer went down with the text tool; the dialog opens on release.
   DocumentPoint? _textAnchor;
   ObjectSize _textSize = ObjectSize.medium;
+
+  /// The letters of the next text: those chosen last (one of textFonts).
+  int _textFont = 0;
   ObjectSize _stampSize = ObjectSize.medium;
   int _stampId = 0;
   int get _draftStamp => _drafting.stamp;
   set _draftStamp(int stamp) => _drafting.stamp = stamp;
   bool _filled = false;
+  // What the brush draws with, the magic of « Magie », the shape of
+  // « Formes » (Color 1.1).
+  BrushTool _brushTool = BrushTool.round;
+  Magic _magic = Magic.rainbow;
+  NewShape _newShape = NewShape.star;
+
+  /// What « Formes » gives when it is chosen again: the shape tool used last.
+  StudioTool _lastShapeTool = StudioTool.rectangle;
+
+  /// How the next stamp is turned (an eighth of a turn at a time) and
+  /// mirrored.
+  int _stampEighths = 0;
+  bool _stampMirrored = false;
+
+  ObjectLook get _stampLook => ObjectLook(
+    rotation: normalAngle(_stampEighths * math.pi / 4),
+    mirrorX: _stampMirrored,
+  );
+
+  /// How the paint pot pours, and the colour chosen before the current one:
+  /// the other end of its gradients.
+  PourKind _pourKind = PourKind.plain;
+  int _previousColor = 0xffffff;
+  late final _seeds = debugMarkSeeds?.call() ?? math.Random();
+
+  /// What a trait of the current tool is drawn with.
+  BrushTool get _strokeTool => switch (_tool) {
+    StudioTool.brush => _brushTool,
+    StudioTool.magic => switch (_magic) {
+      Magic.rainbow => BrushTool.rainbow,
+      Magic.grass => BrushTool.grass,
+      Magic.bricks => BrushTool.bricks,
+      Magic.confetti => BrushTool.confetti,
+      Magic.mirror => BrushTool.round,
+    },
+    _ => BrushTool.round,
+  };
+
+  // The pressure of a stylus that measures it, 1 to 255; null for a mouse,
+  // a finger, or a pen that does not.
+  static int? _pressureOf(PointerEvent event) {
+    if (!_isPen(event.kind) || !(event.pressureMax > event.pressureMin)) {
+      return null;
+    }
+    final share =
+        ((event.pressure - event.pressureMin) /
+                (event.pressureMax - event.pressureMin))
+            .clamp(0.0, 1.0);
+    return (1 + share * 254).round().clamp(1, 255);
+  }
+
   int? get _draftFillRgb => _drafting.fillRgb;
   set _draftFillRgb(int? rgb) => _drafting.fillRgb = rgb;
   int _color = 0x477fb2;
@@ -353,6 +481,13 @@ class _DrawingStudioState extends State<DrawingStudio>
   set _draftWidth(double width) => _drafting.width = width;
   int _revision = 0;
   int _documentRevision = 0;
+
+  /// Where the device says it is; null until read, and then the pot closes
+  /// no gap.
+  CountrySigns? _countrySigns;
+
+  /// The paint pot reads the drawing as an image: a second press waits.
+  bool _pouring = false;
   // The revision whose recovery copy going out of sight last asked for.
   int? _hiddenRevision;
   DocumentSaveState? _saveState;
@@ -379,9 +514,19 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// that changes alone, as when a copy of recovery has been written, does
   /// not build the studio again (F-03).
   final _statusLine = ValueNotifier<String>(
-    'Recherche d’un dessin à reprendre…',
+    tr('Recherche d’un dessin à reprendre…'),
   );
-  set _status(String status) => _statusLine.value = status;
+  // How the line is said, to say it again when the language changes: a
+  // sentence of before stays in the language chosen in the options. Its
+  // values are taken when it is said first.
+  String Function() _statusSaid = () =>
+      tr('Recherche d’un dessin à reprendre…');
+  set _status(String Function() said) {
+    _statusSaid = said;
+    _statusLine.value = said();
+  }
+
+  void _sayStatusAgain() => _statusLine.value = _statusSaid();
   // The options of the adult; a studio that was given none keeps its own,
   // with the defaults, for as long as it lives.
   late final StudioOptionsStore _optionsStore =
@@ -412,10 +557,25 @@ class _DrawingStudioState extends State<DrawingStudio>
     } catch (error) {
       _startupError = StudioProblem.fromError(
         error,
-        message: 'Color n’a pas pu démarrer.',
+        message: tr('Color n’a pas pu démarrer.'),
       );
     }
+    _recentColors.addListener(
+      () => widget.keptColours?.keep(_recentColors.colors),
+    );
+    widget.countrySigns().then(
+      (signs) => _countrySigns = signs,
+      onError: (Object _) {},
+    );
     _optionsStore.addListener(_optionsChanged);
+    appLanguage.addListener(_sayStatusAgain);
+    // The language of the options: main() set it before the first frame;
+    // another store, in a test, sets it after this one.
+    if (appLanguage.value != languageOf(_options.language)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) appLanguage.value = languageOf(_options.language);
+      });
+    }
     if (_options.simpleControls) _fitSimpleControls();
     if (!_options.tools.contains(_tool)) _tool = StudioTool.brush;
     _lifecycle = AppLifecycleListener(
@@ -434,6 +594,14 @@ class _DrawingStudioState extends State<DrawingStudio>
     WidgetsBinding.instance.addPostFrameCallback((_) => _initializeRecovery());
   }
 
+  /// The device changed its languages while Color runs: with « Celle de
+  /// l'appareil », Color speaks the new one at once, without a restart.
+  @override
+  void didChangeLocales(List<Locale>? locales) {
+    if (!mounted) return;
+    appLanguage.value = languageOf(_options.language);
+  }
+
   /// The system runs short of memory: the images of the sheet go, and are
   /// made again when the sheet is next painted.
   @override
@@ -445,6 +613,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   @override
   void dispose() {
     _optionsStore.removeListener(_optionsChanged);
+    appLanguage.removeListener(_sayStatusAgain);
     if (widget.options == null) _optionsStore.dispose();
     _bounceTimer?.cancel();
     _savedTimer?.cancel();
@@ -458,6 +627,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     _canvasRepaint.dispose();
     _sheetImages.dispose();
     _viewRebuild.dispose();
+    _companionCue.dispose();
     _recentColors.dispose();
     _selectionOffset.dispose();
     _statusLine.dispose();
@@ -472,6 +642,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _optionsChanged() {
     if (!mounted) return;
     final options = _options;
+    appLanguage.value = languageOf(options.language);
     if (!options.tools.contains(_tool)) _cancelDraft();
     setState(() {
       if (!options.tools.contains(_tool)) {
@@ -532,27 +703,37 @@ class _DrawingStudioState extends State<DrawingStudio>
           undoCount: document.undoCount,
           redoCount: document.redoCount,
         );
+      case _HistoryChange.amend:
+        state.amendSucceeded(
+          undoCount: document.undoCount,
+          redoCount: document.redoCount,
+        );
     }
     final rendered = {for (final element in _strokes) element.data: element};
     _strokes = List.unmodifiable(
       _document!.strokes.map((data) => rendered[data] ?? RenderedElement(data)),
     );
     _revision++;
+    final savedAt = _currentPath;
     _status = _dirty
-        ? 'Modifications non enregistrées · préparation de la copie de récupération…'
-        : (_currentPath == null
-              ? 'Nouvelle feuille · récupération locale prête.'
-              : 'Projet enregistré : $_currentPath');
+        ? () => tr(
+            'Modifications non enregistrées · préparation de la copie de récupération…',
+          )
+        : (savedAt == null
+              ? () => tr('Nouvelle feuille · récupération locale prête.')
+              : () => trf('Projet enregistré : {0}', [savedAt]));
     // A transition to clean must reconcile an older recovery in the same queue.
     _scheduleRecovery();
   }
 
-  void _error(
-    Object error, {
-    String message = 'Cette action n’a pas pu être terminée.',
-  }) {
+  void _error(Object error, {String? message}) {
     if (!mounted) return;
-    _showProblem(StudioProblem.fromError(error, message: message));
+    _showProblem(
+      StudioProblem.fromError(
+        error,
+        message: message ?? tr('Cette action n’a pas pu être terminée.'),
+      ),
+    );
   }
 
   void _showProblem(StudioProblem problem) {
@@ -582,7 +763,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                   style: TextButton.styleFrom(foregroundColor: Colors.white),
                   // A blocked press must not dismiss the notification.
                   onPressed: () => _showProblemDetails(problem),
-                  child: const Text('Détails'),
+                  child: Text(tr('Détails')),
                 ),
               ),
           ],
@@ -643,10 +824,11 @@ class _DrawingStudioState extends State<DrawingStudio>
       _selectionBoundsObject = object;
       _selectionPaintBounds = object == null
           ? null
-          : _boundsForObject(
-              _selectedIndex!,
+          : shownBounds(
               object,
-            ).inflate(object.outlineRadius);
+              includeStroke: true,
+              points: _boundsForObject(_selectedIndex!, object),
+            );
     }
     return _selectionPaintBounds;
   }
@@ -790,6 +972,42 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
   }
 
+  // Turns the chosen element about the centre of its box: one step to undo.
+  void _turnSelection(double angle) {
+    final index = _selectedIndex;
+    if (index == null || !_canEditSelection) return;
+    final object = _document!.strokes[index];
+    _changeLook(index, object, object.look.turnedBy(angle));
+  }
+
+  // Shows the chosen element in a mirror, left and right swapped as the
+  // sheet shows it: one step to undo.
+  void _mirrorSelection() {
+    final index = _selectedIndex;
+    if (index == null || !_canEditSelection) return;
+    final object = _document!.strokes[index];
+    _changeLook(index, object, object.look.flippedLeftRight());
+  }
+
+  void _changeLook(int index, StrokeData object, ObjectLook look) {
+    try {
+      if (_document!.setObjectPaint(
+        index,
+        fillRgb: object.fillRgb,
+        look: look,
+      )) {
+        setState(() {
+          _refreshAfterMutation();
+          _reselect(index);
+        });
+        _sound(StudioSound.select);
+      }
+    } catch (error) {
+      _error(error, message: tr('Cet élément n’a pas pu être tourné.'));
+    }
+    _focus.requestFocus();
+  }
+
   void _duplicateSelection() {
     if (!_canEditSelection) return;
     try {
@@ -918,67 +1136,150 @@ class _DrawingStudioState extends State<DrawingStudio>
     inkOnly: inkOnly,
   );
 
-  /// The eraser removes the element it touches: one step for Annuler each.
-  /// What an erased element was covering is uncovered, not erased: a click
-  /// on a star keeps the sky behind it, and a glide that removes a large
-  /// shape leaves what appears from under it. Those elements are out of the
-  /// eraser's reach until the gesture ends: the child points at them with
-  /// the next one. The page of a colouring page is never in its reach.
+  /// The eraser (Color 1.1). A press on a filled shape, a text or a stamp
+  /// takes it whole, as a click on a trait does; rubbing cuts the traits and
+  /// the outlines it crosses, and takes whole what it would take with a
+  /// click. One gesture is one step for Annuler. What an element taken whole
+  /// was covering is uncovered, not erased: a click on a star keeps the sky
+  /// behind it. Those elements are out of the eraser's reach until the
+  /// gesture ends; the traits under a trait that is cut stay in reach, so
+  /// that a rub goes on through them. The page of a colouring page is never
+  /// in its reach.
   void _eraseAt(DocumentPoint point, double scale) {
-    final index = _objectAt(point, scale);
-    if (index == null) return;
+    final targets = _eraserTargetsAt(point, scale);
+    _eraserPress = point;
+    _eraserPressCut = targets.cut;
+    final whole = targets.whole;
+    if (whole != null) _erase([point], scale, removed: [whole]);
+  }
+
+  ({List<int> cut, int? whole}) _eraserTargetsAt(
+    DocumentPoint point,
+    double scale,
+  ) => eraserTargets(
+    _document!.strokes,
+    point,
+    reach: _eraserPixels / scale,
+    paintOrder: _document!.unlockedPaintOrder,
+    preparedBounds: _boundsForObject,
+    shielded: _eraserShield.contains,
+  );
+
+  // A rub along [path], points of the sheet: what it cuts and what it takes
+  // whole, gathered at each of its points before anything changes.
+  void _rubAlong(List<DocumentPoint> path, double scale) {
+    final cut = <int>{};
+    final removed = <int>{};
+    for (final point in path) {
+      final targets = _eraserTargetsAt(point, scale);
+      cut.addAll(targets.cut);
+      if (targets.whole != null) removed.add(targets.whole!);
+    }
+    _erase(
+      path,
+      scale,
+      cut: cut.difference(removed).toList(),
+      removed: removed.toList(),
+    );
+  }
+
+  void _erase(
+    List<DocumentPoint> path,
+    double scale, {
+    List<int> cut = const [],
+    List<int> removed = const [],
+  }) {
+    if (cut.isEmpty && removed.isEmpty) return;
     final document = _document!;
-    final object = document.strokes[index];
-    if (_eraserShield.contains(object)) return;
-    // Everything painted behind it that its outline or its box overlaps.
-    final area = _boundsForObject(index, object).inflate(object.outlineRadius);
-    final covered = <StrokeData>[];
+    // What lies behind what changes, before it changes: behind an element
+    // taken whole, everything; behind a trait that is cut, what would be
+    // taken whole.
+    final changing = {...cut, ...removed};
+    final behind = <StrokeData>[];
     for (final other in document.unlockedPaintOrder) {
-      if (other == index) break;
-      final behind = document.strokes[other];
-      if (_boundsForObject(
-        other,
-        behind,
-      ).inflate(behind.outlineRadius).overlaps(area)) {
-        covered.add(behind);
+      if (changing.contains(other)) continue;
+      final object = document.strokes[other];
+      final area = shownBounds(
+        object,
+        includeStroke: true,
+        points: _boundsForObject(other, object),
+      );
+      for (final index in changing) {
+        if (document.unlockedPaintOrder.indexOf(index) <
+            document.unlockedPaintOrder.indexOf(other)) {
+          continue;
+        }
+        final front = document.strokes[index];
+        final covers = shownBounds(
+          front,
+          includeStroke: true,
+          points: _boundsForObject(index, front),
+        ).overlaps(area);
+        if (covers && (removed.contains(index) || !erasesByCutting(object))) {
+          behind.add(object);
+          break;
+        }
       }
     }
     try {
-      if (document.removeObject(index)) {
-        _eraserShield.addAll(covered);
-        setState(_refreshAfterMutation);
-        _sound(StudioSound.erase);
-        // Also what is now under the pointer, however it got there.
-        final uncovered = _objectAt(point, scale);
-        if (uncovered != null) _eraserShield.add(document.strokes[uncovered]);
+      final before = document.undoCount;
+      final changed = document.erase(
+        path,
+        _eraserPixels / scale,
+        cut: cut,
+        removed: removed,
+        merge: _eraserCommitted,
+      );
+      if (changed > 0) {
+        _eraserCommitted = true;
+        _eraserShield.addAll(behind);
+        // After the first rub of a gesture, the core joins the others to its
+        // step: one Annuler takes the whole gesture back.
+        final change = document.undoCount == before
+            ? _HistoryChange.amend
+            : _HistoryChange.edit;
+        setState(() => _refreshAfterMutation(change: change));
+        final now = _eraserClock.elapsed;
+        final heard = _eraserHeardAt;
+        if (heard == null || now - heard >= _brushHeardEvery) {
+          _sound(StudioSound.erase);
+          _eraserHeardAt = now;
+        }
       }
     } catch (error) {
       _error(error);
     }
   }
 
-  static const _imageCoversSheet =
-      'Une image couvre toute la feuille. Touche un élément pour le colorier.';
-  static const _stampKeepsColours = 'Ce tampon garde ses couleurs.';
+  static String get _imageCoversSheet => tr(
+    'Une image couvre toute la feuille. Touche un élément pour le colorier.',
+  );
+  static String get _stampKeepsColours => tr('Ce tampon garde ses couleurs.');
 
   /// The paint pot gives the current colour to what it touches: the inside
-  /// of a rectangle, an oval or a contour, the colour of any other element,
-  /// or the sheet itself where nothing is drawn.
+  /// of a rectangle, an oval or a contour, the colour of any other element;
+  /// on the paper, the zone that the lines around close (Color 1.1), or the
+  /// sheet itself where no line closes anything.
   ///
   /// On a colouring page it sees through the lines of the page, which keep
   /// their colour: a click on or near a line colours the zone under it. A
   /// zone receives the colour of its inside and nothing else, the one change
   /// that its locked layer accepts.
   void _fillAt(DocumentPoint point, double scale) {
+    if (_pouring) return;
     final document = _document!;
+    // The zones the pot poured on this layer are paper to it: it fills
+    // within them or over them.
+    final poured = _pouredZones();
     // What the pot can colour, bottom first: everything seen but the lines
     // of a page, whose locked layer keeps them as they are.
-    final order = document.lockedLayers.isEmpty
+    final order = document.lockedLayers.isEmpty && poured.isEmpty
         ? document.paintOrder
         : [
             for (final index in document.paintOrder)
-              if (!document.isLockedObject(index) ||
-                  document.strokes[index].fillRgb != null)
+              if (!poured.contains(index) &&
+                  (!document.isLockedObject(index) ||
+                      document.strokes[index].fillRgb != null))
                 index,
           ];
     // The pot touches what is seen under the pointer, then the frame around
@@ -992,69 +1293,271 @@ class _DrawingStudioState extends State<DrawingStudio>
           order: order,
         ) ??
         _zoneAlongLine(point, scale);
+    if (index == null) {
+      if (_backgroundImage != null) {
+        _showProblem(StudioProblem.notice(_imageCoversSheet));
+        return;
+      }
+      unawaited(_pour(point, scale, poured));
+      return;
+    }
     final before = document.undoCount;
     try {
-      if (index == null) {
-        if (_backgroundImage != null) {
-          _showProblem(StudioProblem.notice(_imageCoversSheet));
-          return;
-        }
-        document.setPaperColor(_color);
-      } else {
-        final object = document.strokes[index];
-        if (_keepsOwnColours(object)) {
-          // No change that nobody could see, and no step for Annuler.
-          _showProblem(StudioProblem.notice(_stampKeepsColours));
-          return;
-        }
-        final fills = object.kind.canFill;
-        var target = index;
-        if (fills && object.fillRgb == null) {
-          // A frame that receives an inside must not hide what it was drawn
-          // around: like paint poured inside an outline, the new inside
-          // stays in front of what was seen through the frame under the
-          // pointer, and goes behind every other element of its layer that
-          // its box overlaps. Annuler takes the colour away, then, with one
-          // more press that shows nothing, puts the frame back where it was.
-          // Such a frame is never one of a page: those of a page that have
-          // no inside are its lines, out of the pot's reach.
-          final seen = hitTestObjects(
-            document.strokes,
-            point,
-            scale: scale,
-            tolerancePixels: precisePixels,
-            preparedBounds: _boundsForObject,
-            paintOrder: order.sublist(0, order.indexOf(index)),
-          );
-          final from =
-              seen != null && document.strokes[seen].layer == object.layer
-              ? seen + 1
-              : 0;
-          final area = _boundsForObject(index, object);
-          for (var other = from; other < index; other++) {
-            final behind = document.strokes[other];
-            if (behind.layer == object.layer &&
-                _boundsForObject(
-                  other,
-                  behind,
-                ).inflate(behind.outlineRadius).overlaps(area)) {
-              document.reorderObject(index, other);
-              target = other;
-              break;
-            }
+      final object = document.strokes[index];
+      if (_keepsOwnColours(object)) {
+        // No change that nobody could see, and no step for Annuler.
+        _showProblem(StudioProblem.notice(_stampKeepsColours));
+        return;
+      }
+      final fills = object.kind.canFill;
+      var target = index;
+      if (fills && object.fillRgb == null) {
+        // A frame that receives an inside must not hide what it was drawn
+        // around: like paint poured inside an outline, the new inside
+        // stays in front of what was seen through the frame under the
+        // pointer, and goes behind every other element of its layer that
+        // its box overlaps. Annuler takes the colour away, then, with one
+        // more press that shows nothing, puts the frame back where it was.
+        // Such a frame is never one of a page: those of a page that have
+        // no inside are its lines, out of the pot's reach.
+        final seen = hitTestObjects(
+          document.strokes,
+          point,
+          scale: scale,
+          tolerancePixels: precisePixels,
+          preparedBounds: _boundsForObject,
+          paintOrder: order.sublist(0, order.indexOf(index)),
+        );
+        final from =
+            seen != null && document.strokes[seen].layer == object.layer
+            ? seen + 1
+            : 0;
+        final area = _boundsForObject(index, object);
+        for (var other = from; other < index; other++) {
+          final behind = document.strokes[other];
+          // A zone poured by the pot is paint on the paper: the frame stays
+          // in front of it.
+          if (behind.layer == object.layer &&
+              !behind.look.zone &&
+              _boundsForObject(
+                other,
+                behind,
+              ).inflate(behind.outlineRadius).overlaps(area)) {
+            document.reorderObject(index, other);
+            target = other;
+            break;
           }
         }
+      }
+      final look = fills
+          ? _pourKind.lookOf(object.look, _previousColor)
+          : object.look;
+      if (look == object.look) {
         document.setObjectStyle(
           target,
           rgb: fills ? object.rgb : _color,
           width: object.width,
           fillRgb: fills ? _color : null,
         );
+      } else {
+        // A gradient, or one taken away: the inside and its look together.
+        document.setObjectPaint(target, fillRgb: _color, look: look);
       }
     } catch (error) {
       _error(error);
     }
     // Whatever was done before a failure is reported, step by step.
+    if (document.undoCount != before) {
+      setState(() => _refreshAfterEdits(before));
+      _sound(StudioSound.fill);
+    }
+  }
+
+  /// The zones that the paint pot poured on the active layer.
+  Set<int> _pouredZones() {
+    final document = _document!;
+    final layer = document.activeLayer;
+    return {
+      for (final index in document.paintOrder)
+        if (document.strokes[index].layer == layer &&
+            document.strokes[index].look.zone &&
+            !document.isLockedObject(index))
+          index,
+    };
+  }
+
+  /// The pot on the paper, or on a zone it poured before: it finds the zone
+  /// that the lines around [point] close, plugging gaps narrower than about
+  /// three millimetres where that is allowed, and pours it as a contour of
+  /// its own, under the lines, over the zones it overlaps. Where no line
+  /// closes anything the sheet takes the colour, as in Color 1.0; the zone
+  /// found again changes colour.
+  Future<void> _pour(
+    DocumentPoint point,
+    double viewScale,
+    Set<int> poured,
+  ) async {
+    final document = _document!;
+    final under = poured.isEmpty
+        ? null
+        : _objectAt(
+            point,
+            viewScale,
+            tolerancePixels: precisePixels,
+            insideShapes: true,
+            order: [
+              for (final index in document.paintOrder)
+                if (poured.contains(index)) index,
+            ],
+          );
+    final ink = [
+      for (final index in document.paintOrder)
+        if (!poured.contains(index)) _strokes[index],
+    ];
+    // A colouring page draws its zones itself: beside them is the sheet, as
+    // in Color 1.0.
+    if (ink.isEmpty || document.lockedLayers.isNotEmpty) {
+      _pourOver(under);
+      return;
+    }
+    final revision = _documentRevision;
+    setState(() => _pouring = true);
+    try {
+      final mask = await renderInkMask(
+        ink,
+        sheetWidth: document.width,
+        sheetHeight: document.height,
+      );
+      // Anything done meanwhile wins: the drawing the zone was found in is
+      // no longer the one shown.
+      if (!mounted ||
+          !identical(_document, document) ||
+          revision != _documentRevision) {
+        return;
+      }
+      final (x, y) = mask.pixelAt(point);
+      final zone = RustDocument.fillZone(
+        mask.bytes,
+        mask.width,
+        mask.height,
+        x,
+        y,
+        potRadius(
+          viewScale: viewScale,
+          mask: mask,
+          closesGaps: potClosesGaps(_countrySigns, DateTime.now()),
+        ),
+      );
+      if (zone.onInk || zone.wholeSheet) {
+        // On the edge of a line, nothing to pour but what is under it.
+        if (zone.wholeSheet || under != null) _pourOver(under);
+        return;
+      }
+      final points = zonePointsOnSheet(
+        zone,
+        mask,
+        sheetWidth: document.width,
+        sheetHeight: document.height,
+      );
+      final rings = zone.rings!.toList();
+      final pixel = 1 / math.min(mask.scaleX, mask.scaleY);
+      if (under != null &&
+          isSameZone(
+            document.strokes[under],
+            points,
+            rings,
+            tolerance: 2 * pixel + 1,
+          )) {
+        _pourOver(under);
+        return;
+      }
+      // Over every zone poured before that it overlaps, under the rest.
+      final box = shownBounds(
+        StrokeData(points, _color, 1, kind: VectorKind.contour),
+        includeStroke: false,
+      );
+      int? above;
+      for (final index in poured) {
+        if ((above == null || index > above) &&
+            _boundsForObject(index, document.strokes[index]).overlaps(box)) {
+          above = index;
+        }
+      }
+      final before = document.undoCount;
+      document.addObject(
+        VectorKind.contour,
+        points,
+        rgb: _color,
+        width: _zoneOutline,
+        fillRgb: _color,
+        look: _pourKind.lookOf(ObjectLook.pouredZone, _previousColor),
+        rings: rings.length > 1 ? rings : null,
+        quant: 4,
+        bottom: above == null,
+        above: above,
+      );
+      setState(() => _refreshAfterEdits(before));
+      _sound(StudioSound.fill);
+    } catch (error) {
+      _error(error);
+    } finally {
+      _pouring = false;
+      if (mounted) setState(() {});
+    }
+  }
+
+  /// The outline of a poured zone, in its colour: it hides the seam between
+  /// the zone and the lines that close it.
+  static const _zoneOutline = .5;
+
+  /// The colour of the pot given to the zone [zone] poured before, or to the
+  /// sheet when it is null. A gradient on the sheet of a drawing is a zone
+  /// of the whole sheet, under everything: the paper has one colour.
+  void _pourOver(int? zone) {
+    final document = _document!;
+    final before = document.undoCount;
+    try {
+      if (zone == null) {
+        if (_pourKind == PourKind.plain || document.lockedLayers.isNotEmpty) {
+          document.setPaperColor(_color);
+        } else {
+          final (w, h) = (
+            document.width.toDouble(),
+            document.height.toDouble(),
+          );
+          document.addObject(
+            VectorKind.contour,
+            [
+              const DocumentPoint(0, 0),
+              DocumentPoint(w, 0),
+              DocumentPoint(w, h),
+              DocumentPoint(0, h),
+            ],
+            rgb: _color,
+            width: _zoneOutline,
+            fillRgb: _color,
+            look: _pourKind.lookOf(ObjectLook.pouredZone, _previousColor),
+            quant: 4,
+            bottom: true,
+          );
+        }
+      } else {
+        final object = document.strokes[zone];
+        final look = _pourKind.lookOf(object.look, _previousColor);
+        if (look == object.look) {
+          document.setObjectStyle(
+            zone,
+            rgb: _color,
+            width: object.width,
+            fillRgb: _color,
+          );
+        } else {
+          document.setObjectPaint(zone, fillRgb: _color, look: look);
+        }
+      }
+    } catch (error) {
+      _error(error);
+    }
     if (document.undoCount != before) {
       setState(() => _refreshAfterEdits(before));
       _sound(StudioSound.fill);
@@ -1112,8 +1615,8 @@ class _DrawingStudioState extends State<DrawingStudio>
     _focus.requestFocus();
   }
 
-  static const _nothingToPick =
-      'Clique sur un élément de ton dessin pour reprendre sa couleur.';
+  static String get _nothingToPick =>
+      tr('Clique sur un élément de ton dessin pour reprendre sa couleur.');
 
   /// The pipette reads the colour under the pointer and chooses it, exactly
   /// as a click in the palette would: a chosen element takes it at once.
@@ -1171,6 +1674,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           !_styleSelection(rgb: rgb)) {
         return;
       }
+      if (rgb != _color) _previousColor = _color;
       _color = rgb;
     }
   }
@@ -1263,8 +1767,8 @@ class _DrawingStudioState extends State<DrawingStudio>
       _showProblem(
         StudioProblem.notice(
           factor > 1
-              ? 'Cet élément ne peut pas être plus grand sur cette feuille.'
-              : 'Cet élément ne peut pas être plus petit.',
+              ? tr('Cet élément ne peut pas être plus grand sur cette feuille.')
+              : tr('Cet élément ne peut pas être plus petit.'),
         ),
       );
     } catch (error) {
@@ -1351,6 +1855,13 @@ class _DrawingStudioState extends State<DrawingStudio>
         _erasing = true;
         _eraserLast = event.localPosition;
         _eraserShield.clear();
+        _eraserPress = null;
+        _eraserPressCut = const [];
+        _eraserRubbed = false;
+        _eraserCommitted = false;
+        _eraserHeardAt = null;
+        _pressPosition = event.localPosition;
+        _pressByTouch = event.kind == PointerDeviceKind.touch;
       });
       if (onSheet) {
         _eraseAt(
@@ -1373,7 +1884,14 @@ class _DrawingStudioState extends State<DrawingStudio>
       return;
     }
     if (_choosing) {
-      final found = _objectAt(point, viewport.scale);
+      final found = _objectAt(
+        point,
+        viewport.scale,
+        tolerancePixels: reachPixels(
+          touch: event.kind == PointerDeviceKind.touch,
+          touchScreen: touchFirst,
+        ),
+      );
       if (found != null && found != _selectedIndex) _sound(StudioSound.select);
       _pressOnChosen = found != null && found == _selectedIndex;
       _pressPosition = event.localPosition;
@@ -1416,6 +1934,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       _pointer = event.pointer;
       _draftKind = kind;
       _draftStamp = _stampId;
+      _drafting.stampLook = _stampLook;
       _draftFillRgb = _filled && _tool.drawsFillableShape ? _fillColor : null;
       _pressPosition = event.localPosition;
       _pressTravel = 0;
@@ -1435,6 +1954,21 @@ class _DrawingStudioState extends State<DrawingStudio>
       _draftWidth = _width;
       _draftStroke = DraftStroke(_draft.first);
       _draftSeen = null;
+      _drafting.resetLook();
+      if (kind == VectorKind.stroke) {
+        final tool = _strokeTool;
+        _drafting.tool = tool;
+        _drafting.seed = tool.scatters ? 1 + _seeds.nextInt(1 << 30) : 0;
+        if (_tool == StudioTool.magic && _magic == Magic.mirror) {
+          _drafting.mirrorWidth = _document!.width.toDouble();
+        }
+        // The magnet straightens what is drawn: no pressure to keep.
+        final pressure = _tool == StudioTool.magnet ? null : _pressureOf(event);
+        if (pressure != null) _drafting.pressures = [pressure];
+        _markDraft();
+      } else if (kind == VectorKind.contour) {
+        _drafting.shape = _newShape;
+      }
       // A finger trembles, and a pen a little: their samples are smoothed;
       // a mouse is followed as it is.
       _steady =
@@ -1445,6 +1979,10 @@ class _DrawingStudioState extends State<DrawingStudio>
               event.localPosition.dy,
               event.timeStamp,
             ))
+          : null;
+      _string = kind == VectorKind.stroke && _options.steadyHand
+          ? (StringStabilizer()
+              ..pull(event.localPosition.dx, event.localPosition.dy))
           : null;
     }
 
@@ -1497,7 +2035,12 @@ class _DrawingStudioState extends State<DrawingStudio>
         _dragSelectionTo(event.localPosition, viewport);
         return;
       case _Latch.stroke:
-        _extendDraftTo(event.localPosition, viewport, at: event.timeStamp);
+        _extendDraftTo(
+          event.localPosition,
+          viewport,
+          at: event.timeStamp,
+          pressure: _pressureOf(event),
+        );
         return;
       case null:
         break;
@@ -1569,6 +2112,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     Offset position,
     DocumentViewport viewport, {
     Duration? at,
+    int? pressure,
   }) {
     var place = position;
     final steady = _steady;
@@ -1576,6 +2120,11 @@ class _DrawingStudioState extends State<DrawingStudio>
       final (x, y) = steady.filter(position.dx, position.dy, at);
       place = Offset(x, y);
       _draftSeen = viewport.point(position.dx, position.dy);
+    }
+    final string = _string;
+    if (string != null && _draftKind == VectorKind.stroke) {
+      final (x, y) = string.pull(place.dx, place.dy);
+      place = Offset(x, y);
     }
     final raw = viewport.point(place.dx, place.dy);
     _draftRawEnd = raw;
@@ -1588,6 +2137,9 @@ class _DrawingStudioState extends State<DrawingStudio>
       if (dx * dx + dy * dy < unseenMovePixels * unseenMovePixels) return;
       _draft.add(raw);
       _draftStroke!.lineTo(raw);
+      final pressures = _drafting.pressures;
+      if (pressures != null) pressures.add(pressure ?? pressures.last);
+      _markDraft();
       _hearBrush(position, at);
     } else {
       _draft[1] = _shapeEndFrom(_draft.first, raw, _draftKind);
@@ -1595,6 +2147,37 @@ class _DrawingStudioState extends State<DrawingStudio>
     _revision++;
     // Pointer samples repaint the page without rebuilding the toolbars.
     _canvasRepaint.value++;
+  }
+
+  // The marks of the trait being drawn, for a tool of 1.1 or a stylus: the
+  // core gives those of the new segments only, the first ones never change
+  // as the trait grows. A lone dot has marks of its own, made again once
+  // the trait leaves it.
+  void _markDraft() {
+    final drawn = _drafting;
+    if (!drawn.tool.paintsMarks && drawn.pressures == null) return;
+    final points = drawn.points;
+    if (points.isEmpty) return;
+    final pressures = drawn.pressures;
+    try {
+      if (points.length == 1 || drawn.markedSegments == 0) {
+        drawn.marks.clear();
+      }
+      final from = points.length == 1 ? 0 : drawn.markedSegments;
+      final marks = RustDocument.strokeMarks(
+        points,
+        pressures: pressures == null ? null : Uint8List.fromList(pressures),
+        width: drawn.width,
+        rgb: drawn.rgb,
+        tool: drawn.tool,
+        seed: drawn.seed,
+        from: from,
+      );
+      if (marks != null) drawn.marks.addAll(markPaths(marks));
+      drawn.markedSegments = points.length - 1;
+    } catch (_) {
+      // Without the marks the trait is still drawn when it is finished.
+    }
   }
 
   /// The brush keeps sounding while it travels on the sheet: once more each
@@ -1636,20 +2219,35 @@ class _DrawingStudioState extends State<DrawingStudio>
       return;
     }
     if (_pointer == event.pointer && _erasing) {
+      final pressed = _pressPosition;
+      // A press that stays where it began is a click: it takes a trait
+      // whole when it is released. One that travels rubs.
+      if (!_eraserRubbed &&
+          pressed != null &&
+          (event.localPosition - pressed).distance <
+              clickTravel(touch: _pressByTouch)) {
+        return;
+      }
+      _eraserRubbed = true;
       // A quick hand leaves few samples: walk the whole way between two of
       // them, so that a thin line in between is not jumped over.
       final from = _eraserLast ?? event.localPosition;
       final to = event.localPosition;
       _eraserLast = to;
       final steps = ((to - from).distance / 5).ceil().clamp(1, 400);
-      for (var step = 1; step <= steps; step++) {
+      final path = <DocumentPoint>[];
+      for (var step = 0; step <= steps; step++) {
         final position = Offset.lerp(from, to, step / steps)!;
         // Outside the sheet nothing is touched: positions are not pulled
         // back onto its edge, which would erase what lies there.
         if (viewport.contains(position.dx, position.dy)) {
-          _eraseAt(viewport.point(position.dx, position.dy), viewport.scale);
+          path.add(viewport.point(position.dx, position.dy));
+        } else if (path.isNotEmpty) {
+          _rubAlong(path, viewport.scale);
+          path.clear();
         }
       }
+      if (path.isNotEmpty) _rubAlong(path, viewport.scale);
       return;
     }
     if (_pointer != event.pointer || _draft.isEmpty) return;
@@ -1660,7 +2258,12 @@ class _DrawingStudioState extends State<DrawingStudio>
         (event.localPosition - pressed).distance,
       );
     }
-    _extendDraftTo(event.localPosition, viewport, at: event.timeStamp);
+    _extendDraftTo(
+      event.localPosition,
+      viewport,
+      at: event.timeStamp,
+      pressure: _pressureOf(event),
+    );
   }
 
   /// The press that was just released was a click, and the options ask for
@@ -1766,10 +2369,21 @@ class _DrawingStudioState extends State<DrawingStudio>
     _endViewGesture();
     _finishSelectionDrag();
     if (_erasing) {
-      // Every erased element is already its own finished step.
+      // A click on a trait takes it whole; a rub already did its work.
+      final press = _eraserPress;
+      if (released &&
+          !_eraserRubbed &&
+          press != null &&
+          _eraserPressCut.isNotEmpty) {
+        _erase([press], _view?.scale ?? 1, removed: [_eraserPressCut.first]);
+      }
       _erasing = false;
       _eraserLast = null;
       _eraserShield.clear();
+      _eraserPress = null;
+      _eraserPressCut = const [];
+      _eraserRubbed = false;
+      _eraserCommitted = false;
       _pointer = null;
       return;
     }
@@ -1786,6 +2400,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     final rawEnd = _draftRawEnd;
     final seen = _draftSeen;
     _steady = null;
+    _string = null;
     _draftSeen = null;
     // A press that stayed where it began is a click, told on the screen.
     final clicked =
@@ -1802,23 +2417,34 @@ class _DrawingStudioState extends State<DrawingStudio>
         // The brush was heard while it travelled: nothing when it lifts.
         // A smoothed trait ends where the pointer is, not where its filter
         // was; then only the points that the eye can see are kept.
+        final pressures = _drafting.pressures;
         if (seen != null &&
             (seen.x != points.last.x || seen.y != points.last.y)) {
           points.add(seen);
+          pressures?.add(pressures.last);
         }
-        _document!.addStroke(
-          _simplified(points),
-          rgb: _draftColor,
-          width: _draftWidth,
-        );
+        _addTrait(points, pressures);
       } else if (_draftKind == VectorKind.stamp) {
         final box = _stampBox(points.first, points.last);
-        _document!.addStamp(
-          box.first,
-          box.second,
-          stamp: _draftStamp,
-          rgb: _draftColor,
-        );
+        final look = _drafting.stampLook;
+        if (look.isPlain) {
+          _document!.addStamp(
+            box.first,
+            box.second,
+            stamp: _draftStamp,
+            rgb: _draftColor,
+          );
+        } else {
+          // Turned or mirrored before it is posed (Color 1.1).
+          _document!.addObject(
+            VectorKind.stamp,
+            [box.first, box.second],
+            rgb: _draftColor,
+            width: 1,
+            param: _draftStamp,
+            look: look,
+          );
+        }
         _sound(StudioSound.stamp);
       } else {
         var makes = isUsableShape(_draftKind, points.first, points.last);
@@ -1857,14 +2483,29 @@ class _DrawingStudioState extends State<DrawingStudio>
           }
           return;
         }
-        _document!.addShape(
-          _draftKind,
-          points.first,
-          points.last,
-          rgb: _draftColor,
-          width: _draftWidth,
-          fillRgb: _draftFillRgb,
-        );
+        if (_draftKind == VectorKind.contour) {
+          // A shape of 1.1: its outline in the box of the two corners.
+          _document!.addObject(
+            VectorKind.contour,
+            RustDocument.shapeOutline(
+              _drafting.shape ?? _newShape,
+              points.first,
+              points.last,
+            ),
+            rgb: _draftColor,
+            width: _draftWidth,
+            fillRgb: _draftFillRgb,
+          );
+        } else {
+          _document!.addShape(
+            _draftKind,
+            points.first,
+            points.last,
+            rgb: _draftColor,
+            width: _draftWidth,
+            fillRgb: _draftFillRgb,
+          );
+        }
         _sound(StudioSound.shape);
       }
       _refreshAfterMutation();
@@ -1876,6 +2517,90 @@ class _DrawingStudioState extends State<DrawingStudio>
         _revision++;
       });
     }
+  }
+
+  // A finished trait becomes what its tool makes of it: a trait painted as
+  // a line, its marks (a tool of 1.1, a stylus), the same in the mirror of
+  // the middle of the sheet, or, with the magnet, the shape it draws.
+  void _addTrait(List<DocumentPoint> points, List<int>? pressures) {
+    final document = _document!;
+    final drawn = _drafting;
+    if (_tool == StudioTool.magnet) {
+      final shape = document.recogniseShape(points);
+      if (shape != null) {
+        _addMagnetShape(shape);
+        return;
+      }
+    }
+    final look = ObjectLook(tool: drawn.tool, seed: drawn.seed);
+    // A trait painted as a line keeps the points the eye can see; marks
+    // keep every point, so that the sheet shows what was drawn.
+    final marked = drawn.tool.paintsMarks || pressures != null;
+    final kept = marked ? points : _simplified(points);
+    final pressed = pressures == null ? null : Uint8List.fromList(pressures);
+    final mirror = drawn.mirrorWidth;
+    if (mirror == null && look.isPlain && pressed == null) {
+      document.addStroke(kept, rgb: _draftColor, width: _draftWidth);
+      return;
+    }
+    document.addObjects([
+      NewObject(
+        VectorKind.stroke,
+        kept,
+        rgb: _draftColor,
+        width: _draftWidth,
+        look: look,
+        pressures: pressed,
+      ),
+      if (mirror != null)
+        NewObject(
+          VectorKind.stroke,
+          [for (final p in kept) DocumentPoint(mirror - p.x, p.y)],
+          rgb: _draftColor,
+          width: _draftWidth,
+          look: look,
+          pressures: pressed,
+        ),
+    ]);
+  }
+
+  // The shape the magnet found, as the shape tools make it: filled when
+  // they would be.
+  void _addMagnetShape(RecognisedShape shape) {
+    final document = _document!;
+    final fill = _filled ? _fillColor : null;
+    final points = shape.points;
+    switch (shape.kind) {
+      case VectorKind.line:
+        document.addShape(
+          VectorKind.line,
+          points.first,
+          points.last,
+          rgb: _draftColor,
+          width: _draftWidth,
+        );
+      case VectorKind.rectangle || VectorKind.ellipse:
+        document.addObject(
+          shape.kind,
+          points,
+          rgb: _draftColor,
+          width: _draftWidth,
+          fillRgb: fill,
+          look: ObjectLook(rotation: normalAngle(shape.rotation)),
+        );
+      case VectorKind.contour:
+        document.addObject(
+          VectorKind.contour,
+          points,
+          rgb: _draftColor,
+          width: _draftWidth,
+          fillRgb: fill,
+        );
+      default:
+        // A broken line: a trait of straight pieces.
+        document.addStroke(points, rgb: _draftColor, width: _draftWidth);
+    }
+    _sound(StudioSound.shape);
   }
 
   /// The points of a trait without those that lie within a quarter of a
@@ -1976,7 +2701,12 @@ class _DrawingStudioState extends State<DrawingStudio>
   // Where a confirmed text goes: its lines broken to the sheet's width, its
   // box as close as possible to the anchor. Null when it cannot stand on the
   // sheet at this size.
-  PlacedText? _placeText(String text, double size, DocumentPoint anchor) {
+  PlacedText? _placeText(
+    String text,
+    double size,
+    DocumentPoint anchor, {
+    int font = 0,
+  }) {
     final document = _document!;
     return placeText(
       text,
@@ -1984,6 +2714,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       anchor: anchor,
       pageWidth: document.width.toDouble(),
       pageHeight: document.height.toDouble(),
+      font: font,
     );
   }
 
@@ -2000,18 +2731,20 @@ class _DrawingStudioState extends State<DrawingStudio>
       () => showTextEntryDialog(
         context,
         initialSize: _textSize,
+        initialFont: _textFont,
         screenKeyboard: _options.screenKeyboard,
-        problem: (text, choice) =>
-            _placeText(text, sizeOf(choice), anchor) == null
+        problem: (text, choice, font) =>
+            _placeText(text, sizeOf(choice), anchor, font: font) == null
             ? _textTooLarge
             : null,
       ),
     );
     if (entry == null || !mounted || !identical(document, _document)) return;
     _textSize = entry.size;
+    _textFont = entry.font;
     try {
       final size = sizeOf(entry.size);
-      final placed = _placeText(entry.text, size, anchor);
+      final placed = _placeText(entry.text, size, anchor, font: entry.font);
       if (placed == null) {
         _showProblem(StudioProblem.notice(_textTooLarge));
         return;
@@ -2022,16 +2755,18 @@ class _DrawingStudioState extends State<DrawingStudio>
         text: placed.text,
         rgb: _color,
         size: size,
+        font: entry.font,
       );
       setState(_refreshAfterMutation);
       _sound(StudioSound.text);
     } catch (error) {
-      _error(error, message: 'Ce texte n’a pas pu être posé.');
+      _error(error, message: tr('Ce texte n’a pas pu être posé.'));
     }
   }
 
-  static const _textTooLarge =
-      'Ce texte est trop grand pour la feuille. Choisis une taille plus petite ou un texte plus court.';
+  static String get _textTooLarge => tr(
+    'Ce texte est trop grand pour la feuille. Choisis une taille plus petite ou un texte plus court.',
+  );
 
   bool get _canEditText =>
       _canEditSelection && _selectedObject?.kind == VectorKind.text;
@@ -2059,10 +2794,11 @@ class _DrawingStudioState extends State<DrawingStudio>
         context,
         initialText: object.text ?? '',
         initialSize: currentSize,
+        initialFont: object.font,
         editing: true,
         screenKeyboard: _options.screenKeyboard,
-        problem: (text, choice) =>
-            _placeText(text, sizeOf(choice), anchor) == null
+        problem: (text, choice, font) =>
+            _placeText(text, sizeOf(choice), anchor, font: font) == null
             ? _textTooLarge
             : null,
       ),
@@ -2076,7 +2812,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
     try {
       final size = sizeOf(entry.size);
-      final placed = _placeText(entry.text, size, anchor);
+      final placed = _placeText(entry.text, size, anchor, font: entry.font);
       if (placed == null) {
         _showProblem(StudioProblem.notice(_textTooLarge));
         return;
@@ -2088,13 +2824,14 @@ class _DrawingStudioState extends State<DrawingStudio>
         text: placed.text,
         rgb: object.rgb,
         size: size,
+        font: entry.font,
       );
       setState(() {
         if (changed) _refreshAfterMutation();
         _reselect(index);
       });
     } catch (error) {
-      _error(error, message: 'Ce texte n’a pas pu être changé.');
+      _error(error, message: tr('Ce texte n’a pas pu être changé.'));
     }
   }
 
@@ -2113,7 +2850,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       );
       if (chosen != null && mounted) setState(() => _stampId = chosen);
     } catch (error) {
-      _error(error, message: 'Les tampons ne sont pas disponibles.');
+      _error(error, message: tr('Les tampons ne sont pas disponibles.'));
     }
   }
 
@@ -2146,11 +2883,12 @@ class _DrawingStudioState extends State<DrawingStudio>
     return false;
   }
 
-  static const _allLayersHidden =
-      'Tous les calques sont cachés. Ouvre les calques pour en montrer un.';
+  static String get _allLayersHidden =>
+      tr('Tous les calques sont cachés. Ouvre les calques pour en montrer un.');
   // The same in an interface that does not show the layers.
-  static const _allLayersHiddenElsewhere =
-      'Tous les calques de ce dessin sont cachés. Un adulte peut en montrer un dans l’interface complète (Options).';
+  static String get _allLayersHiddenElsewhere => tr(
+    'Tous les calques de ce dessin sont cachés. Un adulte peut en montrer un dans l’interface complète (Options).',
+  );
 
   /// Reports every native command made since [before] undo steps, one by one:
   /// the save state follows the history a single step at a time.
@@ -2169,7 +2907,10 @@ class _DrawingStudioState extends State<DrawingStudio>
     try {
       edit(document);
     } catch (error) {
-      _error(error, message: 'Ce changement de calque n’a pas pu être fait.');
+      _error(
+        error,
+        message: tr('Ce changement de calque n’a pas pu être fait.'),
+      );
     }
     _followVisibleLayer(document);
     setState(() {
@@ -2297,6 +3038,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     _draftStroke = null;
     _draftRawEnd = null;
     _steady = null;
+    _string = null;
     _draftSeen = null;
     _pointer = null;
     _shapeAnchor = null;
@@ -2395,8 +3137,10 @@ class _DrawingStudioState extends State<DrawingStudio>
     var number = _digitKeys.indexOf(event.physicalKey);
     if (number < 0) number = _numpadKeys.indexOf(event.logicalKey);
     // The numbers follow the bar as the options show it.
-    final tools = _options.tools;
-    return number >= 0 && number < tools.length ? tools[number] : null;
+    final groups = _options.groups;
+    return number >= 0 && number < groups.length
+        ? _toolOfGroup(groups[number])
+        : null;
   }
 
   // The keys that are held with others and ask for nothing by themselves.
@@ -2413,7 +3157,121 @@ class _DrawingStudioState extends State<DrawingStudio>
     LogicalKeyboardKey.fn,
   };
 
+  /// The pointer of the keyboard or the gamepad (Color 1.1): where it is on
+  /// the sheet, in pixels of its frame, and whether it is pressed.
+  Offset? _keyPointerAt;
+  bool _keyDown = false;
+  DocumentViewport? _keyViewport;
+  Size? _keySheetSize;
+  final _keyClock = Stopwatch()..start();
+  static const _keyPointerId = 0x4b4559;
+
+  void _pointerUp(PointerUpEvent event, DocumentViewport viewport) {
+    if (_fingerUp(event)) return;
+    if (_panPointer == event.pointer) {
+      _pointerMove(event, viewport);
+      if (!_beginPanLatch()) _endViewGesture();
+    }
+    if (_pointer == event.pointer) {
+      _pointerMove(event, viewport);
+      _finishStroke(released: true);
+    }
+  }
+
+  /// The arrows move the pointer, ten pixels at a time or two with Maj;
+  /// Entrée, or the button A of a gamepad, presses it, and again releases
+  /// it. True when the key was the pointer's.
+  bool _keyPointerKey(KeyEvent event) {
+    final viewport = _keyViewport;
+    final size = _keySheetSize;
+    if (viewport == null || size == null) return false;
+    final key = event.logicalKey;
+    final press =
+        key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter ||
+        key == LogicalKeyboardKey.select ||
+        key == LogicalKeyboardKey.gameButtonA;
+    final direction = switch (key) {
+      LogicalKeyboardKey.arrowLeft => const Offset(-1, 0),
+      LogicalKeyboardKey.arrowRight => const Offset(1, 0),
+      LogicalKeyboardKey.arrowUp => const Offset(0, -1),
+      LogicalKeyboardKey.arrowDown => const Offset(0, 1),
+      _ => null,
+    };
+    if (direction == null && !press) return false;
+    if (event is KeyUpEvent) return true;
+    final at = _keyPointerAt ?? size.center(Offset.zero);
+    final time = _keyClock.elapsed;
+    if (press) {
+      if (event is KeyRepeatEvent) return true;
+      _keyDown = !_keyDown;
+      if (_keyDown) {
+        _pointerDown(
+          PointerDownEvent(
+            pointer: _keyPointerId,
+            position: at,
+            kind: PointerDeviceKind.mouse,
+            buttons: kPrimaryButton,
+            timeStamp: time,
+          ),
+          viewport,
+        );
+      } else {
+        _pointerUp(
+          PointerUpEvent(
+            pointer: _keyPointerId,
+            position: at,
+            kind: PointerDeviceKind.mouse,
+            timeStamp: time,
+          ),
+          viewport,
+        );
+      }
+      setState(() => _keyPointerAt = at);
+      return true;
+    }
+    final distance = HardwareKeyboard.instance.isShiftPressed ? 2.0 : 10.0;
+    final next = Offset(
+      (at.dx + direction!.dx * distance).clamp(0, size.width),
+      (at.dy + direction.dy * distance).clamp(0, size.height),
+    );
+    if (_keyDown) {
+      _pointerMove(
+        PointerMoveEvent(
+          pointer: _keyPointerId,
+          position: next,
+          delta: next - at,
+          kind: PointerDeviceKind.mouse,
+          buttons: kPrimaryButton,
+          timeStamp: time,
+        ),
+        viewport,
+      );
+    } else {
+      _pointerHover(
+        PointerHoverEvent(
+          position: next,
+          delta: next - at,
+          kind: PointerDeviceKind.mouse,
+          timeStamp: time,
+        ),
+        viewport,
+      );
+    }
+    setState(() => _keyPointerAt = next);
+    return true;
+  }
+
   KeyEventResult _shapeModifiers(FocusNode node, KeyEvent event) {
+    // The pointer of the keyboard takes its keys before anything else does:
+    // the arrows are then its own, not those that nudge the chosen element.
+    if (_options.keyboardPointer &&
+        !_busy &&
+        !_confirmationOpen &&
+        _focus.hasFocus &&
+        _keyPointerKey(event)) {
+      return KeyEventResult.handled;
+    }
     // « Dessiner sans tenir le bouton » : a key pressed while a gesture begun
     // with a click goes on first keeps what that gesture made; the command
     // of the key comes after. Échap gives the gesture up instead.
@@ -2513,7 +3371,9 @@ class _DrawingStudioState extends State<DrawingStudio>
               null,
               background: recoveredBackground,
               dirty: true,
-              status: 'Dessin récupéré · enregistre-le pour choisir son emplacement.',
+              status: () => tr(
+                'Dessin récupéré · enregistre-le pour choisir son emplacement.',
+              ),
             );
             prepared.takeDocument();
             recoveredBackground = null;
@@ -2521,7 +3381,8 @@ class _DrawingStudioState extends State<DrawingStudio>
             await _clearRecovery();
             if (mounted) {
               setState(() {
-                _status = 'Nouvelle feuille · récupération locale prête.';
+                _status = () =>
+                    tr('Nouvelle feuille · récupération locale prête.');
               });
             }
           }
@@ -2531,7 +3392,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         }
       } else if (mounted) {
         setState(() {
-          _status = 'Nouvelle feuille · récupération locale prête.';
+          _status = () => tr('Nouvelle feuille · récupération locale prête.');
         });
       }
     } catch (error) {
@@ -2539,13 +3400,19 @@ class _DrawingStudioState extends State<DrawingStudio>
       _storage = null;
       if (mounted) {
         setState(() {
-          _status = 'Récupération indisponible · enregistre régulièrement ton dessin.';
+          _status = () => tr(
+            'Récupération indisponible · enregistre régulièrement ton dessin.',
+          );
         });
         _error(
           error,
           message: error is NewerProjectException
-              ? 'La copie de récupération vient d’une version plus récente de Color : elle est conservée telle quelle. Enregistre régulièrement ton dessin.'
-              : 'La récupération n’est pas disponible pour le moment. Enregistre régulièrement ton dessin.',
+              ? tr(
+                  'La copie de récupération vient d’une version plus récente de Color : elle est conservée telle quelle. Enregistre régulièrement ton dessin.',
+                )
+              : tr(
+                  'La récupération n’est pas disponible pour le moment. Enregistre régulièrement ton dessin.',
+                ),
         );
       }
     } finally {
@@ -2569,7 +3436,9 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _scheduleRecovery() {
     if (_storage == null) {
       if (_dirty) {
-        _status = 'Modifications non enregistrées · récupération locale indisponible.';
+        _status = () => tr(
+          'Modifications non enregistrées · récupération locale indisponible.',
+        );
       }
       return;
     }
@@ -2600,7 +3469,8 @@ class _DrawingStudioState extends State<DrawingStudio>
       );
       if (!committed || !belongsToCurrentDocument() || !_dirty) return;
       if (revision == _documentRevision) {
-        _status = 'Copie de récupération à jour · projet à enregistrer.';
+        _status = () =>
+            tr('Copie de récupération à jour · projet à enregistrer.');
       } else {
         // Keep the completed older snapshot, then coalesce the latest edits.
         // The scheduler never keeps an encoded snapshot for every pointer event.
@@ -2610,16 +3480,21 @@ class _DrawingStudioState extends State<DrawingStudio>
       if (belongsToCurrentDocument()) {
         setState(() {
           _status = _dirty
-              ? 'Récupération non mise à jour · enregistre ton dessin.'
-              : 'Ancienne copie de récupération encore présente.';
+              ? () =>
+                    tr('Récupération non mise à jour · enregistre ton dessin.')
+              : () => tr('Ancienne copie de récupération encore présente.');
         });
         if (!_recoveryWarningShown) {
           _recoveryWarningShown = true;
           _error(
             error,
             message: _dirty
-                ? 'Le dessin reste ouvert, mais sa copie de récupération n’a pas pu être écrite.'
-                : 'L’ancienne copie de récupération n’a pas pu être retirée. Le dessin actuel reste ouvert.',
+                ? tr(
+                    'Le dessin reste ouvert, mais sa copie de récupération n’a pas pu être écrite.',
+                  )
+                : tr(
+                    'L’ancienne copie de récupération n’a pas pu être retirée. Le dessin actuel reste ouvert.',
+                  ),
           );
         }
       }
@@ -2691,7 +3566,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       finalNativeExitApproved = finalNativeDecision;
       return AppExitResponse.exit;
     } catch (error) {
-      _error(error, message: 'Color n’a pas pu terminer la fermeture.');
+      _error(error, message: tr('Color n’a pas pu terminer la fermeture.'));
       return AppExitResponse.cancel;
     } finally {
       if (mounted) {
@@ -2738,8 +3613,12 @@ class _DrawingStudioState extends State<DrawingStudio>
       _replaceDocument(replacement, null);
       replacement = null;
       _sound(StudioSound.sheet);
+      _react();
     } catch (error) {
-      _error(error, message: 'La nouvelle feuille n’a pas pu être préparée.');
+      _error(
+        error,
+        message: tr('La nouvelle feuille n’a pas pu être préparée.'),
+      );
     } finally {
       replacement?.dispose();
       _releaseBusy();
@@ -2753,7 +3632,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     String? path, {
     ui.Image? background,
     bool dirty = false,
-    String? status,
+    String Function()? status,
   }) {
     final strokes = List<RenderedElement>.unmodifiable(
       replacement.strokes.map(RenderedElement.new),
@@ -2784,8 +3663,8 @@ class _DrawingStudioState extends State<DrawingStudio>
       _status =
           status ??
           (path == null
-              ? 'Nouvelle feuille · récupération locale prête.'
-              : 'Projet ouvert : $path');
+              ? () => tr('Nouvelle feuille · récupération locale prête.')
+              : () => trf('Projet ouvert : {0}', [path]));
     });
     oldTracking?.retire();
     old?.dispose();
@@ -2818,7 +3697,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     try {
       final path = await widget.files.chooseImage();
       if (path == null || !mounted) return;
-      setState(() => _busyLabel = 'Préparation de ton image…');
+      setState(() => _busyLabel = tr('Préparation de ton image…'));
       // Present the busy state before starting bounded parsing and decoding.
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
@@ -2839,7 +3718,9 @@ class _DrawingStudioState extends State<DrawingStudio>
         null,
         background: candidateBackground,
         dirty: true,
-        status: 'Ton image est le fond de la feuille. Dessine par-dessus, puis enregistre ton projet Color.',
+        status: () => tr(
+          'Ton image est le fond de la feuille. Dessine par-dessus, puis enregistre ton projet Color.',
+        ),
       );
       candidate = null;
       candidateBackground = null;
@@ -2847,7 +3728,9 @@ class _DrawingStudioState extends State<DrawingStudio>
     } catch (error) {
       _error(
         error,
-        message: 'Cette image n’a pas pu être ouverte. Ton dessin actuel est conservé.',
+        message: tr(
+          'Cette image n’a pas pu être ouverte. Ton dessin actuel est conservé.',
+        ),
       );
     } finally {
       asset?.dispose();
@@ -2866,11 +3749,14 @@ class _DrawingStudioState extends State<DrawingStudio>
     });
     PreparedProject? candidate;
     ui.Image? candidateBackground;
+    String? opened;
+    var rescued = false;
     try {
       final path = await widget.files.chooseOpen();
       recordNativeDiagnostics('open-panel-returned');
       if (path == null || !mounted) return;
-      setState(() => _busyLabel = 'Ouverture de ton dessin…');
+      opened = path;
+      setState(() => _busyLabel = tr('Ouverture de ton dessin…'));
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
       // Parse a separate document before asking to abandon the current drawing.
@@ -2889,7 +3775,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         candidate = null;
         candidateBackground?.dispose();
         candidateBackground = null;
-        setState(() => _busyLabel = 'Ouverture de ton dessin…');
+        setState(() => _busyLabel = tr('Ouverture de ton dessin…'));
         candidate = await widget.files.readPrepared(path);
         if (!mounted) return;
         candidateBackground = await _decodePreparedBackground(candidate);
@@ -2906,7 +3792,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         own ? null : path,
         background: candidateBackground,
         dirty: own,
-        status: own ? _ownFolderStatus : null,
+        status: own ? () => _ownFolderStatus : null,
       );
       candidate.takeDocument();
       candidate = null;
@@ -2917,18 +3803,95 @@ class _DrawingStudioState extends State<DrawingStudio>
       }
       recordNativeDiagnostics('open-applied');
     } catch (error) {
+      if (error is FormatException && opened != null && mounted) {
+        // A drawing of 1.1 whose end does not check: what is intact may be
+        // saved (Color 1.1).
+        rescued = await _offerRescue(opened);
+        if (rescued) return;
+      }
       _error(
         error,
         message: error is NewerProjectException
-            ? 'Ce dessin vient d’une version plus récente de Color. Installe la dernière version pour l’ouvrir. Le dessin actuel est conservé.'
-            : 'Ce projet n’a pas pu être ouvert. Le dessin actuel est conservé.',
+            ? tr(
+                'Ce dessin vient d’une version plus récente de Color. Installe la dernière version pour l’ouvrir. Le dessin actuel est conservé.',
+              )
+            : tr(
+                'Ce projet n’a pas pu être ouvert. Le dessin actuel est conservé.',
+              ),
       );
     } finally {
       candidateBackground?.dispose();
       candidate?.dispose();
-      _releaseBusy();
+      if (!rescued) _releaseBusy();
     }
   }
+
+  /// What can be saved of the damaged drawing at [path], offered to the
+  /// child: true when it was opened, as a drawing still to be saved under a
+  /// name of its own. Releases the busy state when it opens it.
+  Future<bool> _offerRescue(String path) async {
+    DamagedProjectRescue? rescue;
+    ui.Image? background;
+    try {
+      final bytes = await widget.files.read(path);
+      if (!mounted) return false;
+      rescue = RustDocument.fromDamagedProject(bytes);
+      if (rescue == null) return false;
+      final document = rescue.document;
+      final png = rescue.lostImage ? null : document.copyBackgroundPng();
+      if (png != null) {
+        final asset = await decodeCanonicalBackground(png);
+        try {
+          if (asset.width == document.width &&
+              asset.height == document.height) {
+            background = asset.image.clone();
+          }
+        } finally {
+          asset.dispose();
+        }
+      }
+      if (!mounted) return false;
+      final lost = [
+        if (rescue.lostLayerCount == 1) tr('un calque'),
+        if (rescue.lostLayerCount > 1)
+          trf('{0} calques', [rescue.lostLayerCount]),
+        if (rescue.lostImage || (png != null && background == null))
+          tr('l’image du fond'),
+      ];
+      setState(() => _busyLabel = null);
+      final open = await showRescueDialog(
+        context,
+        lost: lost.isEmpty ? null : lost.join(tr(' et ')),
+      );
+      if (!open || !mounted || !await _confirmProceed() || !mounted) {
+        return false;
+      }
+      await _clearRecovery();
+      if (!mounted) return false;
+      _replaceDocument(
+        document,
+        null,
+        background: background,
+        dirty: true,
+        status: () => _rescuedStatus,
+      );
+      rescue = null;
+      background = null;
+      _scheduleRecovery();
+      _showProblem(StudioProblem.notice(_rescuedStatus));
+      _releaseBusy();
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      background?.dispose();
+      rescue?.document.dispose();
+    }
+  }
+
+  static String get _rescuedStatus => tr(
+    'Ce qui restait du dessin abîmé est ouvert. Enregistre-le sous un nouveau nom.',
+  );
 
   // Called only while the surrounding operation owns the busy state.
   Future<bool> _saveCurrent({bool saveAs = false}) async {
@@ -2950,7 +3913,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     void preserveLatest() {
       if (!mounted || !_dirty) return;
       setState(() {
-        _status = 'Des modifications restent à enregistrer.';
+        _status = () => tr('Des modifications restent à enregistrer.');
         _scheduleRecovery();
       });
     }
@@ -2973,7 +3936,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         return false;
       }
       if (projectExportUsesWorker(document)) {
-        setState(() => _busyLabel = 'Préparation de ton projet…');
+        setState(() => _busyLabel = tr('Préparation de ton projet…'));
         await WidgetsBinding.instance.endOfFrame;
         if (!unchanged() || generation != _recoveryGeneration) {
           preserveLatest();
@@ -3011,9 +3974,10 @@ class _DrawingStudioState extends State<DrawingStudio>
           identical(tracking, _saveState) &&
           completion != SaveCompletion.ignoredStale) {
         setState(() {
+          final shown = widget.files.shownPath(path);
           _status = _dirty
-              ? 'Des modifications restent à enregistrer.'
-              : 'Projet enregistré : ${widget.files.shownPath(path)}';
+              ? () => tr('Des modifications restent à enregistrer.')
+              : () => trf('Projet enregistré : {0}', [shown]);
           _scheduleRecovery();
         });
       }
@@ -3040,7 +4004,9 @@ class _DrawingStudioState extends State<DrawingStudio>
       } catch (error) {
         _error(
           error,
-          message: 'Le projet est enregistré. L’ancienne copie de récupération n’a pas pu être retirée.',
+          message: tr(
+            'Le projet est enregistré. L’ancienne copie de récupération n’a pas pu être retirée.',
+          ),
         );
       }
       if (!unchanged() || clearingGeneration != _recoveryGeneration) {
@@ -3048,7 +4014,8 @@ class _DrawingStudioState extends State<DrawingStudio>
         return false;
       }
       setState(() {
-        _status = 'Projet enregistré : ${widget.files.shownPath(path)}';
+        final shown = widget.files.shownPath(path);
+        _status = () => trf('Projet enregistré : {0}', [shown]);
         _savedJustNow = true;
       });
       // A tick on the button for a moment: not every interface has the
@@ -3058,11 +4025,12 @@ class _DrawingStudioState extends State<DrawingStudio>
         if (mounted) setState(() => _savedJustNow = false);
       });
       _sound(StudioSound.saved);
+      _react();
       return true;
     } catch (error) {
       _error(
         error,
-        message: 'Enregistrement non terminé. Le dessin reste ouvert.',
+        message: tr('Enregistrement non terminé. Le dessin reste ouvert.'),
       );
       return false;
     } finally {
@@ -3074,8 +4042,9 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
   }
 
-  static const _reservedFolder =
-      'Ce dossier est celui où Color range ses propres copies. Choisis un autre endroit pour ton dessin.';
+  static String get _reservedFolder => tr(
+    'Ce dossier est celui où Color range ses propres copies. Choisis un autre endroit pour ton dessin.',
+  );
 
   // Color's own folders hold its recovery copy and its album, which it
   // clears by itself: nothing there is the file of a drawing.
@@ -3154,16 +4123,20 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (entry != null && mounted) await _openGalleryEntry(gallery, entry);
   }
 
-  static const _ownFolderStatus =
-      'Ce dessin vient d’un dossier que Color vide lui-même : il n’est pas encore rangé. Enregistrer te demandera où le mettre.';
+  static String get _ownFolderStatus => tr(
+    'Ce dessin vient d’un dossier que Color vide lui-même : il n’est pas encore rangé. Enregistrer te demandera où le mettre.',
+  );
 
   // The copy of the album is the drawing as it was saved that day: say so,
   // in case a later save never reached the album.
-  static String _galleryCopyStatus(GalleryEntry entry) =>
-      'Dessin repris de la galerie, tel qu’il était ${savedMoment(entry.savedAt.toLocal(), now: DateTime.now())} · Enregistrer te demandera où le ranger.';
+  static String _galleryCopyStatus(GalleryEntry entry) => trf(
+    'Dessin repris de la galerie, tel qu’il était {0} · Enregistrer te demandera où le ranger.',
+    [savedMoment(entry.savedAt.toLocal(), now: DateTime.now())],
+  );
 
-  static const _replacedStatus =
-      'Ce dessin vient d’être remplacé sur le disque par celui que tu as enregistré : il n’existe plus qu’ici. Enregistre-le sous un autre nom pour le garder.';
+  static String get _replacedStatus => tr(
+    'Ce dessin vient d’être remplacé sur le disque par celui que tu as enregistré : il n’existe plus qu’ici. Enregistre-le sous un autre nom pour le garder.',
+  );
 
   // Beside the file that took its place, under a name that tells them apart.
   static String _earlierVersionPath(String path) {
@@ -3172,8 +4145,11 @@ class _DrawingStudioState extends State<DrawingStudio>
     final stem = name.toLowerCase().endsWith(extension)
         ? name.substring(0, name.length - extension.length)
         : name;
-    return '${path.substring(0, path.length - name.length)}'
-        '$stem (version précédente)$extension';
+    return trf(
+      '{0}'
+      '{1} (version précédente){2}',
+      [path.substring(0, path.length - name.length), stem, extension],
+    );
   }
 
   /// Reopens a card. The saved file itself when this program can still read
@@ -3189,7 +4165,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     PreparedProject? candidate;
     ui.Image? candidateBackground;
     try {
-      setState(() => _busyLabel = 'Ouverture de ton dessin…');
+      setState(() => _busyLabel = tr('Ouverture de ton dessin…'));
       await WidgetsBinding.instance.endOfFrame;
       if (!mounted) return;
       String? path = entry.sourcePath;
@@ -3207,8 +4183,12 @@ class _DrawingStudioState extends State<DrawingStudio>
           _showProblem(
             StudioProblem.notice(
               _options.opensFiles
-                  ? 'Ce dessin est trop grand pour être gardé dans la galerie, et son fichier n’est plus accessible d’ici. Retrouve-le avec Ouvrir.'
-                  : 'Ce dessin est trop grand pour être gardé dans la galerie, et son fichier n’est plus accessible d’ici. Un adulte peut le retrouver avec Ouvrir, dans une interface plus complète.',
+                  ? tr(
+                      'Ce dessin est trop grand pour être gardé dans la galerie, et son fichier n’est plus accessible d’ici. Retrouve-le avec Ouvrir.',
+                    )
+                  : tr(
+                      'Ce dessin est trop grand pour être gardé dans la galerie, et son fichier n’est plus accessible d’ici. Un adulte peut le retrouver avec Ouvrir, dans une interface plus complète.',
+                    ),
             ),
           );
           return;
@@ -3245,9 +4225,9 @@ class _DrawingStudioState extends State<DrawingStudio>
         background: candidateBackground,
         dirty: replaced,
         status: replaced
-            ? _replacedStatus
+            ? () => _replacedStatus
             : path == null
-            ? _galleryCopyStatus(entry)
+            ? () => _galleryCopyStatus(entry)
             : null,
       );
       if (replaced) {
@@ -3266,8 +4246,12 @@ class _DrawingStudioState extends State<DrawingStudio>
       _error(
         error,
         message: error is NewerProjectException
-            ? 'Ce dessin vient d’une version plus récente de Color. Installe la dernière version pour l’ouvrir. Le dessin actuel est conservé.'
-            : 'Ce dessin n’a pas pu être repris. Le dessin actuel est conservé.',
+            ? tr(
+                'Ce dessin vient d’une version plus récente de Color. Installe la dernière version pour l’ouvrir. Le dessin actuel est conservé.',
+              )
+            : tr(
+                'Ce dessin n’a pas pu être repris. Le dessin actuel est conservé.',
+              ),
       );
     } finally {
       candidateBackground?.dispose();
@@ -3322,7 +4306,9 @@ class _DrawingStudioState extends State<DrawingStudio>
     )) {
       _showProblem(
         StudioProblem.notice(
-          'Cette feuille est trop grande pour une image PNG. Choisis le format SVG.',
+          tr(
+            'Cette feuille est trop grande pour une image PNG. Choisis le format SVG.',
+          ),
         ),
       );
       return;
@@ -3365,8 +4351,18 @@ class _DrawingStudioState extends State<DrawingStudio>
       observe('writer-returned');
       if (mounted) {
         setState(() {
-          _status =
-              'Image PNG exportée (${document.width * scale} × ${document.height * scale}) : ${widget.files.shownPath(path)}${_dirty ? ' · projet encore à enregistrer' : ''}';
+          final (width, height) = (
+            document.width * scale,
+            document.height * scale,
+          );
+          final shown = widget.files.shownPath(path);
+          final unsaved = _dirty;
+          _status = () => trf('Image PNG exportée ({0} × {1}) : {2}{3}', [
+            width,
+            height,
+            shown,
+            unsaved ? tr(' · projet encore à enregistrer') : '',
+          ]);
         });
         observe('status-applied');
       }
@@ -3375,7 +4371,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       observe('cancelled');
     } catch (error) {
       observe('failed');
-      _error(error, message: 'L’image n’a pas pu être exportée.');
+      _error(error, message: tr('L’image n’a pas pu être exportée.'));
     } finally {
       observe('finally-entered');
       _releaseBusy();
@@ -3405,7 +4401,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           revision == _documentRevision &&
           generation == _recoveryGeneration;
       if (svgExportUsesWorker(document)) {
-        setState(() => _busyLabel = 'Préparation de ton image SVG…');
+        setState(() => _busyLabel = tr('Préparation de ton image SVG…'));
         await WidgetsBinding.instance.endOfFrame;
         if (!unchanged()) return;
       }
@@ -3415,27 +4411,34 @@ class _DrawingStudioState extends State<DrawingStudio>
       recordNativeDiagnostics('svg-written');
       if (unchanged()) {
         setState(() {
-          _status =
-              'Image SVG exportée : ${widget.files.shownPath(path)}${_dirty ? ' · projet encore à enregistrer' : ''}';
+          final shown = widget.files.shownPath(path);
+          final unsaved = _dirty;
+          _status = () => trf('Image SVG exportée : {0}{1}', [
+            shown,
+            unsaved ? tr(' · projet encore à enregistrer') : '',
+          ]);
         });
       }
       // Export deliberately never marks the editable project as saved.
     } on CopyNotHandedOver {
       // The person closed the system's panel: nothing to say.
     } catch (error) {
-      _error(error, message: 'L’image n’a pas pu être exportée.');
+      _error(error, message: tr('L’image n’a pas pu être exportée.'));
     } finally {
       _releaseBusy();
     }
   }
 
-  static const _noPrinter =
-      'Color ne trouve pas d’imprimante sur cet ordinateur. Demande à un adulte d’en installer une, puis recommence.';
-  static const _printUnavailable =
-      'Cette version de Color ne sait pas imprimer sur cet ordinateur. Tu peux exporter ton dessin en image, puis imprimer l’image.';
+  static String get _noPrinter => tr(
+    'Color ne trouve pas d’imprimante sur cet ordinateur. Demande à un adulte d’en installer une, puis recommence.',
+  );
+  static String get _printUnavailable => tr(
+    'Cette version de Color ne sait pas imprimer sur cet ordinateur. Tu peux exporter ton dessin en image, puis imprimer l’image.',
+  );
   // The same in an interface that does not offer « Exporter ».
-  static const _printUnavailableWithoutExport =
-      'Cette version de Color ne sait pas imprimer sur cet ordinateur. Demande à un adulte.';
+  static String get _printUnavailableWithoutExport => tr(
+    'Cette version de Color ne sait pas imprimer sur cet ordinateur. Demande à un adulte.',
+  );
 
   // « Imprimer » hands the picture of the sheet to the print panel of the
   // system, where the person chooses the printer or gives up. Color itself
@@ -3448,7 +4451,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     _finishStroke();
     setState(() {
       _busy = true;
-      _busyLabel = 'Préparation de ton dessin pour l’imprimante…';
+      _busyLabel = tr('Préparation de ton dessin pour l’imprimante…');
     });
     try {
       // The label is on screen before the engine starts on the image.
@@ -3479,8 +4482,10 @@ class _DrawingStudioState extends State<DrawingStudio>
           setState(() {
             // Confirmed in the panel of the system, which may as well have
             // made a file of it: the studio only says what it knows.
-            _status =
-                'Impression lancée${_dirty ? ' · projet encore à enregistrer' : ''}';
+            final unsaved = _dirty;
+            _status = () => trf('Impression lancée{0}', [
+              unsaved ? tr(' · projet encore à enregistrer') : '',
+            ]);
           });
           _sound(StudioSound.printed);
         case PrintOutcome.cancelled:
@@ -3498,7 +4503,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           );
       }
     } catch (error) {
-      _error(error, message: 'Le dessin n’a pas pu être imprimé.');
+      _error(error, message: tr('Le dessin n’a pas pu être imprimé.'));
     } finally {
       _releaseBusy();
     }
@@ -3568,8 +4573,9 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
   }
 
-  static const _doorClosed =
-      'Trois résultats faux : les options restent fermées. Clique de nouveau sur Options pour réessayer.';
+  static String get _doorClosed => tr(
+    'Trois résultats faux : les options restent fermées. Clique de nouveau sur Options pour réessayer.',
+  );
 
   // The film has something to show on a layer that is seen: an element that
   // the child drew, or a zone of a colouring page that the paint pot
@@ -3781,8 +4787,10 @@ class _DrawingStudioState extends State<DrawingStudio>
                             horizontal: 24,
                             vertical: 5,
                           ),
-                          child: const Text(
-                            'Color · Un petit atelier pour les grandes idées',
+                          child: Text(
+                            tr(
+                              'Color · Un petit atelier pour les grandes idées',
+                            ),
                             style: TextStyle(
                               fontSize: 11,
                               color: studioHelpText,
@@ -3819,7 +4827,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                                 constraints.maxWidth >= 1120;
                             final textScale =
                                 MediaQuery.textScalerOf(context).scale(12) / 12;
-                            final tools = _options.tools;
+                            final tools = _options.groups;
                             final largeTools = _options.simpleControls;
                             final narrow = StudioLayout.toolsAbove(
                               width: constraints.maxWidth,
@@ -3849,8 +4857,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                                 children: [
                                   if (!narrow) ...[
                                     StudioToolBar(
-                                      selected: _tool,
-                                      onSelected: _busy ? null : _selectTool,
+                                      selected: _tool.group,
+                                      onSelected: _busy ? null : _selectGroup,
                                       tools: tools,
                                       large: largeTools,
                                     ),
@@ -3869,10 +4877,10 @@ class _DrawingStudioState extends State<DrawingStudio>
                                       children: [
                                         if (narrow) ...[
                                           StudioToolBar(
-                                            selected: _tool,
+                                            selected: _tool.group,
                                             onSelected: _busy
                                                 ? null
-                                                : _selectTool,
+                                                : _selectGroup,
                                             horizontal: true,
                                             tools: tools,
                                           ),
@@ -3944,6 +4952,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                                       stamp: _tool == StudioTool.stamp
                                           ? _currentStamp
                                           : null,
+                                      shape: _newShape,
+                                      companionCue: _companionCue,
                                     ),
                                   ],
                                 ],
@@ -3971,13 +4981,14 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// not counted, a zone that the paint pot coloured is.
   String get _documentCaption =>
       '${elementCount(_document!.madeCount)} · ${_dirty
-          ? 'modifications non enregistrées'
+          ? tr('modifications non enregistrées')
           : _currentPath == null
-          ? 'nouvelle feuille'
-          : 'projet enregistré'}';
+          ? tr('nouvelle feuille')
+          : tr('projet enregistré')}';
 
-  String get _documentTitle =>
-      _currentPath == null ? 'Mon dessin' : StudioFiles.fileName(_currentPath!);
+  String get _documentTitle => _currentPath == null
+      ? tr('Mon dessin')
+      : StudioFiles.fileName(_currentPath!);
 
   // The studio of a telephone on its side. The sheet takes the whole
   // height, in the middle. On the left, the tools under the button of the
@@ -3999,9 +5010,9 @@ class _DrawingStudioState extends State<DrawingStudio>
           child: StudioToolBar(
             rail: true,
             leading: _phoneMenuButton(),
-            selected: _tool,
-            onSelected: _busy ? null : _selectTool,
-            tools: _options.tools,
+            selected: _tool.group,
+            onSelected: _busy ? null : _selectGroup,
+            tools: _options.groups,
             large: simple,
           ),
         ),
@@ -4042,7 +5053,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       child: _savedJustNow
           ? Semantics(
               liveRegion: true,
-              label: 'Dessin enregistré',
+              label: tr('Dessin enregistré'),
               child: const Icon(
                 Icons.check_circle,
                 key: Key('savedTick'),
@@ -4050,10 +5061,14 @@ class _DrawingStudioState extends State<DrawingStudio>
                 color: studioGreen,
               ),
             )
-          : const Tooltip(
-              message: 'Menu',
+          : Tooltip(
+              message: tr('Menu'),
               excludeFromSemantics: true,
-              child: Icon(Icons.menu_rounded, size: 30, semanticLabel: 'Menu'),
+              child: Icon(
+                Icons.menu_rounded,
+                size: 30,
+                semanticLabel: tr('Menu'),
+              ),
             ),
     ),
   );
@@ -4064,35 +5079,35 @@ class _DrawingStudioState extends State<DrawingStudio>
     final entries = [
       PhoneMenuEntry(
         id: 'newProject',
-        name: 'Nouveau',
+        name: tr('Nouveau'),
         picture: (size) => EduIllustration(art: EduArt.newPage, size: size),
         enabled: true,
       ),
       if (_options.opensFiles)
         PhoneMenuEntry(
           id: 'openProject',
-          name: 'Ouvrir',
+          name: tr('Ouvrir'),
           picture: (size) => EduIllustration(art: EduArt.folder, size: size),
           enabled: true,
         ),
       if (_gallery != null)
         PhoneMenuEntry(
           id: 'openGallery',
-          name: 'Mes dessins',
+          name: tr('Mes dessins'),
           picture: (size) => EduIllustration(art: EduArt.gallery, size: size),
           enabled: true,
         ),
       if (_options.opensFiles)
         PhoneMenuEntry(
           id: 'importImage',
-          name: 'Sur une image',
+          name: tr('Sur une image'),
           picture: (size) =>
               Icon(Icons.add_photo_alternate_outlined, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
         id: 'saveProject',
-        name: 'Enregistrer',
+        name: tr('Enregistrer'),
         picture: (size) => EduIllustration(art: EduArt.save, size: size),
         enabled: true,
         filled: true,
@@ -4100,7 +5115,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       if (_options.exports)
         PhoneMenuEntry(
           id: 'exportImage',
-          name: 'Exporter',
+          name: tr('Exporter'),
           picture: (size) =>
               EduIllustration(art: EduArt.exportImage, size: size),
           enabled: true,
@@ -4108,47 +5123,47 @@ class _DrawingStudioState extends State<DrawingStudio>
       if (_options.printing)
         PhoneMenuEntry(
           id: 'printDrawing',
-          name: 'Imprimer',
+          name: tr('Imprimer'),
           picture: (size) => EduIllustration(art: EduArt.printer, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
         id: 'replayDrawing',
-        name: 'Revoir',
+        name: tr('Revoir'),
         picture: (size) => EduIllustration(art: EduArt.film, size: size),
         enabled: _canReplay,
       ),
       if (_options.layers)
         PhoneMenuEntry(
           id: 'layersButton',
-          name: 'Calques',
+          name: tr('Calques'),
           picture: (size) => EduIllustration(art: EduArt.layers, size: size),
           enabled: true,
         ),
       if (_options.viewControls)
         PhoneMenuEntry(
           id: 'fitPage',
-          name: 'Toute la feuille',
+          name: tr('Toute la feuille'),
           picture: (size) => Icon(Icons.fit_screen_outlined, size: size),
           enabled: _viewEnabled && _view != null && !_view!.isFit,
         ),
       if (_options.headerHelp)
         PhoneMenuEntry(
           id: 'showHelp',
-          name: 'Aide',
+          name: tr('Aide'),
           picture: (size) => Icon(Icons.help_outline, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
         id: 'openOptions',
-        name: 'Options',
+        name: tr('Options'),
         picture: (size) => EduIllustration(art: EduArt.options, size: size),
         enabled: true,
       ),
       // Always there: the privacy policy is reached through it.
       PhoneMenuEntry(
         id: 'aboutColor',
-        name: 'À propos',
+        name: tr('À propos'),
         picture: (size) => Icon(Icons.info_outline, size: size),
         enabled: true,
       ),
@@ -4207,7 +5222,9 @@ class _DrawingStudioState extends State<DrawingStudio>
             ? (!_busy && _document!.canRedo ? () => _history(true) : null)
             : (_canUndo ? () => _history(false) : null),
         icon: Semantics(
-          label: redo ? 'Rétablir le geste annulé' : 'Annuler le dernier geste',
+          label: redo
+              ? tr('Rétablir le geste annulé')
+              : tr('Annuler le dernier geste'),
           child: EduIllustration(
             art: redo ? EduArt.redo : EduArt.undo,
             size: 26,
@@ -4238,7 +5255,7 @@ class _DrawingStudioState extends State<DrawingStudio>
             if (_canFill) ...[
               const SizedBox(height: 8),
               Semantics(
-                label: 'Remplir la forme',
+                label: tr('Remplir la forme'),
                 child: Row(
                   children: [
                     Checkbox(
@@ -4248,8 +5265,11 @@ class _DrawingStudioState extends State<DrawingStudio>
                           ? (value) => _setFilled(value ?? false)
                           : null,
                     ),
-                    const Expanded(
-                      child: Text('Remplir', style: TextStyle(fontSize: 12)),
+                    Expanded(
+                      child: Text(
+                        tr('Remplir'),
+                        style: TextStyle(fontSize: 12),
+                      ),
                     ),
                   ],
                 ),
@@ -4270,25 +5290,29 @@ class _DrawingStudioState extends State<DrawingStudio>
     children: [
       // « Dessiner en grand » keeps the colours, in their tightest form.
       _palettePanel(narrow, compact: compact || _bigSheet),
-      if ((!_bigSheet && _options.toolHelp) || _choosing) ...[
+      // The choices of a tool stay in « Dessiner en grand », as the actions
+      // of a chosen element do; the sentences of help do not.
+      if (_hasVariants || _choosing || (!_bigSheet && _options.toolHelp)) ...[
         SizedBox(height: compact ? 6 : 10),
         Row(
           children: [
-            if (!_choosing) ...[
-              EduIllustration(art: EduArt.mascot, size: compact ? 32 : 56),
+            if (!_choosing && !_bigSheet) ...[
+              Companion(size: compact ? 32 : 56, cue: _companionCue),
               const SizedBox(width: 12),
             ],
             Expanded(
               child: _choosing
                   ? _selectionToolbar(compact: compact || _bigSheet)
-                  : Text(
-                      _toolHelp,
-                      style: TextStyle(
-                        fontSize: compact ? 11 : 13,
-                        color: studioHelpText,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                  : _hasVariants && (_bigSheet || !_options.toolHelp)
+                  ? _toolVariants()
+                  : _hasVariants
+                  // Both are laid out, one is shown: the line keeps the
+                  // height of the taller, and the sheet its size.
+                  ? IndexedStack(
+                      index: _helpIsUrgent ? 1 : 0,
+                      children: [_toolVariants(), _helpText(compact)],
+                    )
+                  : _helpText(compact),
             ),
           ],
         ),
@@ -4339,27 +5363,64 @@ class _DrawingStudioState extends State<DrawingStudio>
         onEditText: _canEditText ? _editSelectedText : null,
         onDuplicate: _canEditSelection ? _duplicateSelection : null,
         onDelete: _canEditSelection ? _deleteSelection : null,
+        onTurn: _canEditSelection ? () => _turnSelection(math.pi / 4) : null,
+        onMirror: _canEditSelection ? _mirrorSelection : null,
       );
+
+  /// Whether the choices of the tool stand where its help would: for the
+  /// tools of 1.1 that have some.
+  bool get _hasVariants => ToolVariants.offers(_tool);
+
+  /// Whether what the help says now matters more than the choices of the
+  /// tool: the pipette, a latch, the sheet held.
+  bool get _helpIsUrgent => _picking || _latch != null || _panning;
+
+  Widget _helpText(bool compact) => Text(
+    _toolHelp,
+    style: TextStyle(
+      fontSize: compact ? 11 : 13,
+      color: studioHelpText,
+      fontWeight: FontWeight.w500,
+    ),
+  );
 
   String get _toolHelp => forTouch(_mouseToolHelp);
 
   String get _mouseToolHelp => _picking
-      ? 'Clique sur une couleur de ton dessin pour la reprendre. Échap garde ta couleur.'
+      ? tr(
+          'Clique sur une couleur de ton dessin pour la reprendre. Échap garde ta couleur.',
+        )
       : _latch == _Latch.stroke
-      ? 'Bouge pour dessiner. Clique pour arrêter ton trait. Échap l’enlève.'
+      ? tr(
+          'Bouge pour dessiner. Clique pour arrêter ton trait. Échap l’enlève.',
+        )
       : _latch == _Latch.move
-      ? 'Bouge pour déplacer l’élément. Clique pour le poser.'
+      ? tr('Bouge pour déplacer l’élément. Clique pour le poser.')
       : _latch == _Latch.pan
-      ? 'Bouge pour déplacer la feuille. Clique pour la lâcher.'
+      ? tr('Bouge pour déplacer la feuille. Clique pour la lâcher.')
       : _panning
       ? (_options.holdFree
-            ? 'Clique pour prendre la feuille, bouge, puis clique pour la lâcher. Les boutons + et − rapprochent ou éloignent ton dessin.'
-            : 'Glisse pour déplacer la feuille. Les boutons + et − rapprochent ou éloignent ton dessin.')
+            ? tr(
+                'Clique pour prendre la feuille, bouge, puis clique pour la lâcher. Les boutons + et − rapprochent ou éloignent ton dessin.',
+              )
+            : tr(
+                'Glisse pour déplacer la feuille. Les boutons + et − rapprochent ou éloignent ton dessin.',
+              ))
       : _shapeAnchor != null
       ? switch (_shapeAnchor!.kind) {
-          VectorKind.line => 'Clique maintenant là où ta ligne doit s’arrêter. Échap enlève le petit cercle.',
-          VectorKind.rectangle => 'Clique maintenant le coin d’en face de ton rectangle. Échap enlève le petit cercle.',
-          _ => 'Clique maintenant plus loin, en biais : ton ovale se placera entre tes deux clics. Échap enlève le petit cercle.',
+          VectorKind.line => tr(
+            'Clique maintenant là où ta ligne doit s’arrêter. Échap enlève le petit cercle.',
+          ),
+          VectorKind.rectangle => tr(
+            'Clique maintenant le coin d’en face de ton rectangle. Échap enlève le petit cercle.',
+          ),
+          VectorKind.ellipse => tr(
+            'Clique maintenant plus loin, en biais : ton ovale se placera entre tes deux clics. Échap enlève le petit cercle.',
+          ),
+          // The shapes of 1.1, drawn in a box like a rectangle.
+          _ => tr(
+            'Clique maintenant plus loin, en biais : ta forme se placera entre tes deux clics. Échap enlève le petit cercle.',
+          ),
         }
       : _holdFreeHelp ?? _tool.help;
 
@@ -4367,13 +5428,46 @@ class _DrawingStudioState extends State<DrawingStudio>
   String? get _holdFreeHelp => !_options.holdFree
       ? null
       : switch (_tool) {
-          StudioTool.brush => 'Clique pour commencer ton trait, bouge, puis clique pour l’arrêter. Tu peux aussi glisser.',
-          StudioTool.select => 'Clique un élément pour le choisir. Clique-le encore pour le prendre, bouge, puis clique pour le poser.',
+          StudioTool.brush => tr(
+            'Clique pour commencer ton trait, bouge, puis clique pour l’arrêter. Tu peux aussi glisser.',
+          ),
+          StudioTool.select => tr(
+            'Clique un élément pour le choisir. Clique-le encore pour le prendre, bouge, puis clique pour le poser.',
+          ),
           _ => null,
         };
 
+  /// A finger's event where « Régler le toucher » says the finger meant to
+  /// touch; any other pointer as it is.
+  T _touchShifted<T extends PointerEvent>(T event) {
+    final options = _options;
+    if (event.kind != PointerDeviceKind.touch ||
+        (options.touchShiftX == 0 && options.touchShiftY == 0)) {
+      return event;
+    }
+    final shift = Matrix4.translationValues(
+      options.touchShiftX,
+      options.touchShiftY,
+      0,
+    );
+    final transform = event.transform;
+    if (transform != null) shift.multiply(transform);
+    return event.transformed(shift) as T;
+  }
+
+  /// The tool a button of the bar gives: the one of its tools chosen last,
+  /// the first at the start; the tool in hand when it is already its own.
+  StudioTool _toolOfGroup(ToolGroup group) => _tool.group == group
+      ? _tool
+      : group == ToolGroup.shapes
+      ? _lastShapeTool
+      : group.tools.first;
+
+  void _selectGroup(ToolGroup group) => _selectTool(_toolOfGroup(group));
+
   void _selectTool(StudioTool tool) {
     if (_busy || _confirmationOpen) return;
+    if (tool.group == ToolGroup.shapes) _lastShapeTool = tool;
     _settleLatch();
     _cancelDraft();
     setState(() {
@@ -4685,6 +5779,9 @@ class _DrawingStudioState extends State<DrawingStudio>
         valueListenable: _viewRebuild,
         builder: (context, _, child) {
           final viewport = DocumentViewport.fromTransform(_view!);
+          // What the pointer of the keyboard moves on (Color 1.1).
+          _keyViewport = viewport;
+          _keySheetSize = constraints.biggest;
           return DecoratedBox(
             decoration: BoxDecoration(
               color: studioSheetBackdrop,
@@ -4696,7 +5793,10 @@ class _DrawingStudioState extends State<DrawingStudio>
                 Positioned.fill(
                   child: Semantics(
                     label: forTouch(
-                      'Feuille de dessin ${_document!.width} par ${_document!.height} unités. Souris ou stylet.',
+                      trf(
+                        'Feuille de dessin {0} par {1} unités. Souris ou stylet.',
+                        [_document!.width, _document!.height],
+                      ),
                     ),
                     child: MouseRegion(
                       cursor: _panning || _spaceHeld || _choosing
@@ -4711,12 +5811,14 @@ class _DrawingStudioState extends State<DrawingStudio>
                       child: Listener(
                         key: const Key('drawingSurface'),
                         behavior: HitTestBehavior.opaque,
-                        onPointerDown: (event) {
+                        onPointerDown: (raw) {
+                          final event = _touchShifted(raw);
                           if (!_fingerDown(event)) {
                             _pointerDown(event, viewport);
                           }
                         },
-                        onPointerMove: (event) {
+                        onPointerMove: (raw) {
+                          final event = _touchShifted(raw);
                           if (!_fingerMove(event)) {
                             _pointerMove(event, viewport);
                           }
@@ -4731,17 +5833,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                             _endViewGesture();
                           }
                         },
-                        onPointerUp: (event) {
-                          if (_fingerUp(event)) return;
-                          if (_panPointer == event.pointer) {
-                            _pointerMove(event, viewport);
-                            if (!_beginPanLatch()) _endViewGesture();
-                          }
-                          if (_pointer == event.pointer) {
-                            _pointerMove(event, viewport);
-                            _finishStroke(released: true);
-                          }
-                        },
+                        onPointerUp: (raw) =>
+                            _pointerUp(_touchShifted(raw), viewport),
                         onPointerCancel: (event) {
                           if (_fingerUp(event)) return;
                           if (_panPointer == event.pointer) _endViewGesture();
@@ -4781,6 +5874,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                               anchorFillRgb: _filled && _tool.drawsFillableShape
                                   ? _fillColor
                                   : null,
+                              anchorShape: _newShape,
                               images: _sheetImages,
                               pixelRatio: MediaQuery.devicePixelRatioOf(
                                 context,
@@ -4795,13 +5889,13 @@ class _DrawingStudioState extends State<DrawingStudio>
                   ),
                 ),
                 if (showCaptions)
-                  const Positioned(
+                  Positioned(
                     top: 10,
                     left: 16,
                     child: IgnorePointer(
                       child: Text(
-                        'MA FEUILLE',
-                        style: TextStyle(
+                        tr('MA FEUILLE'),
+                        style: const TextStyle(
                           fontSize: 10,
                           letterSpacing: 1.2,
                           color: studioSheetTitle,
@@ -4815,7 +5909,10 @@ class _DrawingStudioState extends State<DrawingStudio>
                     left: 16,
                     child: IgnorePointer(
                       child: Text(
-                        '${_document!.width} × ${_document!.height} unités',
+                        trf('{0} × {1} unités', [
+                          _document!.width,
+                          _document!.height,
+                        ]),
                         style: const TextStyle(
                           fontSize: 10,
                           color: studioSheetCaption,
@@ -4830,7 +5927,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                     child: IgnorePointer(
                       child: Text(
                         _view!.isFit
-                            ? 'Toute la feuille'
+                            ? tr('Toute la feuille')
                             : '${(viewport.scale * 100).round()} %',
                         style: TextStyle(
                           fontSize: 10,
@@ -4838,6 +5935,27 @@ class _DrawingStudioState extends State<DrawingStudio>
                         ),
                       ),
                     ),
+                  ),
+                // The pointer of the keyboard or the gamepad (Color 1.1).
+                if (_options.keyboardPointer && _keyPointerAt != null)
+                  Positioned(
+                    left: _keyPointerAt!.dx - 14,
+                    top: _keyPointerAt!.dy - 14,
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        key: const Key('keyPointer'),
+                        size: const Size.square(28),
+                        painter: KeyPointerPainter(pressed: _keyDown),
+                      ),
+                    ),
+                  ),
+                // While the pot reads the drawing: nothing to see, it is quick;
+                // the tests wait for it to go.
+                if (_pouring)
+                  const Positioned(
+                    left: 0,
+                    top: 0,
+                    child: SizedBox.shrink(key: Key('pouring')),
                   ),
                 if (_busyLabel != null)
                   Positioned.fill(
@@ -4922,8 +6040,23 @@ class _DrawingStudioState extends State<DrawingStudio>
         onPickFromDrawing: _options.simpleControls ? null : _togglePicking,
         picking: _picking,
         simple: _options.simpleControls,
-        trailingControl: _sizeControl(narrow, rail: rail),
+        trailingControl: rail ? _railControls(narrow) : _sizeOnly(narrow),
       );
+
+  /// The rail of a telephone has no line of help: the choices of the tool
+  /// stand there above the size, in a rail that scrolls.
+  Widget? _railControls(bool narrow) {
+    final size = _sizeOnly(narrow, rail: true);
+    if (_choosing || !_hasVariants) return size;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _toolVariants(),
+        if (size != null) ...[const SizedBox(height: 8), size],
+      ],
+    );
+  }
 
   StampArt? get _currentStamp {
     try {
@@ -4934,9 +6067,69 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
   }
 
+  /// The choices of a tool of 1.1, where the sentence of help stands: the
+  /// tip of the brush, the magic, the shape. They take its place as the
+  /// actions of a chosen element take it, so that the sheet keeps its size.
+  Widget _toolVariants() {
+    final enabled = !_busy && !_confirmationOpen;
+    return ToolVariants(
+      key: const Key('toolVariants'),
+      tool: _tool,
+      brush: _brushTool,
+      magic: _magic,
+      shape: _newShape,
+      rgb: _color,
+      onBrush: enabled
+          ? (tip) {
+              setState(() => _brushTool = tip);
+              _sound(StudioSound.tool);
+            }
+          : null,
+      onMagic: enabled
+          ? (magic) {
+              setState(() => _magic = magic);
+              _sound(StudioSound.tool);
+            }
+          : null,
+      onShape: enabled
+          ? (shape) {
+              setState(() => _newShape = shape);
+              if (_tool == StudioTool.shapes) {
+                _sound(StudioSound.tool);
+              } else {
+                _selectTool(StudioTool.shapes);
+              }
+            }
+          : null,
+      onTool: enabled ? _selectTool : null,
+      pour: _pourKind,
+      secondRgb: _previousColor,
+      stamp: _tool == StudioTool.stamp ? _currentStamp : null,
+      stampLook: _stampLook,
+      onTurnStamp: enabled
+          ? () {
+              setState(() => _stampEighths = (_stampEighths + 1) % 8);
+              _sound(StudioSound.tool);
+            }
+          : null,
+      onMirrorStamp: enabled
+          ? () {
+              setState(() => _stampMirrored = !_stampMirrored);
+              _sound(StudioSound.tool);
+            }
+          : null,
+      onPour: enabled
+          ? (kind) {
+              setState(() => _pourKind = kind);
+              _sound(StudioSound.tool);
+            }
+          : null,
+    );
+  }
+
   /// One place answers « how big? »: the outline of a trait or shape, the
   /// letters of a text, or a stamp placed with a click.
-  Widget? _sizeControl(bool narrow, {bool rail = false}) {
+  Widget? _sizeOnly(bool narrow, {bool rail = false}) {
     // The paint pot and the eraser have nothing to size.
     if (_tool == StudioTool.fill || _tool == StudioTool.eraser) return null;
     final enabled = !_busy && !_confirmationOpen;
@@ -4948,7 +6141,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       final forStamp = kind == VectorKind.stamp;
       return PlacedSizeControl(
         size: forStamp ? _stampSize : _textSize,
-        what: forStamp ? 'du tampon' : 'du texte',
+        what: forStamp ? tr('du tampon') : tr('du texte'),
         onSizeChanged: enabled
             ? (size) => setState(() {
                 if (forStamp) {
@@ -4975,7 +6168,7 @@ class _DrawingStudioState extends State<DrawingStudio>
             : _width <= 21
             ? ObjectSize.medium
             : ObjectSize.large,
-        what: 'du trait',
+        what: tr('du trait'),
         onChanged: enabled
             ? (size) => setState(
                 () => _width = switch (size) {

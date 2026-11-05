@@ -48,7 +48,7 @@ void main() {
         expect(top(stamp), closeTo(325, .5));
         expect(right(stamp) - left(stamp), closeTo(150, .01));
         expect(bottom(stamp) - top(stamp), closeTo(150, .01));
-        expect(document.exportProject()[8], 4);
+        expect(document.exportProject()[8], 6);
       } finally {
         document.dispose();
       }
@@ -380,7 +380,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
     expect(studio.recovery.bytes, isNotNull);
-    expect(studio.recovery.bytes![8], 4);
+    expect(studio.recovery.bytes![8], 6);
     await studio.finish();
 
     await tester.pumpWidget(

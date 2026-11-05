@@ -27,12 +27,10 @@ void main() {
 
       await studio.tap('tool-fill');
       expect(find.text('Épaisseur'), findsNothing);
-      expect(
-        find.textContaining(
-          'Touche une forme ou une zone de ta page pour la remplir',
-        ),
-        findsOneWidget,
-      );
+      // Where its help would be, the pot shows how it pours (Color 1.1).
+      for (final pour in ['plain', 'linear', 'radial']) {
+        expect(find.byKey(Key('pour-$pour')), findsOneWidget);
+      }
       await studio.tap('color-eebf4e');
       // The middle of a hollow rectangle: Choisir would find nothing there.
       await studio.click(studio.at(350, 325));
@@ -54,8 +52,10 @@ void main() {
         expect(oval.rgb, 0x477fb2);
         expect(rectangle.width, 12);
         expect(document.paperRgb, whitePaper);
-        // Filling shapes needs no new project version.
-        expect(document.exportProject()[8], 2);
+        // Color 1.1 writes version 6; filling shapes needed no new version
+        // of the writer of 1.0.
+        expect(document.exportProject()[8], 6);
+        expect(document.exportLegacyProject()![8], 2);
       } finally {
         document.dispose();
       }
@@ -131,12 +131,13 @@ void main() {
     (tester) async {
       final studio = StudioDriver(tester);
       await studio.start();
-      await studio.tap('tool-rectangle');
-      await studio.drag(studio.at(200, 200), studio.at(500, 450));
+      // A line closes nothing: the paper around it is the whole sheet's.
+      await studio.tap('tool-line');
+      await studio.drag(studio.at(200, 200), studio.at(200, 450));
       final white = await studio.svg();
       await studio.tap('tool-fill');
       await studio.tap('color-e69976');
-      await studio.click(studio.at(900, 600));
+      await studio.pour(studio.at(900, 600));
       studio.expectCount(1);
       expect(studio.isDirty, isTrue);
 
@@ -147,14 +148,15 @@ void main() {
       );
       final png = await studio.png();
       expect(await studio.pixel(png, 900, 600), [0xe6, 0x99, 0x76, 255]);
-      // The hollow rectangle lets the paper show through.
+      // On both sides of the line, the same paper.
       expect(await studio.pixel(png, 350, 325), [0xe6, 0x99, 0x76, 255]);
+      expect(await studio.pixel(png, 100, 325), [0xe6, 0x99, 0x76, 255]);
       expect(await studio.pixel(png, 200, 325), [0x47, 0x7f, 0xb2, 255]);
 
       var document = await studio.saved();
       try {
         expect(document.paperRgb, 0xe69976);
-        expect(document.exportProject()[8], 4);
+        expect(document.exportProject()[8], 6);
         expect(document.strokes.single.fillRgb, isNull);
       } finally {
         document.dispose();
@@ -172,7 +174,7 @@ void main() {
       document = await studio.saved();
       try {
         expect(document.paperRgb, whitePaper);
-        expect(document.exportProject()[8], 2);
+        expect(document.exportProject()[8], 6);
       } finally {
         document.dispose();
       }
@@ -189,6 +191,10 @@ void main() {
     (tester) async {
       final studio = StudioDriver(tester);
       await studio.start();
+      // The bare sheet first: nothing drawn, its paper takes the colour.
+      await studio.tap('tool-fill');
+      await studio.tap('color-eebf4e');
+      await studio.click(studio.at(1000, 100));
       await studio.tap('tool-rectangle');
       await studio.drag(studio.at(200, 200), studio.at(600, 500));
       await studio.layers(() => studio.tap('addLayer'));
@@ -198,8 +204,6 @@ void main() {
       await studio.tap('color-78a66f');
       // Where both overlap, the oval of the upper layer is in front.
       await studio.click(studio.at(500, 400));
-      await studio.tap('color-eebf4e');
-      await studio.click(studio.at(1000, 100));
       var document = await studio.saved();
       try {
         expect(document.strokes[0].fillRgb, isNull);
@@ -244,7 +248,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
     expect(studio.recovery.bytes, isNotNull);
-    expect(studio.recovery.bytes![8], 4);
+    expect(studio.recovery.bytes![8], 6);
     await studio.finish();
 
     await tester.pumpWidget(

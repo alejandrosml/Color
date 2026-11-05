@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Lune », n° 3. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Lune</title>
+  <path d="M 66 8 C 38 8 14 30 14 54 C 14 78 36 94 62 92 C 74 91 84 86 90 78 C 64 82 44 68 44 46 C 44 30 52 16 66 8 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 52 C 34 54.21 32.21 56 30 56 C 27.79 56 26 54.21 26 52 C 26 49.79 27.79 48 30 48 C 32.21 48 34 49.79 34 52 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 41 70 C 41 71.66 39.66 73 38 73 C 36.34 73 35 71.66 35 70 C 35 68.34 36.34 67 38 67 C 39.66 67 41 68.34 41 70 Z" fill="#efbebb" data-fill="claire"/>
+</svg>

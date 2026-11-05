@@ -16,8 +16,8 @@ Uint8List fixture(String name) =>
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
-  test('version 5 is the newest that this Color knows', () {
-    expect(newestProjectVersion, 5);
+  test('version 6 is the newest that this Color knows', () {
+    expect(newestProjectVersion, 6);
   });
 
   test('the announced version is read from a Color header only', () {
@@ -30,6 +30,7 @@ void main() {
     expect(announcedProjectVersion(fixture('locked-page-v5.edupaint')), 5);
     expect(announcedProjectVersion(fixture('unknown-version-5.edupaint')), 5);
     expect(announcedProjectVersion(fixture('unknown-version-6.edupaint')), 6);
+    expect(announcedProjectVersion(fixture('unknown-version-7.edupaint')), 7);
     // Two bytes, little-endian.
     final far = fixture('portrait-v2.edupaint');
     far[8] = 0x34;
@@ -46,28 +47,29 @@ void main() {
   });
 
   test('a newer project is refused with its own error, nothing is loaded', () {
-    final newer = fixture('unknown-version-6.edupaint');
+    final newer = fixture('unknown-version-7.edupaint');
     expect(
       () => RustDocument.fromProject(newer),
       throwsA(
         isA<NewerProjectException>()
-            .having((error) => error.version, 'version', 6)
-            .having((error) => error.message, 'message', contains('format 6'))
+            .having((error) => error.version, 'version', 7)
+            .having((error) => error.message, 'message', contains('format 7'))
             .having(
               (error) => error.message,
               'message',
-              contains('les formats 1 à 5'),
+              contains('les formats 1 à 6'),
             ),
       ),
     );
     // A damaged project of a known version keeps the ordinary refusal. The
-    // body of version 2 announced as version 5 was a newer project until
-    // Color read version 5: it is now a malformed version 5 file.
+    // body of version 2 announced as version 5, then 6, was a newer project
+    // until Color read those versions: it is now a malformed file of them.
     for (final name in [
       'bad-project-crc.edupaint',
       'truncated.edupaint',
       'unknown-stamp-v4.edupaint',
       'unknown-version-5.edupaint',
+      'unknown-version-6.edupaint',
       'locked-active-v5.edupaint',
     ]) {
       expect(
@@ -80,9 +82,9 @@ void main() {
 
   test('the worker used by Ouvrir reports the newer format too', () async {
     await expectLater(
-      RustDocument.loadProjectBytes(fixture('unknown-version-6.edupaint')),
+      RustDocument.loadProjectBytes(fixture('unknown-version-7.edupaint')),
       throwsA(
-        isA<NewerProjectException>().having((e) => e.version, 'version', 6),
+        isA<NewerProjectException>().having((e) => e.version, 'version', 7),
       ),
     );
     for (final name in [
@@ -101,7 +103,7 @@ void main() {
     'the studio says that the drawing comes from a newer Color and keeps the current one',
     (tester) async {
       final files = MemoryFiles()..openPath = '/drawings/demain.edupaint';
-      files.projects[files.openPath!] = fixture('unknown-version-6.edupaint');
+      files.projects[files.openPath!] = fixture('unknown-version-7.edupaint');
       files.projects['/drawings/abime.edupaint'] = fixture(
         'bad-project-crc.edupaint',
       );

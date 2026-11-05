@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Annuler », une flèche qui revient en arrière. Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Annuler</title>
+  <path d="M 46 51 C 63 30 38 17 15 26" fill="none" stroke="#9a82c9" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 9 26 L 24 13 L 24 36 Z" fill="#43ac9c" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

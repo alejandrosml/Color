@@ -55,74 +55,126 @@ void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
   group('native project size and export scheduling', () {
-    test('exact v2 size follows visible edits without changing history', () {
+    test('the size bound follows visible edits without changing history', () {
       final document = RustDocument();
       try {
-        expect(document.projectByteLength, 36);
+        final empty = document.projectByteLength;
+        expect(empty, greaterThanOrEqualTo(document.exportProject().length));
         _addRectangle(document);
-        expect(document.projectByteLength, 76);
+        final one = document.projectByteLength;
+        expect(one, greaterThan(empty));
         document.duplicateObject(0, 10, 10);
-        expect(document.projectByteLength, 116);
+        final two = document.projectByteLength;
+        // Each rectangle asks the same room.
+        expect(two - one, one - empty);
         document.undo();
         final snapshot = document.strokes;
         final before = document.exportProject();
         for (var index = 0; index < 3; index++) {
-          expect(document.projectByteLength, 76);
-          expect(document.projectByteLength, before.length);
+          expect(document.projectByteLength, one);
+          expect(
+            document.projectByteLength,
+            greaterThanOrEqualTo(before.length),
+          );
           expect(identical(document.strokes, snapshot), isTrue);
           expect(document.canUndo, isTrue);
           expect(document.canRedo, isTrue);
         }
         document.redo();
-        expect(document.projectByteLength, 116);
+        expect(document.projectByteLength, two);
         document.moveObject(0, 3, 2);
         document.setObjectStyle(0, rgb: 0xabcdef, width: 4);
-        expect(document.projectByteLength, document.exportProject().length);
-        expect(document.projectByteLength, 116);
+        expect(
+          document.projectByteLength,
+          greaterThanOrEqualTo(document.exportProject().length),
+        );
+        expect(document.projectByteLength, two);
         document.removeObject(1);
-        expect(document.projectByteLength, 76);
+        expect(document.projectByteLength, one);
         document.undo();
-        expect(document.projectByteLength, 116);
+        expect(document.projectByteLength, two);
       } finally {
         document.dispose();
       }
     });
 
-    test('exact v3 size includes the unchanged PNG and visible vectors', () {
+    test('the size bound includes the unchanged PNG and visible vectors', () {
       final document = _backgroundDocument();
       try {
-        final imageOnlySize = 52 + document.backgroundInfo!.byteCount;
-        expect(document.projectByteLength, imageOnlySize);
-        expect(document.projectByteLength, document.exportProject().length);
+        final png = document.backgroundInfo!.byteCount;
+        final imageOnly = document.projectByteLength;
+        expect(imageOnly, greaterThan(png));
+        expect(
+          imageOnly,
+          greaterThanOrEqualTo(document.exportProject().length),
+        );
         _addRectangle(document);
-        expect(document.projectByteLength, imageOnlySize + 40);
-        expect(document.projectByteLength, document.exportProject().length);
+        final withRectangle = document.projectByteLength;
+        expect(withRectangle, greaterThan(imageOnly));
+        expect(
+          withRectangle,
+          greaterThanOrEqualTo(document.exportProject().length),
+        );
         document.undo();
-        expect(document.projectByteLength, imageOnlySize);
+        expect(document.projectByteLength, imageOnly);
         expect(document.canRedo, isTrue);
         document.redo();
-        expect(document.projectByteLength, imageOnlySize + 40);
+        expect(document.projectByteLength, withRectangle);
       } finally {
         document.dispose();
       }
     });
 
-    // v2 sizes are 4 modulo 8: these are the closest representable project
-    // sizes below and above the 256 KiB and 4 KiB scheduling budgets.
+    // The bound of a stroke grows by the same room for each point: the
+    // strokes whose bound is the last one within a budget and the first
+    // one beyond it.
+    int pointsWithin(int budget) {
+      final one = _strokeDocument(1);
+      final two = _strokeDocument(2);
+      try {
+        final base = one.projectByteLength;
+        final step = two.projectByteLength - base;
+        return 1 + (budget - base) ~/ step;
+      } finally {
+        one.dispose();
+        two.dispose();
+      }
+    }
+
     for (final scenario in [
-      (name: 'project below 256 KiB', svg: false, points: 32760, worker: false),
-      (name: 'project above 256 KiB', svg: false, points: 32761, worker: true),
-      (name: 'SVG below 4 KiB', svg: true, points: 504, worker: false),
-      (name: 'SVG above 4 KiB', svg: true, points: 505, worker: true),
+      (
+        name: 'project below 256 KiB',
+        svg: false,
+        budget: 256 * 1024,
+        beyond: false,
+      ),
+      (
+        name: 'project above 256 KiB',
+        svg: false,
+        budget: 256 * 1024,
+        beyond: true,
+      ),
+      (name: 'SVG below 4 KiB', svg: true, budget: 4 * 1024, beyond: false),
+      (name: 'SVG above 4 KiB', svg: true, budget: 4 * 1024, beyond: true),
     ]) {
+      final worker = scenario.beyond;
+      int points() => pointsWithin(scenario.budget) + (scenario.beyond ? 1 : 0);
       test(
         '${scenario.name}: captures exact bytes before edits and disposal',
         () async {
-          final document = _strokeDocument(scenario.points);
+          final document = _strokeDocument(points());
           try {
-            expect(document.projectByteLength, 60 + 8 * scenario.points);
-            expect(document.projectByteLength, document.exportProject().length);
-            expect(_usesWorker(document, scenario.svg), scenario.worker);
+            expect(
+              document.projectByteLength,
+              scenario.beyond
+                  ? greaterThan(scenario.budget)
+                  : lessThanOrEqualTo(scenario.budget),
+            );
+            expect(
+              document.projectByteLength,
+              greaterThanOrEqualTo(document.exportProject().length),
+            );
+            expect(_usesWorker(document, scenario.svg), worker);
             final expected = _expected(document, scenario.svg);
             final pending = _prepare(document, scenario.svg);
             document.moveObject(0, 2, 3);
@@ -138,7 +190,7 @@ void main() {
       test(
         '${scenario.name}: actual route respects the worker job limit',
         () async {
-          final document = _strokeDocument(scenario.points);
+          final document = _strokeDocument(points());
           try {
             final expected = _expected(document, scenario.svg);
             // Both jobs are captured synchronously and stay outstanding until
@@ -146,7 +198,7 @@ void main() {
             final first = document.exportProjectAsync();
             final second = document.exportProjectAsync();
             final prepared = _prepare(document, scenario.svg);
-            if (scenario.worker) {
+            if (worker) {
               await expectLater(prepared, throwsStateError);
             } else {
               expect(await prepared, orderedEquals(expected));

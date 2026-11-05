@@ -459,9 +459,10 @@ void main() {
     await hoverTo(tester, studio, mouse, 400, 300);
     await keys(tester, LogicalKeyboardKey.digit3);
     studio.expectCount(1);
+    // « Formes », the rectangle first.
     expect(
       tester
-          .getSemantics(key('tool-rectangle'))
+          .getSemantics(key('tool-shapes'))
           .getSemanticsData()
           .flagsCollection
           .isSelected

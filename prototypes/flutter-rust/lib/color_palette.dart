@@ -7,16 +7,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'fit_to_screen.dart';
+import 'rust_document.dart' show RustDocument;
 import 'studio_colors.dart';
 import 'studio_text.dart';
+import 'language.dart';
 
 enum PaintColorTarget { stroke, fill }
 
 @immutable
 class NamedPaintColor {
-  const NamedPaintColor(this.name, this.rgb);
-  final String name;
+  const NamedPaintColor(this.frenchName, this.rgb);
+
+  /// Its name in French; [name] gives it in the language of the interface.
+  final String frenchName;
   final int rgb;
+  String get name => tr(frenchName);
 }
 
 /// The original ten named colors remain the first, stable choices.
@@ -118,36 +123,44 @@ String paintColorName(int rgb) {
     if (entry.rgb == rgb) return entry.name;
   }
   final hsv = HSVColor.fromColor(_color(rgb));
-  if (hsv.value < .12) return 'Noir';
-  if (hsv.saturation < .12) return hsv.value > .9 ? 'Blanc cassé' : 'Gris';
+  if (hsv.value < .12) return tr('Noir');
+  if (hsv.saturation < .12) {
+    return hsv.value > .9 ? tr('Blanc cassé') : tr('Gris');
+  }
   final hueName = _hueName(hsv.hue);
+  // « Rouge foncé », but « Dark red ».
+  final within = inEnglish ? hueName.toLowerCase() : hueName;
   return hsv.value < .48
-      ? '$hueName foncé'
+      ? trf('{0} foncé', [within])
       : hsv.saturation < .45
-      ? '$hueName doux'
+      ? trf('{0} doux', [within])
       : hueName;
 }
 
 String _hueName(double hue) => switch (hue) {
-  < 15 => 'Rouge',
-  < 45 => 'Orange',
-  < 75 => 'Jaune',
-  < 165 => 'Vert',
-  < 200 => 'Turquoise',
-  < 260 => 'Bleu',
-  < 305 => 'Violet',
-  < 345 => 'Rose',
-  _ => 'Rouge',
+  < 15 => tr('Rouge'),
+  < 45 => tr('Orange'),
+  < 75 => tr('Jaune'),
+  < 165 => tr('Vert'),
+  < 200 => tr('Turquoise'),
+  < 260 => tr('Bleu'),
+  < 305 => tr('Violet'),
+  < 345 => tr('Rose'),
+  _ => tr('Rouge'),
 };
 
 /// Session-only, newest-first history. A caller may retain one instance across
 /// document changes and dispose it with the studio. No disk state is involved.
 class RecentPaintColors extends ChangeNotifier {
-  RecentPaintColors({this.capacity = 8}) {
+  /// [initial]: the colours kept from an earlier session, the latest first.
+  RecentPaintColors({this.capacity = 8, List<int> initial = const []})
+    : _colors = List.unmodifiable(
+        initial.where((rgb) => rgb >= 0 && rgb <= 0xffffff).take(capacity),
+      ) {
     RangeError.checkValueInInterval(capacity, 1, 16, 'capacity');
   }
   final int capacity;
-  List<int> _colors = const [];
+  List<int> _colors;
   List<int> get colors => _colors;
 
   void remember(int rgb) {
@@ -315,8 +328,8 @@ class _ColorPaletteState extends State<ColorPalette> {
                   IconButton.outlined(
                     key: ValueKey('paint-target-${target.name}'),
                     tooltip: target == PaintColorTarget.stroke
-                        ? 'La couleur du trait'
-                        : 'La couleur de l’intérieur',
+                        ? tr('La couleur du trait')
+                        : tr('La couleur de l’intérieur'),
                     isSelected: effectiveTarget == target,
                     style: IconButton.styleFrom(
                       minimumSize: const Size(48, 48),
@@ -330,8 +343,8 @@ class _ColorPaletteState extends State<ColorPalette> {
                           ? Icons.edit_outlined
                           : Icons.format_color_fill,
                       semanticLabel: target == PaintColorTarget.stroke
-                          ? 'Trait'
-                          : 'Intérieur',
+                          ? tr('Trait')
+                          : tr('Intérieur'),
                     ),
                   ),
                 ),
@@ -346,31 +359,33 @@ class _ColorPaletteState extends State<ColorPalette> {
               square(
                 IconButton.outlined(
                   key: const Key('pickPaintColor'),
-                  tooltip: 'Pipette : reprendre une couleur du dessin',
+                  tooltip: tr('Pipette : reprendre une couleur du dessin'),
                   isSelected: widget.picking,
                   style: IconButton.styleFrom(
                     minimumSize: const Size(48, 48),
                     visualDensity: VisualDensity.standard,
                   ),
                   onPressed: _enabled ? widget.onPickFromDrawing : null,
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.colorize,
-                    semanticLabel: 'Pipette : reprendre une couleur du dessin',
+                    semanticLabel: tr(
+                      'Pipette : reprendre une couleur du dessin',
+                    ),
                   ),
                 ),
               ),
             square(
               IconButton.outlined(
                 key: const Key('morePaintColors'),
-                tooltip: 'Autres couleurs',
+                tooltip: tr('Autres couleurs'),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(48, 48),
                   visualDensity: VisualDensity.standard,
                 ),
                 onPressed: _enabled ? _moreColors : null,
-                icon: const Icon(
+                icon: Icon(
                   Icons.palette_outlined,
-                  semanticLabel: 'Autres couleurs',
+                  semanticLabel: tr('Autres couleurs'),
                 ),
               ),
             ),
@@ -437,8 +452,8 @@ class _ColorPaletteState extends State<ColorPalette> {
                         key: ValueKey('paint-target-${target.name}'),
                         label: Text(
                           target == PaintColorTarget.stroke
-                              ? 'Trait'
-                              : 'Intérieur',
+                              ? tr('Trait')
+                              : tr('Intérieur'),
                           style: const TextStyle(fontSize: 12),
                         ),
                         avatar: Icon(
@@ -465,23 +480,27 @@ class _ColorPaletteState extends State<ColorPalette> {
               Text(
                 widget.compact
                     ? paintColorName(widget.selectedRgb)
-                    : 'COULEURS · ${paintColorName(widget.selectedRgb)}',
+                    : trf('COULEURS · {0}', [
+                        paintColorName(widget.selectedRgb),
+                      ]),
                 style: const TextStyle(fontSize: 11, color: _paletteInk),
               ),
             if (widget.trailingControl != null) widget.trailingControl!,
             if (widget.onPickFromDrawing != null)
               IconButton.outlined(
                 key: const Key('pickPaintColor'),
-                tooltip: 'Pipette : reprendre une couleur du dessin',
+                tooltip: tr('Pipette : reprendre une couleur du dessin'),
                 isSelected: widget.picking,
                 style: IconButton.styleFrom(
                   minimumSize: const Size(48, 48),
                   visualDensity: VisualDensity.standard,
                 ),
                 onPressed: _enabled ? widget.onPickFromDrawing : null,
-                icon: const Icon(
+                icon: Icon(
                   Icons.colorize,
-                  semanticLabel: 'Pipette : reprendre une couleur du dessin',
+                  semanticLabel: tr(
+                    'Pipette : reprendre une couleur du dessin',
+                  ),
                 ),
               ),
             // With the pipette beside it, the written button would push the
@@ -489,15 +508,15 @@ class _ColorPaletteState extends State<ColorPalette> {
             if (widget.compact || (widget.onPickFromDrawing != null && tight))
               IconButton.outlined(
                 key: const Key('morePaintColors'),
-                tooltip: 'Autres couleurs',
+                tooltip: tr('Autres couleurs'),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(48, 48),
                   visualDensity: VisualDensity.standard,
                 ),
                 onPressed: _enabled ? _moreColors : null,
-                icon: const Icon(
+                icon: Icon(
                   Icons.palette_outlined,
-                  semanticLabel: 'Autres couleurs',
+                  semanticLabel: tr('Autres couleurs'),
                 ),
               )
             else
@@ -505,7 +524,7 @@ class _ColorPaletteState extends State<ColorPalette> {
                 key: const Key('morePaintColors'),
                 onPressed: _enabled ? _moreColors : null,
                 icon: const Icon(Icons.palette_outlined, size: 20),
-                label: const Text('Autres couleurs'),
+                label: Text(tr('Autres couleurs')),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(48, 48),
                   visualDensity: VisualDensity.standard,
@@ -558,21 +577,21 @@ class _ColorPaletteState extends State<ColorPalette> {
               runSpacing: gap,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                const Text(
-                  'RÉCENTES',
-                  style: TextStyle(
+                Text(
+                  tr('RÉCENTES'),
+                  style: const TextStyle(
                     fontSize: 10,
                     letterSpacing: .7,
                     color: _paletteInk,
                   ),
                 ),
                 if (_history.colors.isEmpty)
-                  const SizedBox(
+                  SizedBox(
                     height: 48,
                     child: Center(
                       widthFactor: 1,
                       child: Text(
-                        'Tes choix apparaîtront ici.',
+                        tr('Tes choix apparaîtront ici.'),
                         style: TextStyle(fontSize: 11),
                       ),
                     ),
@@ -583,8 +602,10 @@ class _ColorPaletteState extends State<ColorPalette> {
                       'recent-paint-color-${entry.$2.toRadixString(16)}',
                     ),
                     rgb: entry.$2,
-                    label:
-                        'Couleur récente ${entry.$1 + 1}, ${paintColorName(entry.$2)}',
+                    label: trf('Couleur récente {0}, {1}', [
+                      entry.$1 + 1,
+                      paintColorName(entry.$2),
+                    ]),
                     selected: widget.selectedRgb == entry.$2,
                     onPressed: _enabled ? () => _choose(entry.$2) : null,
                   ),
@@ -676,6 +697,20 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
   late HSVColor _hsv = HSVColor.fromColor(_color(widget.initialRgb));
   late int _rgb = widget.initialRgb;
 
+  /// The paint mixed into the colour, and how much of it (Color 1.1).
+  int _mixPaint = simplePaintColors.first.rgb;
+  double _mixAmount = .5;
+
+  /// The colour and the paint mixed as paints mix, by the core; null
+  /// without it.
+  int? get _mixed {
+    try {
+      return RustDocument.mixColours(_rgb, _mixPaint, _mixAmount);
+    } catch (_) {
+      return null;
+    }
+  }
+
   void _change(HSVColor color) => setState(() {
     _hsv = color;
     _rgb = color.toColor().toARGB32() & 0xffffff;
@@ -684,7 +719,7 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
   @override
   Widget build(BuildContext context) => AlertDialog(
     key: const Key('paintColorDialog'),
-    title: const Text('Trouve ta couleur'),
+    title: Text(tr('Trouve ta couleur')),
     scrollable: true,
     insetPadding: const EdgeInsets.all(16),
     content: SizedBox(
@@ -696,7 +731,7 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
         children: [
           Semantics(
             key: const Key('paintColorPreview'),
-            label: 'Aperçu : ${paintColorName(_rgb)}',
+            label: trf('Aperçu : {0}', [paintColorName(_rgb)]),
             child: Row(
               children: [
                 Container(
@@ -720,7 +755,7 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
           ),
           if (widget.recentColors.isNotEmpty) ...[
             const SizedBox(height: 18),
-            const Text('Tes couleurs récentes', style: TextStyle(fontSize: 12)),
+            Text(tr('Tes couleurs récentes'), style: TextStyle(fontSize: 12)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -732,8 +767,10 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
                       'dialog-recent-color-${entry.$2.toRadixString(16)}',
                     ),
                     rgb: entry.$2,
-                    label:
-                        'Couleur récente ${entry.$1 + 1}, ${paintColorName(entry.$2)}',
+                    label: trf('Couleur récente {0}, {1}', [
+                      entry.$1 + 1,
+                      paintColorName(entry.$2),
+                    ]),
                     selected: _rgb == entry.$2,
                     onPressed: () => setState(() {
                       _rgb = entry.$2;
@@ -744,7 +781,7 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
             ),
           ],
           const SizedBox(height: 18),
-          const Text('Des nuances à essayer', style: TextStyle(fontSize: 12)),
+          Text(tr('Des nuances à essayer'), style: TextStyle(fontSize: 12)),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -764,29 +801,31 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
             ],
           ),
           const SizedBox(height: 18),
-          const Text('Ou invente la tienne', style: TextStyle(fontSize: 12)),
+          Text(tr('Ou invente la tienne'), style: TextStyle(fontSize: 12)),
           const SizedBox(height: 8),
           _ColorAxisSlider(
             key: const Key('paintHue'),
-            label: 'Couleur',
+            label: tr('Couleur'),
             value: _hsv.hue / 360,
             describe: (value) => _hueName(value * 360),
             onChanged: (value) => _change(_hsv.withHue(value * 360)),
           ),
           _ColorAxisSlider(
             key: const Key('paintIntensity'),
-            label: 'Intensité',
+            label: tr('Intensité'),
             value: _hsv.saturation,
             describe: (value) => '${(value * 100).round()} %',
             onChanged: (value) => _change(_hsv.withSaturation(value)),
           ),
           _ColorAxisSlider(
             key: const Key('paintLightness'),
-            label: 'Clarté',
+            label: tr('Clarté'),
             value: _hsv.value,
             describe: (value) => '${(value * 100).round()} %',
             onChanged: (value) => _change(_hsv.withValue(value)),
           ),
+          // Last, as an idea to try: two paints mixed (Color 1.1).
+          ..._mixer(),
         ],
       ),
     ),
@@ -794,15 +833,94 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
       TextButton(
         key: const Key('cancelPaintColor'),
         onPressed: () => Navigator.pop(context),
-        child: const Text('Annuler'),
+        child: Text(tr('Annuler')),
       ),
       FilledButton(
         key: const Key('confirmPaintColor'),
         onPressed: () => Navigator.pop(context, _rgb),
-        child: const Text('Choisir cette couleur'),
+        child: Text(tr('Choisir cette couleur')),
       ),
     ],
   );
+
+  // Two paints mixed as on a palette: blue and yellow make green, not the
+  // grey of their numbers. Each « Mélanger » mixes once more.
+  List<Widget> _mixer() {
+    final mixed = _mixed;
+    if (mixed == null) return const [];
+    return [
+      const SizedBox(height: 18),
+      Text(tr('Mélange-la avec une peinture'), style: TextStyle(fontSize: 12)),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final paint in simplePaintColors)
+            _ColorSwatch(
+              key: Key('mixPaint-${paint.rgb.toRadixString(16)}'),
+              rgb: paint.rgb,
+              label: trf('Mélanger avec {0}', [paint.name]),
+              selected: _mixPaint == paint.rgb,
+              onPressed: () => setState(() => _mixPaint = paint.rgb),
+            ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      // The slider takes the width; its two ends are named under it, so
+      // that enlarged letters never push it out of a narrow dialog.
+      Slider(
+        key: const Key('mixAmount'),
+        value: _mixAmount,
+        min: .1,
+        max: .9,
+        divisions: 8,
+        semanticFormatterCallback: (value) =>
+            trf('{0} % de peinture', [(value * 100).round()]),
+        onChanged: (value) => setState(() => _mixAmount = value),
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(child: Text(tr('Un peu'), style: TextStyle(fontSize: 12))),
+          Flexible(
+            child: Text(
+              tr('Beaucoup'),
+              textAlign: TextAlign.end,
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8),
+      Wrap(
+        spacing: 14,
+        runSpacing: 8,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          Container(
+            key: const Key('mixPreview'),
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: _color(mixed),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xff9baea3)),
+            ),
+          ),
+          FilledButton.tonal(
+            key: const Key('mixColours'),
+            style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+            onPressed: () => setState(() {
+              _rgb = mixed;
+              _hsv = HSVColor.fromColor(_color(mixed));
+            }),
+            child: Text(tr('Mélanger')),
+          ),
+        ],
+      ),
+    ];
+  }
 }
 
 class _ColorAxisIntent extends Intent {

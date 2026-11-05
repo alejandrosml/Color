@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 import AVFoundation
 import Flutter
+import StoreKit
 import UIKit
 
 @main
@@ -90,7 +91,36 @@ final class ColorNative: NSObject, UIDocumentPickerDelegate, AVAudioPlayerDelega
       default: result(FlutterMethodNotImplemented)
       }
     }
-    channels = [sound, printer, files, folders]
+    let country = FlutterMethodChannel(name: "org.edupaint/country", binaryMessenger: messenger)
+    country.setMethodCallHandler { call, result in
+      switch call.method {
+      case "signs": result(ColorNative.countrySigns())
+      case "store": ColorNative.storeCountry { result($0) }
+      default: result(FlutterMethodNotImplemented)
+      }
+    }
+    channels = [sound, printer, files, folders, country]
+  }
+
+  /// What the device says of its country, for the paint pot
+  /// (lib/country_signs.dart), at once: the region of the settings and the
+  /// time zone. The country of the App Store, which may be slow, is asked
+  /// apart ("store"): it never keeps them waiting.
+  static func countrySigns() -> [String: Any] {
+    var codes: [String] = []
+    if let region = Locale.current.region?.identifier {
+      codes.append(region)
+    }
+    return ["codes": codes, "timeZone": TimeZone.current.identifier]
+  }
+
+  /// The country of the App Store (three letters), or nil.
+  static func storeCountry(_ done: @escaping (String?) -> Void) {
+    Task {
+      let store = await Storefront.current
+      let code = store?.countryCode
+      await MainActor.run { done(code) }
+    }
   }
 
   /// A folder of Color in the user's domain, as path_provider gave it before

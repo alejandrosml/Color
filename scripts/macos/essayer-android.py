@@ -15,9 +15,11 @@ Color-<version>-sources in it is built. In order:
   3. builds the core for the three processors, then Color twice: a trial
      build that checks the core, the files, a picture and a sound on the
      device itself, and the normal build;
-  4. creates, once, a tablet and a telephone of the emulator, starts them,
-     runs the trial on each, takes a picture of the screen, and leaves Color
-     open on both;
+  4. creates, once, a tablet and a telephone of the emulator, without a
+     microphone (Color 1.1: the emulator's microphone, open on the Mac's,
+     was suspected of the crackling of its sound), starts them, runs the
+     trial on each, takes a picture of the screen, and leaves Color open on
+     both until the person presses Entrée, which closes the emulators;
   5. writes all of it in construction-mac/journal.
 
 It installs nothing outside the folder « mobiles », deletes nothing of the
@@ -117,6 +119,27 @@ def emulator_device(journal, environment, name, model):
         if process.returncode == 0:
             return
     raise Failure('L’émulateur « %s » n’a pas pu être créé.' % name)
+
+
+def without_microphone(journal, environment, name):
+    """The emulator `name` hears nothing: hw.audioInput=no in its settings,
+    changed in place, the rest of them kept. It still plays Color's sounds."""
+    settings = Path(environment['ANDROID_AVD_HOME']) / (name + '.avd') / 'config.ini'
+    if not settings.is_file():
+        return
+    lines = settings.read_text(encoding='utf-8').splitlines()
+    kept = [line for line in lines if not line.strip().startswith('hw.audioInput')]
+    if kept + ['hw.audioInput=no'] == lines:
+        return
+    settings.write_text('\n'.join(kept + ['hw.audioInput=no']) + '\n', encoding='utf-8')
+    journal.keep('  %s : hw.audioInput=no' % name)
+
+
+def close_emulators(journal, environment, serials):
+    """Closes the emulators started here, once the person says so."""
+    for serial in serials:
+        code, said = output([ADB, '-s', serial, 'emu', 'kill'], env=environment)
+        journal.keep('  %s fermé : code %d %s' % (serial, code, said.strip()))
 
 
 def start(journal, environment, name, port):
@@ -246,9 +269,12 @@ def main():
 
     journal.say('\n4. Dans l’émulateur')
     all_passed = True
+    serials = []
     for name, model, label, port in DEVICES:
         emulator_device(journal, environment, name, model)
+        without_microphone(journal, environment, name)
         serial = start(journal, environment, name, port)
+        serials.append(serial)
         results = trial_on(journal, environment, serial, label, trial_apk, normal_apk)
         journal.say('  %s :' % ('Tablette' if label == 'tablette' else 'Téléphone'))
         for line in summary_of_self_test(results):
@@ -259,6 +285,15 @@ def main():
                 ' souris (un clic vaut un doigt).')
     journal.say('Journal et captures : ' + str(journal.folder))
     subprocess.call(['/usr/bin/open', str(journal.captures)])
+    # The emulators stay open for the person's own trial, then close: left
+    # open, they keep the sound of the Mac busy.
+    try:
+        input('\nQuand tu as fini d’essayer, appuie sur Entrée ici : les émulateurs se'
+              ' fermeront. ')
+    except EOFError:
+        pass
+    close_emulators(journal, environment, serials)
+    journal.say('Les émulateurs sont fermés.')
 
 
 if __name__ == '__main__':

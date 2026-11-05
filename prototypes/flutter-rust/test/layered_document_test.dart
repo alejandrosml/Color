@@ -260,8 +260,9 @@ void main() {
     final document = sample();
     try {
       final bytes = document.exportProject();
-      expect(bytes[8], 4);
-      expect(document.projectByteLength, bytes.length);
+      expect(bytes[8], 6);
+      expect(document.exportLegacyProject()![8], 4);
+      expect(document.projectByteLength, greaterThanOrEqualTo(bytes.length));
       expect(await document.exportProjectAsync(), bytes);
       expect(await prepareProjectBytes(document), bytes);
       final svg = document.exportSvg();
@@ -313,7 +314,17 @@ void main() {
           fixture(name).absolute.path,
         );
         try {
-          expect(prepared.document.exportProject(), expected);
+          // The writer of 1.0 gives back the bytes an independent encoder
+          // made; 1.1 saves version 6, which reopens to the same drawing.
+          expect(prepared.document.exportLegacyProject(), expected);
+          final saved = prepared.document.exportProject();
+          expect(saved[8], 6);
+          final reopened = RustDocument.fromProject(saved);
+          try {
+            expect(reopened.exportLegacyProject(), expected);
+          } finally {
+            reopened.dispose();
+          }
         } finally {
           prepared.dispose();
         }
@@ -321,7 +332,7 @@ void main() {
           await fixture(name).readAsBytes(),
         );
         try {
-          expect(direct.exportProject(), expected);
+          expect(direct.exportLegacyProject(), expected);
         } finally {
           direct.dispose();
         }
@@ -413,7 +424,8 @@ void main() {
         // The objects of the locked layers are not in the history: only the
         // three others are steps to undo.
         expect(document.undoCount, 3);
-        expect(document.exportProject()[8], 5);
+        expect(document.exportProject()[8], 6);
+        expect(document.exportLegacyProject()![8], 5);
         expect(document.exportSvg(), contains('<path d="M700 400 L900 420.5 '));
       } finally {
         document.dispose();
@@ -606,6 +618,7 @@ void main() {
     'contour-in-v4.edupaint',
     'locked-in-v4.edupaint',
     'unknown-version-6.edupaint',
+    'unknown-version-7.edupaint',
   ]) {
     test('rejected fixture $name is refused by both entries', () async {
       final bytes = await fixture(name).readAsBytes();
@@ -662,8 +675,9 @@ void main() {
     expect(layerName(4, page), 'Calque 3');
   });
 
-  test('the Dart size bound is the bound of the layered format', () {
-    expect(maxProjectBytes, 80711932);
+  test('the Dart size bound is the bound of every format read', () {
+    // EP_MAX_READ_PROJECT_BYTES: version 6 may be a little larger than 5.
+    expect(maxProjectBytes, 85778977);
     expect(
       () => RustDocument.fromProject(Uint8List(maxProjectBytes + 1)),
       throwsFormatException,

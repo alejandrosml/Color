@@ -110,16 +110,19 @@ void main() {
       } finally {
         document.dispose();
       }
-      // Two elements crossed: two steps to bring back.
-      await studio.tap('undo');
+      // Two elements crossed in one gesture: one step brings both back.
       await studio.tap('undo');
       studio.expectCount(4);
+      await studio.tap('redo');
+      studio.expectCount(2);
       await studio.finish();
     },
     skip: !available,
   );
 
-  testWidgets('a quick glide does not jump over a thin line', (tester) async {
+  testWidgets('a quick glide does not jump over a thin line: it cuts it', (
+    tester,
+  ) async {
     final studio = StudioDriver(tester);
     await studio.start();
     await studio.tap('tool-line');
@@ -134,13 +137,94 @@ void main() {
     await gesture.moveTo(studio.sheetCenter + studio.at(600, 400));
     await gesture.up();
     await tester.pumpAndSettle();
-    studio.expectCount(1);
+    // The first line is now two, on each side of where the eraser passed.
+    studio.expectCount(3);
     final document = await studio.saved();
     try {
-      expect(left(document.strokes.single), closeTo(750, .5));
+      final [upper, lower, other] = document.strokes;
+      for (final piece in [upper, lower]) {
+        expect(piece.kind, VectorKind.line);
+        expect(left(piece), closeTo(450, .5));
+        expect(right(piece), closeTo(450, .5));
+      }
+      expect(top(upper), closeTo(300, .5));
+      expect(bottom(upper), lessThan(395));
+      expect(top(lower), greaterThan(405));
+      expect(bottom(lower), closeTo(500, .5));
+      expect(left(other), closeTo(750, .5));
+      expect(other.points, hasLength(2));
     } finally {
       document.dispose();
     }
+    await studio.tap('undo');
+    studio.expectCount(2);
+    await studio.finish();
+  }, skip: !available);
+
+  testWidgets('rubbing to and fro across a trait cuts it in one step to undo', (
+    tester,
+  ) async {
+    final studio = StudioDriver(tester);
+    await studio.start();
+    await studio.tap('tool-stroke');
+    final trait = await tester.startGesture(
+      studio.sheetCenter + studio.at(200, 400),
+    );
+    for (var x = 220.0; x <= 1000; x += 20) {
+      await trait.moveTo(studio.sheetCenter + studio.at(x, 400));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await trait.up();
+    await tester.pumpAndSettle();
+    studio.expectCount(1);
+    await studio.tap('saveProject');
+    expect(studio.isDirty, isFalse);
+
+    await studio.tap('tool-eraser');
+    // Down across the trait, then up across it again further on: two cuts.
+    final rub = await tester.startGesture(
+      studio.sheetCenter + studio.at(400, 300),
+    );
+    for (final (x, y) in [
+      (400.0, 350.0),
+      (400.0, 450.0),
+      (400.0, 500.0),
+      (700.0, 500.0),
+      (700.0, 450.0),
+      (700.0, 350.0),
+      (700.0, 300.0),
+    ]) {
+      await rub.moveTo(studio.sheetCenter + studio.at(x, y));
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    await rub.up();
+    await tester.pumpAndSettle();
+    studio.expectCount(3);
+    expect(studio.isDirty, isTrue);
+    // One Annuler gives the whole trait back, as it was saved.
+    await studio.tap('undo');
+    studio.expectCount(1);
+    expect(studio.isDirty, isFalse);
+    await studio.tap('redo');
+    studio.expectCount(3);
+    expect(studio.isDirty, isTrue);
+    final document = await studio.saved();
+    try {
+      final pieces = document.strokes;
+      expect(
+        pieces.map((piece) => piece.kind),
+        everyElement(VectorKind.stroke),
+      );
+      expect(left(pieces[0]), closeTo(200, .5));
+      expect(right(pieces[0]), lessThan(400));
+      expect(left(pieces[1]), greaterThan(400));
+      expect(right(pieces[1]), lessThan(700));
+      expect(left(pieces[2]), greaterThan(700));
+      expect(right(pieces[2]), closeTo(1000, .5));
+    } finally {
+      document.dispose();
+    }
+    expect(tester.takeException(), isNull);
     await studio.finish();
   }, skip: !available);
 

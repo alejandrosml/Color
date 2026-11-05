@@ -720,6 +720,7 @@ pub(crate) fn page_document(page: &Page) -> Result<EpDocument, i32> {
             layer,
             param: 0,
             text: Vec::new(),
+            extras: Extras::plain(),
         });
         document.count_attached(document.strokes.len() - 1);
     }

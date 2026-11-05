@@ -68,7 +68,7 @@ void main() {
         final layout = TextLayout('Bonjour', size: 56, rgb: 0x477fb2);
         expect(right(text) - left(text), closeTo(layout.width, .01));
         expect(bottom(text) - top(text), closeTo(layout.height, .01));
-        expect(document.exportProject()[8], 4);
+        expect(document.exportProject()[8], 6);
       } finally {
         document.dispose();
       }
@@ -393,7 +393,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
     expect(studio.recovery.bytes, isNotNull);
-    expect(studio.recovery.bytes![8], 4);
+    expect(studio.recovery.bytes![8], 6);
     await studio.finish();
     await tester.pumpWidget(
       EduPaintApp(files: studio.files, recoveryStorage: studio.recovery),

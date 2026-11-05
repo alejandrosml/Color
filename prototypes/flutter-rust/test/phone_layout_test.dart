@@ -67,7 +67,7 @@ void main() {
       expect(side.right, lessThanOrEqualTo(852 - 59));
       expect(side.bottom, lessThanOrEqualTo(393 - 21));
       // Every tool is in view, a full target for a finger.
-      for (final tool in StudioTool.values) {
+      for (final tool in ToolGroup.values) {
         final button = tester.getRect(_key(tool.keyName));
         expect(button.width, greaterThanOrEqualTo(48), reason: tool.keyName);
         expect(button.height, greaterThanOrEqualTo(48), reason: tool.keyName);
@@ -263,7 +263,8 @@ void main() {
         for (final tool in options.tools) {
           await studio.tap(tool.keyName);
           expect(tester.takeException(), isNull, reason: tool.keyName);
-          for (final other in options.tools) {
+          // Every button of the bar stays on the screen.
+          for (final other in options.groups) {
             final rect = tester.getRect(_key(other.keyName));
             expect(
               rect.bottom,

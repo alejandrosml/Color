@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'fit_to_screen.dart';
 import 'french.dart';
 import 'gallery_storage.dart';
+import 'slideshow.dart';
 import 'studio_colors.dart';
+import 'language.dart';
 
 /// « Mes dessins » : the cards of the album. Returns the card to reopen, or
 /// null when the dialog is closed. Removing a card happens here; opening is
@@ -140,22 +142,26 @@ class _GalleryDialogState extends State<GalleryDialog> {
       builder: (dialogContext) => FitDialog(
         child: AlertDialog(
           key: const Key('galleryForgetDialog'),
-          title: Text('Retirer « ${cardTitle(entry.name)} » de la galerie ?'),
-          content: const Text(
-            'Sa carte disparaît d’ici, avec la copie que la galerie en gardait. Ton fichier enregistré reste à sa place.',
+          title: Text(
+            trf('Retirer « {0} » de la galerie ?', [cardTitle(entry.name)]),
+          ),
+          content: Text(
+            tr(
+              'Sa carte disparaît d’ici, avec la copie que la galerie en gardait. Ton fichier enregistré reste à sa place.',
+            ),
           ),
           actions: [
             TextButton(
               key: const Key('cancelGalleryForget'),
               style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Annuler'),
+              child: Text(tr('Annuler')),
             ),
             FilledButton(
               key: const Key('confirmGalleryForget'),
               style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Retirer la carte'),
+              child: Text(tr('Retirer la carte')),
             ),
           ],
         ),
@@ -203,7 +209,7 @@ class _GalleryDialogState extends State<GalleryDialog> {
             ),
             // One name for the whole card; the picture only illustrates it.
             child: Semantics(
-              label: 'Reprendre $title, enregistré $saved',
+              label: trf('Reprendre {0}, enregistré {1}', [title, saved]),
               excludeSemantics: true,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -274,8 +280,8 @@ class _GalleryDialogState extends State<GalleryDialog> {
               onPressed: () => _remove(entry),
               icon: const Icon(Icons.close, size: 18),
               label: Text(
-                'Retirer',
-                semanticsLabel: 'Retirer $title de la galerie',
+                tr('Retirer'),
+                semanticsLabel: trf('Retirer {0} de la galerie', [title]),
               ),
             ),
           ),
@@ -291,7 +297,7 @@ class _GalleryDialogState extends State<GalleryDialog> {
       key: const Key('galleryDialog'),
       scrollable: true,
       insetPadding: const EdgeInsets.all(16),
-      title: const Text('Mes dessins'),
+      title: Text(tr('Mes dessins')),
       content: SizedBox(
         width: 640,
         child: Column(
@@ -301,8 +307,12 @@ class _GalleryDialogState extends State<GalleryDialog> {
             if (_failed)
               Text(
                 widget.opensFiles
-                    ? 'La galerie ne peut pas être affichée pour le moment. Tes fichiers enregistrés ne sont pas concernés : retrouve-les avec Ouvrir.'
-                    : 'La galerie ne peut pas être affichée pour le moment. Tes fichiers enregistrés ne sont pas concernés.',
+                    ? tr(
+                        'La galerie ne peut pas être affichée pour le moment. Tes fichiers enregistrés ne sont pas concernés : retrouve-les avec Ouvrir.',
+                      )
+                    : tr(
+                        'La galerie ne peut pas être affichée pour le moment. Tes fichiers enregistrés ne sont pas concernés.',
+                      ),
                 key: const Key('galleryUnavailable'),
               )
             else if (entries == null)
@@ -313,13 +323,17 @@ class _GalleryDialogState extends State<GalleryDialog> {
                 ),
               )
             else if (entries.isEmpty)
-              const Text(
-                'Aucun dessin pour le moment. Dès que tu enregistres un dessin, il se range ici.',
+              Text(
+                tr(
+                  'Aucun dessin pour le moment. Dès que tu enregistres un dessin, il se range ici.',
+                ),
                 key: Key('galleryEmpty'),
               )
             else ...[
-              const Text(
-                'Tes dessins enregistrés sont rangés ici. Choisis-en un pour le reprendre.',
+              Text(
+                tr(
+                  'Tes dessins enregistrés sont rangés ici. Choisis-en un pour le reprendre.',
+                ),
               ),
               const SizedBox(height: 16),
               Wrap(
@@ -333,13 +347,26 @@ class _GalleryDialogState extends State<GalleryDialog> {
       ),
       actionsPadding: const EdgeInsets.all(16),
       actions: [
+        // The drawings one after the other, the whole screen for each.
+        if (entries != null && entries.isNotEmpty)
+          TextButton.icon(
+            key: const Key('gallerySlideshow'),
+            style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
+            onPressed: () => showSlideshow(
+              context,
+              storage: widget.storage,
+              entries: entries,
+            ),
+            icon: const Icon(Icons.slideshow),
+            label: Text(tr('Diaporama')),
+          ),
         FilledButton(
           key: const Key('closeGallery'),
           // Entrée returns to the drawing: it never replaces it by accident.
           autofocus: true,
           style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
           onPressed: () => Navigator.pop(context),
-          child: const Text('Revenir au dessin'),
+          child: Text(tr('Revenir au dessin')),
         ),
       ],
     );

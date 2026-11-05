@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Pomme », n° 15. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Pomme</title>
+  <path d="M 50 32 C 38 21 13 27 13 53 C 13 77 32 94 50 87 C 68 94 87 77 87 53 C 87 27 62 21 50 32 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 50 32 C 50 23 53 16 58 11" fill="none" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 57 22 C 63 9 78 9 84 13 C 80 26 66 30 57 22 Z" fill="#78a66f" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 36 46 C 36 50.97 33.31 55 30 55 C 26.69 55 24 50.97 24 46 C 24 41.03 26.69 37 30 37 C 33.31 37 36 41.03 36 46 Z" fill="#efbebb" data-fill="claire"/>
+</svg>

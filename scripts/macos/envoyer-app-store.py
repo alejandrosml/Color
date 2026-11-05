@@ -431,7 +431,7 @@ def mac(journal, sources, version, team_id):
     cargo = shutil.which('cargo', path='/opt/homebrew/bin') or 'cargo'
     # The core of the stores reads no SVG: neither usvg nor the readers (R-01).
     run(journal, 'coeur-mac', [cargo, 'rustc', '--release', '--lib', '--offline', '--frozen',
-                               '--no-default-features',
+                               '--no-default-features', '--features', 'deflate',
                                '--target', 'aarch64-apple-darwin', '--crate-type', 'cdylib', '--',
                                '-C', 'link-arg=-Wl,-install_name,@rpath/libedupaint_core.dylib'],
         cwd=core_folder(sources), env=environment)
@@ -550,7 +550,7 @@ def ios(journal, sources, version, team_id):
     rust_env['IPHONEOS_DEPLOYMENT_TARGET'] = '18.0'
     # The core of the stores reads no SVG: neither usvg nor the readers (R-01).
     run(journal, 'coeur-ios', cargo + ['rustc', '--release', '--lib', '--offline', '--frozen',
-                                       '--no-default-features',
+                                       '--no-default-features', '--features', 'deflate',
                                        '--target', 'aarch64-apple-ios', '--crate-type', 'staticlib'],
         cwd=core_folder(sources), env=rust_env)
     place = work / 'ios' / 'rust' / 'iphoneos'

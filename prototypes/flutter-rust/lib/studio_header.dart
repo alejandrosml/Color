@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'child_art.dart';
 import 'studio_colors.dart';
 import 'studio_text.dart';
+import 'language.dart';
 
 // How generous the actions are: the room on each side of their words, the
 // gap between two of them, the size of their pictures and of their letters.
@@ -155,39 +156,39 @@ class StudioHeader extends StatelessWidget {
   List<_Action> get _actions => [
     _Action(
       id: 'newProject',
-      name: 'Nouveau',
-      menuName: 'Nouveau',
+      name: tr('Nouveau'),
+      menuName: tr('Nouveau'),
       picture: (size) => EduIllustration(art: EduArt.newPage, size: size),
       onPressed: onNew,
     ),
     if (showOpen)
       _Action(
         id: 'openProject',
-        name: 'Ouvrir',
-        menuName: 'Ouvrir…',
+        name: tr('Ouvrir'),
+        menuName: tr('Ouvrir…'),
         picture: (size) => EduIllustration(art: EduArt.folder, size: size),
         onPressed: onOpen,
       ),
     if (hasGallery)
       _Action(
         id: 'openGallery',
-        name: 'Mes dessins',
-        menuName: 'Mes dessins',
+        name: tr('Mes dessins'),
+        menuName: tr('Mes dessins'),
         picture: (size) => EduIllustration(art: EduArt.gallery, size: size),
         onPressed: onGallery,
       ),
     if (showImportImage)
       _Action(
         id: 'importImage',
-        name: 'Sur une image',
-        menuName: 'Dessiner sur une image…',
+        name: tr('Sur une image'),
+        menuName: tr('Dessiner sur une image…'),
         picture: (size) => Icon(Icons.add_photo_alternate_outlined, size: size),
         onPressed: onImportImage,
       ),
     _Action(
       id: 'saveProject',
-      name: 'Enregistrer',
-      menuName: 'Enregistrer',
+      name: tr('Enregistrer'),
+      menuName: tr('Enregistrer'),
       picture: (size) => EduIllustration(art: EduArt.save, size: size),
       onPressed: onSave,
       filled: true,
@@ -195,16 +196,16 @@ class StudioHeader extends StatelessWidget {
     if (showExport)
       _Action(
         id: 'exportImage',
-        name: 'Exporter',
-        menuName: 'Exporter…',
+        name: tr('Exporter'),
+        menuName: tr('Exporter…'),
         picture: (size) => EduIllustration(art: EduArt.exportImage, size: size),
         onPressed: onExport,
       ),
     if (showPrint)
       _Action(
         id: 'printDrawing',
-        name: 'Imprimer',
-        menuName: 'Imprimer…',
+        name: tr('Imprimer'),
+        menuName: tr('Imprimer…'),
         picture: (size) => EduIllustration(art: EduArt.printer, size: size),
         onPressed: onPrint,
       ),
@@ -235,7 +236,7 @@ class StudioHeader extends StatelessWidget {
     final picture = savedJustNow && action.id == 'saveProject'
         ? Semantics(
             liveRegion: true,
-            label: 'Dessin enregistré',
+            label: tr('Dessin enregistré'),
             child: Icon(
               Icons.check_circle,
               key: const Key('savedTick'),
@@ -291,7 +292,7 @@ class StudioHeader extends StatelessWidget {
             10 +
             _textWidth(
               context,
-              'Color',
+              tr('Color'),
               DefaultTextStyle.of(context).style.merge(_nameStyle),
             ) +
             12 +
@@ -363,7 +364,10 @@ class StudioHeader extends StatelessWidget {
           ];
           final listed = names.length == 1
               ? names.single
-              : '${names.sublist(0, names.length - 1).join(', ')} et ${names.last}';
+              : trf('{0} et {1}', [
+                  names.sublist(0, names.length - 1).join(', '),
+                  names.last,
+                ]);
           final menuName = '${listed[0].toUpperCase()}${listed.substring(1)}';
           return Row(
             children: [
@@ -412,21 +416,21 @@ class StudioHeader extends StatelessWidget {
                           child: Text(action.menuName),
                         ),
                     if (showHelp)
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         key: Key('showHelp'),
                         value: 'help',
-                        child: Text('Comment faire ?'),
+                        child: Text(tr('Comment faire ?')),
                       ),
                     if (showHelp)
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'about',
-                        child: Text('À propos de Color'),
+                        child: Text(tr('À propos de Color')),
                       ),
                     PopupMenuItem(
                       key: const Key('openOptions'),
                       value: 'options',
                       enabled: onOptions != null,
-                      child: const Text('Options…'),
+                      child: Text(tr('Options…')),
                     ),
                   ],
                 ),
@@ -442,7 +446,7 @@ class StudioHeader extends StatelessWidget {
             const EduIllustration(art: EduArt.brush, size: 36),
             const SizedBox(width: 10),
             Text(
-              'Color',
+              tr('Color'),
               maxLines: 1,
               style: _nameStyle.copyWith(color: studioTitle),
             ),
@@ -450,27 +454,27 @@ class StudioHeader extends StatelessWidget {
             if (showHelp) ...[
               IconButton(
                 key: const Key('showHelp'),
-                tooltip: 'Comment faire ?',
+                tooltip: tr('Comment faire ?'),
                 onPressed: onHelp,
-                icon: const Icon(
+                icon: Icon(
                   Icons.help_outline,
-                  semanticLabel: 'Comment faire ?',
+                  semanticLabel: tr('Comment faire ?'),
                 ),
               ),
               IconButton(
                 onPressed: onAbout,
-                icon: const Icon(
+                icon: Icon(
                   Icons.info_outline,
-                  semanticLabel: 'À propos de Color',
+                  semanticLabel: tr('À propos de Color'),
                 ),
               ),
             ],
             IconButton(
               key: const Key('openOptions'),
-              tooltip: 'Options, pour les adultes',
+              tooltip: tr('Options, pour les adultes'),
               onPressed: onOptions,
               icon: Semantics(
-                label: 'Options, pour les adultes',
+                label: tr('Options, pour les adultes'),
                 child: const EduIllustration(art: EduArt.options, size: 28),
               ),
             ),

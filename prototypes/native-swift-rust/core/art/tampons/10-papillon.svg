@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le tampon « Papillon », n° 10. Dessin original, grille de 100 unités.
+     Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
+     changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
+     l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <title>Papillon</title>
+  <path d="M 50 46 C 34 12 4 12 8 40 C 10 56 34 56 50 50 Z M 50 46 C 66 12 96 12 92 40 C 90 56 66 56 50 50 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 50 54 C 32 54 14 62 20 80 C 26 94 46 84 50 60 Z M 50 54 C 68 54 86 62 80 80 C 74 94 54 84 50 60 Z" fill="#efbebb" data-fill="claire" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 32 32 C 32 35.31 29.31 38 26 38 C 22.69 38 20 35.31 20 32 C 20 28.69 22.69 26 26 26 C 29.31 26 32 28.69 32 32 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 80 32 C 80 35.31 77.31 38 74 38 C 70.69 38 68 35.31 68 32 C 68 28.69 70.69 26 74 26 C 77.31 26 80 28.69 80 32 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 55 52 C 55 63.6 52.76 73 50 73 C 47.24 73 45 63.6 45 52 C 45 40.4 47.24 31 50 31 C 52.76 31 55 40.4 55 52 Z" fill="#293d4b" stroke="#293d4b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 48 32 C 44 22 40 16 34 14 M 52 32 C 56 22 60 16 66 14" fill="none" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

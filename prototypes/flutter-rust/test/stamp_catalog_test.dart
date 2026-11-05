@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/color_palette.dart';
+import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:edupaint_flutter_study/stamp_catalog.dart';
 import 'package:flutter/painting.dart';
@@ -43,6 +44,22 @@ void main() {
       catalog.stamps.map((stamp) => stamp.label).toSet(),
       hasLength(catalog.stamps.length),
     );
+    // In English too: the sun is a sun, though the colour is « Sunshine ».
+    appLanguage.value = AppLanguage.english;
+    try {
+      expect(catalog.stamps.take(3).map((stamp) => stamp.label), [
+        'Star',
+        'Heart',
+        'Sun',
+      ]);
+      expect(tr('Soleil'), 'Sunshine');
+      expect(
+        catalog.stamps.map((stamp) => stamp.label).toSet(),
+        hasLength(catalog.stamps.length),
+      );
+    } finally {
+      appLanguage.value = AppLanguage.french;
+    }
     expect(catalog[-1], isNull);
     expect(catalog[catalog.stamps.length], isNull);
     expect(identical(StampCatalog.instance, StampCatalog.instance), isTrue);

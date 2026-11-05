@@ -523,7 +523,7 @@ def main(argv=None):
         '-C', 'link-arg=-Wl,-install_name,@rpath/libedupaint_core.dylib'], cwd=CORE_FOLDER)
     install_library(cargo_target / RUST_TARGET / 'release/libedupaint_core.dylib', tested)
     command('rust-dylib', [cargo, 'rustc', '--release', '--lib', '--offline', '--frozen',
-        '--no-default-features', '--target', RUST_TARGET, '--crate-type', 'cdylib', '--',
+        '--no-default-features', '--features', 'deflate', '--target', RUST_TARGET, '--crate-type', 'cdylib', '--',
         '-C', 'link-arg=-Wl,-install_name,@rpath/libedupaint_core.dylib'], cwd=CORE_FOLDER)
     install_library(cargo_target / RUST_TARGET / 'release/libedupaint_core.dylib', dylib)
     if args.prepare_only:
@@ -587,7 +587,7 @@ def main(argv=None):
         dart_aot_sha256=sha256(app / 'Contents/Frameworks/App.framework/App'),
         rust_dylib_sha256=sha256(embedded), core_source_sha256=sha256(core),
         core_source_files_sha256=core_files, core_vendored_sources=core_vendor,
-        core_build='cargo rustc --release --lib --offline --frozen --no-default-features --target '
+        core_build='cargo rustc --release --lib --offline --frozen --no-default-features --features deflate --target '
                    + RUST_TARGET + ' --crate-type cdylib; for the tests the same with the reader of SVG,'
                    + ' dependencies from vendor/ only',
         cargo_target_directory=str(cargo_target),

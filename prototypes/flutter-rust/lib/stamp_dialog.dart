@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'fit_to_screen.dart';
 import 'stamp_catalog.dart';
 import 'studio_colors.dart';
+import 'language.dart';
 
 /// A catalogue stamp drawn at any size, tinted with the current colour.
 class StampPreview extends StatelessWidget {
@@ -55,7 +56,7 @@ Future<int?> showStampDialog(
       key: const Key('stampDialog'),
       scrollable: true,
       insetPadding: const EdgeInsets.all(16),
-      title: const Text('Choisis un tampon'),
+      title: Text(tr('Choisis un tampon')),
       content: SizedBox(
         width: 560,
         child: Wrap(
@@ -84,7 +85,7 @@ Future<int?> showStampDialog(
                 // One name on the button itself, which keeps its own action:
                 // the picture and the written name under it only decorate.
                 child: Semantics(
-                  label: 'Tampon ${stamp.label}',
+                  label: trf('Tampon {0}', [stamp.label]),
                   selected: stamp.id == selected,
                   excludeSemantics: true,
                   child: SizedBox(
@@ -115,7 +116,7 @@ Future<int?> showStampDialog(
           key: const Key('cancelStamp'),
           style: TextButton.styleFrom(minimumSize: const Size(88, 48)),
           onPressed: () => Navigator.pop(dialogContext),
-          child: const Text('Annuler'),
+          child: Text(tr('Annuler')),
         ),
       ],
     ),

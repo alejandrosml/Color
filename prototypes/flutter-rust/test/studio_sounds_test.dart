@@ -205,7 +205,8 @@ void main() {
     expect(sounds.take(), [StudioSound.stroke]);
     await studio.tap('color-d75e56');
     expect(sounds.take(), [StudioSound.colour]);
-    await studio.tap('tool-rectangle');
+    // « Formes » begins with the rectangle.
+    await studio.tap('tool-shapes');
     expect(sounds.take(), [StudioSound.tool]);
     await studio.drag(studio.at(450, 150), studio.at(650, 300));
     expect(sounds.take(), [StudioSound.shape]);

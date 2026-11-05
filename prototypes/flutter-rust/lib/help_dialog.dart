@@ -8,6 +8,7 @@ import 'studio_colors.dart';
 import 'studio_options.dart';
 import 'studio_tool.dart';
 import 'platform_words.dart';
+import 'language.dart';
 
 /// « Comment faire ? » : every tool with its picture and the same sentence as
 /// beside the sheet, then the keys that do the same things. Nothing here
@@ -38,7 +39,7 @@ class HelpDialog extends StatelessWidget {
 
   /// The key that accompanies letters in shortcuts on this computer.
   static String get commandKey =>
-      defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : 'Ctrl';
+      defaultTargetPlatform == TargetPlatform.macOS ? '⌘' : tr('Ctrl');
 
   @override
   Widget build(BuildContext context) {
@@ -47,14 +48,18 @@ class HelpDialog extends StatelessWidget {
       key: const Key('helpDialog'),
       scrollable: true,
       insetPadding: const EdgeInsets.all(16),
-      title: const Text('Comment faire ?'),
+      title: Text(tr('Comment faire ?')),
       content: SizedBox(
         width: 520,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (final tool in options.tools)
+            // In the order of the bar, « Formes » with all it holds.
+            for (final tool in [
+              for (final group in options.groups)
+                ...group.tools.where(options.tools.contains),
+            ])
               _HelpRow(
                 key: Key('help-${tool.name}'),
                 picture: EduIllustration(art: tool.art, size: 40),
@@ -62,92 +67,114 @@ class HelpDialog extends StatelessWidget {
                 text: tool.help,
               ),
             if (!options.simpleControls)
-              const _HelpRow(
+              _HelpRow(
                 key: Key('help-picker'),
                 picture: Icon(Icons.colorize, size: 30),
-                title: 'Pipette',
-                text: 'À côté des couleurs. Appuie dessus, puis clique sur une couleur de ton dessin pour la reprendre.',
+                title: tr('Pipette'),
+                text: tr(
+                  'À côté des couleurs. Appuie dessus, puis clique sur une couleur de ton dessin pour la reprendre.',
+                ),
               ),
             if (options.layers)
-              const _HelpRow(
+              _HelpRow(
                 key: Key('help-layers'),
                 picture: EduIllustration(art: EduArt.layers, size: 40),
-                title: 'Calques',
-                text: 'Des feuilles transparentes posées l’une sur l’autre. Tu peux en cacher une, ou la passer devant.',
+                title: tr('Calques'),
+                text: tr(
+                  'Des feuilles transparentes posées l’une sur l’autre. Tu peux en cacher une, ou la passer devant.',
+                ),
               ),
             if (options.viewControls)
-              const _HelpRow(
+              _HelpRow(
                 key: Key('help-big-sheet'),
                 picture: Icon(Icons.open_in_full, size: 28),
-                title: 'Dessiner en grand',
-                text: 'Range les panneaux pour laisser toute la place à ta feuille. Le même bouton les fait revenir.',
+                title: tr('Dessiner en grand'),
+                text: tr(
+                  'Range les panneaux pour laisser toute la place à ta feuille. Le même bouton les fait revenir.',
+                ),
               ),
             if (hasGallery)
-              const _HelpRow(
+              _HelpRow(
                 key: Key('help-gallery'),
                 picture: EduIllustration(art: EduArt.gallery, size: 40),
-                title: 'Mes dessins',
-                text: 'Chaque dessin que tu enregistres y laisse une carte : Color en garde une copie. Clique sur une carte pour reprendre le dessin.',
+                title: tr('Mes dessins'),
+                text: tr(
+                  'Chaque dessin que tu enregistres y laisse une carte : Color en garde une copie. Clique sur une carte pour reprendre le dessin, ou sur Diaporama pour les voir l’un après l’autre.',
+                ),
               ),
-            const _HelpRow(
+            _HelpRow(
               key: Key('help-film'),
               picture: EduIllustration(art: EduArt.film, size: 40),
-              title: 'Revoir ton dessin',
-              text: 'Ton dessin se refait tout seul sous tes yeux, élément par élément, de celui du dessous à celui du dessus. Il ne change pas.',
+              title: tr('Revoir ton dessin'),
+              text: tr(
+                'Ton dessin se refait tout seul sous tes yeux, élément par élément, de celui du dessous à celui du dessus. Il ne change pas.',
+              ),
             ),
             if (options.printing)
-              const _HelpRow(
+              _HelpRow(
                 key: Key('help-print'),
                 picture: EduIllustration(art: EduArt.printer, size: 40),
-                title: 'Imprimer',
-                text: 'Ouvre la fenêtre d’impression de ton ordinateur, avec ton dessin sur une page. Rien ne s’imprime avant que tu le confirmes là.',
+                title: tr('Imprimer'),
+                text: tr(
+                  'Ouvre la fenêtre d’impression de ton ordinateur, avec ton dessin sur une page. Rien ne s’imprime avant que tu le confirmes là.',
+                ),
               ),
-            const _HelpRow(
+            _HelpRow(
               key: Key('help-options'),
               picture: EduIllustration(art: EduArt.options, size: 40),
-              title: 'Options',
-              text: 'Pour les adultes : choisir ce que Color montre, couper les sons ou l’impression, régler l’accessibilité. Un calcul peut en garder l’entrée : c’est l’une des options.',
+              title: tr('Options'),
+              text: tr(
+                'Pour les adultes : choisir la langue et ce que Color montre, couper les sons ou l’impression, régler l’accessibilité. Un calcul peut en garder l’entrée : c’est l’une des options.',
+              ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Avec le clavier',
+            Text(
+              tr('Avec le clavier'),
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             _KeyRow(
-              keys: '1 à ${options.tools.length}',
-              text: 'Choisir un outil, dans leur ordre.',
+              keys: trf('1 à {0}', [options.groups.length]),
+              text: tr('Choisir un outil, dans leur ordre.'),
             ),
-            _KeyRow(keys: '$command + Z', text: 'Annuler le dernier geste.'),
             _KeyRow(
-              keys: 'Maj + $command + Z',
-              text: 'Rétablir le geste annulé.',
+              keys: '$command + Z',
+              text: tr('Annuler le dernier geste.'),
             ),
-            _KeyRow(keys: '$command + S', text: 'Enregistrer ton projet.'),
+            _KeyRow(
+              keys: trf('Maj + {0} + Z', [command]),
+              text: tr('Rétablir le geste annulé.'),
+            ),
+            _KeyRow(keys: '$command + S', text: tr('Enregistrer ton projet.')),
             if (options.opensFiles)
-              _KeyRow(keys: '$command + O', text: 'Ouvrir un projet.'),
+              _KeyRow(keys: '$command + O', text: tr('Ouvrir un projet.')),
             _KeyRow(
               keys: '$command + N',
-              text: 'Prendre une nouvelle feuille.',
+              text: tr('Prendre une nouvelle feuille.'),
             ),
             if (options.printing)
-              _KeyRow(keys: '$command + P', text: 'Imprimer ton dessin.'),
+              _KeyRow(keys: '$command + P', text: tr('Imprimer ton dessin.')),
             if (options.tools.contains(StudioTool.select)) ...[
-              _KeyRow(keys: '$command + D', text: 'Copier l’élément choisi.'),
-              const _KeyRow(
-                keys: 'Flèches',
-                text: 'Déplacer l’élément choisi. Avec Maj, il va plus vite.',
+              _KeyRow(
+                keys: '$command + D',
+                text: tr('Copier l’élément choisi.'),
               ),
-              const _KeyRow(keys: 'Suppr', text: 'Effacer l’élément choisi.'),
+              _KeyRow(
+                keys: tr('Flèches'),
+                text: tr(
+                  'Déplacer l’élément choisi. Avec Maj, il va plus vite.',
+                ),
+              ),
+              _KeyRow(keys: tr('Suppr'), text: tr('Effacer l’élément choisi.')),
             ],
             if (options.viewControls)
-              const _KeyRow(
-                keys: 'Espace',
-                text: 'Maintenu, il permet de glisser la feuille.',
+              _KeyRow(
+                keys: tr('Espace'),
+                text: tr('Maintenu, il permet de glisser la feuille.'),
               ),
-            const _KeyRow(
-              keys: 'Échap',
-              text: 'Arrêter le geste en cours, sans rien changer.',
+            _KeyRow(
+              keys: tr('Échap'),
+              text: tr('Arrêter le geste en cours, sans rien changer.'),
             ),
           ],
         ),
@@ -159,7 +186,7 @@ class HelpDialog extends StatelessWidget {
           autofocus: true,
           style: FilledButton.styleFrom(minimumSize: const Size(88, 48)),
           onPressed: () => Navigator.pop(context),
-          child: const Text('Revenir au dessin'),
+          child: Text(tr('Revenir au dessin')),
         ),
       ],
     );

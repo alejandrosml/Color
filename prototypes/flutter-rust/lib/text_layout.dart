@@ -23,6 +23,35 @@ const colorTextLineHeight = 1.2;
 /// very expression of the core's SVG export.
 const colorTextBaseline = colorTextLineHeight * 1901 / 2384;
 
+/// A font a text may have: its family in pubspec, its name for the child,
+/// and its metrics, the very ones of the core's SVG export (text.rs, FONTS):
+/// the line height as a multiple of the size, and the distance from the top
+/// of a line to its baseline, the line height shared between the font's
+/// ascent and descent.
+class TextFont {
+  const TextFont(this.family, this.name, this.lineHeight, this.baseline);
+  final String family;
+  final String name;
+  final double lineHeight;
+  final double baseline;
+}
+
+/// Fonts 0 to 4 of the project format, in its order. What a font lacks of a
+/// text is drawn with font 0.
+const textFonts = <TextFont>[
+  TextFont(
+    colorTextFontFamily,
+    'Bâton',
+    colorTextLineHeight,
+    colorTextBaseline,
+  ),
+  TextFont('ColorAtkinson', 'Lisible', 1.2, 1.2 * 950 / 1240),
+  TextFont('ColorComic', 'Bande dessinée', 1.2, 1.2 * 900 / 1150),
+  TextFont('ColorFredoka', 'Ronde', 1.2, 1.2 * 974 / 1210),
+  // The school hand of France: its loops need the font's own line height.
+  TextFont('ColorPlaywrite', 'Écriture', 2.852, 2.852 * 1927 / 2852),
+];
+
 // Unicode's Default_Ignorable_Code_Point: characters that a renderer shows
 // as nothing when nothing else stands with them. The same table as the
 // core's (text.rs): a text made only of them, and of white space, is refused
@@ -156,12 +185,21 @@ bool textExceedsLimits(String raw) => textExcess(raw) != null;
 
 /// A laid-out text: its lines, ready to paint, and the size of its box.
 class TextLayout {
-  TextLayout._(this._lines, this.lineWidths, this.size, this.width);
+  TextLayout._(this._lines, this.lineWidths, this.size, this.width, this.font);
 
-  factory TextLayout(String text, {required double size, required int rgb}) {
+  factory TextLayout(
+    String text, {
+    required double size,
+    required int rgb,
+    int font = 0,
+  }) {
     if (!size.isFinite || size < minTextSize || size > maxTextSize) {
       throw ArgumentError('Taille de texte hors limites.');
     }
+    if (font < 0 || font >= textFonts.length) {
+      throw ArgumentError('Police inconnue.');
+    }
+    final face = textFonts[font];
     final lines = <Paragraph>[];
     final widths = <double>[];
     var widest = 0.0;
@@ -169,18 +207,19 @@ class TextLayout {
       final builder =
           ParagraphBuilder(
               ParagraphStyle(
-                fontFamily: colorTextFontFamily,
+                fontFamily: face.family,
                 fontSize: size,
-                height: colorTextLineHeight,
+                height: face.lineHeight,
                 textDirection: TextDirection.ltr,
               ),
             )
             ..pushStyle(
               TextStyle(
                 color: Color(0xff000000 | rgb),
-                fontFamily: colorTextFontFamily,
+                fontFamily: face.family,
+                fontFamilyFallback: const [colorTextFontFamily],
                 fontSize: size,
-                height: colorTextLineHeight,
+                height: face.lineHeight,
               ),
             )
             ..addText(line);
@@ -199,10 +238,17 @@ class TextLayout {
       List.unmodifiable(widths),
       size,
       widest > 0 ? widest : size * .25,
+      font,
     );
   }
 
   final List<Paragraph> _lines;
+
+  /// Font 0 to 4 of the project format.
+  final int font;
+
+  /// Line height as a multiple of the size, for this font.
+  double get lineHeight => textFonts[font].lineHeight;
 
   /// Width of every line, in the order of the text.
   final List<double> lineWidths;
@@ -212,11 +258,11 @@ class TextLayout {
   int get lineCount => _lines.length;
 
   /// Exactly what the core stores and writes: a whole number of lines.
-  double get height => lineCount * colorTextLineHeight * size;
+  double get height => lineCount * lineHeight * size;
 
   /// Where the baseline of a line lies under the top of the box.
   double baselineOf(int line) =>
-      (line * colorTextLineHeight + colorTextBaseline) * size;
+      (line * lineHeight + textFonts[font].baseline) * size;
 
   /// Paints the lines from the top-left corner of the box. Every line is
   /// placed by its own baseline: the engine rounds the height of a line to a
@@ -255,17 +301,18 @@ class TextLayout {
   );
 }
 
-double _widthOf(String line, double size) =>
-    line.isEmpty ? 0 : TextLayout(line, size: size, rgb: 0).lineWidths.single;
+double _widthOf(String line, double size, [int font = 0]) => line.isEmpty
+    ? 0
+    : TextLayout(line, size: size, rgb: 0, font: font).lineWidths.single;
 
 // The longest beginning of [word] that fits, at least one character of it.
-String _headThatFits(String word, double size, double maxWidth) {
+String _headThatFits(String word, double size, double maxWidth, int font) {
   final characters = word.characters.toList();
   var low = 1;
   var high = characters.length;
   while (low < high) {
     final middle = (low + high + 1) ~/ 2;
-    if (_widthOf(characters.take(middle).join(), size) <= maxWidth) {
+    if (_widthOf(characters.take(middle).join(), size, font) <= maxWidth) {
       low = middle;
     } else {
       high = middle - 1;
@@ -282,10 +329,11 @@ String? wrapTextToWidth(
   String text, {
   required double size,
   required double maxWidth,
+  int font = 0,
 }) {
   final result = <String>[];
   for (final line in text.split('\n')) {
-    if (_widthOf(line, size) <= maxWidth) {
+    if (_widthOf(line, size, font) <= maxWidth) {
       result.add(line);
       continue;
     }
@@ -295,7 +343,7 @@ String? wrapTextToWidth(
       // inside a line and are dropped where a line is broken.
       while (true) {
         final candidate = current.isEmpty ? word : '$current $word';
-        if (_widthOf(candidate, size) <= maxWidth) {
+        if (_widthOf(candidate, size, font) <= maxWidth) {
           current = candidate;
           break;
         }
@@ -305,8 +353,8 @@ String? wrapTextToWidth(
           continue;
         }
         // The word alone is wider than a line: cut it.
-        final head = _headThatFits(word, size, maxWidth);
-        if (_widthOf(head, size) > maxWidth) return null;
+        final head = _headThatFits(word, size, maxWidth, font);
+        if (_widthOf(head, size, font) > maxWidth) return null;
         result.add(head);
         word = word.substring(head.length);
         if (word.isEmpty) break;
@@ -336,8 +384,14 @@ PlacedText? placeText(
   required DocumentPoint anchor,
   required double pageWidth,
   required double pageHeight,
+  int font = 0,
 }) {
-  final wrapped = wrapTextToWidth(text, size: size, maxWidth: pageWidth);
+  final wrapped = wrapTextToWidth(
+    text,
+    size: size,
+    maxWidth: pageWidth,
+    font: font,
+  );
   if (wrapped == null ||
       '\n'.allMatches(wrapped).length + 1 > maxTextLines ||
       utf8.encode(wrapped).length > maxTextBytes) {
@@ -345,7 +399,7 @@ PlacedText? placeText(
   }
   final box = textBoxAt(
     anchor,
-    TextLayout(wrapped, size: size, rgb: 0),
+    TextLayout(wrapped, size: size, rgb: 0, font: font),
     pageWidth: pageWidth,
     pageHeight: pageHeight,
   );

@@ -80,6 +80,36 @@ final class OneEuroFilter {
   }
 }
 
+/// The brush at the end of a string (Color 1.1, « Trait tranquille »): the
+/// trait follows the pointer only when the pointer pulls the string tight,
+/// [length] logical pixels away; a tremble shorter than the string does not
+/// move it at all. Plain geometry, on the screen.
+final class StringStabilizer {
+  StringStabilizer({this.length = 14});
+  final double length;
+  double? _x;
+  double? _y;
+
+  /// Where the brush is once the pointer is at ([x], [y]): the first point
+  /// as it is, then dragged at the string's length behind the pointer.
+  (double, double) pull(double x, double y) {
+    final bx = _x, by = _y;
+    if (bx == null || by == null) {
+      _x = x;
+      _y = y;
+      return (x, y);
+    }
+    final dx = x - bx, dy = y - by;
+    final distance = math.sqrt(dx * dx + dy * dy);
+    if (distance <= length) return (bx, by);
+    final along = (distance - length) / distance;
+    final nx = bx + dx * along, ny = by + dy * along;
+    _x = nx;
+    _y = ny;
+    return (nx, ny);
+  }
+}
+
 /// The distance on the screen, in logical pixels, under which a sample of
 /// the pointer is not kept: a move the eye cannot see (D-08).
 const double unseenMovePixels = .4;
