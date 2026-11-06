@@ -2,13 +2,15 @@
 
 Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; jusqu'à la 1.0.1, Color n'existe qu'en français. La 1.1 parle aussi anglais : sa fiche reçoit une localisation anglaise, prête plus bas.
 
-## Où en est la fiche (5 novembre 2026)
+## Où en est la fiche (6 novembre 2026)
 
-**macOS : la 1.0.0 acceptée le 4 novembre, la 1.0.1 envoyée le 5.** Apple a accepté Color 1.0.0 (39) pour le Mac le 4 novembre au soir (courriel de 20 h 17), et l'a publiée aussitôt, comme prévu. Le 5 novembre, à ta demande, les builds 1.0.1 (40) du Mac, de l'iPhone et de l'iPad sont partis chez Apple (« Envoyer Color vers l'App Store », vers 0 h 25), et la version 1.0.1 du Mac a été envoyée à la vérification à 0 h 38, avec ton accord :
+**macOS : la 1.0.0 acceptée le 4 novembre, la 1.0.1 acceptée le 6.** Apple a accepté Color 1.0.0 (39) pour le Mac le 4 novembre au soir (courriel de 20 h 17), et l'a publiée aussitôt, comme prévu. Le 5 novembre, à ta demande, les builds 1.0.1 (40) du Mac, de l'iPhone et de l'iPad sont partis chez Apple (« Envoyer Color vers l'App Store », vers 0 h 25), et la version 1.0.1 du Mac a été envoyée à la vérification à 0 h 38, avec ton accord :
 
 - la description commence par « Color est un petit atelier de dessin. », comme sur l'iPhone ;
 - les nouveautés sont celles de la fiche, plus bas, sans leur première ligne : le doigt, le stylet et la main posée sur l'écran ne concernent pas le Mac ;
 - publication automatique dès l'accord d'Apple, à tous les utilisateurs d'un coup, en gardant la note existante.
+
+Apple a accepté la 1.0.1 (40) du Mac dans la nuit du 5 au 6 novembre (courriel de 0 h 05) : publiée automatiquement, comme la 1.0.0.
 
 **iOS : refusée le 3 novembre, renvoyée le 4, toujours « En attente de vérification ».** Le 3 novembre au soir, Apple a refusé la version iOS 1.0.0 (39), vérifiée sur un iPad Air 11 pouces (M3), selon la règle **2.3.8, « Accurate Metadata »**. Le sous-titre « Atelier de dessin pour enfants » présentait Color comme faite pour les enfants, alors que l'app n'était pas dans la catégorie Enfants. Apple laissait le choix : retirer du nom, du sous-titre, de l'icône et des captures ce qui dit « pour enfants », ou cocher « Fait pour les enfants ».
 
