@@ -119,13 +119,23 @@ bool potClosesGaps(CountrySigns? signs, DateTime now) =>
 
 const _channel = MethodChannel('org.edupaint/country');
 
+/// Whether `flutter test` runs this code: no system side answers there, and
+/// a question to it would only leave its two-second wait behind the test.
+bool get _inFlutterTest => Platform.environment.containsKey('FLUTTER_TEST');
+
 /// Reads every sign this system gives. Never fails: a sign that cannot be
 /// read is left out, and the store's answer, the slowest, waits two seconds
-/// at most.
+/// at most. [system] (a name of [Platform.operatingSystem]) and
+/// [askTheSystem] let a test take another system's way; under `flutter test`
+/// the system is not asked, unless [askTheSystem] says so.
 Future<CountrySigns> readCountrySigns({
   MethodChannel channel = _channel,
   PlatformDispatcher? dispatcher,
+  @visibleForTesting String? system,
+  @visibleForTesting bool? askTheSystem,
 }) async {
+  final os = system ?? Platform.operatingSystem;
+  final ask = askTheSystem ?? !_inFlutterTest;
   final codes = <String>[];
   final zones = <String>[];
   // The region of the system's first language: the one it is set in.
@@ -134,20 +144,20 @@ Future<CountrySigns> readCountrySigns({
   // The region Dart reads of the system — but where it reads none, it says
   // « en_US »: always on Android, whose region comes with the other signs,
   // and on Linux without a language set, where LANG is read instead.
-  final region = Platform.isAndroid
+  final region = os == 'android'
       ? null
-      : Platform.isLinux
+      : os == 'linux'
       ? linuxRegion(Platform.environment)
       : regionOfLocale(Platform.localeName);
   if (region != null) codes.add(region);
-  if (Platform.isLinux) {
+  if (os == 'linux') {
     zones.addAll(_linuxTimeZones());
-  } else if (Platform.isWindows) {
+  } else if (os == 'windows') {
     // The time zone of Windows is not read yet: its region is the sign
     // (to be completed with the version of the Microsoft Store).
     final geo = _windowsGeoName();
     if (geo != null) codes.add(geo);
-  } else {
+  } else if (ask) {
     // At once: the region of the settings, the SIM's and the network's,
     // the time zone.
     try {
@@ -163,7 +173,7 @@ Future<CountrySigns> readCountrySigns({
     }
     // The country of Apple's store, which may be slow: asked apart, it
     // never keeps the others waiting.
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (os == 'ios' || os == 'macos') {
       try {
         final store = await channel
             .invokeMethod<String>('store')

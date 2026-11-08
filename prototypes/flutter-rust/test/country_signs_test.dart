@@ -2,11 +2,10 @@
 // The paint pot closes small gaps everywhere but in the United States and
 // their territories, until 16 July 2028 included: one sign is enough, and
 // no sign at all counts as one.
-import 'dart:typed_data';
-
 import 'package:edupaint_flutter_study/country_signs.dart';
 import 'package:edupaint_flutter_study/paint_pot.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -178,5 +177,40 @@ void main() {
       isFalse,
     );
     expect(isSameZone(poured, hole, [4], tolerance: 2), isFalse);
+  });
+
+  testWidgets('under flutter test, an Apple system is not asked: no wait is '
+      'left behind the test', (tester) async {
+    // Asked, a Mac with no answer here left its two-second waits pending
+    // when the studio closed: 28 tests of the Mac recipe stopped, 9 November.
+    CountrySigns? signs;
+    readCountrySigns(system: 'macos').then((read) => signs = read);
+    await tester.pump();
+    expect(signs, isNotNull);
+    expect(signs!.timeZones, isEmpty);
+  });
+
+  test('asked, an Apple system gives its signs, the store included', () async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const channel = MethodChannel('test/country');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'signs') {
+        return {
+          'codes': ['US'],
+          'timeZone': 'America/Puerto_Rico',
+        };
+      }
+      return call.method == 'store' ? 'GU' : null;
+    });
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+    final signs = await readCountrySigns(
+      channel: channel,
+      system: 'ios',
+      askTheSystem: true,
+    );
+    expect(signs.codes, containsAll(['US', 'GU']));
+    expect(signs.timeZones, contains('America/Puerto_Rico'));
   });
 }

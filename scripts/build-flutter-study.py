@@ -497,6 +497,9 @@ def main(argv=None):
     # one that compares the functions of Dart, of the header and of the
     # iPhone (P-04) is told where the header is.
     env['EDUPAINT_CORE_HEADER'] = str(core.parent.parent / 'include' / 'edupaint_core.h')
+    # The one that checks the English of the interface reads the catalogues
+    # of the core: it is told where the core is.
+    env['EDUPAINT_CORE_SOURCES'] = str(core.parent.parent)
 
     def command(name, arguments, cwd=APP_SOURCE):
         run(name, arguments, cwd=cwd, env=env, report_dir=report_dir)

@@ -83,9 +83,12 @@ Set<String> frenchOfValues() => {
     colour.frenchName,
   ...StampArt.frenchLabels.values,
   for (final font in textFonts) font.name,
-  // The titles of the pages, as the catalogue of the core writes them.
+  // The titles of the pages, as the catalogue of the core writes them. A
+  // recipe that tests a copy of the application kept elsewhere (the Mac's,
+  // scripts/build-flutter-study.py) names the core in EDUPAINT_CORE_SOURCES.
   for (final line in File(
-    '../native-swift-rust/core/src/catalogues/pages.txt',
+    '${Platform.environment['EDUPAINT_CORE_SOURCES'] ?? '../native-swift-rust/core'}'
+    '/src/catalogues/pages.txt',
   ).readAsLinesSync())
     if (line.startsWith('T '))
       Uri.decodeComponent(line.split(' ').skip(5).join(' ').trim()),
