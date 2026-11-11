@@ -143,15 +143,19 @@ try:
     with open(str(program) + ':Zone.Identifier', 'w', encoding='ascii') as mark:
         mark.write('[ZoneTransfer]\r\nZoneId=3\r\nHostUrl=' + base + name + '\r\n')
     before = {window['title'] for window in visible_windows()}
-    os.startfile(str(program))
+    # Through the shell, as a double click does — from a program apart: the
+    # shell does not come back while its warning waits for an answer.
+    shell = subprocess.Popen(['cmd', '/c', 'start', '', str(program)])
     time.sleep(15)
     shot('01-premier-lancement-fichier-marque')
     running = color_processes()
     record['first_start_with_the_mark_of_the_internet'] = {
         'color_started': bool(running),
+        'the_shell_was_still_waiting': shell.poll() is None,
         'new_windows': [window for window in visible_windows() if window['title'] not in before],
-        'note': 'A machine of GitHub may have SmartScreen turned off: a home computer would show '
-                '« Windows a protégé votre ordinateur » here, as the notice says.'}
+        'note': 'What Windows shows here depends on the machine: the notice of Color says what a home '
+                'computer shows (« Windows a protégé votre ordinateur »).'}
+    subprocess.run(['taskkill', '/F', '/T', '/PID', str(shell.pid)], capture_output=True)
     end_all()
     subprocess.run(['taskkill', '/F', '/IM', 'smartscreen.exe'], capture_output=True)
     os.remove(str(program) + ':Zone.Identifier')
