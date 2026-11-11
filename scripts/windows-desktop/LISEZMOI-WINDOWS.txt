@@ -1,0 +1,62 @@
+Color @VERSION@ pour Windows (@ARCHITECTURE@) — version expérimentale
+=====================================================================
+
+Color est un petit atelier de dessin pour les enfants : le pinceau, les
+formes, les tampons, le pot de peinture, des pages à colorier, et le film du
+dessin qui se refait tout seul. Sans publicité, sans compte, sans Internet :
+Color ne collecte aucune donnée.
+
+Pour l'essayer
+--------------
+1. Dézippe ce dossier où tu veux (clic droit, « Extraire tout… »).
+2. Double-clique « color.exe ».
+Rien ne s'installe. Pour l'enlever, supprime le dossier.
+
+Windows affichera un avertissement
+----------------------------------
+Cette version n'est pas encore signée. Au premier lancement, Windows peut
+afficher « Windows a protégé votre ordinateur » : c'est ce qu'il fait pour
+tout programme qu'il ne connaît pas encore. Pour lancer Color quand même :
+« Informations complémentaires », puis « Exécuter quand même ».
+Tu peux vérifier que le fichier téléchargé est bien celui qui a été publié :
+son empreinte SHA-256 est écrite à côté de lui, sur la page de la version.
+
+Ce qui a été essayé, et ce qui ne l'a pas été
+---------------------------------------------
+Ce programme est construit et essayé automatiquement sur de vrais Windows
+(les machines de GitHub) : ses tests, son lancement, un parcours complet de
+l'atelier dans sa fenêtre, la fenêtre d'impression de Windows et une page
+imprimée dans un fichier PDF.
+Pas encore essayé : le stylet et l'écran tactile, les sons (ces machines
+n'ont pas de haut-parleur), les affichages agrandis à 150 et 200 %, et une
+vraie imprimante. Si quelque chose ne va pas, dis-le ici :
+https://github.com/alejandrosml/Color/issues
+
+Color est un logiciel libre, sous licence MIT (LICENSE.txt), créé par
+Alejandro San Martin Lamas — https://github.com/alejandrosml
+Les sons, les polices et les bibliothèques gardent leurs propres licences :
+NOTICE.txt et third-party-notices.txt.
+
+
+Color @VERSION@ for Windows (@ARCHITECTURE@) — experimental version
+====================================================================
+
+Color is a little drawing studio for children: the brush, shapes, stamps,
+the paint pot, colouring pages, and the film of the drawing making itself
+again. No ads, no account, no Internet: Color collects no data.
+
+To try it: unzip this folder anywhere, then double-click "color.exe".
+Nothing is installed; to remove it, delete the folder.
+
+This version is not signed yet. On first launch Windows may show "Windows
+protected your PC", as it does for any program it does not know yet: choose
+"More info", then "Run anyway". The SHA-256 fingerprint of the download is
+written beside it on the page of the release.
+
+Built and tried automatically on real Windows machines (GitHub's): its
+tests, its launch, a whole tour of the studio in its window, the print
+dialog of Windows and a page printed to a PDF file. Not tried yet: stylus
+and touch, sounds, displays scaled to 150 and 200 %, and a real printer.
+
+Free software under the MIT licence (LICENSE.txt), created by
+Alejandro San Martin Lamas — https://github.com/alejandrosml

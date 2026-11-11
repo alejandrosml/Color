@@ -36,7 +36,7 @@ void main() {
   test('Dart, the header and the program of the iPhone name the same '
       'functions', () {
     final declared = _declared();
-    expect(declared, hasLength(90));
+    expect(declared, hasLength(92));
     expect(coreFunctionNames.toSet(), declared);
     expect(coreFunctionNames, hasLength(declared.length));
     // Every function that the bindings look up is one of them.

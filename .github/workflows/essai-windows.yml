@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: MIT
+# La version Windows publiée, essayée comme un parent la recevrait : sur une
+# machine Windows neuve de GitHub, téléchargée depuis la « Release », dézippée,
+# lancée, puis utilisée avec le vrai pointeur de Windows
+# (scripts/windows-desktop/essai-publie.py). Les captures et la page imprimée
+# en PDF sont gardées avec le passage.
+name: Essai de la version Windows publiée
+
+on:
+  workflow_dispatch:
+    inputs:
+      etiquette:
+        description: "L'étiquette de la « Release » (vide : celle de la version des sources)"
+        type: string
+        default: ""
+  push:
+    branches: [essai-windows]
+
+permissions:
+  contents: read
+
+jobs:
+  essayer:
+    name: Essayer (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            machine: windows-latest
+          - architecture: arm64
+            machine: windows-11-arm
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: L'essai
+        shell: pwsh
+        run: |
+          $etiquette = '${{ inputs.etiquette }}'
+          if (-not $etiquette) {
+            $version = (Select-String -Path prototypes/flutter-rust/pubspec.yaml -Pattern '^version:\s*(\S+)').Matches[0].Groups[1].Value
+            $etiquette = 'windows-' + $version.Replace('+', '-')
+          }
+          python scripts/windows-desktop/essai-publie.py "$env:RUNNER_TEMP\essai" --architecture ${{ matrix.architecture }} --depot ${{ github.repository }} --etiquette $etiquette
+      - name: Garder l'essai
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: essai-${{ matrix.architecture }}
+          path: ${{ runner.temp }}/essai/**
+          if-no-files-found: warn

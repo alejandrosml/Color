@@ -16,6 +16,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/studio_driver.dart';
 
+/// What joins the folders that Color adds to those the tablet names: the
+/// separator of the machine that plays the test.
+final s = Platform.pathSeparator;
+
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
   tearDown(() => debugTouchFirstOverride = null);
@@ -207,20 +211,20 @@ void main() {
     test('a drawing is saved in Color’s folder, under a free name', () async {
       final studio = files();
       final first = await studio.chooseSave();
-      expect(first, '${folder.path}/documents/Dessins/Mon dessin.edupaint');
+      expect(first, '${folder.path}/documents${s}Dessins${s}Mon dessin.edupaint');
       await File(first!).writeAsBytes([1, 2, 3]);
       // Saved again, it stays where it is.
       expect(await studio.chooseSave(currentPath: first), first);
       // A new drawing takes the next free name.
       expect(
         await studio.chooseSave(),
-        '${folder.path}/documents/Dessins/Mon dessin 2.edupaint',
+        '${folder.path}/documents${s}Dessins${s}Mon dessin 2.edupaint',
       );
       // A drawing opened from elsewhere is saved in Color's folder, under
       // its own name.
       expect(
         await studio.chooseSave(currentPath: '/ailleurs/La mer.edupaint'),
-        '${folder.path}/documents/Dessins/La mer.edupaint',
+        '${folder.path}/documents${s}Dessins${s}La mer.edupaint',
       );
       expect(studio.shownPath(first), 'Mon dessin.edupaint');
     });
@@ -236,7 +240,7 @@ void main() {
         expect(await studio.chooseSave(currentPath: french), french);
         expect(
           await studio.chooseSave(),
-          '${folder.path}/documents/Dessins/My drawing.edupaint',
+          '${folder.path}/documents${s}Dessins${s}My drawing.edupaint',
         );
       } finally {
         appLanguage.value = AppLanguage.french;
@@ -252,7 +256,7 @@ void main() {
         },
       );
       final path = await studio.choosePng(currentPath: '/x/La mer.edupaint');
-      expect(path, '${folder.path}/temporary/color-outbox/La mer.png');
+      expect(path, '${folder.path}/temporary${s}color-outbox${s}La mer.png');
       await studio.writePng(path!, Uint8List.fromList([9, 8, 7]));
       expect(handed.single.$2, 'La mer.png');
       expect(handed.single.$3, 'image/png');
@@ -261,7 +265,7 @@ void main() {
       expect(studio.shownPath(path), 'Dessin pour mamie.png');
 
       final svg = await studio.chooseExport();
-      expect(svg, '${folder.path}/temporary/color-outbox/Mon dessin.svg');
+      expect(svg, '${folder.path}/temporary${s}color-outbox${s}Mon dessin.svg');
       await studio.writeSvgBytes(svg!, Uint8List.fromList([60, 115]));
       expect(handed.last.$3, 'image/svg+xml');
     });

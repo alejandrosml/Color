@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: MIT
+     The package of Color for the Microsoft Store. scripts/windows-desktop/recette.py
+     writes the version and the processor in the two @…@ places.
+     Identity/Name and Identity/Publisher are provisional: the Store gives the
+     real ones when the name « Color » is reserved in the Partner Center, and
+     signs the package itself. A package with this manifest is not signed: it
+     is what the Store receives, not something to install by a double click. -->
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap rescap">
+  <Identity Name="AlejandroSanMartinLamas.Color"
+            Publisher="CN=Alejandro San Martin Lamas"
+            Version="@VERSION@"
+            ProcessorArchitecture="@ARCHITECTURE@" />
+  <Properties>
+    <DisplayName>Color</DisplayName>
+    <PublisherDisplayName>Alejandro San Martin Lamas</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="fr-FR" />
+    <Resource Language="en-GB" />
+  </Resources>
+  <Applications>
+    <Application Id="Color" Executable="color.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Color"
+                          Description="Color : un atelier de dessin pour les enfants."
+                          BackgroundColor="transparent"
+                          Square150x150Logo="Assets\Square150x150Logo.png"
+                          Square44x44Logo="Assets\Square44x44Logo.png" />
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

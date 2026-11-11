@@ -32,7 +32,7 @@ void main() {
   // Two pixels by one: red, then blue.
   final image = Uint8List.fromList([255, 0, 0, 255, 0, 0, 255, 255]);
   Future<PrintOutcome> printIt() =>
-      printWithSystemPanel(rgba: image, width: 2, height: 1, jobName: 'Zoé');
+      printWithChannel(rgba: image, width: 2, height: 1, jobName: 'Zoé');
 
   test(
     'one call carries the pixels, their size and the name of the job',
@@ -140,7 +140,7 @@ void main() {
     answer((_) async => 'printed');
     for (final (width, height) in [(2, 2), (0, 1), (1, 0), (-2, -1), (3, 1)]) {
       await expectLater(
-        printWithSystemPanel(
+        printWithChannel(
           rgba: image,
           width: width,
           height: height,
@@ -151,5 +151,124 @@ void main() {
       );
     }
     expect(calls, isEmpty);
+  });
+
+  group('on Windows, through the core', () {
+    test('what the dialog of Windows ended with is what the studio hears', () async {
+      for (final (state, outcome) in [
+        (2, PrintOutcome.sent),
+        (3, PrintOutcome.cancelled),
+        (4, PrintOutcome.noPrinter),
+      ]) {
+        final asked = <Object?>[];
+        var polls = 0;
+        final answer = await printWithCore(
+          rgba: image,
+          width: 2,
+          height: 1,
+          jobName: 'Zoé',
+          start: (rgba, width, height, name) {
+            asked.addAll([rgba.length, width, height, name]);
+            return 0;
+          },
+          // The dialog stays open for two questions, then ends.
+          result: () => ++polls < 3 ? (1, 0) : (state, 0),
+          every: Duration.zero,
+        );
+        expect(answer, outcome);
+        expect(asked, [8, 2, 1, 'Zoé']);
+        expect(polls, 3);
+      }
+    });
+
+    test('a core that does not print here leaves the studio without printing', () async {
+      var polls = 0;
+      final answer = await printWithCore(
+        rgba: image,
+        width: 2,
+        height: 1,
+        jobName: 'Zoé',
+        start: (_, _, _, _) => 3,
+        result: () {
+          polls++;
+          return (0, 0);
+        },
+        every: Duration.zero,
+      );
+      expect(answer, PrintOutcome.unavailable);
+      expect(polls, 0);
+    });
+
+    test('a request while another runs, and one that the core refuses', () async {
+      for (final (started, code) in [
+        (1, 'PRINT_BUSY'),
+        (2, 'INVALID_ARGUMENT'),
+      ]) {
+        await expectLater(
+          printWithCore(
+            rgba: image,
+            width: 2,
+            height: 1,
+            jobName: 'Zoé',
+            start: (_, _, _, _) => started,
+            result: () => fail('nothing started: nothing to ask'),
+            every: Duration.zero,
+          ),
+          throwsA(isA<PlatformException>().having((e) => e.code, 'code', code)),
+        );
+      }
+    });
+
+    test('a refusal of Windows is said with its code', () async {
+      await expectLater(
+        printWithCore(
+          rgba: image,
+          width: 2,
+          height: 1,
+          jobName: 'Zoé',
+          start: (_, _, _, _) => 0,
+          result: () => (5, 1801),
+          every: Duration.zero,
+        ),
+        throwsA(
+          isA<PlatformException>()
+              .having((e) => e.code, 'code', 'PRINT_FAILED')
+              .having((e) => e.message, 'message', contains('1801')),
+        ),
+      );
+      // The core forgot the request before it was asked about.
+      await expectLater(
+        printWithCore(
+          rgba: image,
+          width: 2,
+          height: 1,
+          jobName: 'Zoé',
+          start: (_, _, _, _) => 0,
+          result: () => (0, 0),
+          every: Duration.zero,
+        ),
+        throwsA(
+          isA<PlatformException>().having((e) => e.code, 'code', 'PRINT_FAILED'),
+        ),
+      );
+    });
+
+    test('an image that does not have the announced size never reaches the core', () async {
+      for (final (width, height) in [(2, 2), (0, 1), (1, 0), (-2, -1), (3, 1)]) {
+        await expectLater(
+          printWithCore(
+            rgba: image,
+            width: width,
+            height: height,
+            jobName: 'Zoé',
+            start: (_, _, _, _) => fail('the core was asked'),
+            result: () => fail('the core was asked'),
+            every: Duration.zero,
+          ),
+          throwsArgumentError,
+          reason: '$width × $height',
+        );
+      }
+    });
   });
 }

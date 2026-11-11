@@ -2,9 +2,17 @@
 
 ![Le logo de Color : un enfant dans son fauteuil roulant électrique lève son crayon.](docs/icone-app-store-1024.png)
 
-**Color** est un petit atelier de dessin vectoriel pour les enfants, inspiré de Tux Paint mais écrit entièrement de zéro. Il fonctionne sur Mac, iPhone et iPad. Les versions Linux et Windows sont expérimentales : essayées en émulation, elles semblent bien fonctionner. Sans publicité, sans compte, sans Internet : Color ne collecte aucune donnée ([confidentialité](docs/confidentialite.html)).
+**Color** est un petit atelier de dessin vectoriel pour les enfants, inspiré de Tux Paint mais écrit entièrement de zéro. Il fonctionne sur Mac, iPhone et iPad, et, en version expérimentale, sur Windows. La version Linux est expérimentale aussi. Sans publicité, sans compte, sans Internet : Color ne collecte aucune donnée ([confidentialité](docs/confidentialite.html)).
 
 Créé par **Alejandro San Martin Lamas** ([github.com/alejandrosml](https://github.com/alejandrosml)). Logiciel libre sous [licence MIT](LICENSE) : chacun peut l’utiliser, le copier, le modifier et le redistribuer, en gardant la mention de son auteur.
+
+## Color pour Windows (version expérimentale)
+
+Elle se télécharge sur [la page des versions](https://github.com/alejandrosml/Color/releases) : un dossier à dézipper, sans installation, pour Windows 10 et 11 (x64) et Windows 11 sur ARM.
+
+**Elle n’est pas encore signée.** Au premier lancement, Windows peut afficher « Windows a protégé votre ordinateur », comme pour tout programme qu’il ne connaît pas encore : « Informations complémentaires », puis « Exécuter quand même ». Les empreintes SHA-256 des fichiers sont écrites sur la page de chaque version.
+
+Elle est construite et essayée automatiquement sur de vrais Windows, les machines de GitHub. Pas encore essayé : le stylet et l’écran tactile, les sons, les affichages agrandis à 150 et 200 %, une vraie imprimante.
 
 ## Ce qu’il sait faire
 
@@ -30,15 +38,16 @@ Créé par **Alejandro San Martin Lamas** ([github.com/alejandrosml](https://git
 
 - L’interface en Dart, avec Flutter : `prototypes/flutter-rust/lib/`.
 - Le cœur en Rust — le document vectoriel, son format de fichier, l’historique, les pages à colorier, les tampons, les sons : `prototypes/native-swift-rust/core/`. Ses seules bibliothèques, celles de la lecture SVG et de la compression des dessins, sont recopiées dans `vendor/` : rien n’est téléchargé pour le construire.
-- Ce que seul chaque système sait faire : en Swift sur le Mac, l’iPhone et l’iPad (impression, sons, enregistrement) ; en Kotlin sur Android ; en C++ sur Linux et Windows (impression).
-- Plus de 1 100 tests Flutter et 289 tests Rust ; certains éprouvent la lecture des projets sur des milliers de fichiers volontairement abîmés, et le lecteur de projets est passé au fuzzing.
+- Ce que seul chaque système sait faire : en Swift sur le Mac, l’iPhone et l’iPad (impression, sons, enregistrement) ; en Kotlin sur Android ; en C++ sur Linux (impression). Sur Windows, c’est le cœur Rust qui imprime et joue les sons.
+- Plus de 1 100 tests Flutter et près de 300 tests Rust ; certains éprouvent la lecture des projets sur des milliers de fichiers volontairement abîmés, et le lecteur de projets est passé au fuzzing.
 
 ## Construire
 
 - Flutter 3.47 et le Rust de Homebrew (1.99).
 - Mac : `scripts/macos/construire-color.py`.
 - iPhone et iPad : `scripts/macos/essayer-ios.py` installe ce qu’il faut, construit Color et l’essaie dans le simulateur.
-- Linux et Windows : versions expérimentales ; leurs scripts de construction ne sont pas encore publiés.
+- Windows : `scripts/windows-desktop/recette.py`, sur un Windows qui a Visual Studio, Rust et Flutter. Le flux « Windows » (`.github/workflows/windows.yml`) la joue sur les machines de GitHub, x64 et ARM64 : les tests, le lancement, un parcours de l’atelier dans sa fenêtre, une page imprimée en PDF, puis les paquets.
+- Linux : version expérimentale ; ses scripts de construction ne sont pas encore publiés.
 - Les tests : `cargo test` dans le dossier du cœur, `flutter test` dans celui de l’application.
 
 Les sons, les polices et les bibliothèques gardent leurs propres licences, que résume le fichier `NOTICE` : `prototypes/native-swift-rust/core/sons/PROVENANCE.md`, `prototypes/native-swift-rust/core/third-party-notices.txt`, et les fichiers `LICENCE-*.txt` de `prototypes/flutter-rust/fonts/`.

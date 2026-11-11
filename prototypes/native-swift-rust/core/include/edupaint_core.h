@@ -762,6 +762,29 @@ size_t ep_copy_sound_wav(uint32_t id, uint8_t *out, size_t capacity);
  */
 int32_t ep_sound_play(uint32_t id);
 
+/* « Imprimer » on 64-bit Windows: the print dialog of the system and one
+ * image on one page, asked of a thread of the core. Elsewhere the application
+ * prints itself, and ep_print_start always returns 3.
+ * ep_print_start copies width x height opaque RGBA pixels (four bytes each,
+ * rows from the top) and the name of the job (NUL-terminated UTF-8, what the
+ * print queue shows), opens the dialog over the window of the program — which
+ * Windows disables until the dialog is closed — and returns at once. The page
+ * is proposed landscape for a wide image, portrait otherwise; the image is as
+ * large as the page allows, never distorted, in the middle of the paper.
+ * Nothing is printed unless the person confirms it in the dialog; where
+ * Windows knows no printer, no dialog opens. Returns 0 started, 1 a request
+ * is still running, 2 NULL, a dimension of zero or above 8192 or a name that
+ * is not UTF-8, 3 no printing by the core on this system.
+ * ep_print_result says what became of it: 0 nothing was asked, 1 the dialog
+ * is open or the page is on its way, 2 the page was handed to Windows, 3 the
+ * person closed the dialog without printing, 4 Windows knows no printer,
+ * 5 Windows refused (non-NULL error_code then receives its code). An answer
+ * from 2 to 5 is given once: the next call returns 0. Uses no document: any
+ * thread may call them. */
+int32_t ep_print_start(const uint8_t *rgba, uint32_t width, uint32_t height,
+                       const char *job_name);
+int32_t ep_print_result(uint32_t *error_code);
+
 /* Pictures drawn in SVG. Every core has these three functions. The pictures
  * of the interface are read from their SVG files before the core is built,
  * and their descriptions compiled in (src/catalogues.rs): handing them over

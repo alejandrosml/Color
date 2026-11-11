@@ -1,0 +1,174 @@
+# SPDX-License-Identifier: MIT
+# Color sur de vrais Windows : construit, testé, essayé dans sa fenêtre et
+# empaqueté par scripts/windows-desktop/recette.py, sur les machines Windows
+# de GitHub, x64 et ARM64. Le rapport de chaque machine (journaux, captures,
+# pages imprimées en PDF) et ses paquets sont gardés avec le passage.
+#
+# Lancé à la main (onglet « Actions », « Run workflow ») ou par un envoi sur
+# la branche « windows ». Un envoi sur la branche « publier-windows », ou une
+# étiquette « windows-<version> », publie en plus les paquets des deux
+# machines dans une « Release », puis les essaie sur deux machines neuves,
+# téléchargés comme un parent les recevrait
+# (scripts/windows-desktop/essai-publie.py).
+name: Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      tests_interface:
+        description: "Jouer aussi tous les tests de l'interface"
+        type: boolean
+        default: true
+      publier:
+        description: "Publier les paquets dans une « Release »"
+        type: boolean
+        default: false
+  push:
+    branches: [windows, publier-windows]
+    tags: ['windows-*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  construire:
+    name: Construire et essayer (${{ matrix.architecture }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            machine: windows-latest
+            rust: x86_64
+          - architecture: arm64
+            machine: windows-11-arm
+            rust: aarch64
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: 150
+    steps:
+      # Les sources telles qu'elles sont : cargo compare celles de vendor/ à
+      # leurs empreintes, et les tests lisent des fichiers ligne à ligne.
+      - name: Pas de conversion des fins de ligne
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - uses: actions/checkout@v4
+      - name: Rust de la référence
+        shell: pwsh
+        run: |
+          if (-not (Get-Command rustup -ErrorAction SilentlyContinue)) {
+            Invoke-WebRequest "https://win.rustup.rs/${{ matrix.rust }}" -OutFile "$env:RUNNER_TEMP\rustup-init.exe"
+            & "$env:RUNNER_TEMP\rustup-init.exe" -y --default-toolchain none --profile minimal
+            "$env:USERPROFILE\.cargo\bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+            $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
+          }
+          python --version
+          $version = python scripts/rust-reference.py --version
+          rustup toolchain install $version --profile minimal
+          rustup target add --toolchain $version ${{ matrix.rust }}-pc-windows-msvc
+          & (rustup which --toolchain $version rustc) --version --verbose
+      - name: Flutter épinglé
+        shell: pwsh
+        run: |
+          git clone --quiet --depth 1 --branch 3.47.4 https://github.com/flutter/flutter.git "$env:RUNNER_TEMP\flutter"
+          $commit = git -C "$env:RUNNER_TEMP\flutter" rev-parse HEAD
+          if ($commit -ne '9584c6713b324636289d067944a46fd6b49df14b') { throw "Flutter inattendu : $commit" }
+          & "$env:RUNNER_TEMP\flutter\bin\flutter.bat" --version
+          & "$env:RUNNER_TEMP\flutter\bin\flutter.bat" precache --windows --no-android --no-ios --no-web --no-macos --no-linux --no-fuchsia
+      - name: La recette
+        shell: pwsh
+        run: |
+          $options = @('--architecture', '${{ matrix.architecture }}')
+          if ('${{ inputs.tests_interface }}' -eq 'false') { $options += '--sans-tests-interface' }
+          python scripts/windows-desktop/recette.py . "$env:RUNNER_TEMP\flutter" "$env:RUNNER_TEMP\rapport" @options
+      - name: Garder le rapport
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-${{ matrix.architecture }}
+          path: |
+            ${{ runner.temp }}/rapport/**
+            !${{ runner.temp }}/rapport/cargo-target/**
+            !${{ runner.temp }}/rapport/cargo-home/**
+            !${{ runner.temp }}/rapport/native/**
+            !${{ runner.temp }}/rapport/packages/**
+          if-no-files-found: warn
+      - name: Garder les paquets
+        uses: actions/upload-artifact@v4
+        with:
+          name: paquets-${{ matrix.architecture }}
+          path: ${{ runner.temp }}/rapport/packages/*
+          if-no-files-found: error
+
+  publier:
+    name: Publier la « Release »
+    needs: construire
+    if: ${{ startsWith(github.ref, 'refs/tags/windows-') || github.ref == 'refs/heads/publier-windows' || (github.event_name == 'workflow_dispatch' && inputs.publier) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      etiquette: ${{ steps.publier.outputs.etiquette }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: paquets-*
+          path: paquets
+          merge-multiple: true
+      - name: Publier
+        id: publier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version="$(sed -n 's/^version: *//p' prototypes/flutter-rust/pubspec.yaml)"
+          tag="windows-${version/+/-}"
+          if [ "${GITHUB_REF_TYPE}" = tag ] && [ "${GITHUB_REF_NAME}" != "$tag" ]; then
+            echo "L'étiquette ${GITHUB_REF_NAME} n'est pas celle de la version ${version} (${tag})." >&2
+            exit 1
+          fi
+          cat paquets/SHA256SUMS-*.txt > paquets/SHA256SUMS.txt
+          ( cd paquets && sha256sum --check SHA256SUMS.txt )
+          {
+            cat docs/publication/NOTES-WINDOWS.md
+            printf '\n## Empreintes SHA-256\n\n```\n'
+            cat paquets/SHA256SUMS.txt
+            printf '```\n'
+          } > notes.md
+          gh release create "$tag" paquets/*.zip paquets/*.msix paquets/SHA256SUMS.txt \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "Color ${version%%+*} pour Windows (version expérimentale)" \
+            --notes-file notes.md
+          echo "etiquette=$tag" >> "$GITHUB_OUTPUT"
+
+  essayer:
+    name: Essayer la version publiée (${{ matrix.architecture }})
+    needs: publier
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: x64
+            machine: windows-latest
+          - architecture: arm64
+            machine: windows-11-arm
+    runs-on: ${{ matrix.machine }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: L'essai
+        shell: pwsh
+        run: python scripts/windows-desktop/essai-publie.py "$env:RUNNER_TEMP\essai" --architecture ${{ matrix.architecture }} --depot ${{ github.repository }} --etiquette ${{ needs.publier.outputs.etiquette }}
+      - name: Garder l'essai
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: essai-${{ matrix.architecture }}
+          path: ${{ runner.temp }}/essai/**
+          if-no-files-found: warn

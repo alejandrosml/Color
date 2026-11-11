@@ -41,6 +41,8 @@ mod resize;
 pub use resize::*;
 mod sound;
 pub use sound::*;
+mod print;
+pub use print::*;
 mod stamps;
 pub use stamps::*;
 mod text;

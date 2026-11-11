@@ -34,6 +34,7 @@ import 'dart:ui' as ui;
 import 'package:edupaint_flutter_study/app_folders.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
 import 'package:edupaint_flutter_study/gallery_storage.dart';
+import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/licences.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/options_dialog.dart';
@@ -71,6 +72,11 @@ void main() {
 
   binding.addTimingsCallback(firstFrameDrawn);
   final folder = Platform.environment['COLOR_SCENARIO_DIR'];
+  // Windows cannot be told a language for one program: the script outside
+  // names the one of the scenario, which is written in French.
+  if (Platform.environment['COLOR_SCENARIO_LANGUAGE'] == 'fr') {
+    debugDeviceLanguage = AppLanguage.french;
+  }
 
   testWidgets('the studio, played on the real engine', (tester) async {
     if (folder == null || folder.isEmpty) {

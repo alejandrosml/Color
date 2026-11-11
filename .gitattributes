@@ -1,0 +1,7 @@
+# Compared byte for byte with the checksums that cargo keeps beside them, or
+# compiled into the core as they are: never a conversion of line ends.
+prototypes/native-swift-rust/core/vendor/** -text
+prototypes/native-swift-rust/core/third-party-notices.txt -text
+prototypes/native-swift-rust/core/art/** -text
+prototypes/native-swift-rust/core/test-fixtures/** -text
+prototypes/native-swift-rust/core/src/catalogues/** -text

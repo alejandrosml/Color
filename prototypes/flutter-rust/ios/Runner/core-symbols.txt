@@ -55,6 +55,8 @@ _ep_page_catalog
 _ep_page_count
 _ep_paper_color
 _ep_picture_from_svg
+_ep_print_result
+_ep_print_start
 _ep_project_bound
 _ep_project_size
 _ep_recognise_shape

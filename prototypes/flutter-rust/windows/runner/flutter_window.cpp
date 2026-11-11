@@ -3,7 +3,6 @@
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
-#include "print_channel.h"
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -26,9 +25,6 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
-  print_channel_ = CreatePrintChannel(
-      flutter_controller_->engine()->messenger(),
-      [this]() { return GetHandle(); });
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
@@ -44,12 +40,6 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
-  // The handler of the channel names this window: the engine forgets it
-  // before the window goes.
-  if (print_channel_) {
-    print_channel_->SetMethodCallHandler(nullptr);
-    print_channel_ = nullptr;
-  }
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -61,10 +51,11 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
-  // The print dialog of Windows runs its own loop of messages: a request to
-  // close the window that arrives meanwhile is refused, as the studio itself
-  // refuses to quit while it prints.
-  if (message == WM_CLOSE && PrintDialogIsOpen()) {
+  // While a dialog of the system is open over this window — the print
+  // dialog that the core opens (print.rs) — Windows keeps the window
+  // disabled: a request to close it that arrives meanwhile is refused, as
+  // the studio itself refuses to quit while it prints.
+  if (message == WM_CLOSE && !::IsWindowEnabled(hwnd)) {
     return 0;
   }
   // Give Flutter, including plugins, an opportunity to handle window messages.

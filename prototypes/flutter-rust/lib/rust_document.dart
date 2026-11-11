@@ -1005,6 +1005,16 @@ class _Bindings {
       .lookupFunction<Int32 Function(Uint32), int Function(int)>(
         'ep_sound_play',
       );
+  late final printStart = library
+      .lookupFunction<
+        Int32 Function(Pointer<Uint8>, Uint32, Uint32, Pointer<Utf8>),
+        int Function(Pointer<Uint8>, int, int, Pointer<Utf8>)
+      >('ep_print_start');
+  late final printResult = library
+      .lookupFunction<
+        Int32 Function(Pointer<Uint32>),
+        int Function(Pointer<Uint32>)
+      >('ep_print_result');
   late final thirdPartyNotices = library
       .lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>(
         'ep_third_party_notices',
@@ -1409,6 +1419,8 @@ const coreFunctionNames = <String>[
   'ep_page_count',
   'ep_paper_color',
   'ep_picture_from_svg',
+  'ep_print_result',
+  'ep_print_start',
   'ep_project_bound',
   'ep_project_size',
   'ep_recognise_shape',
@@ -2080,6 +2092,43 @@ class RustDocument {
   /// caller plays the WAV itself), -1 unknown identifier.
   static int playSound(int id, {String? libraryPath}) =>
       _process(libraryPath).soundPlay(id);
+
+  /// Asks the core to open the print dialog of Windows for one image on one
+  /// page: [rgba] holds [width] × [height] opaque pixels, rows from the top,
+  /// and [jobName] is what the print queue shows. Returns at once: 0 started,
+  /// 1 a request is still running, 2 refused as it is, 3 the core does not
+  /// print on this system. [printResult] then says what became of it.
+  static int printStart(
+    Uint8List rgba,
+    int width,
+    int height,
+    String jobName, {
+    String? libraryPath,
+  }) {
+    final bindings = _process(libraryPath);
+    final pixels = calloc<Uint8>(rgba.length);
+    final name = jobName.toNativeUtf8();
+    try {
+      pixels.asTypedList(rgba.length).setAll(0, rgba);
+      return bindings.printStart(pixels, width, height, name);
+    } finally {
+      calloc.free(name);
+      calloc.free(pixels);
+    }
+  }
+
+  /// What became of the request of [printStart]: its state (0 nothing asked,
+  /// 1 running, 2 sent, 3 cancelled, 4 no printer, 5 refused) and, for a
+  /// refusal, the error code of Windows. An end is said once.
+  static (int, int) printResult({String? libraryPath}) {
+    final code = calloc<Uint32>();
+    try {
+      final state = _process(libraryPath).printResult(code);
+      return (state, code.value);
+    } finally {
+      calloc.free(code);
+    }
+  }
 
   /// Cached independently from vector snapshots because the background never
   /// changes for the lifetime of this document. No PNG bytes are copied here.
