@@ -36,8 +36,8 @@ import urllib.request
 import zipfile
 
 from fenetres import (IDCANCEL, WM_CLOSE, WM_COMMAND, changed_pixels, client_size, close_first_run_screens, dialogs_of,
-                      enlarge_screen, main_window, on_screen, picture, pointer, screen_pixels, stop, user32,
-                      visible_windows)
+                      enlarge_screen, keep_on_top, main_window, on_screen, picture, pointer, screen_pixels, stop,
+                      user32, visible_windows)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('report')
@@ -165,6 +165,7 @@ try:
     if window is None:
         raise RuntimeError('color.exe showed no window in a minute')
     time.sleep(6)
+    keep_on_top(window['handle'])
     user32.SetForegroundWindow(window['handle'])
     time.sleep(1)
     wide, high = client_size(window['handle'])
@@ -251,6 +252,8 @@ try:
     stop(process)
     end_all()
     process, window, appeared = start(program)
+    if window:
+        keep_on_top(window['handle'])
     time.sleep(8)
     shot('08-relance')
     record['started_again'] = {'window_after_seconds': appeared, 'running': process.poll() is None}

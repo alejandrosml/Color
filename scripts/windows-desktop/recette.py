@@ -45,7 +45,7 @@ import time
 import zipfile
 
 from fenetres import (IDCANCEL, WM_COMMAND, client_size, close_first_run_screens, dialogs_of, enlarge_screen,
-                      main_window, picture, resize_client, stop, user32)
+                      keep_on_top, main_window, picture, resize_client, stop, user32)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('source')
@@ -298,6 +298,8 @@ try:
         time.sleep(.25)
         window = main_window(process.pid)
     appeared = round(time.monotonic() - started, 1)
+    if window:
+        keep_on_top(window['handle'])
     time.sleep(12)
     launch = {'window_appeared_after_seconds': appeared if window else None,
               'survived_12_seconds_more': process.poll() is None,
@@ -328,9 +330,12 @@ try:
             env=flutter_environment({'COLOR_SCENARIO_DIR': str(folder), 'COLOR_SCENARIO_LANGUAGE': 'fr'}))
         started = time.monotonic()
         awaited = None
+        on_top = False
         result_file = folder / 'result.json'
         while time.monotonic() - started < 900 and process.poll() is None:
             window = main_window(process.pid)
+            if window and not on_top:
+                on_top = keep_on_top(window['handle'])
             for request in sorted(shots.glob('*.request')):
                 name, done = request.stem, shots / f'{request.stem}.done'
                 if done.exists():

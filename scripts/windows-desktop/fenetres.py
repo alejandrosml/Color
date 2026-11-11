@@ -240,8 +240,18 @@ def close_first_run_screens():
     again, closed. Returns the names of the programs ended."""
     ended = []
     for name in ['WWAHost.exe', 'UserOOBEBroker.exe', 'CloudExperienceHostBroker.exe',
-                 'StartMenuExperienceHost.exe', 'SearchHost.exe']:
+                 'StartMenuExperienceHost.exe', 'SearchHost.exe', 'wsl.exe']:
         done = subprocess.run(['taskkill', '/F', '/IM', name], capture_output=True, text=True, errors='replace')
         if done.returncode == 0:
             ended.append(name)
     return ended
+
+
+def keep_on_top(handle):
+    """Keeps a window above every other one: a machine never used yet opens
+    windows of its own at any moment (an offer to update a component, for
+    one), which would cover it in the pictures and take the pointer meant
+    for it. The dialogs that the window owns still open above it."""
+    SWP_NOSIZE, SWP_NOMOVE = 0x1, 0x2
+    return bool(user32.SetWindowPos(handle, wt.HWND(-1), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE))
+
