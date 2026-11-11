@@ -6,6 +6,9 @@
   <!-- Le soleil -->
   <path d="M999 100 L1008 55 Q1020 36 1032 55 L1041 100 L1079 74 Q1101 69 1096 91 L1070 129 L1115 138 Q1134 150 1115 162 L1070 171 L1096 209 Q1101 231 1079 226 L1041 200 L1032 245 Q1020 264 1008 245 L999 200 L961 226 Q939 231 944 209 L970 171 L925 162 Q906 150 925 138 L970 129 L944 91 Q939 69 961 74 L999 100 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <circle cx="1020" cy="150" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="1002,138 1003,138" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <polyline points="1038,138 1039,138" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <path d="M998 164 Q1020 182 1042 164" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <!-- Le nuage et les mouettes -->
   <path d="M362 150 C328 150 332 104 380 108 C383 70 431 66 437 95 C452 68 500 78 494 112 C542 112 542 150 512 150 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <path d="M560 230 Q574 214 588 230 Q602 214 616 230" fill="none" stroke="#2f3d4a" stroke-width="5"/>
@@ -44,8 +47,8 @@
   <circle cx="730" cy="568" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- Les vagues devant -->
   <path d="M60 632 Q90 608 120 632 Q150 656 180 632 Q210 608 240 632 Q270 656 300 632 Q330 608 360 632 Q390 656 420 632 Q450 608 480 632 Q510 656 540 632 Q570 608 600 632 Q630 656 660 632 Q690 608 720 632 Q750 656 780 632 Q810 608 840 632 Q870 656 900 632 Q930 608 960 632 Q990 656 1020 632 Q1050 608 1080 632 Q1110 656 1140 632 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le poisson qui saute -->
-  <path d="M1066 525 C1020 500 964 532 967 582 L917 578 L946 600 L953 635 L971 589 C1015 613 1068 578 1066 525 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le poisson qui saute (queue galbée en courbes) -->
+  <path d="M1066 525 C1020 500 964 532 967 582 Q934 568 916 580 Q932 596 946 600 Q940 622 954 636 Q968 616 971 589 C1015 613 1068 578 1066 525 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <polyline points="1036,530 1037,530" fill="none" stroke="#2f3d4a" stroke-width="12"/>
   <!-- Les vagues tout devant -->
   <path d="M60 698 Q90 722 120 698 Q150 674 180 698 Q210 722 240 698 Q270 674 300 698 Q330 722 360 698 Q390 674 420 698 Q450 722 480 698 Q510 674 540 698 Q570 722 600 698 Q630 674 660 698 Q690 722 720 698 Q750 674 780 698 Q810 722 840 698 Q870 674 900 698 Q930 722 960 698 Q990 674 1020 698 Q1050 722 1080 698 Q1110 674 1140 698 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>

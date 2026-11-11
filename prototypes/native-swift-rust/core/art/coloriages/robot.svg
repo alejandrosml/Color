@@ -3,53 +3,42 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
   <title>Le robot</title>
   <desc>Un robot qui fait coucou, avec son antenne, ses grands yeux, ses boutons et ses pieds carrés, entre les étoiles.</desc>
-  <!-- Les étoiles -->
-  <line x1="170" y1="128" x2="170" y2="172" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="151" y1="139" x2="189" y2="161" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="189" y1="139" x2="151" y2="161" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="300" y1="398" x2="300" y2="442" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="281" y1="409" x2="319" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="319" y1="409" x2="281" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="150" y1="618" x2="150" y2="662" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="131" y1="629" x2="169" y2="651" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="169" y1="629" x2="131" y2="651" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1030" y1="108" x2="1030" y2="152" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1011" y1="119" x2="1049" y2="141" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1049" y1="119" x2="1011" y2="141" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="980" y1="398" x2="980" y2="442" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="961" y1="409" x2="999" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="999" y1="409" x2="961" y2="431" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1060" y1="598" x2="1060" y2="642" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1041" y1="609" x2="1079" y2="631" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1079" y1="609" x2="1041" y2="631" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <!-- L’antenne -->
-  <line x1="600" y1="124" x2="600" y2="96" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les grandes étoiles coloriables et les étincelles -->
+  <path d="M176 110 L185 135 L212 136 L191 153 L198 179 L176 164 L154 179 L161 153 L140 136 L167 135 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M168 558 L177 583 L204 584 L183 601 L190 627 L168 612 L146 627 L153 601 L132 584 L159 583 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1030 100 L1039 125 L1066 126 L1045 143 L1052 169 L1030 154 L1008 169 L1015 143 L994 126 L1021 125 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1036 550 L1045 575 L1072 576 L1051 593 L1058 619 L1036 604 L1014 619 L1021 593 L1000 576 L1027 575 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M276 388 L286 410 L308 420 L286 430 L276 452 L266 430 L244 420 L266 410 Z" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M976 388 L986 410 L1008 420 L986 430 L976 452 L966 430 L944 420 L966 410 Z" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- L’antenne et ses petites ondes -->
+  <line x1="600" y1="128" x2="600" y2="96" fill="none" stroke="#2f3d4a" stroke-width="8"/>
   <circle cx="600" cy="72" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M548 54 Q534 72 548 90" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M652 54 Q666 72 652 90" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <!-- Le cou et les bras -->
   <rect x="560" y="290" width="80" height="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="358" y="380" width="72" height="150" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="394" cy="562" r="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="770" y="380" width="72" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M436 378 L382 378 Q358 378 358 402 L358 534 L428 534 L428 438 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="393" cy="562" r="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- Le bras qui fait coucou -->
-  <rect x="806" y="230" width="72" height="150" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="842" cy="196" r="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M764 378 L810 378 L810 226 L880 226 L880 412 Q880 438 854 438 L764 438 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="845" cy="194" r="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- Les jambes et les pieds -->
-  <rect x="476" y="596" width="82" height="98" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="642" y="596" width="82" height="98" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="452" y="690" width="130" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="618" y="690" width="130" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le corps -->
-  <rect x="430" y="352" width="340" height="246" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="486" y="396" width="228" height="132" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="476" y="592" width="82" height="102" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <rect x="642" y="592" width="82" height="102" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M452 722 Q452 688 486 688 L548 688 Q582 688 582 722 L582 750 L452 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M618 722 Q618 688 652 688 L714 688 Q748 688 748 722 L748 750 L618 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le corps et son écran de contrôle -->
+  <path d="M458 352 L742 352 Q770 352 770 380 L770 570 Q770 598 742 598 L458 598 Q430 598 430 570 L430 380 Q430 352 458 352 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M506 396 L694 396 Q714 396 714 416 L714 508 Q714 528 694 528 L506 528 Q486 528 486 508 L486 416 Q486 396 506 396 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <circle cx="546" cy="462" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <circle cx="654" cy="462" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- La tête -->
-  <rect x="466" y="124" width="268" height="170" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les oreilles et la tête -->
   <circle cx="466" cy="210" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <circle cx="734" cy="210" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M492 124 L708 124 Q734 124 734 150 L734 268 Q734 294 708 294 L492 294 Q466 294 466 268 L466 150 Q466 124 492 124 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <circle cx="546" cy="196" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <polyline points="552,196 553,196" fill="none" stroke="#2f3d4a" stroke-width="18"/>
   <circle cx="654" cy="196" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <polyline points="660,196 661,196" fill="none" stroke="#2f3d4a" stroke-width="18"/>
-  <polyline points="635,250 628,258 620,265 610,269 600,270 590,269 580,265 572,258 565,250" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M562 248 Q600 278 638 248" fill="none" stroke="#2f3d4a" stroke-width="6"/>
 </svg>

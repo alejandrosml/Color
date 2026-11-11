@@ -3,52 +3,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
   <title>La fleur</title>
   <desc>Une grande fleur qui sourit dans son pot, avec ses deux feuilles, une coccinelle et un papillon qui viennent la voir.</desc>
-  <!-- La tige -->
-  <polyline points="600,440 592,480 588,520 592,560 600,600" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Les feuilles -->
-  <ellipse cx="518" cy="520" rx="72" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="462" y1="520" x2="584" y2="520" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="684" cy="562" rx="72" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="618" y1="562" x2="740" y2="562" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le pot -->
-  <rect x="500" y="640" width="200" height="112" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="468" y="596" width="264" height="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La tige galbée coloriable -->
+  <path d="M578 376 L616 376 C596 456 608 532 636 612 L596 612 C566 532 556 456 578 376 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les deux feuilles pointues et leurs nervures -->
+  <path d="M586 526 C552 482 482 470 422 504 C462 554 536 566 588 538 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M448 508 Q514 522 578 530" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M610 554 C646 510 716 498 776 532 C736 582 662 594 608 566 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M620 558 Q684 550 750 536" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Le pot de fleur galbé -->
+  <path d="M484 632 L716 632 L688 734 Q684 748 668 748 L532 748 Q516 748 512 734 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M464 590 L736 590 Q750 590 750 604 L750 638 Q750 652 736 652 L464 652 Q450 652 450 638 L450 604 Q450 590 464 590 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- Les pétales -->
-  <circle cx="600" cy="188" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="672" cy="218" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="702" cy="290" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="672" cy="362" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="600" cy="392" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="528" cy="362" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="498" cy="290" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="528" cy="218" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le cœur de la fleur -->
-  <circle cx="600" cy="290" r="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="578,274 579,274" fill="none" stroke="#2f3d4a" stroke-width="14"/>
-  <polyline points="622,274 623,274" fill="none" stroke="#2f3d4a" stroke-width="14"/>
-  <polyline points="626,303 621,309 615,314 608,317 600,318 592,317 585,314 579,309 574,303" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le papillon -->
-  <ellipse cx="924" cy="168" rx="54" ry="44" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="1012" cy="168" rx="54" ry="44" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="932" cy="240" rx="42" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="1004" cy="240" rx="42" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="968" y1="146" x2="968" y2="270" fill="none" stroke="#2f3d4a" stroke-width="18"/>
-  <polyline points="964,140 963,130 959,120 954,112 947,105" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="972,140 973,130 977,120 982,112 989,105" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="184" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="672" cy="214" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="702" cy="286" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="672" cy="358" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="388" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="528" cy="358" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="498" cy="286" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="528" cy="214" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le cœur souriant de la fleur -->
+  <circle cx="600" cy="286" r="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="578,270 579,270" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <polyline points="622,270 623,270" fill="none" stroke="#2f3d4a" stroke-width="14"/>
+  <path d="M572 300 Q600 324 628 300" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le papillon aux ailes galbées -->
+  <path d="M966 196 C950 132 874 108 854 156 C838 194 892 224 966 212 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M970 196 C986 132 1062 108 1082 156 C1098 194 1044 224 970 212 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M966 212 C904 212 868 252 894 282 C916 306 956 284 966 236 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M970 212 C1032 212 1068 252 1042 282 C1020 306 980 284 970 236 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="968" y1="150" x2="968" y2="274" fill="none" stroke="#2f3d4a" stroke-width="16"/>
+  <path d="M964 146 Q958 114 938 104" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M972 146 Q978 114 998 104" fill="none" stroke="#2f3d4a" stroke-width="6"/>
   <!-- La coccinelle -->
-  <line x1="180" y1="444" x2="154" y2="434" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="180" y1="474" x2="154" y2="464" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="180" y1="504" x2="154" y2="494" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="280" y1="444" x2="306" y2="434" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="280" y1="474" x2="306" y2="464" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="280" y1="504" x2="306" y2="494" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="236,386 235,376 231,366 224,359 216,354" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="224,386 225,376 229,366 236,359 244,354" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="230" cy="404" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="230" cy="480" r="62" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="230" y1="420" x2="230" y2="540" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M180 444 Q162 440 150 430" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M176 476 Q158 474 146 466" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M180 508 Q162 510 150 518" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M280 444 Q298 440 310 430" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M284 476 Q302 474 314 466" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M280 508 Q298 510 310 518" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M222 382 Q216 356 198 348" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M238 382 Q244 356 262 348" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="230" cy="402" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="230" cy="480" r="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="230" y1="416" x2="230" y2="544" fill="none" stroke="#2f3d4a" stroke-width="6"/>
   <polyline points="200,456 201,456" fill="none" stroke="#2f3d4a" stroke-width="20"/>
-  <polyline points="262,456 263,456" fill="none" stroke="#2f3d4a" stroke-width="20"/>
+  <polyline points="260,456 261,456" fill="none" stroke="#2f3d4a" stroke-width="20"/>
   <polyline points="196,506 197,506" fill="none" stroke="#2f3d4a" stroke-width="20"/>
   <polyline points="264,506 265,506" fill="none" stroke="#2f3d4a" stroke-width="20"/>
 </svg>

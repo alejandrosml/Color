@@ -28,6 +28,7 @@
   <!-- La souris -->
   <circle cx="1000" cy="522" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <circle cx="1052" cy="518" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1082 586 Q1114 580 1110 552" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <path d="M936 576 C939 567 954 554 968 546 C982 538 1003 531 1020 530 C1037 529 1057 535 1068 542 C1079 549 1086 564 1086 574 C1086 584 1078 598 1066 604 C1054 610 1032 610 1012 610 C992 610 961 608 948 602 C935 596 933 585 936 576 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <polyline points="990,560 991,560" fill="none" stroke="#2f3d4a" stroke-width="14"/>
   <polyline points="936,576 937,576" fill="none" stroke="#2f3d4a" stroke-width="14"/>
@@ -48,13 +49,13 @@
   <!-- Les pattes de derrière -->
   <path d="M450 520 C456 500 469 474 482 468 C495 462 519 473 530 486 C541 499 543 528 548 548 C553 568 570 594 560 604 C550 614 509 612 490 610 C471 608 455 605 448 590 C441 575 444 540 450 520 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <path d="M750 520 C756 540 759 575 752 590 C745 605 729 608 710 610 C691 612 650 614 640 604 C630 594 647 568 652 548 C657 528 659 499 670 486 C681 473 705 462 718 468 C731 474 744 500 750 520 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Les pattes de devant -->
-  <path d="M600 440 L600 610 L566 610 C546 610 536 600 536 584 L536 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <path d="M558 610 L558 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <path d="M578 610 L578 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <path d="M600 440 L600 610 L634 610 C654 610 664 600 664 584 L664 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <path d="M622 610 L622 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <path d="M642 610 L642 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Les pattes de devant (galbées avec douceur) -->
+  <path d="M598 440 C598 504 602 566 596 602 C592 612 574 614 556 612 C536 610 528 596 532 576 C538 544 534 492 538 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M554 612 L554 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M574 612 L574 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M602 440 C602 504 598 566 604 602 C608 612 626 614 644 612 C664 610 672 596 668 576 C662 544 666 492 662 440 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M626 612 L626 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M646 612 L646 594" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <!-- Le plastron -->
   <path d="M514 338 C508 400 520 460 550 482 Q575 468 600 490 Q625 468 650 482 C680 460 692 400 686 338 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- Les oreilles -->

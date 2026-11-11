@@ -299,7 +299,7 @@ void main() {
       final beyond = (precisePixels + .5) / scale;
       expect(beyond, lessThan(line.width / 2 - .5));
       await studio.tap('color-e69976');
-      await tester.tapAt(_onScreen(tester, box.center.dx, box.top - beyond));
+      await tester.tapAt(_onScreen(tester, box.left - beyond, box.center.dy));
       await tester.pumpAndSettle();
       var document = await studio.saved();
       try {
@@ -311,7 +311,7 @@ void main() {
       // Beside the line, the sheet itself.
       await studio.tap('color-9385bc');
       await tester.tapAt(
-        _onScreen(tester, box.center.dx, box.top - line.width / 2 - 4),
+        _onScreen(tester, box.left - line.width / 2 - 4, box.center.dy),
       );
       await tester.pumpAndSettle();
       document = await studio.saved();

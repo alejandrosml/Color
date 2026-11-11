@@ -3,19 +3,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
   <title>La fusée</title>
   <desc>Une fusée qui s’envole vers les étoiles, avec son hublot et ses flammes, entre une planète à anneau et la lune.</desc>
-  <!-- Les étoiles -->
-  <line x1="420" y1="88" x2="420" y2="132" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="401" y1="99" x2="439" y2="121" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="439" y1="99" x2="401" y2="121" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <!-- Les grandes étoiles à colorier et les petites étoiles -->
+  <path d="M390 66 L402 92 L430 96 L410 116 L415 144 L390 130 L365 144 L370 116 L350 96 L378 92 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M160 510 L172 536 L200 540 L180 560 L185 588 L160 574 L135 588 L140 560 L120 540 L148 536 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1010 470 L1022 496 L1050 500 L1030 520 L1035 548 L1010 534 L985 548 L990 520 L970 500 L998 496 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <line x1="820" y1="278" x2="820" y2="322" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <line x1="801" y1="289" x2="839" y2="311" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <line x1="839" y1="289" x2="801" y2="311" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="160" y1="538" x2="160" y2="582" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="141" y1="549" x2="179" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="179" y1="549" x2="141" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1040" y1="538" x2="1040" y2="582" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1021" y1="549" x2="1059" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <line x1="1059" y1="549" x2="1021" y2="571" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <line x1="330" y1="678" x2="330" y2="722" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <line x1="311" y1="689" x2="349" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <line x1="349" y1="689" x2="311" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
@@ -23,24 +17,26 @@
   <line x1="881" y1="689" x2="919" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <line x1="919" y1="689" x2="881" y2="711" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <!-- La lune -->
-  <circle cx="990" cy="160" r="74" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="984,140 982,149 975,156 966,158 957,156 950,149 948,140 950,131 957,124 966,122 975,124 982,131 984,140" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <polyline points="1030,188 1028,195 1022,199 1014,199 1008,195 1006,188 1008,181 1014,177 1022,177 1028,181 1030,188" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <circle cx="996" cy="160" r="78" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="964" cy="136" r="18" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <circle cx="1026" cy="186" r="14" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <circle cx="980" cy="202" r="10" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <!-- La planète et son anneau -->
-  <ellipse cx="230" cy="300" rx="160" ry="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="230" cy="300" r="92" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="140,335 155,337 170,339 185,340 200,341 215,342 230,342 245,342 260,341 275,340 290,339 305,337 320,335" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="230" cy="296" r="88" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M144 276 C88 292 64 314 70 332 C78 358 160 364 246 344 C332 324 396 286 388 260 C382 242 350 238 302 246 Q312 260 316 276 C296 298 202 322 142 302 Q142 288 144 276 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M142 292 C112 302 102 312 108 320 C114 326 130 324 148 320" fill="none" stroke="#2f3d4a" stroke-width="5"/>
+  <path d="M312 260 C340 256 354 260 352 268 C350 276 334 286 314 294" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <!-- Les flammes -->
-  <ellipse cx="600" cy="668" rx="62" ry="72" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="600" cy="650" rx="32" ry="46" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Les ailerons -->
-  <circle cx="516" cy="500" r="76" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="684" cy="500" r="76" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- La fusée -->
-  <ellipse cx="600" cy="252" rx="84" ry="150" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="516" y="252" width="168" height="300" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="516" y="430" width="168" height="64" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="600" cy="330" r="50" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="600" cy="330" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="550" y="552" width="100" height="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M542 586 C512 638 516 700 550 736 Q568 708 576 694 Q588 734 600 758 Q612 734 624 694 Q632 708 650 736 C684 700 688 638 658 586 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M568 586 C556 622 566 664 600 694 C634 664 644 622 632 586 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les ailerons et la tuyère -->
+  <path d="M518 424 C450 452 412 518 418 594 C456 564 494 552 538 552 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M682 424 C750 452 788 518 782 594 C744 564 706 552 662 552 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M546 544 L654 544 L668 604 L532 604 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le corps de la fusée, sa coiffe, sa bande et son hublot -->
+  <path d="M600 74 C642 120 670 172 686 226 Q600 244 514 226 C530 172 558 120 600 74 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M514 226 Q600 244 686 226 C708 310 708 400 696 468 Q600 486 504 468 C492 400 492 310 514 226 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M504 468 Q600 486 696 468 C690 504 680 534 670 556 L530 556 C520 534 510 504 504 468 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="346" r="56" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="600" cy="346" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
 </svg>

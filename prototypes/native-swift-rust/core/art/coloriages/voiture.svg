@@ -5,44 +5,36 @@
   <desc>Une petite voiture qui roule sur la route, avec ses fenêtres, ses phares et ses roues, sous le soleil et un nuage.</desc>
   <!-- La route -->
   <rect x="60" y="638" width="1080" height="110" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="110" y1="698" x2="190" y2="698" fill="none" stroke="#2f3d4a" stroke-width="10"/>
-  <line x1="290" y1="698" x2="370" y2="698" fill="none" stroke="#2f3d4a" stroke-width="10"/>
-  <line x1="470" y1="698" x2="550" y2="698" fill="none" stroke="#2f3d4a" stroke-width="10"/>
-  <line x1="650" y1="698" x2="730" y2="698" fill="none" stroke="#2f3d4a" stroke-width="10"/>
-  <line x1="830" y1="698" x2="910" y2="698" fill="none" stroke="#2f3d4a" stroke-width="10"/>
-  <line x1="1010" y1="698" x2="1090" y2="698" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="110" y1="696" x2="190" y2="696" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="290" y1="696" x2="370" y2="696" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="470" y1="696" x2="550" y2="696" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="650" y1="696" x2="730" y2="696" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="830" y1="696" x2="910" y2="696" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="1010" y1="696" x2="1090" y2="696" fill="none" stroke="#2f3d4a" stroke-width="10"/>
   <!-- Le soleil -->
-  <circle cx="1030" cy="160" r="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="1106" y1="191" x2="1133" y2="203" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="1061" y1="236" x2="1073" y2="263" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="999" y1="236" x2="987" y2="263" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="954" y1="191" x2="927" y2="203" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="954" y1="129" x2="927" y2="117" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="999" y1="84" x2="987" y2="57" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="1061" y1="84" x2="1073" y2="57" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="1106" y1="129" x2="1133" y2="117" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M999 100 L1008 55 Q1020 36 1032 55 L1041 100 L1079 74 Q1101 69 1096 91 L1070 129 L1115 138 Q1134 150 1115 162 L1070 171 L1096 209 Q1101 231 1079 226 L1041 200 L1032 245 Q1020 264 1008 245 L999 200 L961 226 Q939 231 944 209 L970 171 L925 162 Q906 150 925 138 L970 129 L944 91 Q939 69 961 74 L999 100 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="1020" cy="150" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- Le nuage -->
-  <circle cx="200" cy="160" r="46" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="300" cy="164" r="42" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="250" cy="132" r="56" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M136 172 C92 172 96 114 156 118 C160 72 222 66 232 102 C252 68 314 80 308 124 C366 124 366 172 326 172 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- La fumée -->
-  <circle cx="176" cy="528" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="116" cy="488" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le haut de la voiture -->
-  <rect x="392" y="260" width="400" height="132" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="424" y="290" width="158" height="92" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <rect x="602" y="290" width="158" height="92" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le bas de la voiture -->
-  <rect x="236" y="386" width="728" height="176" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="592" y1="392" x2="592" y2="556" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="622" y1="428" x2="662" y2="428" fill="none" stroke="#2f3d4a" stroke-width="10"/>
-  <line x1="522" y1="428" x2="562" y2="428" fill="none" stroke="#2f3d4a" stroke-width="10"/>
-  <!-- Les phares -->
-  <circle cx="962" cy="440" r="34" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="238" cy="440" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="164" cy="524" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="102" cy="478" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le toit et les fenêtres de la voiture -->
+  <path d="M348 398 C374 280 454 224 586 224 C718 224 798 282 832 398 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M396 384 C418 304 474 264 572 264 L572 384 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M604 264 C702 264 758 304 784 384 L604 384 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M712 382 L732 344" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M720 336 Q738 328 746 348" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La carrosserie et les phares -->
+  <circle cx="238" cy="466" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="962" cy="462" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M232 496 C232 422 278 384 356 384 L828 384 C916 384 968 424 968 494 L968 544 C968 564 950 572 918 572 L282 572 C250 572 232 562 232 542 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M588 388 L588 566" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="618" y1="428" x2="660" y2="428" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <line x1="518" y1="428" x2="560" y2="428" fill="none" stroke="#2f3d4a" stroke-width="10"/>
   <!-- Les roues -->
-  <circle cx="412" cy="566" r="78" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="412" cy="566" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="790" cy="566" r="78" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="790" cy="566" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="408" cy="568" r="80" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="408" cy="568" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="792" cy="568" r="80" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="792" cy="568" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
 </svg>

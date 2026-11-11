@@ -615,46 +615,36 @@ fn the_chimney_and_the_ground_of_the_house_lose_what_the_file_paints_over() {
         .find_map(|(id, ((key, _), page))| (*key == "maison").then_some((id, page)))
         .unwrap();
     assert_eq!(index, 7);
-    // The chimney, a rectangle from 664,240 to 728,350, goes down into the
-    // roof drawn after it, from y = 300: three sides of it are left, joined
-    // across the start of its outline.
+    // The chimney, a rectangle from 676,212 to 748,356, goes down into the
+    // sloped roof drawn after it: three sides of it are left, joined across
+    // the start of its outline, shorter on the left than down the right slope.
     assert_eq!(
-        page.objects[19].points,
-        [ep(664.0, 240.0), ep(728.0, 350.0)]
+        page.objects[11].points,
+        [ep(676.0, 212.0), ep(748.0, 356.0)]
     );
+    let [chimney] = &pieces(&page, 11)[..] else {
+        panic!("one piece of three sides");
+    };
+    assert_eq!(chimney.len(), 4);
     assert_eq!(
-        pieces(&page, 19),
-        [vec![
-            ep(664.0, 300.0),
-            ep(664.0, 240.0),
-            ep(728.0, 240.0),
-            ep(728.0, 300.0)
-        ]]
+        (chimney[1], chimney[2]),
+        (ep(676.0, 212.0), ep(748.0, 212.0))
     );
-    // The roof stays a rectangle: the walls under it only touch it.
-    assert!(whole(&page, 20) && whole(&page, 21));
-    // The top of the ground, y = 632, loses where the two lower bushes,
-    // drawn after it, cross it; the third one stops above it.
-    let ground = pieces(&page, 0);
-    assert_eq!(ground.len(), 2);
-    // Half the chord of each bush at y = 632: radii 50 and 46, centres 38
-    // and 34 above.
-    let first_bush = (50.0f64 * 50.0 - 38.0 * 38.0).sqrt();
-    let second_bush = (46.0f64 * 46.0 - 34.0 * 34.0).sqrt();
-    assert_eq!(ground[0].len(), 2);
-    assert!(close(ground[0][0], (188.0 + first_bush, 632.0), 1e-3));
-    assert!(close(ground[0][1], (346.0 - second_bush, 632.0), 1e-3));
-    assert!(close(ground[1][0], (346.0 + second_bush, 632.0), 1e-3));
-    assert_eq!(
-        ground[1][1..5],
-        [
-            ep(1140.0, 632.0),
-            ep(1140.0, 750.0),
-            ep(60.0, 750.0),
-            ep(60.0, 632.0)
-        ]
-    );
-    assert!(close(ground[1][5], (188.0 - first_bush, 632.0), 1e-3));
+    assert_eq!((chimney[0].x, chimney[3].x), (676.0, 748.0));
+    assert!(chimney[0].y > 220.0 && chimney[0].y < chimney[3].y && chimney[3].y < 290.0);
+    // The ground, the sloped roof and the walls under it stay whole: the
+    // shapes that meet them only touch their outline.
+    assert!(whole(&page, 0) && whole(&page, 12) && whole(&page, 16));
+    // The star of the sun loses its middle under the disc drawn over it
+    // (centre 180,150, radius 58), leaving its eight rays around the circle.
+    let rays = pieces(&page, 2);
+    assert_eq!(rays.len(), 8);
+    for ray in &rays {
+        for end in [ray.first().unwrap(), ray.last().unwrap()] {
+            let radius = ((end.x - 180.0).hypot(end.y - 150.0) - 58.0).abs();
+            assert!(radius <= 0.3, "{end:?}: {radius}");
+        }
+    }
 }
 
 #[test]

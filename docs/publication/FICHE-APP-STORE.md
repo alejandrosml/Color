@@ -2,7 +2,19 @@
 
 Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; jusqu'à la 1.0.1, Color n'existe qu'en français. La 1.1 parle aussi anglais : sa fiche reçoit une localisation anglaise, prête plus bas.
 
-## Où en est la fiche (6 novembre 2026)
+## Où en est la fiche (11 novembre 2026)
+
+**La 1.1.1 (42) : publiée sur le Mac, en attente de vérification pour l'iPhone et l'iPad.** Le 10 novembre, à ta demande (« pousser la dernière version, puis toujours la dernière »), les builds 1.1.1 (42) sont partis chez Apple par « Envoyer Color vers l'App Store », et les deux versions 1.1.1 ont été préparées par la clé d'API puis envoyées à la vérification vers 23 h, en publication automatique. Le 11 novembre vers 16 h 15, App Store Connect dit la 1.1.1 du Mac « prête pour la distribution » : elle est publiée, dans la catégorie Enfants. Celle de l'iPhone et de l'iPad attend encore. Le détail : `docs/JALON-1.1.1.md`.
+
+- **La 1.0.0 (39) de l'iPhone et de l'iPad a été acceptée le 10 novembre** (courriel de 8 h 56). Leur 1.0.1 et leur 1.1.0 ne sont jamais parties à la vérification : l'iPhone passe de la 1.0.0 à la 1.1.1, le Mac de la 1.0.1 à la 1.1.1. Les builds 1.1.0 (41) restent chez Apple sans servir.
+- **« Fait pour les enfants » est coché, tranche « 5 ans et moins »** (10 novembre). Apple l'a accepté sur le Mac : la case ne se décoche plus, et toutes les versions suivantes suivent les règles 1.3 et 5.1.4.
+- **Le sous-titre** est redevenu « Atelier de dessin pour enfants » ; la description redit « pour les enfants ».
+- **Les pages anglaises** (`en-US` et `en-GB`) existent : description, mots-clés, texte promotionnel, nouveautés, adresses, sous-titre « Drawing studio for children ». **Le nom « Color » était déjà pris en anglais : tu as choisi « Color: Drawing Studio »** ; le nom français reste « Color ».
+- **Les nouveautés de la 1.1.1** sont celles de la 1.1, plus bas, avec une ligne de plus : « Les douze pages à colorier ont été redessinées : de nouveaux dessins, plus beaux. » (« The twelve colouring pages have been redrawn: new, nicer drawings. »)
+- **Les captures** sont encore celles de la 1.0, en français même sur les pages anglaises, et celle du coloriage montre l'ancien dinosaure : elles seront toutes refaites avec la 1.2.
+- Apple Vision Pro : rien à faire, App Store Connect dit de lui-même que la 1.1.1 n'y est pas disponible.
+
+Ce qui suit raconte les versions précédentes.
 
 **macOS : la 1.0.0 acceptée le 4 novembre, la 1.0.1 acceptée le 6.** Apple a accepté Color 1.0.0 (39) pour le Mac le 4 novembre au soir (courriel de 20 h 17), et l'a publiée aussitôt, comme prévu. Le 5 novembre, à ta demande, les builds 1.0.1 (40) du Mac, de l'iPhone et de l'iPad sont partis chez Apple (« Envoyer Color vers l'App Store », vers 0 h 25), et la version 1.0.1 du Mac a été envoyée à la vérification à 0 h 38, avec ton accord :
 
@@ -37,7 +49,7 @@ Ce qui a été rempli dans App Store Connect :
 - « Confidentialité de l'app » : l'adresse de la politique de confidentialité, et « **Données non collectées** », publiée à ta demande.
 - Les 12 captures, sur les pages produit de l'iPhone, de l'iPad 13 pouces et du Mac.
 
-Pour une prochaine version, les mêmes réponses : droits sur le contenu « Oui » ; âge « Non » ou « Aucun » partout, sans « Conçu pour les enfants » ; confidentialité « Non, nous ne collectons aucune donnée via cette app ».
+Pour une prochaine version, les mêmes réponses : droits sur le contenu « Oui » ; âge « Non » ou « Aucun » partout, avec « Fait pour les enfants », tranche « 5 ans et moins », depuis la 1.1.1 ; confidentialité « Non, nous ne collectons aucune donnée via cette app ».
 
 Ensuite :
 
@@ -51,8 +63,8 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 
 | Champ | À mettre |
 |---|---|
-| Nom | **Color** ; s'il est déjà pris : **Color Atelier de Dessin** |
-| Sous-titre (30 caractères au plus) | Atelier de dessin, depuis le 4 novembre (règle 2.3.8). « Atelier de dessin pour enfants » pourra revenir avec la catégorie Enfants, à la 1.1 |
+| Nom | **Color** en français. En anglais, où « Color » était pris : **Color: Drawing Studio** (ton choix du 10 novembre) |
+| Sous-titre (30 caractères au plus) | **Atelier de dessin pour enfants**, revenu le 10 novembre avec la catégorie Enfants (du 4 au 10 novembre : « Atelier de dessin », règle 2.3.8). En anglais : Drawing studio for children |
 | Identifiant de lot (Bundle ID) | fr.aisml.color |
 | SKU | color |
 | Langue principale | Français |
@@ -60,7 +72,7 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | Catégorie secondaire | Divertissement |
 | Droits sur le contenu | « Oui, l'app contient du contenu de tiers, et j'ai les droits nécessaires » : des sons sous licence CC0 et la police DejaVu Sans, dont les licences sont dans « À propos » → « Licences » |
 | Classification par âge | Répondre « Aucun » à chaque question : Color obtient **4+** |
-| Fait pour les enfants (« Made for Kids ») | **Non coché** pour la 1.0. **À cocher avec la 1.1**, décidé le 4 novembre. La catégorie Enfants demande un contrôle parental devant ce qui fait sortir de l'app et devant les achats ; Color n'a ni l'un ni l'autre, et ses panneaux de fichiers restent dans l'app : pas de contrôle de plus, sauf si Apple le demande. Une seule tranche d'âge (5 ans et moins, 6–8 ou 9–11 ; conseil : 5 ans et moins), sans doute impossible à changer ensuite, comme la case. Retirer alors la disponibilité sur Apple Vision Pro : les apps pour enfants n'y sont pas permises |
+| Fait pour les enfants (« Made for Kids ») | **Coché le 10 novembre, tranche « 5 ans et moins »**, et accepté par Apple sur le Mac avec la 1.1.1 : ni la case ni, sans doute, la tranche ne se changent plus. Non coché pour la 1.0 ; décidé le 4 novembre pour la 1.1. La catégorie Enfants demande un contrôle parental devant ce qui fait sortir de l'app et devant les achats ; Color n'a ni l'un ni l'autre, et ses panneaux de fichiers restent dans l'app : pas de contrôle de plus, sauf si Apple le demande. Une seule tranche d'âge (5 ans et moins, 6–8 ou 9–11 ; conseil : 5 ans et moins), sans doute impossible à changer ensuite, comme la case. Retirer alors la disponibilité sur Apple Vision Pro : les apps pour enfants n'y sont pas permises |
 | Statut de professionnel (Union européenne) | **Je ne suis pas un professionnel** |
 
 ## Prix et disponibilité
@@ -82,13 +94,13 @@ Facultatif : « Accessibilité de l'app » affiche sur la page produit les aides
 | URL d'assistance | `https://alejandrosml.github.io/Color/` |
 | URL marketing | `https://alejandrosml.github.io/Color/` |
 | Copyright | 2026 Alejandro San Martin Lamas |
-| Version | 1.0.0, puis 1.0.1 |
+| Version | 1.0.0, 1.0.1 (Mac seulement), puis 1.1.1 ; la 1.1.0 n'a jamais été envoyée à la vérification |
 
 ### Description
 
 > Color est un petit atelier de dessin. Tout y est grand, simple et bien rangé, pour dessiner sans avoir besoin de lire.
 >
-> *(« pour les enfants » retiré le 4 novembre ; à remettre avec la catégorie Enfants, à la 1.1.)*
+> *(« pour les enfants » retiré le 4 novembre, puis remis le 10 novembre avec la catégorie Enfants : la description de la 1.1.1 commence par « Color est un petit atelier de dessin pour les enfants. »)*
 >
 > • Le pinceau, les lignes, les rectangles et les ovales, le texte, la gomme et le pot de peinture.
 > • Des tampons à poser et à colorier.
@@ -160,7 +172,7 @@ Dans App Store Connect, « Informations sur l'app » → ajouter la langue angla
 
 | Champ | En anglais |
 |---|---|
-| Nom | **Color** |
+| Nom | **Color: Drawing Studio** (« Color » seul était déjà pris en anglais) |
 | Sous-titre (30) | Drawing studio for children (avec la catégorie Enfants ; sinon : Drawing studio) |
 | Texte promotionnel (170) | Draw, colour, stamp, then watch your drawing make itself again. No ads, no account, no Internet. |
 | Mots-clés (100 octets) | drawing,kids,colouring,coloring,paint,brush,stamp,art,crayon,preschool,sketch |

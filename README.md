@@ -41,4 +41,4 @@ Créé par **Alejandro San Martin Lamas** ([github.com/alejandrosml](https://git
 - Linux et Windows : versions expérimentales ; leurs scripts de construction ne sont pas encore publiés.
 - Les tests : `cargo test` dans le dossier du cœur, `flutter test` dans celui de l’application.
 
-Les sons, les polices et les bibliothèques gardent leurs propres licences : `prototypes/native-swift-rust/core/sons/PROVENANCE.md`, `prototypes/native-swift-rust/core/third-party-notices.txt`, et les fichiers `LICENCE-*.txt` de `prototypes/flutter-rust/fonts/`.
+Les sons, les polices et les bibliothèques gardent leurs propres licences, que résume le fichier `NOTICE` : `prototypes/native-swift-rust/core/sons/PROVENANCE.md`, `prototypes/native-swift-rust/core/third-party-notices.txt`, et les fichiers `LICENCE-*.txt` de `prototypes/flutter-rust/fonts/`.

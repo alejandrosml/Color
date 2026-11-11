@@ -1,6 +1,12 @@
 Third-Party Notices
 ===================
 
-This repository includes the Inter variable font under assets/fonts/.
-Inter is Copyright (c) The Inter Project Authors and licensed under the
-SIL Open Font License 1.1 (see assets/fonts/OFL.txt).
+Color is released under the MIT License (see LICENSE). The third-party
+components it includes keep their own licences:
+
+- The Rust libraries copied in prototypes/native-swift-rust/core/vendor/:
+  see prototypes/native-swift-rust/core/third-party-notices.txt.
+- The sounds: see prototypes/native-swift-rust/core/sons/PROVENANCE.md.
+- The fonts in prototypes/flutter-rust/fonts/ (DejaVu Sans, Atkinson
+  Hyperlegible, Comic Neue, Fredoka, Playwrite France Traditionnelle):
+  see the LICENCE-*.txt files beside them.

@@ -5,12 +5,12 @@
     "marge": 0.03,
     "entrees": {
       "core-android-arm64": {
-        "reference": 1229176,
-        "mesure": "1.1.0, cœur des boutiques (sans SVG, avec la compression des projets v6, panic = abort), Rust 1.99, NDK 28.2 (r28c, sous Linux), llvm-strip --strip-unneeded comme Gradle : +21,0 % sur la 1.0.1 (1 015 800 o, la même mesure refaite sur ses sources le 2 novembre 2026, à l'octet près). Ce que la 1.1 ajoute au cœur : le pot qui ferme les trous, la gomme qui coupe, les marques des outils, les formes et l'aimant, le mélange des couleurs, le format v6 et miniz_oxide."
+        "reference": 1290312,
+        "mesure": "1.1.1, cœur des boutiques (sans SVG, avec la compression des projets v6, panic = abort), Rust 1.99, NDK 28.2 (r28c, sous Linux), llvm-strip --strip-unneeded comme Gradle, le 11 novembre 2026 : +5,0 % sur la 1.1.0 (1 229 176 o de référence ; 1 228 632 o reconstruite le même jour sur la même machine). Comme pour le cœur de Linux, toute la différence est le catalogue des douze pages à colorier redessinées (src/catalogues/pages.bin : +61 420 o)."
       },
       "core-linux-x86_64": {
-        "reference": 1399000,
-        "mesure": "1.1.0, cœur des boutiques tel que la recette Linux le construit (--no-default-features --features deflate), avec la Rust de scripts/rust-reference.json (1.99) : +25,3 % sur la 1.0.1 (1 116 120 o, mesure refaite sur ses sources le 2 novembre 2026, à l'octet près), pour les mêmes ajouts que le cœur d'Android."
+        "reference": 1459104,
+        "mesure": "1.1.1, cœur des boutiques tel que la recette Linux le construit (--no-default-features --features deflate), avec la Rust de scripts/rust-reference.json (1.99), le 11 novembre 2026 : +4,4 % sur la 1.1.0 (1 399 000 o de référence ; 1 397 408 o reconstruite le même jour sur la même machine). Toute la différence est le catalogue des douze pages à colorier redessinées pour la 1.1.1, plus détaillées : src/catalogues/pages.bin passe de 178 804 à 240 224 o (+61 420 o) ; le reste du cœur ne bouge pas. La 1.1.1 n'était pas passée par la recette Linux avant son envoi : son cœur dépassait l'ancienne référence, marge comprise."
       },
       "android-aab-arm64-v8a": {
         "reference": null,

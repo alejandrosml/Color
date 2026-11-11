@@ -3,36 +3,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" stroke-linecap="round" stroke-linejoin="round">
   <title>Le poisson</title>
   <desc>Un gros poisson tacheté qui fait des bulles au fond de la mer, entre les algues et les cailloux.</desc>
-  <!-- Les algues -->
-  <ellipse cx="126" cy="556" rx="32" ry="112" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="190" cy="600" rx="30" ry="70" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="1066" cy="566" rx="32" ry="102" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="1004" cy="610" rx="30" ry="62" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le sable -->
-  <rect x="60" y="652" width="1080" height="98" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="330" cy="702" rx="64" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Les algues souples -->
+  <path d="M104 676 C78 606 132 542 102 476 C78 424 118 366 134 356 C162 372 142 428 162 476 C188 542 138 606 164 676 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M184 684 C168 632 208 584 188 534 C172 496 202 454 218 448 C242 462 226 502 242 540 C260 588 222 634 240 684 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M1066 676 C1042 606 1092 542 1064 476 C1044 428 1074 372 1098 362 C1118 374 1104 426 1124 476 C1150 542 1100 606 1126 676 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M988 684 C972 642 1006 602 990 562 C976 530 998 498 1018 492 C1038 502 1028 532 1044 562 C1060 602 1024 642 1042 684 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le sable et les cailloux -->
+  <path d="M60 656 C220 632 400 668 600 650 C800 632 980 668 1140 648 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="330" cy="702" rx="66" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <ellipse cx="860" cy="704" rx="76" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- La queue et les nageoires -->
-  <circle cx="860" cy="380" r="108" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="838" y1="340" x2="944" y2="316" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="842" y1="380" x2="960" y2="380" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <line x1="838" y1="420" x2="944" y2="444" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="560" cy="206" rx="112" ry="62" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <ellipse cx="596" cy="552" rx="80" ry="60" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Le corps -->
-  <ellipse cx="560" cy="380" rx="262" ry="166" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="455,290 466,308 473,330 478,354 480,380 478,406 473,430 466,452 455,470" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="560,300 561,300" fill="none" stroke="#2f3d4a" stroke-width="24"/>
-  <polyline points="650,352 651,352" fill="none" stroke="#2f3d4a" stroke-width="30"/>
-  <polyline points="580,430 581,430" fill="none" stroke="#2f3d4a" stroke-width="30"/>
-  <polyline points="700,448 701,448" fill="none" stroke="#2f3d4a" stroke-width="22"/>
-  <polyline points="520,360 521,360" fill="none" stroke="#2f3d4a" stroke-width="18"/>
-  <!-- L’œil et la bouche -->
-  <circle cx="392" cy="334" r="40" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <polyline points="404,330 405,330" fill="none" stroke="#2f3d4a" stroke-width="22"/>
-  <polyline points="357,415 351,421 343,425 334,426 325,425 317,421 311,415" fill="none" stroke="#2f3d4a" stroke-width="6"/>
-  <!-- Les bulles -->
-  <circle cx="250" cy="262" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="200" cy="176" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <circle cx="262" cy="96" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M756 356 C828 254 920 212 976 236 C992 286 954 344 906 380 C954 416 992 474 976 524 C920 548 828 506 756 404 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M810 350 Q880 318 940 286" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <line x1="816" y1="380" x2="898" y2="380" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M810 410 Q880 442 940 474" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M416 244 C468 148 598 132 686 182 C678 220 646 246 604 262 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M504 504 C534 584 610 612 666 588 C664 548 634 516 600 498 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- Le corps du poisson -->
+  <path d="M276 380 C276 276 396 212 550 212 C690 212 792 288 810 380 C792 472 690 548 550 548 C396 548 276 484 276 380 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M436 286 C472 336 472 424 436 474" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- La nageoire pectorale et les vraies taches à colorier -->
+  <path d="M472 388 C510 352 564 352 582 384 C598 414 566 452 522 446 C494 442 472 416 472 388 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="560" cy="288" rx="38" ry="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="678" cy="336" rx="42" ry="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <ellipse cx="654" cy="442" rx="38" ry="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <!-- L’œil, le sourire et les bulles -->
+  <circle cx="372" cy="334" r="38" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="364,332 365,332" fill="none" stroke="#2f3d4a" stroke-width="22"/>
+  <path d="M296 410 Q324 434 356 412" fill="none" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="238" cy="264" r="30" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="188" cy="176" r="36" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <circle cx="250" cy="96" r="32" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
 </svg>

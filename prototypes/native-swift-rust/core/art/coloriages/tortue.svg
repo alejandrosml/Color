@@ -11,6 +11,9 @@
   <!-- Le soleil et un petit nuage -->
   <path d="M989 100 L998 55 Q1010 36 1022 55 L1031 100 L1069 74 Q1091 69 1086 91 L1060 129 L1105 138 Q1124 150 1105 162 L1060 171 L1086 209 Q1091 231 1069 226 L1031 200 L1022 245 Q1010 264 998 245 L989 200 L951 226 Q929 231 934 209 L960 171 L915 162 Q896 150 915 138 L960 129 L934 91 Q929 69 951 74 L989 100 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <circle cx="1010" cy="150" r="58" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <polyline points="992,138 993,138" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <polyline points="1028,138 1029,138" fill="none" stroke="#2f3d4a" stroke-width="10"/>
+  <path d="M988 164 Q1010 182 1032 164" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <path d="M760 160 C728 160 732 118 774 122 C777 86 815 83 820 110 C832 84 870 94 866 125 C908 125 908 160 880 160 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <!-- Le pré -->
   <path d="M60 520 C200 494 330 520 470 508 C620 496 760 518 900 506 C1000 498 1080 512 1140 504 L1140 750 L60 750 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
@@ -32,12 +35,12 @@
   <polyline points="546,626 547,626" fill="none" stroke="#2f3d4a" stroke-width="14"/>
   <polyline points="585,630 586,630" fill="none" stroke="#2f3d4a" stroke-width="14"/>
   <path d="M560 700 Q568 708 577 700" fill="none" stroke="#2f3d4a" stroke-width="5"/>
-  <!-- La tortue : la queue, les pattes et la tête -->
+  <!-- La tortue : la queue, les pattes galbées et la tête -->
   <path d="M336 482 Q282 504 226 566 Q290 566 342 534 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <path d="M402 500 L402 590 Q402 606 418 606 L452 606 Q468 606 468 590 L468 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <path d="M712 500 L712 590 Q712 606 728 606 L762 606 Q778 606 778 590 L778 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <path d="M344 500 L344 606 Q344 622 360 622 L406 622 Q422 622 422 606 L422 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
-  <path d="M650 500 L650 606 Q650 622 666 622 L712 622 Q728 622 728 606 L728 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M404 500 C398 534 396 566 400 590 Q402 606 418 606 L452 606 Q468 606 470 590 C474 566 470 534 466 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M714 500 C708 534 706 566 710 590 Q712 606 728 606 L762 606 Q778 606 780 590 C784 566 780 534 776 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M346 500 C340 538 336 576 342 606 Q344 622 360 622 L406 622 Q422 622 424 606 C428 576 424 538 420 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
+  <path d="M652 500 C646 538 642 576 648 606 Q650 622 666 622 L712 622 Q728 622 730 606 C734 576 730 538 726 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
   <path d="M359 622 Q368 608 377 622 Q386 608 395 622 Q404 608 413 622" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <path d="M665 622 Q674 608 683 622 Q692 608 701 622 Q710 608 719 622" fill="none" stroke="#2f3d4a" stroke-width="5"/>
   <path d="M744 500 C739 486 762 455 776 438 C790 421 813 414 826 400 C839 386 843 364 856 352 C869 340 889 332 906 330 C923 328 943 334 956 342 C969 350 980 366 984 380 C988 394 985 412 978 424 C971 436 955 445 940 450 C925 455 904 452 888 456 C872 460 860 465 846 476 C832 487 823 520 806 524 C789 528 749 514 744 500 Z" fill="#ffffff" stroke="#2f3d4a" stroke-width="6"/>
