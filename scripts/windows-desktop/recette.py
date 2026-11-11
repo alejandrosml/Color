@@ -427,7 +427,8 @@ try:
     print('packages', flush=True)
     packages = report / 'packages'
     packages.mkdir()
-    name = f'Color-{version}-windows-{arch}'
+    # No « + » in the names: the page of a release would rename such a file.
+    name = f"Color-{version.replace('+', '-')}-windows-{arch}"
     notice = (source / 'scripts' / 'windows-desktop' / 'LISEZMOI-WINDOWS.txt').read_text(encoding='utf-8')
     extras = {'LISEZMOI.txt': notice.replace('@VERSION@', version).replace('@ARCHITECTURE@', arch).encode('utf-8'),
               'LICENSE.txt': (source / 'LICENSE').read_bytes(),
