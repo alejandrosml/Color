@@ -8,6 +8,13 @@
 // when the system asks for less motion, or while Color is not in front,
 // nothing ticks at all: the decor is a still picture. A clock of the decor
 // is then set once a minute, which is no movement but the time.
+//
+// Nothing must slow a trait down. While a gesture goes on on the sheet the
+// decor rests: it stops where it is, and the whole of it — the pieces that
+// move and the light too — is one image, which every image of the trait
+// only lays down. So it is whenever nothing moves. And the decor waits for
+// the first image of the studio to be shown before it paints itself: the
+// sheet and the tools come first.
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -50,9 +57,23 @@ class DecorView extends StatefulWidget {
     required this.sheetAtRest,
     required this.motion,
     this.now,
+    this.resting,
+    this.corners = 0,
+    this.behind,
   });
 
   final Decor decor;
+
+  /// Says whether a gesture goes on on the sheet: the decor then stops
+  /// where it is, and moves on when the gesture ends. Asked at each tick
+  /// of the movement, so that no end of a gesture is missed.
+  final bool Function()? resting;
+
+  /// The radius of the corners of the frame, and the colour that lies
+  /// behind the frame: the corners are painted over in that colour, which
+  /// costs less at every image than cutting the decor round.
+  final double corners;
+  final Color? behind;
 
   /// Where the sheet lies in this frame when the whole of it is shown.
   final Rect sheetAtRest;
@@ -78,7 +99,14 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
 
   /// Counts the minutes that pass: the clock and the light follow.
   final _minutes = ValueNotifier<int>(0);
-  final _still = _StillImage();
+  final _still = _KeptImage();
+  final _whole = _KeptImage();
+
+  /// A gesture holds the decor where it is.
+  final _rests = ValueNotifier<bool>(false);
+
+  /// The first image of the studio has been shown: the decor may paint.
+  bool _shown = false;
   Timer? _moving;
   Timer? _minute;
   bool _inFront = true;
@@ -92,6 +120,9 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     final state = WidgetsBinding.instance.lifecycleState;
     _inFront = state == null || state == AppLifecycleState.resumed;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) setState(() => _shown = true);
+    });
   }
 
   @override
@@ -117,6 +148,7 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
         state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _still.drop();
+      _whole.drop();
     }
     if (inFront == _inFront) return;
     _inFront = inFront;
@@ -128,7 +160,10 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
   /// The system runs short of memory: the image goes, and is made again
   /// when the decor is next painted.
   @override
-  void didHaveMemoryPressure() => _still.drop();
+  void didHaveMemoryPressure() {
+    _still.drop();
+    _whole.drop();
+  }
 
   @override
   void dispose() {
@@ -136,6 +171,8 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
     _moving?.cancel();
     _minute?.cancel();
     _still.drop();
+    _whole.drop();
+    _rests.dispose();
     _seconds.dispose();
     _minutes.dispose();
     super.dispose();
@@ -153,7 +190,10 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
   void _settle() {
     if (_moves) {
       _moving ??= Timer.periodic(DecorView.period, (_) {
-        _seconds.value += DecorView.period.inMicroseconds / 1e6;
+        // A gesture on the sheet: the decor waits where it is.
+        final rests = widget.resting?.call() ?? false;
+        _rests.value = rests;
+        if (!rests) _seconds.value += DecorView.period.inMicroseconds / 1e6;
       });
     } else {
       _moving?.cancel();
@@ -201,54 +241,59 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
         size: constraints.biggest,
         painter: _DecorPainter(
           painting: painting,
+          shown: _shown,
           seconds: _seconds,
           minutes: _minutes,
+          resting: _rests,
+          moves: _moves,
           // At rest in the calm mode: the pieces where their pictures draw
           // them, and those of the higher levels away.
           motion: _calm || debugDecorStill ? DecorMotion.none : widget.motion,
           now: _now,
           still: _still,
+          whole: _whole,
           pixelRatio: MediaQuery.devicePixelRatioOf(context),
+          corners: widget.corners,
+          behind: widget.behind,
         ),
       );
     },
   );
 }
 
-/// The image of the still pieces of a decor, for one frame and one moment.
-class _StillImage {
+/// An image of a decor in its frame, kept until what it shows changes: its
+/// still pieces, or the whole of it at rest.
+class _KeptImage {
   ui.Image? _image;
-  Decor? _decor;
-  DecorLayout? _layout;
-  DayMoment? _moment;
-  double _ratio = 0;
+  Object? _key;
+  double _ratio = 1;
 
   /// The longest side of the image, in pixels: beyond it the image is
   /// made at a lower ratio, and drawn enlarged.
   static const longest = 4096;
 
+  /// The image of what [paint] draws in [frame] over [ground], made again
+  /// only when [key] is another; null for an empty frame. No pixel of it
+  /// lets anything through: it is laid down without a blend.
   ui.Image? imageFor(
-    DecorPainting painting,
-    DayMoment moment,
+    Size frame,
     double pixelRatio,
-  ) {
-    final frame = painting.layout.frame;
+    Object key,
+    Color ground,
+    void Function(Canvas canvas) paint, {
+    VoidCallback? onMade,
+  }) {
     if (frame.isEmpty) return null;
     final ratio = math.min(
       pixelRatio,
       longest / math.max(frame.width, frame.height),
     );
-    if (_image != null &&
-        identical(_decor, painting.decor) &&
-        _layout == painting.layout &&
-        _moment == moment &&
-        _ratio == ratio) {
-      return _image;
-    }
+    if (_image != null && _key == key && _ratio == ratio) return _image;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
+    canvas.drawColor(ground.withValues(alpha: 1), BlendMode.src);
     canvas.scale(ratio);
-    painting.paintStill(canvas, moment);
+    paint(canvas);
     final picture = recorder.endRecording();
     final ui.Image image;
     try {
@@ -259,63 +304,140 @@ class _StillImage {
     } finally {
       picture.dispose();
     }
-    debugDecorStillImages++;
+    onMade?.call();
     _image?.dispose();
     _image = image;
-    _decor = painting.decor;
-    _layout = painting.layout;
-    _moment = moment;
+    _key = key;
     _ratio = ratio;
     return image;
   }
 
-  double get ratio => _ratio;
+  /// Lays the image down in the frame it was made for.
+  void lay(Canvas canvas, ui.Image image, double pixelRatio) {
+    canvas.save();
+    canvas.scale(1 / _ratio);
+    canvas.drawImage(
+      image,
+      Offset.zero,
+      Paint()
+        // Pixel for pixel when it was made at the ratio of the screen:
+        // nothing to smooth. It hides whatever lies under it.
+        ..filterQuality = _ratio == pixelRatio
+            ? FilterQuality.none
+            : FilterQuality.low
+        ..blendMode = BlendMode.src,
+    );
+    canvas.restore();
+  }
 
   /// Lets the image go; the next call of [imageFor] makes it again.
   void drop() {
     _image?.dispose();
     _image = null;
+    _key = null;
   }
 }
 
 class _DecorPainter extends CustomPainter {
   _DecorPainter({
     required this.painting,
+    required this.shown,
     required this.seconds,
     required this.minutes,
+    required this.resting,
+    required this.moves,
     required this.motion,
     required this.now,
     required this.still,
+    required this.whole,
     required this.pixelRatio,
-  }) : super(repaint: Listenable.merge([seconds, minutes]));
+    required this.corners,
+    required this.behind,
+  }) : super(repaint: Listenable.merge([seconds, minutes, resting]));
 
   final DecorPainting painting;
+  final bool shown;
   final ValueListenable<double> seconds;
   final ValueListenable<int> minutes;
+  final ValueListenable<bool> resting;
+
+  /// Whether the decor ticks when no gesture holds it.
+  final bool moves;
   final DecorMotion motion;
   final DateTime Function() now;
-  final _StillImage still;
+  final _KeptImage still;
+  final _KeptImage whole;
   final double pixelRatio;
+  final double corners;
+  final Color? behind;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final time = now();
-    final image = still.imageFor(painting, DayMoment.at(time), pixelRatio);
-    if (image != null) {
-      canvas.save();
-      canvas.scale(1 / still.ratio);
-      canvas.drawImage(
-        image,
-        Offset.zero,
-        Paint()..filterQuality = FilterQuality.low,
-      );
-      canvas.restore();
+    final frame = Offset.zero & size;
+    if (!shown) {
+      // Before the first image of the studio: the colour of the room.
+      canvas.drawRect(frame, Paint()..color = painting.decor.top);
+      _paintCorners(canvas, frame);
+      return;
     }
-    painting.paintLive(
+    final time = now();
+    final moment = DayMoment.at(time);
+    final layout = painting.layout;
+    final kept = still.imageFor(
+      layout.frame,
+      pixelRatio,
+      (painting.decor, layout, moment),
+      painting.decor.top,
+      (canvas) => painting.paintStill(canvas, moment),
+      onMade: () => debugDecorStillImages++,
+    );
+    void live(Canvas canvas) => painting.paintLive(
       canvas,
       seconds: seconds.value,
       time: time,
       motion: motion,
+    );
+    if (!moves || resting.value) {
+      // At rest: the whole decor, its light too, is one image; every
+      // image of a trait only lays it down.
+      final image = whole.imageFor(
+        layout.frame,
+        pixelRatio,
+        (
+          painting.decor,
+          layout,
+          motion,
+          seconds.value,
+          time.day,
+          time.hour,
+          time.minute,
+        ),
+        painting.decor.top,
+        (canvas) {
+          if (kept != null) still.lay(canvas, kept, pixelRatio);
+          live(canvas);
+        },
+      );
+      if (image != null) whole.lay(canvas, image, pixelRatio);
+    } else {
+      // It moves: the image of what does not is not made again.
+      whole.drop();
+      if (kept != null) still.lay(canvas, kept, pixelRatio);
+      live(canvas);
+    }
+    _paintCorners(canvas, frame);
+  }
+
+  // The round corners of the frame, painted over in the colour behind it.
+  void _paintCorners(Canvas canvas, Rect frame) {
+    final colour = behind;
+    if (corners <= 0 || colour == null) return;
+    canvas.drawPath(
+      Path()
+        ..fillType = PathFillType.evenOdd
+        ..addRect(frame)
+        ..addRRect(RRect.fromRectAndRadius(frame, Radius.circular(corners))),
+      Paint()..color = colour,
     );
   }
 
@@ -323,8 +445,12 @@ class _DecorPainter extends CustomPainter {
   bool shouldRepaint(_DecorPainter old) =>
       !identical(old.painting.decor, painting.decor) ||
       old.painting.layout != painting.layout ||
+      old.shown != shown ||
+      old.moves != moves ||
       old.motion != motion ||
-      old.pixelRatio != pixelRatio;
+      old.pixelRatio != pixelRatio ||
+      old.corners != corners ||
+      old.behind != behind;
 }
 
 /// Hears what a child does beside the sheet, and says when it asks the

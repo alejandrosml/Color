@@ -5844,8 +5844,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         PhoneMenuEntry(
           id: 'openUniverses',
           name: tr('Univers'),
-          picture: (size) =>
-              EduIllustration(art: EduArt.universes, size: size),
+          picture: (size) => EduIllustration(art: EduArt.universes, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
@@ -6213,6 +6212,18 @@ class _DrawingStudioState extends State<DrawingStudio>
     _viewRebuild.value++;
   }
 
+  /// A gesture goes on on the sheet — a trait, an element or the view
+  /// taken, by a pointer, fingers or a trackpad, with or without a held
+  /// button. The decor of a universe then stops where it is, until the
+  /// gesture ends: nothing must slow a trait down (Color 1.2).
+  bool get _gestureOnSheet =>
+      _pointer != null ||
+      _panPointer != null ||
+      _trackpadPointer != null ||
+      _latch != null ||
+      _pinching ||
+      _fingers.isNotEmpty;
+
   /// The hand, two fingers or a trackpad are moving the view.
   bool get _viewMoving =>
       _pinching || _panPointer != null || _trackpadPointer != null;
@@ -6524,7 +6535,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                 );
           return DecoratedBox(
             decoration: BoxDecoration(
-              color: studioSheetBackdrop,
+              // A decor fills the frame: no backdrop is painted under it.
+              color: decor == null ? studioSheetBackdrop : null,
               borderRadius: corners,
             ),
             child: Stack(
@@ -6534,14 +6546,14 @@ class _DrawingStudioState extends State<DrawingStudio>
                     child: IgnorePointer(
                       child: ExcludeSemantics(
                         child: RepaintBoundary(
-                          child: ClipRRect(
-                            borderRadius: corners,
-                            child: DecorView(
-                              decor: decor,
-                              sheetAtRest: sheetAtRest,
-                              motion: _options.decorMotion,
-                              now: widget.clock,
-                            ),
+                          child: DecorView(
+                            decor: decor,
+                            sheetAtRest: sheetAtRest,
+                            motion: _options.decorMotion,
+                            now: widget.clock,
+                            resting: () => _gestureOnSheet,
+                            corners: look.stageRadius,
+                            behind: studioBackground,
                           ),
                         ),
                       ),

@@ -13,12 +13,12 @@
         "mesure": "1.2.0+43, étape 3 (les deux premiers univers), cœur des boutiques tel que la recette Linux le construit (--no-default-features --features deflate), avec la Rust de scripts/rust-reference.json (1.99), le 12 novembre 2026 : +11,1 % sur la 1.1.1 (1 459 104 o de référence), +131 208 o sur l'étape 2 (1 489 576 o). Presque toute la différence est le catalogue des univers (src/catalogues/univers.txt : 127 808 o pour « Classique » — le bureau, 102 294 o — et « Papier et crayons », 25 514 o), compilé tel quel, sans compression ; le dessin du bouton « Univers » ajoute 671 o au catalogue de l'interface. Les sept univers de l'étape 4 demanderont une nouvelle référence, et l'étape 6 dira s'il faut compresser ce catalogue."
       },
       "core-windows-x64": {
-        "reference": 1306248,
-        "mesure": "1.2.0+43, étape 3 (les deux premiers univers) : ESTIMATION du 12 novembre 2026, en attendant la mesure des machines de GitHub — la taille de l'étape 2 (1 175 040 o) plus ce que le cœur de Linux a pris à l'étape 3 (+131 208 o, le catalogue des univers pour l'essentiel). À remplacer par la mesure de scripts/windows-desktop/recette.py."
+        "reference": 1305088,
+        "mesure": "1.2.0+43, étape 3 (les deux premiers univers), mesuré par scripts/windows-desktop/recette.py sur la machine x64 de GitHub le 12 novembre 2026 (essai 43213686355) : +130 048 o sur l'étape 2 (1 175 040 o), le catalogue des univers pour l'essentiel, comme sous Linux (+131 208 o)."
       },
       "core-windows-arm64": {
-        "reference": 1252488,
-        "mesure": "1.2.0+43, étape 3 (les deux premiers univers) : ESTIMATION du 12 novembre 2026, en attendant la mesure des machines de GitHub — la taille de l'étape 2 (1 121 280 o) plus ce que le cœur de Linux a pris à l'étape 3 (+131 208 o, le catalogue des univers pour l'essentiel). À remplacer par la mesure de scripts/windows-desktop/recette.py."
+        "reference": 1251328,
+        "mesure": "1.2.0+43, étape 3 (les deux premiers univers), mesuré par scripts/windows-desktop/recette.py sur la machine ARM64 de GitHub le 12 novembre 2026 (essai 43213686355) : +130 048 o sur l'étape 2 (1 121 280 o), le catalogue des univers pour l'essentiel."
       },
       "android-aab-arm64-v8a": {
         "reference": null,

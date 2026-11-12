@@ -402,6 +402,103 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   }, skip: !available);
 
+  testWidgets('while a trait goes on the decor waits, then moves on', (
+    tester,
+  ) async {
+    debugDecorStill = false;
+    await start(
+      tester,
+      options: const StudioOptions(decorMotion: DecorMotion.high),
+    );
+    for (var step = 0; step < 10; step++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    final made = debugDecorStillImages;
+    // A trait begins on the sheet: at its next tick the decor stops, and
+    // every image of the trait finds it as it was.
+    final gesture = await tester.startGesture(
+      tester.getCenter(surface),
+      kind: PointerDeviceKind.mouse,
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    final held = await picture(tester);
+    for (var step = 0; step < 20; step++) {
+      await gesture.moveBy(const Offset(3, 1));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(differences(held, await picture(tester)), 0);
+    expect(debugDecorStillImages, made);
+    // The trait ends: the decor goes on from where it stopped.
+    await gesture.up();
+    for (var step = 0; step < 20; step++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(differences(held, await picture(tester)), greaterThan(100));
+    expect(debugDecorStillImages, made);
+    await tester.pumpWidget(const SizedBox());
+  }, skip: !available);
+
+  testWidgets('the first image leaves the decor for the next one', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = mac;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final decor = UniverseCatalog.instance.named('bureau')!.decor!;
+    const behind = Color(0xff224466);
+    final made = debugDecorStillImages;
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(),
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: Align(
+            alignment: Alignment.topLeft,
+            child: RepaintBoundary(
+              child: SizedBox.fromSize(
+                size: decor.size,
+                child: DecorView(
+                  decor: decor,
+                  sheetAtRest: decor.sheet,
+                  motion: DecorMotion.low,
+                  corners: 12,
+                  behind: behind,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    // The first image: the colour of the room, and nothing of the decor
+    // read or drawn yet.
+    expect(debugDecorStillImages, made);
+    final first = await picture(tester);
+    final middle = decor.size.center(Offset.zero);
+    expect(pixel(first, middle).toARGB32(), decor.top.toARGB32());
+    expect(pixel(first, const Offset(1, 1)).toARGB32(), behind.toARGB32());
+    // The next one: the decor, its corners in the colour behind the frame.
+    await tester.pump();
+    expect(debugDecorStillImages, made + 1);
+    final second = await picture(tester);
+    expect(differences(first, second), greaterThan(10000));
+    for (final corner in [
+      const Offset(1, 1),
+      Offset(decor.size.width - 2, 1),
+      Offset(1, decor.size.height - 2),
+      Offset(decor.size.width - 2, decor.size.height - 2),
+    ]) {
+      expect(pixel(second, corner).toARGB32(), behind.toARGB32());
+    }
+    // And no pixel of it lets anything through.
+    final (bytes, _) = second;
+    for (var index = 3; index < bytes.lengthInBytes; index += 4) {
+      if (bytes.getUint8(index) != 255) fail('a pixel is not opaque');
+    }
+    await tester.pumpWidget(const SizedBox());
+  }, skip: !available);
+
   testWidgets(
     'the light follows the hour of the device, and the clock is at the time',
     (tester) async {
