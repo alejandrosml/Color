@@ -36,6 +36,7 @@ import 'package:edupaint_flutter_study/decor_gaze.dart';
 import 'package:edupaint_flutter_study/decor_motion.dart';
 import 'package:edupaint_flutter_study/decor_view.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/licences.dart';
@@ -141,6 +142,13 @@ void main() {
     // as much as it can.
     (int, int)? decorFrames;
     (int, int)? gazeFrames;
+    // In the studio of the pebbles (Color 1.2, a wide window), whose decor
+    // has the whole window: a long trait by day, the same at night, and the
+    // decor that moves around the sheet. Apart from the traits of the
+    // budgets, so that those stay the traits of the steps before.
+    final pebbleDayFrames = <(int, int)>[];
+    final pebbleNightFrames = <(int, int)>[];
+    (int, int)? pebbleDecorFrames;
     // The last frame built before Color is: the frames of the test
     // framework come before it.
     int? beforeColor;
@@ -309,13 +317,78 @@ void main() {
 
     Finder byKey(String key) => find.byKey(Key(key));
 
+    /// Whether the studio is the one of the pebbles (Color 1.2): a wide
+    /// window, at the complete level and the letters of the system as they
+    /// are. The window of the scenario is one; the smallest window, the
+    /// larger letters and the simplest interface keep the studio of before.
+    bool galets() => byKey('galetLine').evaluate().isNotEmpty;
+
+    /// Among the pebbles, what is done with the whole drawing waits in
+    /// « Mon dessin », with the last thing that happened to it.
+    const inMyDrawing = {
+      'newProject',
+      'openProject',
+      'openGallery',
+      'importImage',
+      'exportImage',
+      'printDrawing',
+      'showHelp',
+      'openOptions',
+      'aboutColor',
+    };
+    // What « lequel » opens stays open after these.
+    const keepsPanelOpen = {
+      'fillShapeCheckbox',
+      'paint-target-stroke',
+      'paint-target-fill',
+    };
+
+    /// What a button of the pebbles does when it is pressed; null when it
+    /// does not answer.
+    VoidCallback? onPressed(String key) => switch (tester.widget(byKey(key))) {
+      GaletButton(:final onPressed) => onPressed,
+      GaletPictureButton(:final onPressed) => onPressed,
+      final other => throw StateError('$key is not a pebble: $other'),
+    };
+
+    Future<void> openMyDrawing() async {
+      if (!galets() || byKey('galetPanel-drawing').evaluate().isNotEmpty) {
+        return;
+      }
+      await tester.tap(byKey('myDrawing'));
+      await settle();
+      expect(byKey('galetPanel-drawing'), findsOneWidget);
+    }
+
+    /// Puts an open panel of the pebbles away, as a press beside it does.
+    Future<void> closePanel() async {
+      if (byKey('galetPanelBarrier').evaluate().isEmpty) return;
+      await tester.tapAt(Offset(2, windowSize().height / 2));
+      await settle();
+      expect(byKey('galetPanelBarrier'), findsNothing);
+    }
+
     Future<void> tap(String key) async {
+      if (galets() && byKey(key).evaluate().isEmpty) {
+        // Opened first, as a child does: « Mon dessin », the size, or
+        // « lequel » — the shapes, the stamps, the inside of a shape.
+        if (inMyDrawing.contains(key)) {
+          await openMyDrawing();
+        } else if (key.startsWith('width-') || key.startsWith('size-')) {
+          await tester.tap(byKey('galetSize'));
+          await settle();
+        } else {
+          await tester.tap(byKey('galetWhich'));
+          await settle();
+        }
+      }
       final control = byKey(key);
       expect(control, findsOneWidget, reason: key);
       await tester.ensureVisible(control);
       await settle();
       await tester.tap(control);
       await settle();
+      if (keepsPanelOpen.contains(key)) await closePanel();
     }
 
     final surface = byKey('drawingSurface');
@@ -341,7 +414,7 @@ void main() {
       await settle();
     }
 
-    Future<void> drag(List<Offset> through) async {
+    Future<void> drag(List<Offset> through, {List<(int, int)>? into}) async {
       final from = tester.platformDispatcher.frameData.frameNumber;
       final gesture = await tester.startGesture(
         at(through.first.dx, through.first.dy),
@@ -352,23 +425,41 @@ void main() {
       }
       await gesture.up();
       await settle();
-      traitFrames.add((
+      (into ?? traitFrames).add((
         from + 1,
         tester.platformDispatcher.frameData.frameNumber,
       ));
     }
 
-    int shownCount() {
+    /// What the drawing holds and whether it is saved, as the studio says
+    /// it: under the sheet in the studio of before; among the pebbles it is
+    /// what « Mon dessin » tells whoever cannot read the screen. Null while
+    /// the studio does not say it.
+    String? caption() {
+      if (galets()) {
+        final label = tester.widget<GaletButton>(byKey('myDrawing')).label;
+        return label.substring(label.indexOf(':') + 1).trim();
+      }
       final title = find.textContaining(RegExp(r'^\d+ éléments? · '));
-      expect(title, findsOneWidget);
-      final text = tester.widget<Text>(title).data!;
-      return int.parse(text.substring(0, text.indexOf(' ')));
+      if (title.evaluate().length != 1) return null;
+      return tester.widget<Text>(title).data;
     }
 
-    bool dirty() => find
-        .textContaining('modifications non enregistrées')
-        .evaluate()
-        .isNotEmpty;
+    int shownCount() {
+      final text = caption();
+      expect(text, matches(RegExp(r'^\d+ éléments? · ')));
+      return int.parse(text!.substring(0, text.indexOf(' ')));
+    }
+
+    bool holds(int elements) =>
+        caption()?.startsWith(RegExp('$elements éléments? · ')) ?? false;
+
+    bool dirty() => galets()
+        ? caption()!.contains('modifications non enregistrées')
+        : find
+              .textContaining('modifications non enregistrées')
+              .evaluate()
+              .isNotEmpty;
 
     /// What the sheet paints: its elements, and the first click of a shape
     /// made of two when one waits.
@@ -453,6 +544,10 @@ void main() {
         await tester.pumpWidget(
           EduPaintApp(files: files, options: options, sounds: SystemSounds()),
         );
+        await until('the studio to answer', studioReady);
+        // Among the pebbles the last thing that happened is written in
+        // « Mon dessin », the line under the sheet having gone.
+        await openMyDrawing();
         await until(
           'the recovery to be ready',
           () => find
@@ -460,6 +555,7 @@ void main() {
               .evaluate()
               .isNotEmpty,
         );
+        await closePanel();
         support = (await applicationSupportFolder()).path;
         albumFolder = galleryDirectoryPath(
           support,
@@ -473,6 +569,7 @@ void main() {
         await shot('01-studio');
         return {
           'window': '${logical.width.round()} × ${logical.height.round()}',
+          'studio': galets() ? 'the pebbles' : 'the studio of before',
           'device_pixel_ratio': tester.view.devicePixelRatio,
           'drawing_area':
               '${tester.getSize(surface).width.round()} × '
@@ -491,8 +588,12 @@ void main() {
           Offset(1080, 700),
         ]);
         expect(shownCount(), 1);
-        // Since 1.1 the oval and the rectangle are choices of « Formes », in
-        // the line of help.
+        // Since 1.1 the oval and the rectangle are choices of « Formes » :
+        // in the line of help of the studio of before, in « lequel » among
+        // the pebbles. The colours are those of the line of the pebbles,
+        // which the studio of before does not offer: the scenario is the
+        // one of a wide window.
+        expect(galets(), isTrue, reason: 'a window of ${windowSize()}');
         await tap('tool-shapes');
         await tap('tool-ellipse');
         await drag(const [
@@ -502,7 +603,7 @@ void main() {
         ]);
         expect(shownCount(), 2);
         await tap('tool-rectangle');
-        await tap('color-d75e56');
+        await tap('color-e83d48');
         await tap('paint-target-fill');
         await tap('color-eebf4e');
         await drag(const [
@@ -552,11 +653,15 @@ void main() {
 
       await step('a stamp is chosen and posed', () async {
         await tap('tool-stamp');
-        await tap('chooseStamp');
-        expect(byKey('stampDialog'), findsOneWidget);
-        await shot('04-stamp-dialog');
-        await tap('stamp-chat');
+        // The stamps are what « lequel » opens beside its button: no
+        // dialog among the pebbles.
+        await tester.tap(byKey('galetWhich'));
+        await settle();
+        expect(byKey('galetPanel-which'), findsOneWidget);
         expect(byKey('stampDialog'), findsNothing);
+        await shot('04-stamps');
+        await tap('stamp-chat');
+        expect(byKey('galetPanel-which'), findsNothing);
         await click(700, 400);
         expect(shownCount(), 6);
         return null;
@@ -579,7 +684,7 @@ void main() {
           expect(byKey('layer-row-1'), findsOneWidget);
           await tap('closeLayers');
           await tap('tool-stroke');
-          await tap('color-477fb2');
+          await tap('color-3370d1');
           await drag(const [
             Offset(150, 150),
             Offset(300, 100),
@@ -598,9 +703,11 @@ void main() {
         },
       );
 
-      await step('the pipette takes the inside of the rectangle', () async {
-        await tap('pickPaintColor');
-        await click(330, 455);
+      await step('a trait of the yellow of the rectangle', () async {
+        // The pipette waits for the « réglage des grands » of the pebbles
+        // (step G2 of Color 1.2): the yellow is taken on the line.
+        expect(byKey('pickPaintColor'), findsNothing);
+        await tap('color-eebf4e');
         await tap('tool-stroke');
         await drag(const [Offset(100, 760), Offset(180, 770)]);
         expect(shownCount(), 8);
@@ -636,11 +743,11 @@ void main() {
           ],
         );
         expect((elements[1] as Map)['inside'], 'eebf4e');
-        expect((elements[2] as Map)['colour'], 'd75e56');
+        expect((elements[2] as Map)['colour'], 'e83d48');
         expect((elements[2] as Map)['inside'], 'eebf4e');
         expect((elements[4] as Map)['text'], 'Vive l’été à Noël !');
         expect((elements[6] as Map)['layer'], 1);
-        // The last trait was drawn with the colour the pipette took.
+        expect((elements[6] as Map)['colour'], '3370d1');
         expect((elements[7] as Map)['colour'], 'eebf4e');
         final card = File(
           '$albumFolder${Platform.pathSeparator}'
@@ -748,7 +855,7 @@ void main() {
             () =>
                 byKey('galleryDialog').evaluate().isEmpty &&
                 studioReady() &&
-                find.textContaining('8 éléments').evaluate().isNotEmpty,
+                holds(8),
           );
           sheetWidth = 1200;
           sheetHeight = 800;
@@ -763,15 +870,15 @@ void main() {
         await tap('createNewSheet');
         expect(shownCount(), 0);
         openAnswers.add(project);
+        await openMyDrawing();
         await tester.tap(byKey('openProject'));
-        await until(
-          'the opened drawing',
-          () =>
-              studioReady() &&
-              find.textContaining('8 éléments').evaluate().isNotEmpty,
-        );
+        await until('the opened drawing', () => studioReady() && holds(8));
         expect(dirty(), isFalse);
+        // Its name, which « Mon dessin » says with the last thing that
+        // happened.
+        await openMyDrawing();
         expect(find.textContaining('Recette'), findsWidgets);
+        await closePanel();
         await shot('12-reopened');
         return null;
       });
@@ -806,15 +913,17 @@ void main() {
         () async {
           await tap('tool-select');
           await click(330, 455);
-          expect(colourOf(VectorKind.rectangle), 0xd75e56);
-          await tap('color-78a66f');
+          expect(colourOf(VectorKind.rectangle), 0xe83d48);
+          // Its actions wait in a pebble above the line.
+          expect(byKey('galetSelection'), findsOneWidget);
+          await tap('color-4db266');
           // No button to press: the outline is green in the drawing.
           expect(byKey('applySelectionStyle'), findsNothing);
-          expect(colourOf(VectorKind.rectangle), 0x78a66f);
+          expect(colourOf(VectorKind.rectangle), 0x4db266);
           expect(dirty(), isTrue);
           await shot('12d-recoloured-at-once');
           await tap('undo');
-          expect(colourOf(VectorKind.rectangle), 0xd75e56);
+          expect(colourOf(VectorKind.rectangle), 0xe83d48);
           expect(dirty(), isFalse);
           return null;
         },
@@ -838,6 +947,7 @@ void main() {
             'reason': 'no script outside could ask a window manager to close the dialog',
           };
         }
+        await openMyDrawing();
         expect(byKey('printDrawing'), findsOneWidget);
         await tester.tap(byKey('printDrawing'));
         final closed = File('${shots.path}/$name.closed');
@@ -857,7 +967,9 @@ void main() {
         expect(outcome['seen'], isTrue, reason: '$outcome');
         // Closed without printing: the studio neither says that the
         // drawing went to a printer nor reports a problem.
+        await openMyDrawing();
         expect(find.textContaining('Impression lancée'), findsNothing);
+        await closePanel();
         expect(byKey('problemMessage'), findsNothing);
         expect(shownCount(), 8);
         expect(dirty(), isFalse);
@@ -869,22 +981,48 @@ void main() {
         expect(byKey('helpDialog'), findsOneWidget);
         await shot('13-help');
         await tap('closeHelp');
-        await tap('bigSheet');
-        await shot('14-big-sheet');
-        await tap('bigSheet');
+        // « Dessiner en grand » is offered where the sheet gains room by
+        // it: among the pebbles, in a window lower than it is wide.
+        final sheetBefore = tester.getRect(byKey('sheetAtRest'));
+        final offered = byKey('bigSheet').evaluate().isNotEmpty;
+        Rect? sheetInBig;
+        if (offered) {
+          await tap('bigSheet');
+          sheetInBig = tester.getRect(byKey('sheetAtRest'));
+          expect(sheetInBig.height, greaterThan(sheetBefore.height));
+          await shot('14-big-sheet');
+          await tap('bigSheet');
+          expect(tester.getRect(byKey('sheetAtRest')), sheetBefore);
+        }
+        // « Voir toute la feuille » answers once the view has moved.
+        expect(onPressed('fitPage'), isNull);
         await tap('zoomIn');
         await tap('zoomIn');
+        expect(onPressed('fitPage'), isNotNull);
         await shot('15-zoomed');
         await tap('fitPage');
-        return null;
+        expect(onPressed('fitPage'), isNull);
+        return {
+          'sheet':
+              '${sheetBefore.width.round()} × ${sheetBefore.height.round()}',
+          'big_sheet_offered': offered,
+          if (sheetInBig != null)
+            'sheet_in_big':
+                '${sheetInBig.width.round()} × ${sheetInBig.height.round()}',
+        };
       });
 
       await step('larger text of the system', () async {
         tester.platformDispatcher.textScaleFactorTestValue = 1.3;
         await settle();
+        // Letters this large keep the studio of before, whose panels make
+        // room for them, until the pebbles do (step G2).
+        expect(galets(), isFalse);
+        expect(shownCount(), 8);
         await shot('16-text-scale-1.3');
         tester.platformDispatcher.clearTextScaleFactorTestValue();
         await settle();
+        expect(galets(), isTrue);
         return null;
       });
 
@@ -906,6 +1044,8 @@ void main() {
         // What the window manager made of 500 × 400: the smallest content
         // that the program announces, where every tool is still in reach.
         expect(small, const Size(680, 520));
+        // The studio of before, in a window this small.
+        expect(galets(), isFalse);
         expect(shownCount(), 8);
         final area = tester.getSize(surface);
         await shot('18-smallest-window');
@@ -925,6 +1065,7 @@ void main() {
           thenSettle: false,
         );
         expect(await windowSettled(), before);
+        expect(galets(), isTrue);
         return {
           'played': true,
           'asked': '500 × 400',
@@ -1079,8 +1220,12 @@ void main() {
             await tester.pump(const Duration(milliseconds: 40));
           }
           expect(shownCount(), before);
+          // The companion says it in its bubble, beside « Mon dessin ».
           expect(
-            find.textContaining('Clique pour arrêter ton trait'),
+            find.textContaining(
+              'Clique pour arrêter ton trait',
+              findRichText: true,
+            ),
             findsWidgets,
           );
           await shot('24-trait-without-holding');
@@ -1154,8 +1299,7 @@ void main() {
       );
 
       await step('À propos says the version and lists the licences', () async {
-        await tester.tap(find.byIcon(Icons.info_outline));
-        await settle();
+        await tap('aboutColor');
         final version = tester.widget<Text>(byKey('aboutVersion')).data!;
         expect(version, matches(RegExp(r'^Color \d+\.\d+\.\d+ \(\d+\)$')));
         await tap('aboutLicences');
@@ -1231,6 +1375,78 @@ void main() {
           'flutter_notices_in_the_bundle_bytes': notices.lengthInBytes,
         };
       });
+
+      await step(
+        'among the pebbles: a long trait by day, the same at night, the '
+        'decor that moves — their frames timed',
+        () async {
+          // The decor of the pebbles has the whole window, and the ground
+          // goes on under the line: what a trait costs there, and an image
+          // of the decor that moves, measured apart from the traits of the
+          // budgets. The drawing is left as it was.
+          expect(galets(), isTrue);
+          final before = painter().strokes.length;
+          final decor = tester.getSize(find.byKey(const Key('decor')));
+          List<Offset> wave(double height) => [
+            for (var i = 0; i <= 120; i++)
+              Offset(
+                sheetWidth * (.1 + .8 * i / 120),
+                sheetHeight * (height + .12 * math.sin(i / 10)),
+              ),
+          ];
+          // The decor looks at the hour again when the level of its
+          // movement changes.
+          Future<void> hour(int hours, int minutes) async {
+            debugDecorNow = () => DateTime(2026, 11, 12, hours, minutes);
+            await studioOptions.change(
+              studioOptions.value.copyWith(decorMotion: DecorMotion.medium),
+            );
+            await studioOptions.change(
+              studioOptions.value.copyWith(decorMotion: DecorMotion.low),
+            );
+            await settle();
+          }
+
+          await tap('tool-stroke');
+          await drag(wave(.3), into: pebbleDayFrames);
+          expect(painter().strokes.length, before + 1);
+          await hour(22, 10);
+          await drag(wave(.72), into: pebbleNightFrames);
+          expect(painter().strokes.length, before + 2);
+          await shot('28b-pebbles-at-night');
+          // Three seconds of the decor as it moves by default, at night.
+          debugDecorStill = false;
+          await studioOptions.change(
+            studioOptions.value.copyWith(decorMotion: DecorMotion.medium),
+          );
+          await studioOptions.change(
+            studioOptions.value.copyWith(decorMotion: DecorMotion.low),
+          );
+          await tester.pump();
+          final from = tester.platformDispatcher.frameData.frameNumber;
+          for (var image = 0; image < 90; image++) {
+            await tester.pump(DecorView.period);
+          }
+          await shown();
+          final to = tester.platformDispatcher.frameData.frameNumber;
+          pebbleDecorFrames = (from + 1, to);
+          debugDecorStill = true;
+          // The afternoon again, and the drawing as it was.
+          await hour(14, 30);
+          await tap('undo');
+          await tap('undo');
+          expect(painter().strokes.length, before);
+          expect(to - from, greaterThan(30));
+          return {
+            'window':
+                '${windowSize().width.round()} × '
+                '${windowSize().height.round()}',
+            'decor': '${decor.width.round()} × ${decor.height.round()}',
+            'samples_of_each_trait': 121,
+            'images_of_the_decor': to - from,
+          };
+        },
+      );
 
       await step('the simplest interface, kept for the next launch', () async {
         await openOptions();
@@ -1472,6 +1688,45 @@ void main() {
           'build_ms': _centiles([for (final (build, _, _) in moving) build]),
           'raster_ms': _centiles([for (final (_, raster, _) in moving) raster]),
         },
+      };
+      Map<String, Object?> timed(String scope, List<(int, int)> spans) {
+        final times = [
+          for (final (first, last) in spans)
+            for (var number = first; number <= last; number++)
+              ?frameTimes[number],
+        ];
+        return {
+          'scope': scope,
+          'count': times.length,
+          if (times.isNotEmpty) ...{
+            'build_ms': _centiles([for (final (build, _, _) in times) build]),
+            'raster_ms': _centiles([
+              for (final (_, raster, _) in times) raster,
+            ]),
+          },
+        };
+      }
+
+      record['pebbles_frames'] = {
+        'scope':
+            'In the studio of the pebbles (Color 1.2), whose decor has the '
+            'whole window: frames timed by the engine (FrameTiming), in '
+            'milliseconds, apart from the traits of the budgets. No budget '
+            'yet: a first measure.',
+        'trait_by_day': timed(
+          'One long trait, 121 samples, from its press to the end of its '
+          'settling, the decor still, in the afternoon.',
+          pebbleDayFrames,
+        ),
+        'trait_at_night': timed(
+          'The same trait at night, under the lamp of the desk.',
+          pebbleNightFrames,
+        ),
+        'decor_moving': timed(
+          'Three seconds of the decor that moves at its default level, at '
+          'night, nothing else happening.',
+          [?pebbleDecorFrames],
+        ),
       };
       final gazing = [
         if (gazeFrames case (final first, final last))

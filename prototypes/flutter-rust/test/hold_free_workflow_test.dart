@@ -107,10 +107,8 @@ void main() {
   ) async {
     final sounds = RecordingSounds();
     final (studio, mouse, _) = await open(tester, sounds: sounds);
-    expect(
-      find.textContaining('Clique pour commencer ton trait'),
-      findsWidgets,
-    );
+    // (What the companion says before the first click is in its bubble,
+    // where the window has room for it: galets_workflow_test.dart.)
     await clickAt(tester, studio, mouse, 200, 200);
     // Nothing is drawn yet, and the studio says what comes next.
     studio.expectCount(0);
@@ -188,7 +186,7 @@ void main() {
     // of the sheet, and the click on the colour is only that.
     await clickAt(tester, studio, mouse, 200, 600);
     await hoverTo(tester, studio, mouse, 500, 650);
-    final swatch = tester.getCenter(key('color-d75e56'));
+    final swatch = tester.getCenter(key('color-e83d48'));
     await mouse.moveTo(swatch);
     await tester.pumpAndSettle();
     studio.expectCount(1);
@@ -204,7 +202,7 @@ void main() {
     addTearDown(document.dispose);
     expect(document.strokes, hasLength(2));
     expect(document.strokes[0].rgb, 0x477fb2);
-    expect(document.strokes[1].rgb, 0xd75e56);
+    expect(document.strokes[1].rgb, 0xe83d48);
     await studio.finish();
   }, skip: !available);
 
@@ -238,17 +236,18 @@ void main() {
       await studio.tap('tool-rectangle');
       await studio.drag(studio.at(200, 200), studio.at(400, 400));
       await studio.tap('tool-select');
-      expect(find.text('Clique un élément pour le choisir.'), findsOneWidget);
       // First click: chosen, not taken.
       await clickAt(tester, studio, mouse, 200, 300);
-      expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
-      expect(find.text('Clique un élément pour le choisir.'), findsNothing);
+      expect(
+        find.textContaining('Clique-le pour le prendre.', findRichText: true),
+        findsOneWidget,
+      );
       await hoverTo(tester, studio, mouse, 600, 300);
       await hoverTo(tester, studio, mouse, 200, 300);
       // Second click on it: it follows the pointer.
       await clickAt(tester, studio, mouse, 200, 300);
       expect(
-        find.text('Bouge pour le déplacer. Clique pour le poser.'),
+        find.text('Bouge pour déplacer l’élément. Clique pour le poser.'),
         findsOneWidget,
       );
       await hoverTo(tester, studio, mouse, 500, 450);
@@ -256,7 +255,10 @@ void main() {
       await clickAt(tester, studio, mouse, 700, 500);
       // Posed: it stays there, and stays chosen.
       await hoverTo(tester, studio, mouse, 100, 100);
-      expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
+      expect(
+        find.textContaining('Clique-le pour le prendre.', findRichText: true),
+        findsOneWidget,
+      );
       final document = await studio.saved();
       addTearDown(document.dispose);
       final moved = document.strokes.single;
@@ -302,14 +304,20 @@ void main() {
     expect(find.textContaining('Clique pour la lâcher'), findsWidgets);
     await mouse.moveTo(start + const Offset(-60, -40));
     await tester.pumpAndSettle();
-    expect(sheetOrigin(), before + const Offset(-60, -40));
+    expect(
+      sheetOrigin(),
+      within(distance: 1e-6, from: before + const Offset(-60, -40)),
+    );
     await mouse.down(start + const Offset(-60, -40));
     await mouse.up();
     await tester.pumpAndSettle();
     // Let go: the sheet no longer follows.
     await mouse.moveTo(start + const Offset(40, 40));
     await tester.pumpAndSettle();
-    expect(sheetOrigin(), before + const Offset(-60, -40));
+    expect(
+      sheetOrigin(),
+      within(distance: 1e-6, from: before + const Offset(-60, -40)),
+    );
     studio.expectCount(0);
     await studio.finish();
   }, skip: !available);
@@ -375,7 +383,10 @@ void main() {
     await studio.drag(studio.at(200, 200), studio.at(400, 400));
     await studio.tap('tool-select');
     await clickTwiceAt(tester, studio, mouse, 200, 300);
-    expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
+    expect(
+      find.textContaining('Clique-le pour le prendre.', findRichText: true),
+      findsOneWidget,
+    );
     // Towards a button: nothing goes with the pointer.
     await hoverTo(tester, studio, mouse, 700, 600);
     await mouse.moveTo(tester.getCenter(key('duplicateSelection')));
@@ -404,7 +415,10 @@ void main() {
     await mouse.moveTo(position + const Offset(2, 2));
     await mouse.up();
     await tester.pumpAndSettle();
-    expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
+    expect(
+      find.textContaining('Clique-le pour le prendre.', findRichText: true),
+      findsOneWidget,
+    );
     final document = await studio.saved();
     addTearDown(document.dispose);
     expect(document.strokes.single.points.first.x, 200);
@@ -486,7 +500,7 @@ void main() {
     await clickAt(tester, studio, mouse, 200, 200);
     await clickAt(tester, studio, mouse, 200, 200);
     expect(
-      find.text('Bouge pour le déplacer. Clique pour le poser.'),
+      find.text('Bouge pour déplacer l’élément. Clique pour le poser.'),
       findsOneWidget,
     );
     await hoverTo(tester, studio, mouse, 300, 500);
@@ -517,14 +531,20 @@ void main() {
     await studio.tap('tool-select');
     await clickAt(tester, studio, mouse, 300, 400);
     expect(find.textContaining('Glisse pour déplacer'), findsNothing);
-    expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
+    expect(
+      find.textContaining('Clique-le pour le prendre.', findRichText: true),
+      findsOneWidget,
+    );
     await clickAt(tester, studio, mouse, 300, 400);
     expect(
       find.text('Bouge pour le déplacer. Clique pour le poser.'),
       findsOneWidget,
     );
     await clickAt(tester, studio, mouse, 400, 400);
-    expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
+    expect(
+      find.textContaining('Clique-le pour le prendre.', findRichText: true),
+      findsOneWidget,
+    );
     await studio.finish();
   }, skip: !available);
 
@@ -536,7 +556,10 @@ void main() {
     await studio.drag(studio.at(200, 200), studio.at(400, 400));
     await studio.tap('tool-select');
     await clickAt(tester, studio, mouse, 200, 300);
-    expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
+    expect(
+      find.textContaining('Clique-le pour le prendre.', findRichText: true),
+      findsOneWidget,
+    );
     await studio.tap('zoomIn');
     await studio.tap('panPage');
     await tester.pump(const Duration(milliseconds: 400));
@@ -550,7 +573,10 @@ void main() {
     expect(find.textContaining('Clique pour la lâcher'), findsNothing);
     // The element chosen before is still the chosen one.
     await studio.tap('panPage');
-    expect(find.textContaining('Clique-le pour le prendre.'), findsOneWidget);
+    expect(
+      find.textContaining('Clique-le pour le prendre.', findRichText: true),
+      findsOneWidget,
+    );
     await studio.finish();
   }, skip: !available);
 

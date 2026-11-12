@@ -270,8 +270,12 @@ class _ColorPaletteState extends State<ColorPalette> {
       visibilityChanged?.call(false);
       if (mounted) setState(() => _dialogOpen = false);
     }
-    if (mounted && chosen != null) {
-      _history.remember(chosen);
+    // The answer is delivered even when this palette is no longer there:
+    // a window made much wider while the dialog was open is laid out as
+    // the studio of the pebbles (Color 1.2), which has no such palette —
+    // the colour that was confirmed is the current colour all the same.
+    if (chosen != null) {
+      (widget.history ?? (mounted ? _localHistory : null))?.remember(chosen);
       onSelected(chosen);
     }
   }
@@ -1049,9 +1053,7 @@ class _ColorAxisSliderState extends State<_ColorAxisSlider> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: _focused
-                                ? studioGreen
-                                : Colors.transparent,
+                            color: _focused ? studioGreen : Colors.transparent,
                             width: 2,
                           ),
                         ),

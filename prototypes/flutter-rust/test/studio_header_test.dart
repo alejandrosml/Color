@@ -51,8 +51,13 @@ void main() {
         : tester.widget<PopupMenuButton<String>>(menu).tooltip;
   }
 
+  // A low window: it keeps the header of the studio of before whatever its
+  // width. A wide window that is tall enough is the studio of the pebbles
+  // (Color 1.2), which has no header.
+  const low = 590.0;
+
   Future<void> resize(WidgetTester tester, double width) async {
-    tester.view.physicalSize = Size(width, 800);
+    tester.view.physicalSize = Size(width, low);
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull, reason: '$width');
   }
@@ -62,7 +67,7 @@ void main() {
     (tester) async {
       await loadInterfaceFont(tester);
       final studio = StudioDriver(tester, gallery: MemoryGallery());
-      await studio.start(size: const Size(1280, 800));
+      await studio.start(size: const Size(1280, low));
       var named = 0;
       for (var width = 680.0; width <= 1600; width += 10) {
         await resize(tester, width);
@@ -146,7 +151,10 @@ void main() {
         'exportImage',
         'printDrawing',
       ]);
-      expect(menuName(tester), 'Galerie, image, aide, univers, options et informations');
+      expect(
+        menuName(tester),
+        'Galerie, image, aide, univers, options et informations',
+      );
       await tester.tap(find.byKey(const Key('moreFileActions')));
       await tester.pumpAndSettle();
       expect(find.text('Mes dessins'), findsOneWidget);
@@ -215,7 +223,10 @@ void main() {
         'exportImage',
         'printDrawing',
       ]);
-      expect(menuName(tester), 'Galerie, image, aide, univers, options et informations');
+      expect(
+        menuName(tester),
+        'Galerie, image, aide, univers, options et informations',
+      );
       await studio.finish();
     },
     skip: !available,
@@ -226,7 +237,7 @@ void main() {
   ) async {
     await loadInterfaceFont(tester);
     final studio = StudioDriver(tester);
-    await studio.start(size: const Size(1280, 800));
+    await studio.start(size: const Size(1280, low));
     expect(buttons(tester), [
       for (final key in order)
         if (key != 'openGallery') key,

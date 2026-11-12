@@ -413,7 +413,9 @@ void main() {
   ) async {
     final files = MemoryFiles();
     final studio = StudioDriver(tester, files: files);
-    await studio.start(size: const Size(1280, 820));
+    // The widest window of the studio of before: a wider one is the
+    // studio of the pebbles, where the companion says it in a bubble.
+    await studio.start(size: const Size(1128, 820));
     await studio.tap('tool-stamp');
     expect(find.text('TAMPON'), findsOneWidget);
     expect(find.text('Un tampon, et hop !'), findsOneWidget);

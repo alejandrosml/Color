@@ -232,6 +232,10 @@ void main() {
             tester.view.physicalSize = Size(width, height);
             await tester.pumpAndSettle();
             expect(tester.takeException(), isNull, reason: '$width × $height');
+            // A wide window with ordinary letters is the studio of the
+            // pebbles (Color 1.2), which has neither these controls nor
+            // their region: galets_workflow_test.dart measures it.
+            if (studio.galets) continue;
             await everyTool(studio, (tool) {
               final where = '${tool.name} at $width × $height';
               final sheet = tester.getRect(
@@ -320,13 +324,14 @@ void main() {
     (tester) async {
       await _loadInterfaceFont(tester);
       final studio = StudioDriver(tester, gallery: MemoryGallery());
-      await studio.start(size: const Size(1280, 520));
+      // The widest window of the studio of before.
+      await studio.start(size: const Size(1128, 520));
       final smallest = tester
           .getSize(find.byKey(const Key('drawingSurface')))
           .height;
       var spaciousSeen = false;
       for (var height = 540.0; height <= 1000; height += 20) {
-        tester.view.physicalSize = Size(1280, height);
+        tester.view.physicalSize = Size(1128, height);
         await tester.pumpAndSettle();
         final sheet = tester
             .getSize(find.byKey(const Key('drawingSurface')))
@@ -349,18 +354,18 @@ void main() {
   ) async {
     await _loadInterfaceFont(tester);
     final studio = StudioDriver(tester, gallery: MemoryGallery());
-    await studio.start(size: const Size(1280, 720));
+    await studio.start(size: const Size(1128, 720));
     final mascot = find.byKey(const Key('inspectorMascot'));
     var shown = 0;
     var hidden = 0;
     for (final textScale in [1.0, 1.3, 2.0]) {
       tester.platformDispatcher.textScaleFactorTestValue = textScale;
       for (var height = 600.0; height <= 2000; height += 40) {
-        tester.view.physicalSize = Size(1280, height);
+        tester.view.physicalSize = Size(1128, height);
         await tester.pumpAndSettle();
         for (final tool in StudioTool.values) {
           await studio.tap(tool.keyName);
-          final where = '${tool.name} at 1280 × $height, text × $textScale';
+          final where = '${tool.name} at 1128 × $height, text × $textScale';
           final size = tester.getSize(mascot);
           if (size == Size.zero) {
             hidden++;
@@ -377,17 +382,17 @@ void main() {
         }
       }
       // A window tall enough always shows it.
-      tester.view.physicalSize = const Size(1280, 2600);
+      tester.view.physicalSize = const Size(1128, 2600);
       await tester.pumpAndSettle();
       expect(tester.getSize(mascot), const Size.square(104));
     }
     // The usual laptop window leaves it out rather than cut it in two; a
     // taller one has room for it.
     tester.platformDispatcher.textScaleFactorTestValue = 1;
-    tester.view.physicalSize = const Size(1280, 720);
+    tester.view.physicalSize = const Size(1128, 720);
     await tester.pumpAndSettle();
     expect(tester.getSize(mascot), Size.zero);
-    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.physicalSize = const Size(1128, 900);
     await tester.pumpAndSettle();
     expect(tester.getSize(mascot), const Size.square(104));
     expect(shown, greaterThan(50));

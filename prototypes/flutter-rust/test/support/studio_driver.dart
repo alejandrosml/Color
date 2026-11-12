@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/country_signs.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/kept_colours.dart';
 import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/main.dart';
@@ -177,8 +178,112 @@ class StudioDriver {
     for (final shape in NewShape.values) 'shape-${shape.name}',
   };
 
+  /// Whether the studio is the one of the pebbles (Color 1.2): a wide
+  /// window.
+  bool get galets => find.byKey(const Key('galetLine')).evaluate().isNotEmpty;
+
+  /// What « Mon dessin » holds in the studio of the pebbles.
+  static const _inMyDrawing = {
+    'newProject',
+    'openProject',
+    'openGallery',
+    'importImage',
+    'exportImage',
+    'printDrawing',
+    'showHelp',
+    'openOptions',
+    'aboutColor',
+  };
+
+  /// What the « lequel » button of the pebbles opens stays open after
+  /// these: the panel is put away before anything else is done.
+  static const _keepsPanelOpen = {
+    'fillShapeCheckbox',
+    'paint-target-stroke',
+    'paint-target-fill',
+    'turnStamp',
+    'mirrorStamp',
+  };
+
+  /// In the studio of the pebbles, opens « Mon dessin » : what the
+  /// drawing holds and the last thing that happened to it are written
+  /// there, the line of state having gone with the panels. Nothing to do
+  /// in the studio of before, which writes them under the sheet.
+  Future<void> showStatus() => openMyDrawing();
+
+  /// In the studio of the pebbles, opens « Mon dessin », where what is
+  /// done with the whole drawing waits; nothing to do in the studio of
+  /// before, whose header shows it.
+  Future<void> openMyDrawing() async {
+    if (!galets ||
+        find.byKey(const Key('galetPanel-drawing')).evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.tap(find.byKey(const Key('myDrawing')));
+    await tester.pumpAndSettle();
+  }
+
+  /// Puts an open panel of the pebbles away, as a press beside it does.
+  Future<void> closePanel() async {
+    if (find.byKey(const Key('galetPanelBarrier')).evaluate().isEmpty) return;
+    await tester.tapAt(
+      Offset(
+        2,
+        tester.view.physicalSize.height / tester.view.devicePixelRatio / 2,
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  /// In the studio of the pebbles: opens what holds [key], and gives the
+  /// key to press — a shade of a colour has its own in the column of its
+  /// family.
+  Future<String> _revealAmongPebbles(String key) async {
+    Future<void> open(String button) async {
+      await tester.tap(find.byKey(Key(button)));
+      await tester.pumpAndSettle();
+    }
+
+    if (_inMyDrawing.contains(key)) {
+      await open('myDrawing');
+    } else if (key.startsWith('color-')) {
+      final rgb = int.parse(key.substring(6), radix: 16);
+      final family = galetFamilyOf(rgb);
+      expect(family, isNotNull, reason: 'the pebbles do not offer $key');
+      await tester.longPress(
+        find.byKey(Key('color-${galetColours[family!].rgb.toRadixString(16)}')),
+      );
+      await tester.pumpAndSettle();
+      return 'nuance-${key.substring(6)}';
+    } else if (key.startsWith('size-') || key.startsWith('width-')) {
+      await open('galetSize');
+    } else {
+      if (_inShapes.contains(key) &&
+          find.byKey(const Key('galetPanel-which')).evaluate().isEmpty) {
+        // « Formes » in hand first: its choices are those of « lequel ».
+        final shapes = tester.widget<GaletButton>(
+          find.byKey(const Key('tool-shapes')),
+        );
+        if (!shapes.selected) await open('tool-shapes');
+      }
+      if (_inShapes.contains(key) ||
+          _keepsPanelOpen.contains(key) ||
+          key.startsWith('brushTip-') ||
+          key.startsWith('magic-') ||
+          key.startsWith('pour-') ||
+          key.startsWith('stamp-')) {
+        await open('galetWhich');
+      }
+    }
+    return key;
+  }
+
   Future<void> reveal(String key) async {
     if (find.byKey(Key(key)).evaluate().isNotEmpty) return;
+    if (galets) {
+      await _revealAmongPebbles(key);
+      return;
+    }
     if (_inShapes.contains(key)) {
       await tap('tool-shapes');
       return;
@@ -195,8 +300,22 @@ class StudioDriver {
   }
 
   Future<void> tap(String key) async {
-    await reveal(key);
-    final control = find.byKey(Key(key));
+    var pressed = key;
+    if (key == 'chooseStamp' && galets) {
+      // Among the pebbles the stamps are what « lequel » opens: no
+      // dialog, and nothing more to press before the stamp itself.
+      if (find.byKey(const Key('galetPanel-which')).evaluate().isEmpty) {
+        await tester.tap(find.byKey(const Key('galetWhich')));
+        await tester.pumpAndSettle();
+      }
+      return;
+    }
+    if (find.byKey(Key(key)).evaluate().isEmpty && galets) {
+      pressed = await _revealAmongPebbles(key);
+    } else {
+      await reveal(key);
+    }
+    final control = find.byKey(Key(pressed));
     await tester.ensureVisible(control);
     await tester.pumpAndSettle();
     await tester.tap(control);
@@ -207,6 +326,7 @@ class StudioDriver {
     } else {
       await tester.pumpAndSettle();
     }
+    if (_keepsPanelOpen.contains(key)) await closePanel();
   }
 
   Offset get sheetCenter =>
@@ -263,12 +383,19 @@ class StudioDriver {
     await tester.pumpAndSettle();
   }
 
-  void expectCount(int count) => expect(
-    find.textContaining(
-      count <= 1 ? '$count élément · ' : '$count éléments · ',
-    ),
-    findsOneWidget,
-  );
+  /// What the studio of the pebbles says of the drawing, on the button
+  /// « Mon dessin »: the line of state went with the panels.
+  String get _pebbleCaption =>
+      tester.widget<GaletButton>(find.byKey(const Key('myDrawing'))).label;
+
+  void expectCount(int count) {
+    final said = count <= 1 ? '$count élément · ' : '$count éléments · ';
+    if (galets) {
+      expect(_pebbleCaption, contains(': $said'));
+      return;
+    }
+    expect(find.textContaining(said), findsOneWidget);
+  }
 
   /// On a telephone the count is read at the top of the menu, which is then
   /// closed again.
@@ -318,10 +445,12 @@ class StudioDriver {
     expect(find.byKey(const Key('textDialog')), findsNothing);
   }
 
-  bool get isDirty => find
-      .textContaining('modifications non enregistrées')
-      .evaluate()
-      .isNotEmpty;
+  bool get isDirty => galets
+      ? _pebbleCaption.contains('modifications non enregistrées')
+      : find
+            .textContaining('modifications non enregistrées')
+            .evaluate()
+            .isNotEmpty;
 
   /// Exports a PNG through the interface. The engine encodes it outside the
   /// widget test's fake clock, so the wait runs on the real one.
@@ -423,4 +552,67 @@ Future<void> answerAdultGate(WidgetTester tester) async {
 int wrongAdultGateAnswer(WidgetTester tester) {
   final (first, second) = adultGateNumbers(tester);
   return first * second == 42 ? 43 : 42;
+}
+
+/// What a press on the button [key] does, whatever the button is made of —
+/// one of the pebbles (Color 1.2) or one of the studio of before; null when
+/// the button does not answer.
+VoidCallback? onPressedOf(WidgetTester tester, String key) {
+  final widget = tester.widget(find.byKey(Key(key)));
+  return switch (widget) {
+    GaletButton(:final onPressed) => onPressed,
+    GaletPictureButton(:final onPressed) => onPressed,
+    GaletSaveButton(:final onPressed) => onPressed,
+    GaletTile(:final onPressed) => onPressed,
+    GaletWideButton(:final onPressed) => onPressed,
+    GaletSwatch(:final onPressed) => onPressed,
+    IconButton(:final onPressed) => onPressed,
+    ButtonStyleButton(:final onPressed) => onPressed,
+    _ => throw StateError('$key is not a button: $widget'),
+  };
+}
+
+/// Whether the button [key] shows itself as chosen, or as on.
+bool isChosen(WidgetTester tester, String key) {
+  final widget = tester.widget(find.byKey(Key(key)));
+  return switch (widget) {
+    GaletButton(:final selected) => selected,
+    GaletPictureButton(:final selected) => selected,
+    GaletTile(:final selected) => selected,
+    GaletWideButton(:final selected) => selected,
+    GaletSwatch(:final chosen) => chosen,
+    IconButton(:final isSelected) => isSelected ?? false,
+    _ => throw StateError('$key does not say whether it is chosen: $widget'),
+  };
+}
+
+/// What the studio says its drawing holds — « 3 éléments · modifications
+/// non enregistrées » — wherever it says so: on the button « Mon dessin »
+/// of the pebbles, or under the name of the drawing in the studio of
+/// before.
+String drawingCaption(WidgetTester tester) {
+  final pebble = find.byKey(const Key('myDrawing'));
+  if (pebble.evaluate().isNotEmpty) {
+    final label = tester.widget<GaletButton>(pebble).label;
+    return label.substring(label.indexOf(':') + 1).trim();
+  }
+  return tester
+      .widget<Text>(find.textContaining(RegExp(r'^\d+ éléments? · ')))
+      .data!;
+}
+
+/// Presses the control [key] and lets the studio settle. In the studio of
+/// the pebbles, what is done with the whole drawing — Nouveau, Ouvrir,
+/// Imprimer, Aide, Options… — waits in « Mon dessin », which is opened
+/// first.
+Future<void> pressAction(WidgetTester tester, String key) async {
+  if (find.byKey(Key(key)).evaluate().isEmpty) {
+    final pebble = find.byKey(const Key('myDrawing'));
+    if (pebble.evaluate().isNotEmpty) {
+      await tester.tap(pebble);
+      await tester.pumpAndSettle();
+    }
+  }
+  await tester.tap(find.byKey(Key(key)));
+  await tester.pumpAndSettle();
 }

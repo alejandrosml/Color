@@ -274,8 +274,19 @@ void main() {
       // whatever the letters.
       tester.view.physicalSize = const Size(1500, 760);
       await tester.pumpAndSettle();
-      control(tester, 'showHelp', label: 'Comment faire ?');
+      // A window this wide is the studio of the pebbles (Color 1.2): they
+      // wait in « Mon dessin », which says what the drawing holds.
+      expect(
+        tester
+            .getSemantics(find.byKey(const Key('myDrawing')))
+            .getSemanticsData()
+            .label,
+        startsWith('Mon dessin : 0 élément · '),
+      );
+      await activate(tester, 'myDrawing');
+      control(tester, 'showHelp', label: 'Aide');
       control(tester, 'printDrawing', label: 'Imprimer');
+      await studio.closePanel();
       tester.view.physicalSize = const Size(1100, 760);
       await tester.pumpAndSettle();
       // Here some of them wait in a menu that says what it holds.

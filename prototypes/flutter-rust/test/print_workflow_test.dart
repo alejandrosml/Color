@@ -28,7 +28,7 @@ void main() {
   Future<void> rectangle(StudioDriver studio) async {
     await studio.tap('tool-rectangle');
     await studio.tap('paint-target-fill');
-    await studio.tap('color-d75e56');
+    await studio.tap('color-e83d48');
     await studio.drag(studio.at(300, 200), studio.at(700, 600));
     studio.expectCount(1);
   }
@@ -50,7 +50,7 @@ void main() {
       expect(request.height, 1600);
       expect(request.rgba, hasLength(2400 * 1600 * 4));
       // Inside the rectangle, its outline, and the paper beside it.
-      expect(request.pixel(1000, 800), [0xd7, 0x5e, 0x56, 255]);
+      expect(request.pixel(1000, 800), [0xe8, 0x3d, 0x48, 255]);
       expect(request.pixel(600, 800), [0x47, 0x7f, 0xb2, 255]);
       expect(request.pixel(100, 100), [255, 255, 255, 255]);
       expect(request.pixel(2399, 1599), [255, 255, 255, 255]);
@@ -61,18 +61,21 @@ void main() {
       // Before a first save the job is named as the drawing is.
       expect(request.jobName, 'Mon dessin');
 
-      // The studio says so, and the project is exactly as it was.
+      // The studio says so — at the top of « Mon dessin » —, and the
+      // project is exactly as it was.
+      await studio.showStatus();
       expect(
         find.text('Impression lancée · projet encore à enregistrer'),
         findsOneWidget,
       );
+      await studio.closePanel();
       expect(message(tester), isNull);
       studio.expectCount(1);
       expect(studio.isDirty, isTrue);
       await studio.tap('undo');
       studio.expectCount(0);
       expect(
-        tester.widget<IconButton>(find.byKey(const Key('undo'))).onPressed,
+        onPressedOf(tester, 'undo'),
         isNull,
         reason: 'Printing is not a step of the drawing.',
       );
@@ -97,7 +100,9 @@ void main() {
 
       await printAndWait(tester, printer);
       expect(printer.requests.single.jobName, 'Le chat de Zoé');
+      await studio.showStatus();
       expect(find.text('Impression lancée'), findsOneWidget);
+      await studio.closePanel();
       expect(studio.isDirty, isFalse);
       // Nothing was written anywhere by printing.
       expect(files.projects.values.single, saved);
@@ -119,13 +124,16 @@ void main() {
     // before the panel opens.
     await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
+    await studio.showStatus();
     final sentence = find.textContaining('projet à enregistrer');
     expect(sentence, findsOneWidget);
     final before = tester.widget<Text>(sentence).data;
     await printAndWait(tester, printer);
     expect(printer.requests, hasLength(1));
+    await studio.showStatus();
     expect(tester.widget<Text>(sentence).data, before);
     expect(find.textContaining('Impression'), findsNothing);
+    await studio.closePanel();
     expect(message(tester), isNull);
     studio.expectCount(1);
     expect(studio.isDirty, isTrue);
@@ -150,7 +158,9 @@ void main() {
       );
       // A notice, not a failure: nothing to open for details.
       expect(find.byKey(const Key('showProblemDetails')), findsNothing);
+      await studio.showStatus();
       expect(find.textContaining('Impression lancée'), findsNothing);
+      await studio.closePanel();
 
       printer.outcome = PrintOutcome.unavailable;
       await printAndWait(tester, printer);
@@ -198,6 +208,7 @@ void main() {
       final studio = StudioDriver(tester, printer: printer.call);
       await studio.start(size: const Size(1280, 820));
       await rectangle(studio);
+      await studio.reveal('printDrawing');
       await tester.tap(find.byKey(const Key('printDrawing')));
       // One frame: the sentence is on the sheet before the engine starts on
       // the image, and nothing has reached the printer yet.
@@ -240,20 +251,14 @@ void main() {
 
       // The drawing shows behind the panel: no veil is left on the sheet.
       expect(find.textContaining('Préparation de ton dessin'), findsNothing);
-      // The actions of the header wait.
-      for (final key in ['newProject', 'openProject', 'exportImage']) {
-        expect(
-          tester.widget<ButtonStyleButton>(find.byKey(Key(key))).onPressed,
-          isNull,
-          reason: key,
-        );
+      // The actions on the drawing wait: « Mon dessin », which holds
+      // them, does not open, and « Enregistrer » does not answer.
+      for (final key in ['myDrawing', 'saveProject']) {
+        expect(onPressedOf(tester, key), isNull, reason: key);
       }
-      expect(
-        tester
-            .widget<ButtonStyleButton>(find.byKey(const Key('printDrawing')))
-            .onPressed,
-        isNull,
-      );
+      await tester.tap(find.byKey(const Key('myDrawing')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('printDrawing')), findsNothing);
       expect(studio.menu.onPrint, isNull);
       // The sheet does not take a shape, and the keys do not print again.
       await studio.drag(studio.at(800, 100), studio.at(1000, 300));
@@ -278,13 +283,10 @@ void main() {
       // The panel closes: everything answers again.
       printer.panel!.complete();
       await tester.pumpAndSettle();
+      await studio.showStatus();
       expect(find.textContaining('Impression lancée'), findsOneWidget);
-      expect(
-        tester
-            .widget<ButtonStyleButton>(find.byKey(const Key('printDrawing')))
-            .onPressed,
-        isNotNull,
-      );
+      expect(onPressedOf(tester, 'printDrawing'), isNotNull);
+      await studio.closePanel();
       expect(studio.menu.onPrint, isNotNull);
       await studio.drag(studio.at(800, 100), studio.at(1000, 300));
       studio.expectCount(2);
@@ -387,15 +389,15 @@ void main() {
       await printAndWait(tester, printer);
       var request = printer.requests.last;
       expect(request.pixel(100, 100), [0xee, 0xbf, 0x4e, 255]);
-      expect(request.pixel(1000, 800), [0xd7, 0x5e, 0x56, 255]);
-      expect(request.pixel(1900, 800), [0xd7, 0x5e, 0x56, 255]);
+      expect(request.pixel(1000, 800), [0xe8, 0x3d, 0x48, 255]);
+      expect(request.pixel(1900, 800), [0xe8, 0x3d, 0x48, 255]);
 
       // The second layer hidden: its rectangle is not printed either.
       await studio.layers(() => studio.tap('layer-visible-1'));
       await printAndWait(tester, printer);
       request = printer.requests.last;
       expect(request.pixel(1900, 800), [0xee, 0xbf, 0x4e, 255]);
-      expect(request.pixel(1000, 800), [0xd7, 0x5e, 0x56, 255]);
+      expect(request.pixel(1000, 800), [0xe8, 0x3d, 0x48, 255]);
       await studio.finish();
     },
     skip: !available,
@@ -448,6 +450,8 @@ void main() {
       await tester.pumpWidget(
         EduPaintApp(files: files, recoveryStorage: MemoryRecovery()),
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('myDrawing')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('printDrawing')));
       for (

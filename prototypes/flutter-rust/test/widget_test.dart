@@ -8,6 +8,7 @@ import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final libraryPath = Platform.environment['EDUPAINT_CORE_LIBRARY'];
@@ -26,13 +27,13 @@ void main() {
         isNull,
         reason: 'Initial 1280×820 layout.',
       );
-      expect(find.textContaining('0 élément · '), findsOneWidget);
+      expect(drawingCaption(tester), startsWith('0 élément · '));
       final center = tester.getCenter(find.byKey(const Key('drawingSurface')));
       final gesture = await tester.startGesture(center);
       await gesture.moveBy(const Offset(65, -30));
       await gesture.up();
       await tester.pump();
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       for (final size in [
         const Size(960, 780),
         const Size(680, 520),
@@ -41,7 +42,7 @@ void main() {
         tester.view.physicalSize = size;
         await tester.pumpAndSettle();
         expect(tester.getSize(find.byType(Scaffold)), size);
-        expect(find.textContaining('1 élément'), findsOneWidget);
+        expect(drawingCaption(tester), contains('1 élément'));
         expect(
           tester.takeException(),
           isNull,
@@ -53,10 +54,10 @@ void main() {
       }
       await tester.tap(find.byKey(const Key('undo')));
       await tester.pump();
-      expect(find.textContaining('0 élément · '), findsOneWidget);
+      expect(drawingCaption(tester), startsWith('0 élément · '));
       await tester.tap(find.byKey(const Key('redo')));
       await tester.pump();
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       await tester.pumpWidget(const SizedBox.shrink());
     },
     skip: libraryPath == null,

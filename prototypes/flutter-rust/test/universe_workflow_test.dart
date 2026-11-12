@@ -10,11 +10,11 @@ import 'package:edupaint_flutter_study/decor.dart';
 import 'package:edupaint_flutter_study/decor_motion.dart';
 import 'package:edupaint_flutter_study/decor_view.dart';
 import 'package:edupaint_flutter_study/language.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_colors.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
-import 'package:edupaint_flutter_study/studio_shapes.dart';
 import 'package:edupaint_flutter_study/universe.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +24,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'flutter_test_config.dart';
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
@@ -102,23 +103,19 @@ void main() {
   // The decor of the studio as its frame lays it.
   DecorPainting painting(WidgetTester tester) {
     final view = tester.widget<DecorView>(find.byType(DecorView));
-    final frame = tester.getSize(decorFinder);
     return DecorPainting(
       view.decor,
-      DecorLayout(
-        frame: frame,
-        sheetAtRest: view.sheetAtRest!,
-        decor: view.decor.size,
-        decorSheet: view.decor.sheet,
-      ),
+      view.layoutIn(tester.getSize(decorFinder)),
     );
   }
 
   // Where a point of the decor is, in its frame and on the screen.
   Offset inFrame(WidgetTester tester, Offset at, DecorAnchor anchor) =>
       painting(tester).layout.point(at, anchor);
+  // The frame of the decor is the window, less the band of the line, in
+  // the studio of the pebbles; the stage of the sheet in the one of before.
   Offset onScreen(WidgetTester tester, Offset at, DecorAnchor anchor) =>
-      tester.getTopLeft(surface) + inFrame(tester, at, anchor);
+      tester.getTopLeft(decorFinder) + inFrame(tester, at, anchor);
 
   const cat = Offset(989, 320);
   const curtain = Offset(22, 160);
@@ -142,8 +139,17 @@ void main() {
       expect(shown.decor, same(UniverseCatalog.instance.named('bureau').decor));
       expect(shown.layout.pieces, isTrue);
       // The sheet is where it was: white, in the middle, over the decor.
+      // The decor has the whole window behind it (the pebbles, Color 1.2),
+      // less the band at the bottom where its ground goes on, plain, under
+      // the line.
       final view = tester.widget<DecorView>(find.byType(DecorView));
-      final frame = tester.getSize(surface);
+      final frame = tester.getSize(decorFinder);
+      expect(frame, const Size(1440, 804));
+      expect(tester.getTopLeft(decorFinder), Offset.zero);
+      expect(
+        tester.getRect(find.byType(GaletGround)),
+        const Rect.fromLTWH(0, 804, 1440, 96),
+      );
       expect(view.sheetAtRest!.center.dx, closeTo(frame.width / 2, .5));
       final image = await picture(tester);
       // The wall above the sheet, the wood of the desk under it.
@@ -154,8 +160,9 @@ void main() {
         Offset(frame.width / 2 + 150, frame.height - 4),
       );
       expect(wood.r > wood.b + .15, isTrue, reason: '$wood');
-      // The captions are written on pills: read on any picture.
-      expect(find.byType(DecorCaption), findsNWidgets(3));
+      // Nothing is written around the sheet of the pebbles.
+      expect(find.byType(DecorCaption), findsNothing);
+      expect(find.text('MA FEUILLE'), findsNothing);
       expect(find.byKey(const Key('openUniverses')), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     },
@@ -170,7 +177,7 @@ void main() {
       final centre = tester.getCenter(surface);
       await tester.dragFrom(centre, const Offset(60, 20));
       await tester.pump();
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       expect(studioLook.value, UniverseCatalog.instance.named('bureau').look);
 
       await tester.tap(find.byKey(const Key('openUniverses')));
@@ -194,24 +201,29 @@ void main() {
       final paper = UniverseCatalog.instance.named('papier');
       expect(studioLook.value, paper.look);
       expect(painting(tester).decor, same(paper.decor));
-      // The whole studio wears it: the background of the window, the buttons
-      // cut out along a dotted line — also what was built once and for all.
+      // The whole studio wears it: the background of the window — also what
+      // was built once and for all.
       expect(
         tester.widget<Scaffold>(find.byType(Scaffold).first).backgroundColor ??
             Theme.of(tester.element(surface)).scaffoldBackgroundColor,
         paper.look.background,
       );
-      final button = tester.widget<OutlinedButton>(
-        find.byKey(const Key('newProject')),
-      );
-      final shape =
-          (button.style?.shape ??
-                  Theme.of(tester.element(surface))
-                      .outlinedButtonTheme
-                      .style!
-                      .shape)!
-              .resolve({});
-      expect(shape, isA<DashedRoundedBorder>());
+      // The pebbles wear it too: its surface, and corners hardly round, as
+      // if cut out of paper.
+      final pebble =
+          tester
+                  .widget<Container>(
+                    find
+                        .descendant(
+                          of: find.byType(Galet).first,
+                          matching: find.byType(Container),
+                        )
+                        .first,
+                  )
+                  .decoration!
+              as BoxDecoration;
+      expect(pebble.color, paper.look.surface);
+      expect(pebble.borderRadius, BorderRadius.circular(12));
       final image = await picture(tester);
       final kraft = pixel(image, Offset(tester.getSize(surface).width / 2, 6));
       expect(
@@ -220,7 +232,7 @@ void main() {
         reason: '$kraft',
       );
       // The drawing has not moved.
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
 
       // Left without a choice, nothing changes.
       await tester.tap(find.byKey(const Key('openUniverses')));
@@ -251,8 +263,7 @@ void main() {
     expect(studioLook.value, UniverseCatalog.instance.named('papier').look);
     expect(find.byKey(const Key('openUniverses')), findsNothing);
 
-    await tester.tap(find.byKey(const Key('openOptions')));
-    await tester.pumpAndSettle();
+    await pressAction(tester, 'openOptions');
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Univers et effets'), findsOneWidget);
     Future<void> choose(String key) async {
@@ -514,13 +525,21 @@ void main() {
           colour.r < .35 && colour.g < .4 && colour.b < .45;
       Offset hand(WidgetTester tester, double dx, double dy) =>
           inFrame(tester, clock.centre + Offset(dx, dy), DecorAnchor.right);
+      // A hand is hardly three pixels wide, and the decor of a window is
+      // not drawn at a whole scale: its ink is looked for on the pixel and
+      // on those around it.
+      bool inked((ByteData, int) image, Offset at) => [
+        for (final dx in const [-1.0, 0.0, 1.0])
+          for (final dy in const [-1.0, 0.0, 1.0])
+            dark(pixel(image, at + Offset(dx, dy))),
+      ].contains(true);
 
       // Three o'clock: the large hand on twelve, the small one on three.
       var image = await picture(tester);
-      expect(dark(pixel(image, hand(tester, 0, -12))), isTrue);
-      expect(dark(pixel(image, hand(tester, 8, 0))), isTrue);
-      expect(dark(pixel(image, hand(tester, -8, 0))), isFalse);
-      expect(dark(pixel(image, hand(tester, 0, 12))), isFalse);
+      expect(inked(image, hand(tester, 0, -12)), isTrue);
+      expect(inked(image, hand(tester, 8, 0)), isTrue);
+      expect(inked(image, hand(tester, -8, 0)), isFalse);
+      expect(inked(image, hand(tester, 0, 12)), isFalse);
       // By day: the wall is light, the bulb is off, the cloud is in the sky.
       final wallAt = Offset(tester.getSize(surface).width / 2, 6);
       final bulb = inFrame(
@@ -537,8 +556,8 @@ void main() {
       now = DateTime(2026, 11, 12, 15, 15);
       await tester.pump(const Duration(seconds: 61));
       image = await picture(tester);
-      expect(dark(pixel(image, hand(tester, 12, 0))), isTrue);
-      expect(dark(pixel(image, hand(tester, 0, -12))), isFalse);
+      expect(inked(image, hand(tester, 12, 0)), isTrue);
+      expect(inked(image, hand(tester, 0, -12)), isFalse);
       expect(debugDecorStillImages, made);
 
       // Five o'clock: the evening. The room is tinted, the lamp is lit, and
@@ -563,7 +582,7 @@ void main() {
       final night = pixel(image, wallAt);
       expect(night.computeLuminance(), lessThan(.3));
       expect(night.b, greaterThan(night.r));
-      final frame = tester.getSize(surface);
+      final frame = tester.getSize(decorFinder);
       final inBeam = pixel(image, Offset(frame.width - 40, frame.height - 12));
       final outOfBeam = pixel(
         image,
@@ -653,7 +672,7 @@ void main() {
       // Two clicks on the sheet are two dots of the brush.
       await doubleTap(tester, centre);
       expect(card, findsNothing);
-      expect(find.textContaining('2 éléments'), findsOneWidget);
+      expect(drawingCaption(tester), contains('2 éléments'));
       // A trait that begins on the decor and crosses the sheet is drawn.
       final from = onScreen(tester, cat, DecorAnchor.right);
       await tester.dragFrom(
@@ -661,7 +680,7 @@ void main() {
         const Offset(160, -30),
       );
       await tester.pump();
-      expect(find.textContaining('3 éléments'), findsOneWidget);
+      expect(drawingCaption(tester), contains('3 éléments'));
       // With the cards switched off, the decor answers nothing.
       final store = tester
           .widget<EduPaintApp>(find.byType(EduPaintApp))
@@ -907,7 +926,9 @@ void main() {
     'cover nothing of the decor',
     (tester) async {
       const captions = ['MA FEUILLE', '1200 × 800 unités', 'Toute la feuille'];
-      for (final size in const [mac, Size(1920, 1080), Size(1024, 768)]) {
+      // The window of the studio of before: the pebbles of a wider one
+      // write nothing around the sheet.
+      for (final size in const [Size(1024, 768)]) {
         await start(tester, size: size);
         final shown = painting(tester);
         final origin = tester.getTopLeft(surface);

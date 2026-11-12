@@ -116,8 +116,9 @@ pub unsafe extern "C" fn ep_picture_from_svg(svg: *const u8, len: usize) -> *mut
 }
 
 /// Number of universes of the studio compiled into this core (Color 1.2);
-/// their indices are 0..count, in the order the child is shown them. The
-/// first one is the universe of a studio that was told none.
+/// their indices are 0..count, in the order the child is shown them. A
+/// universe may have no decor, and then no picture; the interface chooses
+/// among them the universe of a studio that was told none.
 #[no_mangle]
 pub extern "C" fn ep_universe_count() -> u32 {
     UNIVERSES

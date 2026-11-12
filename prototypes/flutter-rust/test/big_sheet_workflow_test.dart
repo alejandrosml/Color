@@ -12,10 +12,11 @@ void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
   final surface = find.byKey(const Key('drawingSurface'));
 
-  bool big(WidgetTester tester) =>
-      tester.widget<IconButton>(find.byKey(const Key('bigSheet'))).isSelected!;
+  bool big(WidgetTester tester) => isChosen(tester, 'bigSheet');
 
-  for (final size in const [Size(1280, 820), Size(1100, 760), Size(700, 620)]) {
+  // The windows of the studio of before. In a wide one the studio is made
+  // of pebbles (Color 1.2), whose big sheet is in galets_workflow_test.dart.
+  for (final size in const [Size(1100, 760), Size(700, 620)]) {
     testWidgets(
       'Dessiner en grand puts the panels away and gives their room to the sheet at $size',
       (tester) async {

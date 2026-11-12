@@ -407,11 +407,14 @@ void main() {
   testWidgets(
     'Autres couleurs, a recent colour and the fill box ticked again change the chosen element at once',
     (tester) async {
-      // A window tall enough for the line of recent colours.
+      // A window tall enough for the line of recent colours, in the
+      // studio of before: the pebbles of a wider window have neither
+      // « Autres couleurs » nor recent colours (galets_workflow_test.dart
+      // has what they do to a chosen element).
       final files = await start(
         tester,
         MemoryRecovery(),
-        size: const Size(1280, 1100),
+        size: const Size(1120, 1100),
       );
       final original = files.projects[files.savePath!]!;
       await select(tester);

@@ -37,7 +37,8 @@
    "panelShadow": "paper",
    "stageRadius": 6,
    "stageBorder": 2,
-   "tool": "sticker"
+   "tool": "sticker",
+   "galetRadius": 12
   }
  },
  "decor": {
@@ -52,6 +53,11 @@
    351
   ],
   "top": "#d2b282",
+  "front": [
+   "#c7a471",
+   "#bd9862",
+   "#9f7d4b"
+  ],
   "pieces": [
    {
     "picture": "fond",

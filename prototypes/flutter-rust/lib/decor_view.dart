@@ -73,6 +73,9 @@ class DecorView extends StatefulWidget {
     this.resting,
     this.corners = 0,
     this.behind,
+    this.clearTop = 0,
+    this.smallest,
+    this.onClock,
   }) : safe = EdgeInsets.zero,
        arrangement = null,
        waitsForFirstImage = true;
@@ -90,6 +93,9 @@ class DecorView extends StatefulWidget {
        resting = null,
        corners = 0,
        behind = null,
+       clearTop = 0,
+       smallest = null,
+       onClock = null,
        waitsForFirstImage = false;
 
   final Decor decor;
@@ -99,6 +105,17 @@ class DecorView extends StatefulWidget {
   /// frame.
   final EdgeInsets safe;
   final DecorGazeArrangement? arrangement;
+
+  /// What the pebbles keep of the top of the frame, and the smallest scale
+  /// of the pieces in a frame that is the window ([DecorLayout]).
+  final double clearTop;
+  final double? smallest;
+
+  /// Called when the decor looks at the clock again — at each minute of
+  /// the device, and when Color comes back in front: what stands beside
+  /// the decor in the same room, the ground under the line of the
+  /// pebbles, follows the same hour.
+  final VoidCallback? onClock;
 
   /// Around a sheet, the decor lets the first image of the studio go by
   /// before it paints itself; looked at, it is what the image is for.
@@ -121,6 +138,8 @@ class DecorView extends StatefulWidget {
             sheetAtRest: sheet,
             decor: decor.size,
             decorSheet: decor.sheet,
+            clearTop: clearTop,
+            smallest: smallest,
           );
   }
 
@@ -249,7 +268,10 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
     if (inFront == _inFront) return;
     _inFront = inFront;
     // Back in front: the clock may have gone on without Color.
-    if (inFront) _minutes.value++;
+    if (inFront) {
+      _minutes.value++;
+      widget.onClock?.call();
+    }
     _settle();
   }
 
@@ -325,6 +347,7 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
       _minute = null;
       if (!mounted) return;
       _minutes.value++;
+      widget.onClock?.call();
       if (_inFront && widget.decor.followsTheHour) _awaitMinute();
     });
   }

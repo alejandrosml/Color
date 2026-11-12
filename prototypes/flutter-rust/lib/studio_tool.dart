@@ -100,6 +100,27 @@ enum StudioTool {
   String get label => tr(frenchLabel);
   String get help => tr(frenchHelp);
 
+  /// What the companion says of the tool in its bubble (Color 1.2, « Les
+  /// galets »): a few words, said in bold, then one short sentence, in
+  /// French; [tip] gives them in the language of the interface. The whole
+  /// of [frenchHelp] stays in « Comment faire ? ».
+  (String, String) get frenchTip => switch (this) {
+    brush => ('Un trait, une idée.', 'Choisis ta couleur et dessine !'),
+    line => ('Tout droit !', 'Glisse du début au bout de ta ligne.'),
+    rectangle => ('Un rectangle.', 'Glisse d’un coin au coin d’en face.'),
+    ellipse => ('Un ovale.', 'Glisse en biais pour le dessiner.'),
+    text => ('Des mots sur ta feuille.', 'Clique là où ils commencent.'),
+    stamp => ('Un tampon, et hop !', 'Pose-le sur ta feuille.'),
+    fill => ('De la couleur partout.', 'Clique une zone pour la remplir.'),
+    eraser => ('On efface.', 'Clique ce que tu veux enlever.'),
+    select => ('Choisis un élément.', 'Glisse-le pour le déplacer.'),
+    magic => ('De la magie !', 'Glisse sur ta feuille.'),
+    shapes => ('Une forme.', 'Glisse pour la dessiner.'),
+    magnet => ('L’aimant redresse.', 'Dessine à main levée, il fait le reste.'),
+  };
+
+  (String, String) get tip => (tr(frenchTip.$1), tr(frenchTip.$2));
+
   /// Stable key of the tool's button: `tool-stroke`, `tool-select`… The
   /// tools of 1.1, two of which draw strokes too, by their own names. The
   /// rectangle, the oval and the magnet keep theirs in the choices of

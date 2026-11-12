@@ -814,14 +814,16 @@ uint32_t ep_art_count(void);
 char *ep_art_catalog(void);
 /* The universes of the studio compiled into the core (Color 1.2): what
  * dresses the workshop around the sheet. Their indices are 0..count, in the
- * order the child is shown them; the first one is the universe of a studio
+ * order the child is shown them. A universe may have no decor: it then has
+ * no picture. The interface chooses among them the universe of a studio
  * that was told none. No document is used: any thread may call them. */
 uint32_t ep_universe_count(void);
 /* Universe `index` as ASCII text:
  *   U <key>
  *   M <its description, JSON on one line; beyond ASCII as \uXXXX>
- * then each of its pictures, described like one picture of ep_art_catalog,
- * from `P <name> <width> <height>` to `X`, in the order of their names. The
+ * then each of its pictures (none for a universe without a decor),
+ * described like one picture of ep_art_catalog, from
+ * `P <name> <width> <height>` to `X`, in the order of their names. The
  * description gives its name, its colours and shapes, the pieces of its
  * decor with the picture each one shows, how they move and what a child may
  * ask the name of (src/universes.rs); the interface reads it. NULL for an

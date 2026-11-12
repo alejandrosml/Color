@@ -30,7 +30,18 @@ enum EduArt {
   magic,
   shapes,
   magnet,
-  universes;
+  universes,
+  // The small pictures of the pebbles (Color 1.2).
+  help,
+  about,
+  zoomIn,
+  zoomOut,
+  wholeSheet,
+  moveSheet,
+  bigSheet,
+  onPicture,
+  turn,
+  mirror;
 
   /// The SVG file of the core that draws it, `art/interface/<key>.svg` (Color
   /// 1.1: every picture of the interface is a file; see vector_art.dart).
@@ -60,6 +71,16 @@ enum EduArt {
     shapes => 'formes',
     magnet => 'aimant',
     universes => 'univers',
+    help => 'aide',
+    about => 'a-propos',
+    zoomIn => 'zoom-plus',
+    zoomOut => 'zoom-moins',
+    wholeSheet => 'toute-la-feuille',
+    moveSheet => 'deplacer',
+    bigSheet => 'en-grand',
+    onPicture => 'sur-une-image',
+    turn => 'tourner',
+    mirror => 'retourner',
   };
 }
 
@@ -278,6 +299,17 @@ class _EduArtPainter extends CustomPainter {
         _picture(canvas, 'aimant');
       case EduArt.universes:
         _picture(canvas, 'univers');
+      case EduArt.help ||
+          EduArt.about ||
+          EduArt.zoomIn ||
+          EduArt.zoomOut ||
+          EduArt.wholeSheet ||
+          EduArt.moveSheet ||
+          EduArt.bigSheet ||
+          EduArt.onPicture ||
+          EduArt.turn ||
+          EduArt.mirror:
+        _picture(canvas, art.svgKey);
       case EduArt.select:
         _shape(
           canvas,

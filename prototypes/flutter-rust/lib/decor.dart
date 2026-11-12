@@ -322,6 +322,7 @@ class Decor {
     required this.size,
     required this.sheet,
     required this.top,
+    required this.front,
     required this.pieces,
     required this.veils,
     required this.lamp,
@@ -337,6 +338,12 @@ class Decor {
 
   /// What fills the frame above the ground, where the frame is taller.
   final Color top;
+
+  /// The front of the ground, where it goes on, plain, under the line of
+  /// the pebbles: its colour at the top, at the bottom, and the line of
+  /// its edge (`front`, three colours). A decor that says nothing has the
+  /// colour of its top there.
+  final (Color, Color, Color) front;
 
   /// The pieces, from the back to the front.
   final List<DecorPiece> pieces;
@@ -504,6 +511,13 @@ class Decor {
           (a, b) =>
               (a.at.width * a.at.height).compareTo(b.at.width * b.at.height),
         );
+    final top =
+        StudioLook.parseColour(json['top']) ?? StudioLook.classic.sheetBackdrop;
+    final frontJson = json['front'];
+    final frontColours = [
+      if (frontJson is List)
+        for (final colour in frontJson) ?StudioLook.parseColour(colour),
+    ];
     return Decor._(
       size: frame.size,
       sheet: sheet != null && frame.contains(sheet.center)
@@ -514,9 +528,10 @@ class Decor {
               frame.width * .75,
               frame.height * .93,
             ),
-      top:
-          StudioLook.parseColour(json['top']) ??
-          StudioLook.classic.sheetBackdrop,
+      top: top,
+      front: frontColours.length == 3
+          ? (frontColours[0], frontColours[1], frontColours[2])
+          : (top, top, top),
       pieces: List.unmodifiable(pieces),
       veils: Map.unmodifiable(veils),
       lamp: light is Map ? DecorLamp.fromJson(light['lamp']) : null,
@@ -585,20 +600,29 @@ class DecorLayout {
   /// the whole of it is shown: as large as the height of the frame allows,
   /// and smaller when the sheet leaves less room beside it than the pieces
   /// of the sides need.
+  ///
+  /// [clearTop]: what is kept of the top of the frame — the pebbles of
+  /// Color 1.2 float there — where the pieces do not go. [smallest]: the
+  /// frame is a whole window, far taller than the decor needs: the pieces
+  /// are then shown down to this scale, whatever the height would allow.
   factory DecorLayout({
     required Size frame,
     required Rect sheetAtRest,
     required Size decor,
     required Rect decorSheet,
+    double clearTop = 0,
+    double? smallest,
   }) {
-    final full = frame.height / decor.height;
+    final full = math.max(0.0, frame.height - clearTop) / decor.height;
     final room = math.max(
       0.0,
       math.min(sheetAtRest.left, frame.width - sheetAtRest.right),
     );
     final need = math.max(decorSheet.left, decor.width - decorSheet.right);
     final fitting = need <= 0 ? full : room / need;
-    final pieces = fitting >= full * minimumShare;
+    final pieces = smallest == null
+        ? fitting >= full * minimumShare
+        : math.min(full, fitting) >= smallest;
     final scale = pieces ? math.min(full, fitting) : full;
     // What lies under the sheet was drawn in the band that the sheet leaves
     // at the bottom of the frame. Where the sheet comes lower, it would be
@@ -719,6 +743,10 @@ class DecorLayout {
   /// by side is how it was drawn.
   static const stackedGain = 1.15;
 
+  /// In a frame that is the whole window (the pebbles of Color 1.2), the
+  /// smallest scale at which the pieces of a decor are still looked at.
+  static const smallestInWindow = .6;
+
   /// What is kept free, in units of the decor, on each side of what lies
   /// between the two sides of a decor that is looked at.
   static const gazeMargin = 8.0;
@@ -819,6 +847,9 @@ class DecorPainting {
   final Decor decor;
   final DecorLayout layout;
 
+  /// What a ground covers of the one beside it, in pixels of the frame.
+  static const _groundOverlap = .75;
+
   bool _shown(DecorPiece piece, DayMoment moment, DecorMotion motion) =>
       layout.shows(piece.anchor) &&
       (piece.moments?.contains(moment) ?? true) &&
@@ -889,7 +920,11 @@ class DecorPainting {
         var tile = ((band.rect.left - first) / width).floor();
         while (first + tile * width < band.rect.right) {
           canvas.save();
-          canvas.translate(first + tile * width, top);
+          // Each one a hair wider than its place, over its neighbours:
+          // two edges that only meet let the colour behind them show
+          // through as a thin line, where they fall between two pixels.
+          canvas.translate(first + tile * width - _groundOverlap, top);
+          canvas.scale((width + 2 * _groundOverlap) / width, 1);
           canvas.scale(layout.scale);
           if (tile.isOdd) {
             canvas.translate(decor.size.width, 0);

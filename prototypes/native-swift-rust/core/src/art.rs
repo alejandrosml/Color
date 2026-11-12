@@ -56,10 +56,14 @@ const READER_STACK_BYTES: usize = 64 * 1024 * 1024;
 /// tests, which write their descriptions into catalogues/interface.txt.
 #[cfg(test)]
 static INTERFACE: &[(&str, &str)] = &[
+    ("a-propos", include_str!("../art/interface/a-propos.svg")),
+    ("aide", include_str!("../art/interface/aide.svg")),
     ("aimant", include_str!("../art/interface/aimant.svg")),
     ("annuler", include_str!("../art/interface/annuler.svg")),
     ("calques", include_str!("../art/interface/calques.svg")),
     ("choisir", include_str!("../art/interface/choisir.svg")),
+    ("deplacer", include_str!("../art/interface/deplacer.svg")),
+    ("en-grand", include_str!("../art/interface/en-grand.svg")),
     (
         "enregistrer",
         include_str!("../art/interface/enregistrer.svg"),
@@ -98,9 +102,24 @@ static INTERFACE: &[(&str, &str)] = &[
     ("rectangle", include_str!("../art/interface/rectangle.svg")),
     ("remplir", include_str!("../art/interface/remplir.svg")),
     ("retablir", include_str!("../art/interface/retablir.svg")),
+    ("retourner", include_str!("../art/interface/retourner.svg")),
+    (
+        "sur-une-image",
+        include_str!("../art/interface/sur-une-image.svg"),
+    ),
     ("tampon", include_str!("../art/interface/tampon.svg")),
     ("texte", include_str!("../art/interface/texte.svg")),
+    ("tourner", include_str!("../art/interface/tourner.svg")),
+    (
+        "toute-la-feuille",
+        include_str!("../art/interface/toute-la-feuille.svg"),
+    ),
     ("univers", include_str!("../art/interface/univers.svg")),
+    (
+        "zoom-moins",
+        include_str!("../art/interface/zoom-moins.svg"),
+    ),
+    ("zoom-plus", include_str!("../art/interface/zoom-plus.svg")),
 ];
 
 /// Why a picture is not handed over.

@@ -79,6 +79,7 @@ class StudioLook {
     this.stageRadius = 20,
     this.stageBorder = 1,
     this.tool = ToolShape.tile,
+    this.galetRadius = 999,
   });
 
   /// The look Color always had, and the one of a universe that says nothing.
@@ -167,6 +168,10 @@ class StudioLook {
 
   final ToolShape tool;
 
+  /// The corners of the pebbles (« Les galets », Color 1.2) and of their
+  /// buttons: all round unless a universe says less.
+  final double galetRadius;
+
   /// What a description says, the rest as in « Classique »: `colours`, by
   /// the names of the fields above, written `#rrggbb`, and `shapes`. What is
   /// unknown, or of another type, keeps its default: a description never
@@ -224,6 +229,7 @@ class StudioLook {
       stageRadius: number('stageRadius', c.stageRadius, 40),
       stageBorder: number('stageBorder', c.stageBorder, 4),
       tool: ToolShape.named(shapes is Map ? shapes['tool'] : null),
+      galetRadius: number('galetRadius', c.galetRadius, 999),
     );
   }
 
@@ -273,6 +279,10 @@ class StudioLook {
     ('avertissement', warning, surface),
     ('bouton plein', const Color(0xffffffff), accent),
     ('Enregistrer', ink, studioSaveFill),
+    // The pebbles (Color 1.2): what a panel says of the drawing, and
+    // « Enregistrer », whose ink stays dark on its gold in every universe.
+    ('dernière nouvelle du dessin', statusText, surface),
+    ('Enregistrer, sur un galet', studioSaveInk, studioSaveFill),
   ];
 }
 
@@ -303,6 +313,10 @@ final studioLook = StudioLookNotifier();
 /// « Enregistrer » is golden in every universe: the one action never to
 /// forget keeps its colour.
 const studioSaveFill = Color(0xffffd575);
+
+/// The ink of « Enregistrer » on a pebble: dark on its gold, whatever the
+/// ink of the universe — a universe of night writes in a light ink.
+const studioSaveInk = Color(0xff263f43);
 
 /// Main text and icons.
 Color get studioInk => studioLook.value.ink;

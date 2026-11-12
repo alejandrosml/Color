@@ -188,25 +188,30 @@ void main() {
         options: store,
       );
       await studio.start(size: const Size(1280, 800));
-      await studio.drag(const Offset(-80, -40), const Offset(60, 30));
+      // « Imprimer » waits in « Mon dessin », with what else is done with
+      // the whole drawing.
+      await studio.openMyDrawing();
       expect(key('printDrawing'), findsOneWidget);
+      await studio.closePanel();
       expect(studio.menu.onPrint, isNotNull);
 
       await choose(studio, 'optionPrinting');
       expect(store.value.printing, isFalse);
+      await studio.openMyDrawing();
       expect(key('printDrawing'), findsNothing);
+      // The other actions are still there.
+      expect(key('exportImage'), findsOneWidget);
+      expect(key('newProject'), findsOneWidget);
+      await studio.closePanel();
       expect(studio.menu.onPrint, isNull);
       await shortcut(tester, LogicalKeyboardKey.keyP);
       expect(printer.requests, isEmpty);
-      // The other actions keep their line and their order.
-      expect(
-        tester.getRect(key('exportImage')).top,
-        tester.getRect(key('newProject')).top,
-      );
 
       await choose(studio, 'optionPrinting');
       expect(store.value.printing, isTrue);
+      await studio.openMyDrawing();
       expect(key('printDrawing'), findsOneWidget);
+      await studio.closePanel();
       await printAndWait(
         tester,
         printer,
@@ -236,9 +241,13 @@ void main() {
       );
       await studio.start(size: const Size(1280, 800));
       expect(shownTools(tester), ToolGroup.values);
-      expect(find.byType(StudioInspector), findsOneWidget);
+      // A wide window, the whole interface: the studio of the pebbles.
+      expect(studio.galets, isTrue);
 
       await choose(studio, 'level-toddler');
+      // The simplest interface keeps the studio of before, until the
+      // pebbles are laid out for it.
+      expect(studio.galets, isFalse);
       expect(store.value.level, InterfaceLevel.toddler);
       expect(shownTools(tester), [
         ToolGroup.brush,
@@ -359,29 +368,35 @@ void main() {
       final studio = StudioDriver(tester, options: store);
       await studio.start(size: const Size(1280, 800));
       expect(shownTools(tester), ToolGroup.values);
-      for (final gone in ['exportImage', 'layersButton']) {
-        expect(key(gone), findsNothing, reason: gone);
-      }
+      expect(studio.galets, isTrue);
+      // On the pebbles: Enregistrer, the view, the film — and no layers.
       for (final kept in [
-        'newProject',
-        'openProject',
-        'importImage',
         'saveProject',
-        'printDrawing',
-        'showHelp',
-        'openOptions',
         'zoomIn',
         'bigSheet',
-        'pickPaintColor',
-        'morePaintColors',
         'replayDrawing',
       ]) {
         expect(key(kept), findsOneWidget, reason: kept);
       }
-      expect(find.byType(StudioInspector), findsOneWidget);
-      expect(find.text('MA FEUILLE'), findsOneWidget);
+      expect(key('layersButton'), findsNothing);
+      // In « Mon dessin » : everything but the exports.
+      await studio.openMyDrawing();
+      expect(key('exportImage'), findsNothing);
+      for (final kept in [
+        'newProject',
+        'openProject',
+        'importImage',
+        'printDrawing',
+        'showHelp',
+        'openOptions',
+        'aboutColor',
+      ]) {
+        expect(key(kept), findsOneWidget, reason: kept);
+      }
       // The line that speaks of files and recovery copies is for adults.
+      expect(key('drawingStatus'), findsNothing);
       expect(find.textContaining('récupération'), findsNothing);
+      await studio.closePanel();
       expect(studio.menu.onLayers, isNull);
       expect(studio.menu.onExportSvg, isNull);
       expect(studio.menu.onOpen, isNotNull);
@@ -403,7 +418,8 @@ void main() {
       expect(key('duplicateSelection'), findsOneWidget);
       await studio.tap('zoomIn');
       await studio.tap('zoomIn');
-      expect(find.text('Toute la feuille'), findsNothing);
+      // Seen from closer: « Voir toute la feuille » answers.
+      expect(onPressedOf(tester, 'fitPage'), isNotNull);
 
       await choose(studio, 'level-toddler');
       // « Choisir » is not one of the four: the pinceau takes over, and the
@@ -412,8 +428,9 @@ void main() {
       expect(key('duplicateSelection'), findsNothing);
 
       await choose(studio, 'level-full');
-      // The sheet came back whole when its controls went away.
-      expect(find.text('Toute la feuille'), findsOneWidget);
+      // The sheet came back whole when its controls went away: the button
+      // that shows the whole of it has nothing to do.
+      expect(onPressedOf(tester, 'fitPage'), isNull);
       expect(selectedTool(tester), ToolGroup.brush);
       studio.expectCount(1);
       await studio.finish();

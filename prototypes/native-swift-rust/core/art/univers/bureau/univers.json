@@ -20,6 +20,11 @@
    351
   ],
   "top": "#f3eefa",
+  "front": [
+   "#cfa873",
+   "#c69c66",
+   "#b3884f"
+  ],
   "pieces": [
    {
     "picture": "fond",

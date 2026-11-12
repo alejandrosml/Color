@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 import 'rust_document.dart';
@@ -82,10 +83,12 @@ import 'sheet_hint.dart';
 import 'tool_pointer.dart';
 import 'decor.dart';
 import 'decor_gaze.dart';
+import 'decor_motion.dart';
 import 'decor_view.dart';
 import 'studio_shapes.dart';
 import 'universe.dart';
 import 'universe_dialog.dart';
+import 'galets.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -283,6 +286,11 @@ enum _HistoryChange { edit, undo, redo, amend }
 /// that began it and the click that ends it: a trait, the move of the chosen
 /// element, or the sheet under the hand.
 enum _Latch { stroke, move, pan }
+
+/// What a button of the pebbles opened (Color 1.2, galets.dart): the panel
+/// of the drawing, the size, « lequel » — which trait, which stamp, which
+/// shape —, or the shades of a colour.
+enum _GaletPanel { drawing, size, which, shades }
 
 /// What the paint pot does on the paper: it gives its colour to a zone it
 /// poured before, or to the sheet ([zone] null), or it pours a new zone,
@@ -645,7 +653,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         !viewport.contains(at.dx, at.dy);
     _stageCursor.value = !beside
         ? SystemMouseCursors.none
-        : _options.decorNames && painting.nameAt(at) != null
+        : _options.decorNames && painting.nameAt(at + _stageOrigin) != null
         ? SystemMouseCursors.help
         : SystemMouseCursors.basic;
     if (beside && mouse) _hint.mouseAt = null;
@@ -655,9 +663,24 @@ class _DrawingStudioState extends State<DrawingStudio>
   // may be asking the name of something. Nothing is taken from the tool.
   void _decorDown(PointerDownEvent event) {
     final viewport = _keyViewport;
-    final painting = _decorPainting;
-    if (painting == null || viewport == null) return;
+    if (viewport == null) return;
     final at = event.localPosition;
+    _decorPressed(
+      event,
+      at + _stageOrigin,
+      beside: !viewport.contains(at.dx, at.dy),
+    );
+  }
+
+  // A pointer came down at [at] of the frame of the decor; [beside]: not
+  // on the sheet.
+  void _decorPressed(
+    PointerDownEvent event,
+    Offset at, {
+    required bool beside,
+  }) {
+    final painting = _decorPainting;
+    if (painting == null) return;
     final asks =
         _namesOffered &&
         !_busy &&
@@ -665,7 +688,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         !_panning &&
         !_spaceHeld &&
         (event.buttons & kPrimaryButton) != 0 &&
-        !viewport.contains(at.dx, at.dy);
+        beside;
     final under = asks ? painting.nameAt(at) : null;
     // A press anywhere else puts the open card away.
     if (_shownName.value != null && !identical(under, _shownName.value)) {
@@ -673,6 +696,35 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
     _asking.down(at, event.timeStamp, under);
   }
+
+  /// Where the stage of the sheet begins in the frame of the decor: at its
+  /// corner in the studio of before, where the stage is that frame; lower
+  /// in the studio of the pebbles, where the decor has the whole window.
+  Offset _stageOrigin = Offset.zero;
+
+  /// The pointer of the system over the decor where the stage is not: an
+  /// arrow, and the arrow that asks over what has a name.
+  final _besideCursor = ValueNotifier<MouseCursor>(SystemMouseCursors.basic);
+  // Ticks when the decor of the pebbles looks at the clock again: the
+  // ground under the line is tinted as the room is.
+  final _decorClock = ValueNotifier<int>(0);
+
+  // ——— « Les galets » (Color 1.2, galets.dart) ———
+
+  /// The frame of the pebbles, and the buttons that open a panel: a panel
+  /// is laid beside its button, wherever the window put it.
+  final _galetsFrame = GlobalKey(debugLabel: 'galets');
+  final _drawingButton = GlobalKey(debugLabel: 'Mon dessin');
+  final _sizeButton = GlobalKey(debugLabel: 'taille');
+  final _whichButton = GlobalKey(debugLabel: 'lequel');
+  late final _swatchButtons = [
+    for (var index = 0; index < galetColours.length; index++)
+      GlobalKey(debugLabel: 'godet $index'),
+  ];
+
+  /// The panel that is open, and for the shades, the swatch they belong to.
+  _GaletPanel? _galetPanel;
+  int _galetFamily = 0;
 
   /// « Univers » : the child chooses how the workshop is dressed, or looks
   /// at a decor on the whole screen. The drawing is not touched.
@@ -812,6 +864,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     _asking.dispose();
     _shownName.dispose();
     _stageCursor.dispose();
+    _besideCursor.dispose();
     _pourHintTimer?.cancel();
     _pourHintSerial++;
     _forgetInk();
@@ -826,6 +879,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     _canvasRepaint.dispose();
     _sheetImages.dispose();
     _viewRebuild.dispose();
+    _decorClock.dispose();
     _companionCue.dispose();
     _recentColors.dispose();
     _selectionOffset.dispose();
@@ -1155,6 +1209,11 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   void _escape() {
     if (_busy || _confirmationOpen) return;
+    // An open panel of the pebbles goes first.
+    if (_galetPanel != null) {
+      _closeGaletPanel();
+      return;
+    }
     if (_shownName.value != null) {
       _closeName();
       return;
@@ -5322,6 +5381,13 @@ class _DrawingStudioState extends State<DrawingStudio>
         onDetails: () => _showProblemDetails(_startupError!),
       );
     }
+    // The studio of a wide window is made of pebbles (Color 1.2); the
+    // others keep the panels of before.
+    final galets = !_phoneLayout(context) && _galetsOffered(context);
+    if (!galets) {
+      _stageOrigin = Offset.zero;
+      _galetPanel = null;
+    }
     return EduPaintDesktopMenu(
       onAbout: _showAbout,
       onNew: _busy ? null : _newDrawing,
@@ -5469,6 +5535,8 @@ class _DrawingStudioState extends State<DrawingStudio>
           child: Scaffold(
             body: _phoneLayout(context)
                 ? _phoneBody()
+                : galets
+                ? _galetsBody(context)
                 : Column(
                     children: [
                       if (!_bigSheet &&
@@ -5663,6 +5731,1371 @@ class _DrawingStudioState extends State<DrawingStudio>
           ),
         ),
       ),
+    );
+  }
+
+  // ——— « Les galets » (Color 1.2): the studio of a wide window ———
+  //
+  // The sheet first. Two pebbles at the top, one line at the bottom, and
+  // what a button opens beside it (galets.dart). The decor of the universe
+  // has the whole window behind the sheet, less the band of the line.
+
+  /// Whether the studio of this window is made of pebbles.
+  bool _galetsOffered(BuildContext context) => GaletsLayout.offered(
+    window: MediaQuery.sizeOf(context),
+    textScale: MediaQuery.textScalerOf(context).scale(12) / 12,
+    phone: _phoneLayout(context),
+    simple: _options.simpleControls,
+  );
+
+  void _openGaletPanel(_GaletPanel panel, {int family = 0}) {
+    if (_busy || _confirmationOpen) return;
+    _settleLatch();
+    _finishStroke();
+    _closeName();
+    setState(() {
+      final same =
+          _galetPanel == panel &&
+          (panel != _GaletPanel.shades || _galetFamily == family);
+      _galetPanel = same ? null : panel;
+      _galetFamily = family;
+    });
+  }
+
+  void _closeGaletPanel() {
+    if (_galetPanel == null || !mounted) return;
+    setState(() => _galetPanel = null);
+    _focus.requestFocus();
+  }
+
+  // What a button of a panel does: the panel goes, then the action.
+  VoidCallback? _fromPanel(VoidCallback? action) => action == null
+      ? null
+      : () {
+          if (_galetPanel != null) setState(() => _galetPanel = null);
+          action();
+        };
+
+  /// Where [button] stands in the frame of the pebbles; null before it was
+  /// laid out.
+  Rect? _galetAnchor(GlobalKey button) {
+    final box = button.currentContext?.findRenderObject();
+    final frame = _galetsFrame.currentContext?.findRenderObject();
+    if (box is! RenderBox || frame is! RenderBox || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero, ancestor: frame) & box.size;
+  }
+
+  GlobalKey get _galetPanelButton => switch (_galetPanel!) {
+    _GaletPanel.drawing => _drawingButton,
+    _GaletPanel.size => _sizeButton,
+    _GaletPanel.which => _whichButton,
+    _GaletPanel.shades => _swatchButtons[_galetFamily],
+  };
+
+  /// The colour the swatches show as chosen: the inside of shapes when
+  /// that is what a colour changes, the colour in hand otherwise.
+  int get _galetColour =>
+      _canFill && _colorTarget == PaintColorTarget.fill ? _fillColor : _color;
+
+  void _pickGaletColour(int rgb) {
+    if (_busy || _confirmationOpen) return;
+    _recentColors.remember(rgb);
+    setState(() {
+      _galetPanel = null;
+      // A colour chosen is the choice: the pipette that was waiting has
+      // nothing left to fetch.
+      _picking = false;
+      _chooseColor(rgb);
+    });
+    _sound(StudioSound.colour);
+    _focus.requestFocus();
+  }
+
+  /// What the size button sizes: nothing (null), the width of a trait, or
+  /// one of the three sizes of a text or of a stamp.
+  ({bool placed, bool forStamp})? get _galetSized {
+    if (_tool == StudioTool.fill || _tool == StudioTool.eraser) return null;
+    final kind = _styledKind;
+    if (kind == VectorKind.text || kind == VectorKind.stamp) {
+      // A chosen text changes size with its words (Modifier); a chosen
+      // stamp keeps the size it was given.
+      if (_choosing) return null;
+      return (placed: true, forStamp: kind == VectorKind.stamp);
+    }
+    if (_choosing && (_selectedObject == null || kind!.isBoxObject)) {
+      return null;
+    }
+    return (placed: false, forStamp: false);
+  }
+
+  /// The width the size button shows: that of the chosen element, or the
+  /// one in hand.
+  double get _galetWidth =>
+      _selectedObject != null && _choosing ? _selectedObject!.width : _width;
+
+  void _pickGaletWidth(double width) {
+    if (_busy || _confirmationOpen) return;
+    setState(() {
+      _galetPanel = null;
+      // The chosen element takes it at once: one step for Annuler.
+      if (_selectedObject != null && !_styleSelection(width: width)) return;
+      _width = width;
+    });
+    _sound(StudioSound.tool);
+    _focus.requestFocus();
+  }
+
+  /// Whether « lequel » has something to offer: the choices of the tool,
+  /// or the inside of a shape.
+  bool get _galetWhichOffered =>
+      (!_choosing && _hasVariants) ||
+      (_canFill && (!_choosing || _selectedObject != null));
+
+  String get _galetWhichName => switch (_tool) {
+    StudioTool.brush => tr('Sorte de trait'),
+    StudioTool.magic => tr('Sorte de magie'),
+    StudioTool.fill => tr('Façon de remplir'),
+    StudioTool.stamp => trf('Tampon {0} · choisir un autre tampon', [
+      _currentStamp?.label ?? '',
+    ]),
+    StudioTool.select => tr('Remplir la forme'),
+    _ when _tool.group == ToolGroup.shapes => tr('Sorte de forme'),
+    _ => tr('Rien à choisir pour cet outil'),
+  };
+
+  String get _galetWhichTitle => switch (_tool) {
+    StudioTool.stamp => tr('Choisis un tampon'),
+    _ => _galetWhichName,
+  };
+
+  // The widths of what the pebbles hold, as their buttons are laid out
+  // below: the studio chooses what is written from what fits.
+  static const _galetGap = 2.0;
+  static double _galetWide(List<double> cells, {double padding = 12}) =>
+      padding +
+      cells.fold(0.0, (sum, cell) => sum + cell) +
+      _galetGap * math.max(0, cells.length - 1);
+
+  Widget _galetsBody(BuildContext context) {
+    final window = MediaQuery.sizeOf(context);
+    final document = _document!;
+    // No decor around the sheet on a tablet (the owner, 12 November 2026).
+    final worn = touchFirst ? null : _universe.decor;
+    GaletsLayout laid({required bool decor, bool? big}) => GaletsLayout(
+      window: window,
+      safe: MediaQuery.paddingOf(context),
+      documentWidth: document.width.toDouble(),
+      documentHeight: document.height.toDouble(),
+      decor: decor,
+      bigSheet: big ?? _bigSheet,
+      padding: _options.captions ? 28 : 8,
+    );
+    // « Dessiner en grand » is offered where it gives the sheet more room:
+    // a sheet that already has the width of the window gains nothing when
+    // the pebbles of the top are put away.
+    final bigGains =
+        laid(decor: worn != null, big: true).sheet.width >
+        laid(decor: worn != null, big: false).sheet.width + 8;
+    if (_bigSheet && !bigGains) _bigSheet = false;
+    var layout = laid(decor: worn != null);
+    DecorLayout? around;
+    if (worn != null) {
+      around = DecorLayout(
+        frame: layout.decorFrame,
+        sheetAtRest: layout.sheet,
+        decor: worn.size,
+        decorSheet: worn.sheet,
+        clearTop: layout.decorClearTop,
+        smallest: DecorLayout.smallestInWindow,
+      );
+      // Where its pieces would be too small to be looked at, no decor:
+      // the sheet takes the room.
+      if (!around.pieces) {
+        around = null;
+        layout = laid(decor: false);
+      }
+    }
+    final decor = around == null ? null : worn;
+    final painting = decor == null ? null : DecorPainting(decor, around!);
+    _decorPainting = painting;
+    _stageOrigin = layout.stage.topLeft;
+    final enabled = !_busy && !_confirmationOpen;
+
+    // ——— What is written at the top, from what the window leaves ———
+    final nameStyle = galetText(17, bold: true);
+    final drawingText = galetTextWidth(context, tr('Mon dessin'), nameStyle);
+    final universeText = galetTextWidth(context, tr('Univers'), galetText(16));
+    final saveText = galetTextWidth(
+      context,
+      tr('Enregistrer'),
+      GaletSaveButton.style,
+    );
+    final viewCells = !_options.viewControls
+        ? 0
+        // The loupes are for a mouse: two fingers do it on a tablet.
+        : (touchFirst ? 3 : 5);
+    final rightCells =
+        1 + (_options.layers ? 1 : 0) + viewCells - (bigGains ? 0 : 1) + 2;
+    double leftWide({required bool named, required bool universe}) =>
+        _galetWide([
+          named ? 91 + drawingText : 75,
+          if (_choosesUniverse) ...[
+            GaletRule.width,
+            universe ? 60 + universeText : GaletsLayout.cell,
+          ],
+        ]);
+    double rightWide({required bool named}) => _galetWide([
+      for (var index = 0; index < rightCells; index++) GaletsLayout.cell,
+      GaletRule.width,
+      if (viewCells > 0) GaletRule.width,
+      6,
+      named ? GaletSaveButton.namedWidth(saveText) : GaletsLayout.cell,
+    ], padding: 15);
+    final across = window.width - 2 * GaletsLayout.side;
+    var drawingNamed = true;
+    var universeNamed = true;
+    var saveNamed = true;
+    bool fits() =>
+        leftWide(named: drawingNamed, universe: universeNamed) +
+            rightWide(named: saveNamed) +
+            12 <=
+        across;
+    if (!fits()) universeNamed = false;
+    if (!fits()) saveNamed = false;
+    if (!fits()) drawingNamed = false;
+    final leftWidth = leftWide(named: drawingNamed, universe: universeNamed);
+    final rightWidth = rightWide(named: saveNamed);
+
+    // ——— The bubble of the companion, when it has the room ———
+    final tip = _galetTip;
+    final tipStrong = tip.strong;
+    final tipText = tip.text;
+    Widget? bubble;
+    Widget? bubbleBelow;
+    if (!_bigSheet && _options.toolHelp) {
+      final room = across - leftWidth - rightWidth - 18 - 18;
+      final wanted = GaletBubble.wanted(context, tipStrong, tipText);
+      final width = wanted <= room
+          ? wanted
+          : room >= GaletBubble.narrowest &&
+                wanted <= 2 * math.min(room, GaletBubble.widest) - 60
+          ? math.min(room, GaletBubble.widest)
+          : null;
+      if (width != null) {
+        bubble = GaletBubble(strong: tipStrong, text: tipText, width: width);
+      } else if (tip.urgent) {
+        // What matters now — the second click of a shape, a gesture in
+        // progress — is said whatever the window: under the pebble where
+        // there is no room beside it.
+        bubbleBelow = GaletBubble(
+          strong: tipStrong,
+          text: tipText,
+          width: math.min(math.max(leftWidth, 340), across),
+          below: true,
+        );
+      }
+    }
+
+    final panel = _galetPanel;
+    final anchor = panel == null ? null : _galetAnchor(_galetPanelButton);
+    if (panel != null) {
+      // A button may have moved since it was last laid out: the panel
+      // follows at the next image.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _galetPanel != panel) return;
+        if (_galetAnchor(_galetPanelButton) != anchor) setState(() {});
+      });
+    }
+
+    return Stack(
+      key: _galetsFrame,
+      children: [
+        if (decor == null)
+          Positioned.fill(child: ColoredBox(color: studioBackground))
+        else ...[
+          Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: layout.band,
+            child: ValueListenableBuilder<MouseCursor>(
+              valueListenable: _besideCursor,
+              builder: (context, cursor, child) => MouseRegion(
+                cursor: cursor,
+                onHover: (event) => _besideCursor.value =
+                    _options.decorNames &&
+                        _namesOffered &&
+                        painting!.nameAt(event.localPosition) != null
+                    ? SystemMouseCursors.help
+                    : SystemMouseCursors.basic,
+                child: child,
+              ),
+              // Beside the stage of the sheet: what is pressed there may
+              // be asking the name of something.
+              child: Listener(
+                key: const Key('decorBeside'),
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (event) =>
+                    _decorPressed(event, event.localPosition, beside: true),
+                onPointerMove: (event) => _asking.move(event.localPosition),
+                onPointerUp: (_) => _asking.lift(),
+                onPointerCancel: (_) => _asking.lift(),
+                child: IgnorePointer(
+                  child: ExcludeSemantics(
+                    child: RepaintBoundary(
+                      child: DecorView(
+                        decor: decor,
+                        sheetAtRest: layout.sheet,
+                        motion: _options.decorMotion,
+                        now: widget.clock,
+                        resting: () => _gestureOnSheet,
+                        clearTop: layout.decorClearTop,
+                        smallest: DecorLayout.smallestInWindow,
+                        onClock: () => _decorClock.value++,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // The ground goes on, plain, under the line.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: layout.band,
+            // In the same room as the decor, at the same hour: the shade
+            // of the evening and of the night falls on it too.
+            child: ValueListenableBuilder<int>(
+              valueListenable: _decorClock,
+              builder: (context, _, _) => GaletGround(
+                front: decor.front,
+                veil: decor.veils[DayMoment.at(decorTime(widget.clock))],
+                above: layout.decorFrame,
+              ),
+            ),
+          ),
+        ],
+        Positioned.fromRect(
+          rect: layout.stage,
+          child: _readAt(2, _canvas(galets: layout)),
+        ),
+        // Where the sheet lies when the whole of it is shown: nothing to
+        // see or to touch, a mark for whoever measures the studio.
+        Positioned.fromRect(
+          rect: layout.sheet,
+          child: const IgnorePointer(
+            child: SizedBox.expand(key: Key('sheetAtRest')),
+          ),
+        ),
+        // The names of the decor: what a screen reader may ask about, and
+        // the card of the thing that was asked.
+        if (painting != null && _namesOffered)
+          Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: layout.band,
+            // Read last: the room is around the studio, not before it.
+            child: _readAt(
+              5,
+              ValueListenableBuilder<DecorName?>(
+                valueListenable: _shownName,
+                builder: (context, shown, _) => DecorNameLayer(
+                  painting: painting,
+                  sheetAtRest: layout.sheet,
+                  shown: shown,
+                  onAsk: _showName,
+                  onClose: _closeName,
+                ),
+              ),
+            ),
+          ),
+        // A press beside an open panel puts it away, and does nothing else.
+        if (panel != null)
+          Positioned.fill(
+            child: Listener(
+              key: const Key('galetPanelBarrier'),
+              behavior: HitTestBehavior.opaque,
+              onPointerDown: (_) => _closeGaletPanel(),
+            ),
+          ),
+        if (!_bigSheet)
+          Positioned(
+            left: GaletsLayout.side,
+            top: layout.top,
+            child: _readAt(
+              0,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _galetOfDrawing(
+                    named: drawingNamed,
+                    universeNamed: universeNamed,
+                    nameWidth: drawingText,
+                    universeWidth: universeText,
+                  ),
+                  if (bubble != null) ...[const SizedBox(width: 18), bubble],
+                ],
+              ),
+            ),
+          ),
+        if (bubbleBelow != null)
+          Positioned(
+            left: GaletsLayout.side,
+            top: layout.top + GaletsLayout.topHeight + 10,
+            child: _readAt(.5, IgnorePointer(child: bubbleBelow)),
+          ),
+        Positioned(
+          right: GaletsLayout.side,
+          top: layout.top,
+          child: _readAt(
+            1,
+            _bigSheet
+                ? _galetOfBigSheet(enabled)
+                : _galetOfActions(saveNamed: saveNamed, bigSheet: bigGains),
+          ),
+        ),
+        // What can be done with the chosen element, just above the line.
+        if (_choosing && _selectedObject != null)
+          Positioned(
+            left: GaletsLayout.side,
+            right: GaletsLayout.side,
+            bottom: window.height - layout.lineTop + 10,
+            child: _readAt(3, Center(child: _galetOfSelection())),
+          ),
+        Positioned(
+          left: GaletsLayout.side,
+          right: GaletsLayout.side,
+          top: layout.lineTop,
+          height: GaletsLayout.lineHeight,
+          child: Center(
+            // The line never goes beyond the window: where one more colour
+            // than its ten asks for a little more room than there is, it
+            // is drawn a little smaller.
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: _readAt(4, _galetLine(context, across)),
+            ),
+          ),
+        ),
+        // An open panel is read just after the pebble of its button.
+        if (panel != null && anchor != null)
+          Positioned.fill(
+            child: _readAt(
+              panel == _GaletPanel.drawing ? .25 : 4.5,
+              _galetPanelLayer(panel, anchor),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// The order in which a screen reader goes through the studio of the
+  /// pebbles: « Mon dessin » and the pebbles of the top, the sheet, the
+  /// actions of a chosen element, the line, then the things of the decor —
+  /// which lie behind everything and would otherwise be read first.
+  static Widget _readAt(double order, Widget child) =>
+      Semantics(container: true, sortKey: OrdinalSortKey(order), child: child);
+
+  /// What the companion says in its bubble: a few words in bold, then a
+  /// sentence. [urgent]: what matters now — the pipette, a gesture in
+  /// progress, the second click of a shape — is said whatever the window;
+  /// the few words of the tool in hand only where the window has room for
+  /// them. (What is done with a chosen element is said in its own pebble,
+  /// beside its actions.)
+  ({String strong, String text, bool urgent}) get _galetTip {
+    if (_helpIsUrgent || _shapeAnchor != null) {
+      return (strong: '', text: _toolHelp, urgent: true);
+    }
+    final (strong, text) = _tool.tip;
+    // « Dessiner sans tenir le bouton » changes how a trait is made.
+    final holdFree = _holdFreeHelp;
+    return (
+      strong: strong,
+      text: forTouch(holdFree != null && !_choosing ? holdFree : text),
+      urgent: false,
+    );
+  }
+
+  /// The pebble of the drawing: the companion and « Mon dessin », which
+  /// opens what is done with the whole drawing; then « Univers ».
+  Widget _galetOfDrawing({
+    required bool named,
+    required bool universeNamed,
+    required double nameWidth,
+    required double universeWidth,
+  }) {
+    final open = _galetPanel == _GaletPanel.drawing;
+    return Galet(
+      gap: _galetGap,
+      children: [
+        KeyedSubtree(
+          key: _drawingButton,
+          child: GaletButton(
+            key: const Key('myDrawing'),
+            // The line of state went with the panels: what the drawing
+            // holds, and whether it is saved, is said here and at the top
+            // of the panel.
+            label: trf('Mon dessin : {0}', [_documentCaption]),
+            hint: tr('Nouveau, ouvrir, exporter, imprimer, aide, options'),
+            tip: !named,
+            onPressed: _busy
+                ? null
+                : () => _openGaletPanel(_GaletPanel.drawing),
+            selected: open,
+            marksSelection: false,
+            expanded: open,
+            width: named ? 91 + nameWidth : 75,
+            padding: EdgeInsets.only(left: 4, right: named ? 12 : 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GaletPortrait(cue: _companionCue),
+                SizedBox(width: named ? 10 : 6),
+                if (named) ...[
+                  Text(
+                    tr('Mon dessin'),
+                    maxLines: 1,
+                    style: galetText(
+                      17,
+                      bold: true,
+                      color: open ? studioGreen : null,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                GaletChevron(
+                  up: open,
+                  size: 15,
+                  color: open ? studioGreen : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_choosesUniverse) ...[
+          const GaletRule(),
+          GaletButton(
+            key: const Key('openUniverses'),
+            label: tr('Univers'),
+            tip: !universeNamed,
+            onPressed: _busy ? null : _fromPanel(_openUniverses),
+            width: universeNamed ? 60 + universeWidth : GaletsLayout.cell,
+            padding: universeNamed
+                ? const EdgeInsets.only(left: 8, right: 14)
+                : EdgeInsets.zero,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const EduIllustration(art: EduArt.universes, size: 30),
+                if (universeNamed) ...[
+                  const SizedBox(width: 8),
+                  Text(tr('Univers'), maxLines: 1, style: galetText(16)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// The pebble of the right: the film and the layers; the view; Annuler
+  /// and Rétablir; « Enregistrer ».
+  Widget _galetOfActions({required bool saveNamed, required bool bigSheet}) {
+    final view = _viewEnabled;
+    return Galet(
+      gap: _galetGap,
+      padding: const EdgeInsets.fromLTRB(8, 6, 7, 6),
+      children: [
+        GaletPictureButton(
+          key: const Key('replayDrawing'),
+          art: EduArt.film,
+          label: tr('Revoir ton dessin se faire tout seul'),
+          onPressed: _canReplay ? _fromPanel(_showReplay) : null,
+        ),
+        if (_options.layers)
+          GaletPictureButton(
+            key: const Key('layersButton'),
+            art: EduArt.layers,
+            label: trf('Calques : tu dessines sur {0}', [
+              layerName(_document!.activeLayer, _document!.layers),
+            ]),
+            onPressed: _busy || _confirmationOpen
+                ? null
+                : _fromPanel(_openLayers),
+          ),
+        const GaletRule(),
+        if (_options.viewControls) ...[
+          if (!touchFirst) ...[
+            GaletPictureButton(
+              key: const Key('zoomOut'),
+              art: EduArt.zoomOut,
+              label: tr('Éloigner la feuille'),
+              onPressed: view ? _fromPanel(() => _zoom(1 / 1.25)) : null,
+            ),
+            GaletPictureButton(
+              key: const Key('zoomIn'),
+              art: EduArt.zoomIn,
+              label: tr('Rapprocher la feuille'),
+              onPressed: view ? _fromPanel(() => _zoom(1.25)) : null,
+            ),
+          ],
+          // It answers only when the sheet is seen from closer, or moved:
+          // at rest it says that the whole sheet is shown. The view
+          // changes without building the studio again: it listens.
+          ValueListenableBuilder<int>(
+            valueListenable: _viewRebuild,
+            builder: (context, _, _) => GaletPictureButton(
+              key: const Key('fitPage'),
+              art: EduArt.wholeSheet,
+              label: tr('Voir toute la feuille'),
+              onPressed: view && !(_view?.isFit ?? true)
+                  ? _fromPanel(_fitView)
+                  : null,
+            ),
+          ),
+          GaletPictureButton(
+            key: const Key('panPage'),
+            art: EduArt.moveSheet,
+            label: tr('Déplacer la feuille'),
+            selected: _panning,
+            marksSelection: true,
+            onPressed: view ? _fromPanel(_togglePan) : null,
+          ),
+          if (bigSheet)
+            GaletPictureButton(
+              key: const Key('bigSheet'),
+              art: EduArt.bigSheet,
+              label: tr('Dessiner en grand'),
+              onPressed: view ? _fromPanel(_toggleBigSheet) : null,
+            ),
+          const GaletRule(),
+        ],
+        ..._galetHistory(),
+        const SizedBox(width: 6),
+        GaletSaveButton(
+          key: const Key('saveProject'),
+          onPressed: _busy ? null : _fromPanel(_saveProject),
+          named: saveNamed,
+          savedJustNow: _savedJustNow,
+          unsaved: _dirty,
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _galetHistory() => [
+    GaletPictureButton(
+      key: const Key('undo'),
+      art: EduArt.undo,
+      label: tr('Annuler le dernier geste'),
+      onPressed: _canUndo ? _fromPanel(() => _history(false)) : null,
+    ),
+    GaletPictureButton(
+      key: const Key('redo'),
+      art: EduArt.redo,
+      label: tr('Rétablir le geste annulé'),
+      onPressed: !_busy && _document!.canRedo
+          ? _fromPanel(() => _history(true))
+          : null,
+    ),
+  ];
+
+  /// « Dessiner en grand » : the pebbles of the top are put away, but for
+  /// Annuler, Rétablir and the button that brings them back.
+  Widget _galetOfBigSheet(bool enabled) => Galet(
+    gap: _galetGap,
+    vertical: true,
+    children: [
+      ..._galetHistory(),
+      GaletPictureButton(
+        key: const Key('bigSheet'),
+        art: EduArt.bigSheet,
+        label: tr('Retrouver tous les panneaux'),
+        selected: true,
+        marksSelection: true,
+        onPressed: enabled ? _fromPanel(_toggleBigSheet) : null,
+      ),
+    ],
+  );
+
+  void _togglePan() {
+    _finishStroke();
+    setState(() => _panning = !_panning);
+    _focus.requestFocus();
+  }
+
+  /// The actions on the chosen element, in a pebble of their own, after
+  /// the sentence that says how it is moved and what a colour does to it.
+  Widget _galetOfSelection() => RepaintBoundary(
+    child: Container(
+      key: const Key('galetSelection'),
+      constraints: const BoxConstraints(maxWidth: 640),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: studioSurface,
+        borderRadius: galetCorners(60),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x24263f43),
+            blurRadius: 2,
+            offset: Offset(0, 1),
+          ),
+          BoxShadow(
+            color: Color(0x29263f43),
+            blurRadius: 28,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: _selectionToolbar(compact: true),
+      ),
+    ),
+  );
+
+  /// The line: the tools, the two settings — how big, and which one —,
+  /// then the ten elementary colours. Only the tool in hand has its name
+  /// written, and only where the window leaves the room.
+  Widget _galetLine(BuildContext context, double across) {
+    final enabled = !_busy && !_confirmationOpen;
+    final groups = _options.groups;
+    final chosen = _tool.group;
+    final current = _galetColour;
+    final family = galetFamilyOf(current);
+    final toolStyle = galetText(16, bold: true, color: studioGreen);
+    final nameWidth = galetTextWidth(context, chosen.label, toolStyle);
+    // The longest name of a tool: the line keeps room for it, so that the
+    // two settings and the colours stay where they are whatever the tool.
+    final longestName = groups
+        .map((group) => galetTextWidth(context, group.label, toolStyle))
+        .fold(0.0, math.max);
+    const cell = GaletsLayout.cell;
+    final swatches = galetColours.length + (family == null ? 1 : 0);
+    double wide({required bool named}) =>
+        20 +
+        (groups.length - 1) * cell +
+        (named ? 70 + longestName : cell) +
+        2 * GaletRule.width +
+        52 +
+        66 +
+        swatches * cell +
+        (groups.length + swatches + (named ? 4 : 3));
+    final named = wide(named: true) <= across;
+    // In the narrowest window the ends of the line give a little of their
+    // room before any button is drawn smaller.
+    final ends = (10 - math.max(0.0, wide(named: named) - across) / 2).clamp(
+      4.0,
+      10.0,
+    );
+    final sized = _galetSized;
+    final pale = galetPale(_color);
+    final sizeOpen = _galetPanel == _GaletPanel.size;
+    final whichOpen = _galetPanel == _GaletPanel.which;
+    final whichOffered = _galetWhichOffered;
+    final stamp = _tool == StudioTool.stamp ? _currentStamp : null;
+    final witness = ToolVariants.witness(
+      tool: _tool,
+      brush: _brushTool,
+      magic: _magic,
+      shape: _newShape,
+      rgb: _color,
+      pour: _pourKind,
+      secondRgb: _previousColor,
+      outline: pale ? studioSwatchRing : null,
+    );
+    // The dot of the size button: as large as the trait is wide, between
+    // the smallest and the largest of the five.
+    final dot = sized == null
+        ? 9.0
+        : sized.placed
+        ? 10.0 + 4 * (sized.forStamp ? _stampSize : _textSize).index.toDouble()
+        : (5 +
+                  15 *
+                      math.log(
+                        _galetWidth.clamp(galetWidths.first, galetWidths.last) /
+                            galetWidths.first,
+                      ) /
+                      math.log(galetWidths.last / galetWidths.first))
+              .toDouble();
+    return Galet(
+      key: const Key('galetLine'),
+      height: GaletsLayout.lineHeight,
+      padding: EdgeInsets.symmetric(horizontal: ends, vertical: 8),
+      gap: 1,
+      children: [
+        for (final group in groups)
+          GaletButton(
+            key: Key(group.keyName),
+            label: group.label,
+            selected: group == chosen,
+            tip: !(named && group == chosen),
+            onPressed: enabled ? () => _galetTool(group) : null,
+            width: named && group == chosen ? 70 + nameWidth : cell,
+            padding: named && group == chosen
+                ? const EdgeInsets.only(left: 12, right: 18)
+                : EdgeInsets.zero,
+            child: named && group == chosen
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      EduIllustration(art: group.art, size: 32),
+                      const SizedBox(width: 8),
+                      Text(group.label, maxLines: 1, style: toolStyle),
+                    ],
+                  )
+                : EduIllustration(art: group.art, size: 30),
+          ),
+        // What a shorter name leaves of the room of the longest.
+        if (named) SizedBox(width: longestName - nameWidth),
+        const GaletRule(),
+        KeyedSubtree(
+          key: _sizeButton,
+          child: GaletButton(
+            key: const Key('galetSize'),
+            label: sized == null
+                ? tr('Rien à régler pour cet outil')
+                : sized.placed
+                ? (sized.forStamp
+                      ? tr('Taille du tampon')
+                      : tr('Taille du texte'))
+                : tr('Taille du trait'),
+            onPressed: enabled && sized != null
+                ? () => _openGaletPanel(_GaletPanel.size)
+                : null,
+            selected: sizeOpen,
+            marksSelection: false,
+            expanded: sized == null ? null : sizeOpen,
+            width: 52,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox.square(
+                  dimension: 20,
+                  child: Center(
+                    child: Container(
+                      width: dot,
+                      height: dot,
+                      decoration: BoxDecoration(
+                        color: Color(0xff000000 | _color),
+                        shape: BoxShape.circle,
+                        border: pale
+                            ? Border.all(color: studioSwatchRing, width: 1)
+                            : null,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 3),
+                GaletChevron(color: sizeOpen ? studioGreen : null),
+              ],
+            ),
+          ),
+        ),
+        KeyedSubtree(
+          key: _whichButton,
+          child: GaletButton(
+            key: const Key('galetWhich'),
+            label: whichOffered
+                ? _galetWhichName
+                : tr('Rien à choisir pour cet outil'),
+            onPressed: enabled && whichOffered
+                ? () => _openGaletPanel(_GaletPanel.which)
+                : null,
+            selected: whichOpen,
+            marksSelection: false,
+            expanded: whichOffered ? whichOpen : null,
+            width: 66,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 36,
+                  height: 32,
+                  child: Center(
+                    child: stamp != null
+                        ? StampPreview(stamp: stamp, rgb: _color, size: 32)
+                        : witness != null
+                        ? CustomPaint(
+                            size: const Size(34, 22),
+                            painter: witness,
+                          )
+                        : Container(
+                            width: 18,
+                            height: 3,
+                            decoration: BoxDecoration(
+                              color: studioQuietMark,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(width: 3),
+                GaletChevron(color: whichOpen ? studioGreen : null),
+              ],
+            ),
+          ),
+        ),
+        const GaletRule(),
+        for (final (index, colour) in galetColours.indexed)
+          KeyedSubtree(
+            key: _swatchButtons[index],
+            child: GaletSwatch(
+              key: Key('color-${colour.rgb.toRadixString(16)}'),
+              rgb: colour.rgb,
+              name: colour.name,
+              chosen: family == index,
+              ticked: colour.rgb == current,
+              onPressed: enabled ? () => _pickGaletColour(colour.rgb) : null,
+              onShades: galetFamilies[index].isEmpty
+                  ? null
+                  : () => _openGaletPanel(_GaletPanel.shades, family: index),
+            ),
+          ),
+        // A colour that the line does not offer — that of an element, of
+        // an older drawing — takes the last place while it is in hand.
+        if (family == null)
+          GaletSwatch(
+            key: Key('color-${current.toRadixString(16)}'),
+            rgb: current,
+            name: paintColorName(current),
+            chosen: true,
+            onPressed: enabled ? () => _pickGaletColour(current) : null,
+          ),
+      ],
+    );
+  }
+
+  // A tool of the line: chosen, or — already in hand — its choices opened.
+  void _galetTool(ToolGroup group) {
+    if (_galetPanel != null) setState(() => _galetPanel = null);
+    _selectGroup(group);
+  }
+
+  Widget _galetPanelLayer(_GaletPanel panel, Rect anchor) => GaletPanel(
+    key: Key('galetPanel-${panel.name}'),
+    anchor: anchor,
+    above: panel != _GaletPanel.drawing,
+    gap: panel == _GaletPanel.shades ? 16 : 14,
+    padding: EdgeInsets.all(panel == _GaletPanel.shades ? 10 : 14),
+    label: switch (panel) {
+      _GaletPanel.drawing => tr('Mon dessin'),
+      _GaletPanel.size => tr('Taille'),
+      _GaletPanel.which => _galetWhichTitle,
+      _GaletPanel.shades => tr('Nuances'),
+    },
+    child: switch (panel) {
+      _GaletPanel.drawing => _galetDrawingPanel(),
+      _GaletPanel.size => _galetSizePanel(),
+      _GaletPanel.which => _galetWhichPanel(),
+      _GaletPanel.shades => _galetShadesPanel(),
+    },
+  );
+
+  static Widget _galetPanelRule() => Container(
+    height: 1.5,
+    margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+    color: studioLine,
+  );
+
+  /// « Mon dessin » : what the drawing holds, then what is done with the
+  /// whole of it, in large buttons; help, options and « À propos » under a
+  /// line.
+  Widget _galetDrawingPanel() {
+    final free = !_busy;
+    Widget tile(String key, String name, EduArt art, VoidCallback action) =>
+        GaletTile(
+          key: Key(key),
+          name: name,
+          picture: EduIllustration(art: art, size: 36),
+          onPressed: free ? _fromPanel(action) : null,
+        );
+    final path = _currentPath;
+    return SizedBox(
+      width: 3 * 116 + 2 * 6,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(6, 2, 6, _options.statusLine ? 3 : 10),
+            child: Text(
+              path == null
+                  ? _documentCaption
+                  : '$_documentTitle · $_documentCaption',
+              key: const Key('drawingCaption'),
+              style: galetText(14, color: studioCaption),
+            ),
+          ),
+          // What the line under the sheet said in the studio of before:
+          // the last thing that happened to the drawing.
+          if (_options.statusLine)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 0, 6, 10),
+              child: ValueListenableBuilder<String>(
+                valueListenable: _statusLine,
+                builder: (context, status, _) => Text(
+                  status,
+                  key: const Key('drawingStatus'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: galetText(12.5, color: studioStatusText),
+                ),
+              ),
+            ),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              tile('newProject', tr('Nouveau'), EduArt.newPage, _newDrawing),
+              if (_options.opensFiles)
+                tile('openProject', tr('Ouvrir'), EduArt.folder, _openProject),
+              if (_gallery != null)
+                tile(
+                  'openGallery',
+                  tr('Mes dessins'),
+                  EduArt.gallery,
+                  _openGallery,
+                ),
+              if (_options.opensFiles)
+                tile(
+                  'importImage',
+                  tr('Sur une image'),
+                  EduArt.onPicture,
+                  _importImage,
+                ),
+              if (_options.exports)
+                tile(
+                  'exportImage',
+                  tr('Exporter'),
+                  EduArt.exportImage,
+                  _chooseExport,
+                ),
+              if (_options.printing)
+                tile(
+                  'printDrawing',
+                  tr('Imprimer'),
+                  EduArt.printer,
+                  _printDrawing,
+                ),
+            ],
+          ),
+          _galetPanelRule(),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (_options.headerHelp)
+                tile('showHelp', tr('Aide'), EduArt.help, _showHelp),
+              tile('openOptions', tr('Options'), EduArt.options, _openOptions),
+              // Always there: the privacy policy is reached through it.
+              tile('aboutColor', tr('À propos'), EduArt.about, _showAbout),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The size: five dots as large as the trait they give; for a text or a
+  /// stamp, three sizes.
+  Widget _galetSizePanel() {
+    final sized = _galetSized;
+    if (sized == null) return const SizedBox.shrink();
+    final colour = Color(0xff000000 | _color);
+    final pale = galetPale(_color);
+    Widget dot(double diameter) => Container(
+      width: diameter,
+      height: diameter,
+      decoration: BoxDecoration(
+        color: colour,
+        shape: BoxShape.circle,
+        border: pale ? Border.all(color: studioSwatchRing, width: 1) : null,
+      ),
+    );
+    if (sized.placed) {
+      final value = sized.forStamp ? _stampSize : _textSize;
+      final what = sized.forStamp ? tr('du tampon') : tr('du texte');
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GaletHeading(
+            sized.forStamp ? tr('Taille du tampon') : tr('Taille du texte'),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final size in ObjectSize.values) ...[
+                if (size != ObjectSize.values.first) const SizedBox(width: 4),
+                GaletButton(
+                  key: Key('size-${size.name}'),
+                  label: trf('Taille {0} : {1}', [what, size.label]),
+                  selected: size == value,
+                  framed: true,
+                  width: 60,
+                  height: 60,
+                  onPressed: () {
+                    setState(() {
+                      _galetPanel = null;
+                      if (sized.forStamp) {
+                        _stampSize = size;
+                      } else {
+                        _textSize = size;
+                      }
+                    });
+                    _focus.requestFocus();
+                  },
+                  child: dot(12.0 + 8 * size.index),
+                ),
+              ],
+            ],
+          ),
+        ],
+      );
+    }
+    final chosen = galetWidthIndex(_galetWidth);
+    const diameters = [5.0, 9.0, 14.0, 20.0, 28.0];
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GaletHeading(tr('Taille du trait')),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (final (index, width) in galetWidths.indexed) ...[
+              if (index > 0) const SizedBox(width: 4),
+              GaletButton(
+                key: Key('width-$index'),
+                label: trf('Taille {0} sur {1}', [
+                  index + 1,
+                  galetWidths.length,
+                ]),
+                selected: index == chosen,
+                framed: true,
+                width: 60,
+                height: 60,
+                onPressed: () => _pickGaletWidth(width),
+                child: dot(diameters[index]),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// « Lequel » : the sorts of trait, the magics, the shapes, how the pot
+  /// pours, the stamps — each with its name —, and for what has an inside,
+  /// whether it is filled and which colour a swatch then changes.
+  Widget _galetWhichPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final stamps = _tool == StudioTool.stamp;
+    final variants = !_choosing && _hasVariants && !stamps;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GaletHeading(_galetWhichTitle),
+        const SizedBox(height: 10),
+        if (variants)
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 5 * 104 + 4 * 4),
+            child: _toolVariants(tiles: true),
+          ),
+        if (stamps) _galetStamps(enabled),
+        if (_canFill) ...[
+          if (variants) _galetPanelRule(),
+          _galetInside(enabled),
+        ],
+      ],
+    );
+  }
+
+  // The stamps of the catalogue, in the colour in hand, with their names;
+  // then the two buttons that turn the next one.
+  Widget _galetStamps(bool enabled) {
+    StampCatalog? catalog;
+    try {
+      catalog = StampCatalog.instance;
+    } catch (_) {
+      // The catalogue comes from the core; the studio stays usable
+      // without it.
+    }
+    final look = _stampLook;
+    return SizedBox(
+      width: 6 * 92 + 5 * 4,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (catalog != null)
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                for (final stamp in catalog.stamps)
+                  GaletTile(
+                    key: Key('stamp-${stamp.key}'),
+                    name: stamp.label,
+                    label: trf('Tampon {0}', [stamp.label]),
+                    selected: stamp.id == _stampId,
+                    width: 92,
+                    height: 92,
+                    fontSize: 13.5,
+                    picture: StampPreview(stamp: stamp, rgb: _color, size: 54),
+                    onPressed: enabled
+                        ? () {
+                            setState(() {
+                              _galetPanel = null;
+                              _stampId = stamp.id;
+                            });
+                            _sound(StudioSound.tool);
+                            _focus.requestFocus();
+                          }
+                        : null,
+                  ),
+              ],
+            ),
+          _galetPanelRule(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GaletWideButton(
+                key: const Key('turnStamp'),
+                name: tr('Tourner'),
+                selected: look.rotation != 0,
+                picture: const EduIllustration(art: EduArt.turn, size: 32),
+                onPressed: enabled
+                    ? () {
+                        setState(() => _stampEighths = (_stampEighths + 1) % 8);
+                        _sound(StudioSound.tool);
+                      }
+                    : null,
+              ),
+              const SizedBox(width: 6),
+              GaletWideButton(
+                key: const Key('mirrorStamp'),
+                name: tr('Retourner'),
+                selected: look.mirrorX,
+                picture: const EduIllustration(art: EduArt.mirror, size: 32),
+                onPressed: enabled
+                    ? () {
+                        setState(() => _stampMirrored = !_stampMirrored);
+                        _sound(StudioSound.tool);
+                      }
+                    : null,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // The inside of a shape: filled or not, and which of its two colours a
+  // swatch changes.
+  Widget _galetInside(bool enabled) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Semantics(
+        label: tr('Remplir la forme'),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox.square(
+              dimension: 48,
+              child: Checkbox(
+                key: const Key('fillShapeCheckbox'),
+                value: _filled,
+                onChanged: enabled
+                    ? (value) => _setFilled(value ?? false)
+                    : null,
+              ),
+            ),
+            Text(tr('Remplir'), style: galetText(15)),
+          ],
+        ),
+      ),
+      const SizedBox(width: 18),
+      for (final target in PaintColorTarget.values)
+        Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: GaletButton(
+            key: ValueKey('paint-target-${target.name}'),
+            label: target == PaintColorTarget.stroke
+                ? tr('La couleur du trait')
+                : tr('La couleur de l’intérieur'),
+            selected: _colorTarget == target,
+            framed: true,
+            tip: false,
+            height: 48,
+            corners: 18,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            onPressed: enabled
+                ? () => setState(() => _colorTarget = target)
+                : null,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: target == PaintColorTarget.fill
+                        ? Color(0xff000000 | _fillColor)
+                        : null,
+                    border: Border.all(
+                      color: target == PaintColorTarget.stroke
+                          ? Color(0xff000000 | _color)
+                          : studioSwatchRing,
+                      width: target == PaintColorTarget.stroke ? 4 : 1,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  target == PaintColorTarget.stroke
+                      ? tr('Trait')
+                      : tr('Intérieur'),
+                  style: galetText(15),
+                ),
+              ],
+            ),
+          ),
+        ),
+    ],
+  );
+
+  /// The shades of a colour of the line, from the lightest to the darkest,
+  /// in a small column right above its swatch.
+  Widget _galetShadesPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final current = _galetColour;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final shade in galetFamilies[_galetFamily])
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 1),
+            child: GaletSwatch(
+              key: Key('nuance-${shade.rgb.toRadixString(16)}'),
+              rgb: shade.rgb,
+              name: shade.name,
+              chosen: shade.rgb == current,
+              cell: 52,
+              diameter: 38,
+              onPressed: enabled ? () => _pickGaletColour(shade.rgb) : null,
+            ),
+          ),
+      ],
     );
   }
 
@@ -6456,13 +7889,21 @@ class _DrawingStudioState extends State<DrawingStudio>
     _filled = value;
   });
 
-  Widget _canvas() => LayoutBuilder(
+  /// The stage of the sheet: where it is drawn and touched. [galets]: in
+  /// the studio of the pebbles, where the decor and its names are laid
+  /// behind and over it, on the whole window, and nothing is written
+  /// around the sheet.
+  Widget _canvas({GaletsLayout? galets}) => LayoutBuilder(
     builder: (context, constraints) {
       // A telephone gives the sheet all its room: no name around it.
-      final showCaptions =
+      final roomForCaptions =
           _options.captions &&
           constraints.maxHeight >= 160 &&
           !_phoneLayout(context);
+      // The pebbles keep that room around the sheet, and write nothing
+      // in it.
+      final showCaptions = roomForCaptions && galets == null;
+      final sheetPadding = roomForCaptions ? 28.0 : 8.0;
       // While a pointer is down the view keeps the size it had at the press.
       // A control that appears under the sheet, a sentence that wraps or a
       // window that is resized would otherwise slide the sheet under the
@@ -6479,7 +7920,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         _view = ViewTransform.fit(
           viewWidth: constraints.maxWidth,
           viewHeight: constraints.maxHeight,
-          padding: showCaptions ? 28 : 8,
+          padding: sheetPadding,
           documentWidth: _document!.width.toDouble(),
           documentHeight: _document!.height.toDouble(),
         );
@@ -6487,7 +7928,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         _view = _view!.resize(
           viewWidth: constraints.maxWidth,
           viewHeight: constraints.maxHeight,
-          padding: showCaptions ? 28 : 8,
+          padding: sheetPadding,
         );
         _viewWaits = false;
       } else if (_view!.viewWidth != constraints.maxWidth ||
@@ -6512,11 +7953,11 @@ class _DrawingStudioState extends State<DrawingStudio>
           // None on a tablet or a telephone, whatever its size (the owner,
           // 12 November 2026): the sheet takes the screen there, and the
           // decor is looked at on the whole screen instead.
-          final worn = touchFirst ? null : _universe.decor;
+          final worn = touchFirst || galets != null ? null : _universe.decor;
           final rest = ViewTransform.fit(
             viewWidth: constraints.maxWidth,
             viewHeight: constraints.maxHeight,
-            padding: showCaptions ? 28 : 8,
+            padding: sheetPadding,
             documentWidth: _document!.width.toDouble(),
             documentHeight: _document!.height.toDouble(),
           );
@@ -6541,8 +7982,11 @@ class _DrawingStudioState extends State<DrawingStudio>
           final painting = decor == null || layout == null
               ? null
               : DecorPainting(decor, layout);
-          _decorPainting = painting;
-          final corners = BorderRadius.circular(look.stageRadius);
+          // The studio of the pebbles lays the decor itself.
+          if (galets == null) _decorPainting = painting;
+          final corners = BorderRadius.circular(
+            galets == null ? look.stageRadius : 0,
+          );
           // The captions of the sheet stand in the corners of its frame.
           // Over a decor they would cover what stands there — the knob of
           // the curtain rod, the pencils on the desk — and a child must
@@ -6571,11 +8015,31 @@ class _DrawingStudioState extends State<DrawingStudio>
           return DecoratedBox(
             decoration: BoxDecoration(
               // A decor fills the frame: no backdrop is painted under it.
-              color: decor == null ? studioSheetBackdrop : null,
+              // The pebbles have the whole window behind the stage.
+              color: decor == null && galets == null
+                  ? studioSheetBackdrop
+                  : null,
               borderRadius: corners,
             ),
             child: Stack(
               children: [
+                // Among the pebbles the sheet floats: its shadow, wherever
+                // the view shows it.
+                if (galets != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: CustomPaint(
+                        painter: GaletSheetShadow(
+                          Rect.fromLTWH(
+                            viewport.left,
+                            viewport.top,
+                            viewport.width,
+                            viewport.height,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 if (decor != null)
                   Positioned.fill(
                     child: IgnorePointer(
@@ -6640,7 +8104,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                         },
                         onPointerMove: (raw) {
                           final event = _touchShifted(raw);
-                          _asking.move(event.localPosition);
+                          _asking.move(event.localPosition + _stageOrigin);
                           if (!_fingerMove(event)) {
                             _hintFollows(event);
                             _pointerMove(event, viewport);
@@ -6812,7 +8276,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                     ),
                   ),
                 // The line around the frame, over the decor.
-                if (look.stageBorder > 0)
+                if (look.stageBorder > 0 && galets == null)
                   Positioned.fill(
                     child: IgnorePointer(
                       child: DecoratedBox(
@@ -6915,6 +8379,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         onColorSelected: _busy || _confirmationOpen
             ? null
             : (rgb) {
+                if (!mounted) return;
                 setState(() {
                   // A colour chosen in the palette is the choice: the pipette
                   // that was waiting has nothing left to fetch.
@@ -6956,30 +8421,41 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// The choices of a tool of 1.1, where the sentence of help stands: the
   /// tip of the brush, the magic, the shape. They take its place as the
   /// actions of a chosen element take it, so that the sheet keeps its size.
-  Widget _toolVariants() {
+  Widget _toolVariants({bool tiles = false}) {
     final enabled = !_busy && !_confirmationOpen;
     return ToolVariants(
       key: const Key('toolVariants'),
+      tiles: tiles,
       tool: _tool,
       brush: _brushTool,
       magic: _magic,
       shape: _newShape,
       rgb: _color,
+      // In a panel of the pebbles, a choice made puts the panel away.
       onBrush: enabled
           ? (tip) {
-              setState(() => _brushTool = tip);
+              setState(() {
+                _brushTool = tip;
+                if (tiles) _galetPanel = null;
+              });
               _sound(StudioSound.tool);
             }
           : null,
       onMagic: enabled
           ? (magic) {
-              setState(() => _magic = magic);
+              setState(() {
+                _magic = magic;
+                if (tiles) _galetPanel = null;
+              });
               _sound(StudioSound.tool);
             }
           : null,
       onShape: enabled
           ? (shape) {
-              setState(() => _newShape = shape);
+              setState(() {
+                _newShape = shape;
+                if (tiles) _galetPanel = null;
+              });
               if (_tool == StudioTool.shapes) {
                 _sound(StudioSound.tool);
               } else {
@@ -6987,7 +8463,14 @@ class _DrawingStudioState extends State<DrawingStudio>
               }
             }
           : null,
-      onTool: enabled ? _selectTool : null,
+      onTool: !enabled
+          ? null
+          : tiles
+          ? (tool) {
+              setState(() => _galetPanel = null);
+              _selectTool(tool);
+            }
+          : _selectTool,
       pour: _pourKind,
       secondRgb: _previousColor,
       stamp: _tool == StudioTool.stamp ? _currentStamp : null,
@@ -7006,7 +8489,10 @@ class _DrawingStudioState extends State<DrawingStudio>
           : null,
       onPour: enabled
           ? (kind) {
-              setState(() => _pourKind = kind);
+              setState(() {
+                _pourKind = kind;
+                if (tiles) _galetPanel = null;
+              });
               _sound(StudioSound.tool);
             }
           : null,

@@ -10,6 +10,7 @@ import 'dart:ui' show Locale;
 import 'package:edupaint_flutter_study/color_palette.dart';
 import 'package:edupaint_flutter_study/decor_motion.dart';
 import 'package:edupaint_flutter_study/english.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/new_sheet_dialog.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
@@ -72,7 +73,17 @@ List<String> sentencesOf(String source) {
 /// names of the tools, the colours, the stamps, the fonts, the sizes, the
 /// sheets, the pages to colour.
 Set<String> frenchOfValues() => {
-  for (final tool in StudioTool.values) ...[tool.frenchLabel, tool.frenchHelp],
+  for (final tool in StudioTool.values) ...[
+    tool.frenchLabel,
+    tool.frenchHelp,
+    // What the companion says of it in the bubble of the pebbles.
+    tool.frenchTip.$1,
+    tool.frenchTip.$2,
+  ],
+  // The ten elementary colours of the pebbles and their shades.
+  for (final colour in galetColours) colour.frenchName,
+  for (final family in galetFamilies)
+    for (final shade in family) shade.frenchName,
   for (final magic in Magic.values) magic.frenchLabel,
   for (final pour in PourKind.values) pour.frenchLabel,
   for (final size in ObjectSize.values) size.frenchLabel,

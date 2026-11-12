@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Dessiner en grand » (Color 1.2, « Les galets »). Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Dessiner en grand</title>
+  <rect x="9" y="13" width="46" height="38" rx="6" fill="#fffcf0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M36 28 L46 20 M46 20 H39 M46 20 V27" fill="none" stroke="#9a82c9" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 36 L18 44 M18 44 H25 M18 44 V37" fill="none" stroke="#43ac9c" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

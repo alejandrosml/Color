@@ -718,7 +718,9 @@ void main() {
   );
 
   group('controls a child can hit, on the desktop too', () {
-    for (final size in [const Size(1280, 720), const Size(700, 620)]) {
+    // The windows of the studio of before; the controls of the pebbles of
+    // a wider one are measured in galets_workflow_test.dart.
+    for (final size in [const Size(1120, 720), const Size(700, 620)]) {
       testWidgets(
         'every control is at least 48 pixels in a ${size.width.round()} × ${size.height.round()} window',
         (tester) async {

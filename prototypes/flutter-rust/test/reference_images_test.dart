@@ -11,17 +11,25 @@
 //   flutter test --update-goldens test/reference_images_test.dart   (remake)
 //
 // Remake them only for a change of the picture that is wanted, and look at
-// each new image before keeping it. The pictures with a text have a second
-// reference, made on the Mac (references/macos/): its font engine draws the
-// edges of the letters a little differently. The first ones of the Mac are
-// the pictures of its recipe of 2 November 2026, which differed from those
-// of Linux at the letters only, by up to 102 levels, on at most 1 217
-// pixels of 432 234.
+// each new image before keeping it. They were all remade on 12 November
+// 2026 for the studio of the pebbles (Color 1.2, step G1): the sheet is
+// larger there, the stage has the width of the window, a trait has one of
+// five widths, and four colours of before gave way to those of the line.
+//
+// The pictures with a text have a second reference, made on the Mac
+// (references/macos/): its font engine draws the edges of the letters a
+// little differently — in the recipe of 2 November 2026, by up to 102
+// levels, on at most 1 217 pixels of 432 234. THE FOUR OF THE MAC ARE NOT
+// MADE YET FOR THE PEBBLES: they are those of Linux, put there on 12
+// November 2026 so that the Mac compares pictures of the right size. Its
+// recipe will refuse them at the letters: keep the pictures it paints
+// (test/failures/), look at them, and run it again.
 import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:edupaint_flutter_study/coloring_pages.dart';
 import 'package:edupaint_flutter_study/country_signs.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/text_layout.dart';
 import 'package:edupaint_flutter_study/view_transform.dart';
@@ -31,6 +39,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 final _sheet = find.byKey(const Key('sheetPicture'));
 final _surface = find.byKey(const Key('drawingSurface'));
@@ -63,30 +72,19 @@ class _Studio {
 
   Future<void> finish() => tester.pumpWidget(const SizedBox.shrink());
 
-  Future<void> tap(String key) async {
-    final control = find.byKey(Key(key));
-    // The rectangle and the oval are chosen in « Formes ».
-    if (control.evaluate().isEmpty &&
-        (key == 'tool-rectangle' || key == 'tool-ellipse')) {
-      await tap('tool-shapes');
-    }
-    await tester.ensureVisible(control);
-    await tester.pumpAndSettle();
-    await tester.tap(control);
-    await tester.pumpAndSettle();
-  }
+  // The window is a wide one: the studio of the pebbles (Color 1.2). The
+  // driver knows what each of them opens — the choices of a tool, the
+  // shades of a colour, « Mon dessin ».
+  late final _driver = StudioDriver(tester);
+
+  Future<void> tap(String key) => _driver.tap(key);
 
   Future<void> colour(int rgb) => tap('color-${rgb.toRadixString(16)}');
 
-  /// The width of the brush, chosen where [share] of its slide lies.
-  Future<void> brushWidth(double share) async {
-    final slide = find.byKey(const Key('brushWidthSemantics'));
-    await tester.ensureVisible(slide);
-    await tester.pumpAndSettle();
-    final box = tester.getRect(slide);
-    await tester.tapAt(Offset(box.left + box.width * share, box.center.dy));
-    await tester.pumpAndSettle();
-  }
+  /// The width of the brush: the dot, of the five, that lies at [share] of
+  /// their row.
+  Future<void> brushWidth(double share) =>
+      tap('width-${(share * (galetWidths.length - 1)).round()}');
 
   /// Where the point ([x], [y]) of the sheet lies on the screen, the whole
   /// sheet in view.
@@ -155,19 +153,19 @@ class _Studio {
   Future<void> traits() async {
     await tap('tool-stroke');
     await brushWidth(0.8);
-    await colour(0xd75e56);
+    await colour(0xe83d48);
     await drag([
       for (var step = 0; step <= 30; step++)
         Offset(120 + step * 32.0, 200 + 120 * math.sin(step / 4)),
     ]);
     await brushWidth(0.45);
-    await colour(0x477fb2);
+    await colour(0x3370d1);
     await drag([
       for (var step = 0; step <= 30; step++)
         Offset(140 + step * 30.0, 620 - step * 14.0),
     ]);
     await brushWidth(0.1);
-    await colour(0x388778);
+    await colour(0x2f854a);
     await drag([
       for (var step = 0; step <= 60; step++)
         Offset(
@@ -184,21 +182,21 @@ class _Studio {
   Future<void> shapes() async {
     await shape(
       'line',
-      0x477fb2,
+      0x3370d1,
       null,
       const Offset(80, 80),
       const Offset(520, 300),
     );
     await shape(
       'rectangle',
-      0xd75e56,
+      0xe83d48,
       null,
       const Offset(620, 80),
       const Offset(1100, 300),
     );
     await shape(
       'rectangle',
-      0x388778,
+      0x2f854a,
       0xa8d8f0,
       const Offset(80, 420),
       const Offset(500, 720),
@@ -223,17 +221,17 @@ class _Studio {
     );
     await shape(
       'rectangle',
-      0x78a66f,
-      0x78a66f,
+      0x4db266,
+      0x4db266,
       const Offset(14, 540),
       const Offset(1186, 786),
     );
     await stamp('soleil', 0xeebf4e, 1030, 140);
-    await stamp('maison', 0xd75e56, 300, 450);
-    await stamp('arbre', 0x388778, 760, 440);
+    await stamp('maison', 0xe83d48, 300, 450);
+    await stamp('arbre', 0x2f854a, 760, 440);
     await stamp('fleur', 0xc96d93, 130, 690);
     await tap('tool-text');
-    await colour(0xd75e56);
+    await colour(0xe83d48);
     await click(40, 40);
     await tester.enterText(find.byKey(const Key('textField')), 'Mon jardin');
     await tester.pumpAndSettle();
@@ -268,14 +266,14 @@ class _Studio {
         Offset(90 + step * 18.0, 680 - 90 * math.sin(step / 7.6)),
     ]);
     await tap('magic-grass');
-    await colour(0x388778);
+    await colour(0x2f854a);
     await drag([
       const Offset(60, 770),
       const Offset(340, 770),
       const Offset(620, 770),
     ]);
     await tap('magic-bricks');
-    await colour(0xd75e56);
+    await colour(0xe83d48);
     await drag([
       const Offset(700, 120),
       const Offset(900, 120),
@@ -292,12 +290,12 @@ class _Studio {
     // The round pot inside the star.
     await tap('tool-fill');
     await tap('pour-radial');
-    await colour(0xd75e56);
+    await colour(0xe83d48);
     await click(830, 380);
     // A loop of the brush, filled with a gradient where it is paper.
     await tap('tool-stroke');
     await brushWidth(0.3);
-    await colour(0x477fb2);
+    await colour(0x3370d1);
     await drag([
       for (var step = 0; step <= 48; step++)
         Offset(
@@ -313,7 +311,7 @@ class _Studio {
     await tap('tool-stamp');
     await tap('chooseStamp');
     await tap('stamp-poisson');
-    await colour(0x477fb2);
+    await colour(0x3370d1);
     await tap('size-large');
     await tap('turnStamp');
     await tap('turnStamp');
@@ -446,7 +444,7 @@ void main() {
     await studio.start();
     await studio.shape(
       'rectangle',
-      0x477fb2,
+      0x3370d1,
       0xa8d8f0,
       const Offset(200, 150),
       const Offset(700, 550),
@@ -456,7 +454,7 @@ void main() {
     await studio.tap('closeLayers');
     await studio.shape(
       'ellipse',
-      0xd75e56,
+      0xe83d48,
       0xeebf4e,
       const Offset(450, 300),
       const Offset(1000, 700),
@@ -467,7 +465,7 @@ void main() {
     await studio.tap('closeLayers');
     await studio.tap('tool-stroke');
     await studio.brushWidth(0.8);
-    await studio.colour(0x388778);
+    await studio.colour(0x2f854a);
     final gesture = await studio.press(100, 500);
     for (var step = 1; step <= 20; step++) {
       await gesture.moveTo(studio.at(100 + step * 50.0, 500 - step * 8.0));
@@ -508,9 +506,9 @@ void main() {
     await studio.tap('tool-fill');
     for (final (point, rgb) in const [
       (Offset(31, 30), 0xa8d8f0),
-      (Offset(721, 563), 0x78a66f),
+      (Offset(721, 563), 0x4db266),
       (Offset(650, 141), 0xeebf4e),
-      (Offset(950, 309), 0xd75e56),
+      (Offset(950, 309), 0xe83d48),
     ]) {
       await studio.colour(rgb);
       await studio.click(point.dx, point.dy);

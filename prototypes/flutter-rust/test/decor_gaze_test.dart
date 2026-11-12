@@ -25,6 +25,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
@@ -176,7 +177,7 @@ void main() {
       // A trait, to see that nothing of the drawing is touched.
       await tester.dragFrom(tester.getCenter(surface), const Offset(60, 20));
       await tester.pump();
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
 
       await tester.tap(find.byKey(const Key('openUniverses')));
       await tester.pumpAndSettle();
@@ -240,7 +241,7 @@ void main() {
       expect(gazeFinder, findsNothing);
       expect(find.byKey(const Key('universeDialog')), findsNothing);
       // The drawing is as it was, and the studio hears the keyboard again.
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       expect(store.value.universe, '');
       await tester.sendKeyEvent(LogicalKeyboardKey.f2);
       await tester.pump();
@@ -252,8 +253,7 @@ void main() {
 
   testWidgets('an adult takes « Regarder » away', (tester) async {
     final store = await start(tester);
-    await tester.tap(find.byKey(const Key('openOptions')));
-    await tester.pumpAndSettle();
+    await pressAction(tester, 'openOptions');
     await tester.pump(const Duration(milliseconds: 500));
     final option = find.byKey(const Key('optionDecorWatch'));
     await tester.ensureVisible(option);

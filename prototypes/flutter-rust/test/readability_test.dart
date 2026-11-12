@@ -90,7 +90,9 @@ void main() {
     tester,
   ) async {
     final studio = StudioDriver(tester);
-    await studio.start(size: const Size(1280, 820));
+    // The widest window of the studio of before, with its side panel: a
+    // wider one is the studio of the pebbles (galets_workflow_test.dart).
+    await studio.start(size: const Size(1128, 820));
     Color? colorOf(Finder finder) => tester.widget<Text>(finder).style?.color;
     expect(colorOf(find.text('OUTILS')), studioCaption);
     expect(colorOf(find.text('MA FEUILLE')), studioSheetTitle);

@@ -11,11 +11,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/studio_driver.dart';
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
 
+// Whether the studio is the one of the pebbles (Color 1.2): a wide window
+// with ordinary letters.
+bool _pebbles() => find.byKey(const Key('galetLine')).evaluate().isNotEmpty;
+
 Future<void> _tap(WidgetTester tester, String key) async {
   final finder = find.byKey(Key(key));
+  // Among the pebbles, what is done with the whole drawing waits in
+  // « Mon dessin ».
+  if (finder.evaluate().isEmpty && _pebbles()) {
+    await tester.tap(find.byKey(const Key('myDrawing')));
+    await tester.pumpAndSettle();
+  }
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   expect(finder.hitTestable(), findsOneWidget, reason: '$key is reachable');
@@ -117,10 +128,10 @@ void main() {
         }
         await _tap(tester, 'undo');
         await tester.pumpAndSettle();
-        expect(find.textContaining('0 élément · '), findsOneWidget);
+        expect(drawingCaption(tester), startsWith('0 élément · '));
         await _tap(tester, 'redo');
         await tester.pumpAndSettle();
-        expect(find.textContaining('1 élément'), findsOneWidget);
+        expect(drawingCaption(tester), contains('1 élément'));
 
         // Use actual selection buttons, including lower controls revealed by scroll.
         await _tap(tester, 'tool-select');
@@ -130,7 +141,8 @@ void main() {
         );
         await tester.pumpAndSettle();
         // The colour changes the chosen stroke at once: one step to undo.
-        await _tap(tester, 'color-d75e56');
+        // The pebbles offer the ten elementary colours.
+        await _tap(tester, _pebbles() ? 'color-e83d48' : 'color-d75e56');
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
         await _save(tester);
@@ -146,14 +158,14 @@ void main() {
         await tester.pumpAndSettle();
         await _tap(tester, 'duplicateSelection');
         await tester.pumpAndSettle();
-        expect(find.textContaining('2 éléments'), findsOneWidget);
+        expect(drawingCaption(tester), contains('2 éléments'));
         await _tap(tester, 'selectionOrder');
         await tester.pumpAndSettle();
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
         await _tap(tester, 'deleteSelection');
         await tester.pumpAndSettle();
-        expect(find.textContaining('1 élément'), findsOneWidget);
+        expect(drawingCaption(tester), contains('1 élément'));
         await _tap(tester, 'tool-stroke');
         await tester.pumpAndSettle();
         await _tap(
@@ -168,11 +180,15 @@ void main() {
         await _tap(tester, 'cancelNewSheet');
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('newSheetDialog')), findsNothing);
-        await _tap(tester, 'morePaintColors');
-        await tester.pumpAndSettle();
-        await _tap(tester, 'cancelPaintColor');
-        await tester.pumpAndSettle();
-        expect(find.byKey(const Key('paintColorDialog')), findsNothing);
+        // « Autres couleurs » : in the studio of before only, until the
+        // pebbles have the setting of the older children.
+        if (!_pebbles()) {
+          await _tap(tester, 'morePaintColors');
+          await tester.pumpAndSettle();
+          await _tap(tester, 'cancelPaintColor');
+          await tester.pumpAndSettle();
+          expect(find.byKey(const Key('paintColorDialog')), findsNothing);
+        }
         await _tap(tester, 'exportImage');
         await tester.pumpAndSettle();
         await _tap(tester, 'exportSvg');
