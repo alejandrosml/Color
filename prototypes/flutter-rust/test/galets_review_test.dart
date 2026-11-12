@@ -21,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'flutter_test_config.dart';
 import 'support/memory_files.dart';
+import 'support/memory_gallery.dart';
 import 'support/review_fonts.dart';
 
 void main() {
@@ -74,6 +75,9 @@ void main() {
         child: EduPaintApp(
           files: MemoryFiles(),
           recoveryStorage: MemoryRecovery(),
+          // With its album: « Mes dessins » is among what « Mon dessin »
+          // opens.
+          gallery: MemoryGallery(),
           options: store,
         ),
       ),

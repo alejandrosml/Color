@@ -24,6 +24,16 @@
 // November 2026 so that the Mac compares pictures of the right size. Its
 // recipe will refuse them at the letters: keep the pictures it paints
 // (test/failures/), look at them, and run it again.
+//
+// The references are painted on Linux, on an x86-64 processor, and are
+// compared there pixel for pixel, as on every x86-64 machine. Another
+// processor rounds the edge of a shape another way: on Windows on ARM64,
+// at step G1, 57 pixels of the 979 200 of the garden without its text
+// (05) differed, at this new size of the sheet. Away from x86-64 a
+// picture may differ from a reference painted on x86-64 by up to
+// [_edgeTolerance] of its pixels; a reference painted on the machine
+// itself (references/macos/) is still compared pixel for pixel.
+import 'dart:ffi' show Abi;
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -342,6 +352,41 @@ class _Studio {
   }
 }
 
+/// The share of the pixels of a picture that may differ, away from x86-64,
+/// from a reference painted on x86-64: five in ten thousand — the edges
+/// of a few shapes, never a shape.
+const _edgeTolerance = .0005;
+
+/// Whether this processor is the one the references were painted on.
+/// COLOR_REFERENCES_AS_ELSEWHERE, set to anything, says no: to try on
+/// x86-64 the comparison that another processor gets.
+bool get _paintsAsTheReferences =>
+    Platform.environment['COLOR_REFERENCES_AS_ELSEWHERE'] == null &&
+    const {Abi.linuxX64, Abi.windowsX64, Abi.macosX64}.contains(Abi.current());
+
+/// Compares as flutter_test does, but lets a picture differ from a
+/// reference of x86-64 by [_edgeTolerance] of its pixels.
+class _EdgeTolerantComparator extends LocalFileComparator {
+  _EdgeTolerantComparator(super.testFile);
+
+  @override
+  Future<bool> compare(Uint8List imageBytes, Uri golden) async {
+    final result = await GoldenFileComparator.compareLists(
+      imageBytes,
+      await getGoldenBytes(golden),
+    );
+    final ownReference = golden.path.contains('macos/');
+    if (result.passed ||
+        (!ownReference && result.diffPercent <= _edgeTolerance)) {
+      result.dispose();
+      return true;
+    }
+    final error = await generateFailureOutput(result, golden, basedir);
+    result.dispose();
+    throw FlutterError(error);
+  }
+}
+
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
@@ -350,6 +395,15 @@ void main() {
     final loader = FontLoader(colorTextFontFamily)
       ..addFont(Future.value(ByteData.sublistView(bytes)));
     await loader.load();
+    if (!_paintsAsTheReferences) {
+      final exact = goldenFileComparator;
+      addTearDown(() => goldenFileComparator = exact);
+      goldenFileComparator = _EdgeTolerantComparator(
+        (exact as LocalFileComparator).basedir.resolve(
+          'reference_images_test.dart',
+        ),
+      );
+    }
   });
 
   testWidgets('traits, a dot and a wave', (tester) async {

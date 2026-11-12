@@ -242,6 +242,15 @@ try:
             record['flutter_tests']['failing'] = sorted(set(re.findall(
                 r'^\s+(\S.*\.dart: .*)$', text_of('flutter-tests').split('Failing tests:')[-1], re.M)))[:60] \
                 if failed else []
+        # What a refused picture looked like here: the pictures that the tests of the
+        # reference images leave when one differs (test/failures/), kept with the report.
+        refused = sorted((app / 'test' / 'failures').glob('*.png'))
+        if refused:
+            kept = report / 'flutter-tests-failures'
+            kept.mkdir(exist_ok=True)
+            for picture_of_failure in refused[:60]:
+                shutil.copy2(picture_of_failure, kept / picture_of_failure.name)
+            record.setdefault('flutter_tests', {})['pictures_of_failures'] = [p.name for p in refused[:60]]
         if record.get('flutter_tests', {}).get('verdict') != 'All tests passed!':
             raise Stop('flutter-tests')
     phase('windows-release-build', [flutter, 'build', 'windows', '--release', '--no-pub'], cwd=app,
