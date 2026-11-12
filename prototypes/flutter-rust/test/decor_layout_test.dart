@@ -26,12 +26,13 @@ void main() {
     );
   }
 
-  DecorLayout layout(Size frame, {double ratio = 1.5}) => DecorLayout(
-    frame: frame,
-    sheetAtRest: sheetIn(frame, ratio: ratio),
-    decor: decor,
-    decorSheet: decorSheet,
-  );
+  DecorLayout layout(Size frame, {double ratio = 1.5, double padding = 28}) =>
+      DecorLayout(
+        frame: frame,
+        sheetAtRest: sheetIn(frame, ratio: ratio, padding: padding),
+        decor: decor,
+        decorSheet: decorSheet,
+      );
 
   test('in the frame it was drawn for, the decor is where it was drawn', () {
     final drawn = layout(decor);
@@ -139,6 +140,48 @@ void main() {
     // The limit is a share of the full size.
     expect(DecorLayout.minimumShare, .45);
     expect(layout(Size.zero).pieces, isFalse);
+  });
+
+  test('what lies under the sheet is left out where the sheet hides it', () {
+    // With the captions the sheet leaves a band under it: the pencils that
+    // were drawn there are shown, in the frame of the drawing and in a
+    // larger one.
+    for (final frame in [decor, const Size(1542, 587)]) {
+      final shown = layout(frame);
+      expect(shown.under, isTrue);
+      expect(shown.shows(DecorAnchor.middle), isTrue);
+      expect(shown.shows(DecorAnchor.left), isTrue);
+      expect(shown.shows(DecorAnchor.right), isTrue);
+    }
+    // In the simplest interface the sheet comes down to eight points of
+    // the bottom: the pencils would be under it, but for a sliver. They
+    // are left out; what stands beside the sheet stays.
+    final simple = layout(const Size(1100, 420), padding: 8);
+    expect(simple.pieces, isTrue);
+    expect(simple.under, isFalse);
+    expect(simple.shows(DecorAnchor.middle), isFalse);
+    expect(simple.shows(DecorAnchor.left), isTrue);
+    expect(simple.shows(DecorAnchor.right), isTrue);
+    // Half of the band is the limit.
+    const frame = Size(1061, 407);
+    DecorLayout lowered(double bottom) => DecorLayout(
+      frame: frame,
+      sheetAtRest: Rect.fromLTRB(266, 26, 792, bottom),
+      decor: decor,
+      decorSheet: decorSheet,
+    );
+    expect(lowered(377).under, isTrue);
+    expect(lowered(392).under, isTrue);
+    expect(lowered(393).under, isFalse);
+    // Where only the ground is shown, nothing is, on any side.
+    final ground = layout(const Size(844, 390), ratio: 2.4, padding: 8);
+    expect(ground.pieces, isFalse);
+    for (final anchor in DecorAnchor.values) {
+      expect(ground.shows(anchor), isFalse);
+    }
+    // A layout that shows what lies under the sheet is not one that
+    // leaves it out.
+    expect(lowered(392) == lowered(393), isFalse);
   });
 
   test('two layouts of the same frame are the same', () {

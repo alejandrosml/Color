@@ -725,11 +725,89 @@ void main() {
     skip: !available,
   );
 
+  testWidgets(
+    'the simplest interface: the pencils that the sheet would hide are not '
+    'shown, nor named',
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      // How far the colours of the band that the sheet leaves under it go
+      // from one another, along the sheet: the widest gap of red, green or
+      // blue, out of 255. The grain of the wood is a few; a pencil, many.
+      Future<int> band() async {
+        final frame = tester.getSize(decorFinder);
+        final sheet = tester.widget<DecorView>(find.byType(DecorView));
+        final below = (sheet.sheetAtRest.bottom + frame.height) / 2;
+        final image = await picture(tester);
+        final low = [255, 255, 255];
+        final high = [0, 0, 0];
+        for (
+          var x = sheet.sheetAtRest.left + 4;
+          x < sheet.sheetAtRest.right - 4;
+          x += 3
+        ) {
+          final colour = pixel(image, Offset(x, below)).toARGB32();
+          for (var channel = 0; channel < 3; channel++) {
+            final value = (colour >> (8 * channel)) & 0xff;
+            if (value < low[channel]) low[channel] = value;
+            if (value > high[channel]) high[channel] = value;
+          }
+        }
+        return [
+          for (var channel = 0; channel < 3; channel++)
+            high[channel] - low[channel],
+        ].reduce((a, b) => a > b ? a : b);
+      }
+
+      // With the captions, the pencils lie in the band under the sheet.
+      await start(tester);
+      final pencils = painting(tester).decor.names
+          .firstWhere((name) => name.key == 'crayons');
+      expect(pencils.anchor, DecorAnchor.middle);
+      expect(painting(tester).layout.under, isTrue);
+      expect(find.byKey(const Key('decorName-crayons')), findsOneWidget);
+      expect(await band(), greaterThan(60));
+      await tester.pumpWidget(const SizedBox());
+
+      // In the simplest interface the sheet takes the band: no pencil is
+      // painted there, a screen reader does not meet them, and F2 goes
+      // round the thirteen other things without naming them.
+      await start(
+        tester,
+        options: const StudioOptions(level: InterfaceLevel.toddler),
+      );
+      final simple = painting(tester);
+      expect(simple.layout.pieces, isTrue);
+      expect(simple.layout.under, isFalse);
+      expect(simple.names, hasLength(13));
+      expect(find.byKey(const Key('decorName-crayons')), findsNothing);
+      expect(find.byKey(const Key('decorName-chat')), findsOneWidget);
+      // What is left of the band: the ground alone, the wood of the desk.
+      expect(await band(), lessThan(8));
+      final seen = <String>{};
+      for (var step = 0; step < 14; step++) {
+        await tester.sendKeyEvent(LogicalKeyboardKey.f2);
+        await tester.pump();
+        expect(find.byKey(const Key('decorNameCard')), findsOneWidget);
+        expect(find.text(pencils.frenchName), findsNothing);
+        for (final name in simple.decor.names) {
+          if (find.text(name.frenchName).evaluate().isNotEmpty) {
+            seen.add(name.key);
+          }
+        }
+      }
+      expect(seen, hasLength(13));
+      handle.dispose();
+      await tester.pumpWidget(const SizedBox());
+    },
+    skip: !available,
+  );
+
   testWidgets('a screen reader meets each named thing, and its card is read', (
     tester,
   ) async {
     final handle = tester.ensureSemantics();
     await start(tester);
+    expect(painting(tester).names, hasLength(14));
     for (final name in painting(tester).decor.names) {
       expect(find.byKey(Key('decorName-${name.key}')), findsOneWidget);
     }

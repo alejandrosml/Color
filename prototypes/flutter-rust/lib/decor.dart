@@ -443,6 +443,7 @@ class DecorLayout {
     required this.scale,
     required this.middle,
     required this.pieces,
+    required this.under,
   });
 
   /// The decor in a [frame], around a sheet that lies at [sheetAtRest] when
@@ -463,18 +464,29 @@ class DecorLayout {
     final need = math.max(decorSheet.left, decor.width - decorSheet.right);
     final fitting = need <= 0 ? full : room / need;
     final pieces = fitting >= full * minimumShare;
+    final scale = pieces ? math.min(full, fitting) : full;
+    // What lies under the sheet was drawn in the band that the sheet leaves
+    // at the bottom of the frame. Where the sheet comes lower, it would be
+    // hidden under it: it is then left out, with its name.
+    final band = (decor.height - decorSheet.bottom) * scale;
+    final below = frame.height - sheetAtRest.bottom;
     return DecorLayout._(
       frame: frame,
       decor: decor,
-      scale: pieces ? math.min(full, fitting) : full,
+      scale: scale,
       middle: Offset(sheetAtRest.center.dx, decorSheet.center.dx),
       pieces: pieces && frame.width > 0 && frame.height > 0,
+      under: band <= 0 || below >= band * underShare,
     );
   }
 
   /// Below this share of the size the height allows, the pieces of a decor
   /// are too small to be looked at: only its ground is shown.
   static const minimumShare = .45;
+
+  /// With less than this share of the band that was drawn for it under
+  /// the sheet, what lies there is not shown: a child must see everything.
+  static const underShare = .5;
 
   final Size frame;
   final Size decor;
@@ -487,6 +499,13 @@ class DecorLayout {
 
   /// Whether the pieces are shown; the ground always is.
   final bool pieces;
+
+  /// Whether the sheet leaves room for what lies under it.
+  final bool under;
+
+  /// Whether what keeps to [anchor] is shown, a piece or a named thing.
+  bool shows(DecorAnchor anchor) =>
+      pieces && (anchor != DecorAnchor.middle || under);
 
   /// The left edge, in the frame, of what is drawn at x = 0 of the decor
   /// and keeps to [anchor].
@@ -518,10 +537,11 @@ class DecorLayout {
       other.decor == decor &&
       other.scale == scale &&
       other.middle == middle &&
-      other.pieces == pieces;
+      other.pieces == pieces &&
+      other.under == under;
 
   @override
-  int get hashCode => Object.hash(frame, decor, scale, middle, pieces);
+  int get hashCode => Object.hash(frame, decor, scale, middle, pieces, under);
 }
 
 /// Paints a decor. Nothing here keeps time or listens to anything: the
@@ -532,6 +552,7 @@ class DecorPainting {
   final DecorLayout layout;
 
   bool _shown(DecorPiece piece, DayMoment moment, DecorMotion motion) =>
+      layout.shows(piece.anchor) &&
       (piece.moments?.contains(moment) ?? true) &&
       (piece.level == 1 || motion.rank >= piece.level);
 
@@ -807,9 +828,12 @@ class DecorPainting {
   /// What a child may ask the name of at [position] of the frame: the
   /// smallest named thing there, or null. Nothing is named where the pieces
   /// are not shown.
+  /// The named things that this frame shows.
+  Iterable<DecorName> get names =>
+      decor.names.where((name) => layout.shows(name.anchor));
+
   DecorName? nameAt(Offset position) {
-    if (!layout.pieces) return null;
-    for (final name in decor.names) {
+    for (final name in names) {
       if (layout.place(name.at, name.anchor).inflate(3).contains(position)) {
         return name;
       }

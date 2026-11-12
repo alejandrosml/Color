@@ -584,22 +584,21 @@ class DecorNameLayer extends StatelessWidget {
       }
       return Stack(
         children: [
-          if (layout.pieces)
-            for (final name in painting.decor.names)
-              Positioned.fromRect(
-                rect: layout.place(name.at, name.anchor),
-                child: Semantics(
-                  key: Key('decorName-${name.key}'),
-                  container: true,
-                  button: true,
-                  label: tr(name.frenchName),
-                  hint: tr('En savoir plus'),
-                  onTap: () => onAsk(name),
-                  // Nothing to press here for a pointer: the frame of the
-                  // sheet hears it, and the tool in hand is never stopped.
-                  child: const IgnorePointer(child: SizedBox.expand()),
-                ),
+          for (final name in painting.names)
+            Positioned.fromRect(
+              rect: layout.place(name.at, name.anchor),
+              child: Semantics(
+                key: Key('decorName-${name.key}'),
+                container: true,
+                button: true,
+                label: tr(name.frenchName),
+                hint: tr('En savoir plus'),
+                onTap: () => onAsk(name),
+                // Nothing to press here for a pointer: the frame of the
+                // sheet hears it, and the tool in hand is never stopped.
+                child: const IgnorePointer(child: SizedBox.expand()),
               ),
+            ),
           if (ring != null)
             Positioned.fromRect(
               rect: ring.inflate(2),

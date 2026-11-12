@@ -628,7 +628,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       return;
     }
     final layout = painting.layout;
-    final names = [...painting.decor.names]
+    final names = [...painting.names]
       ..sort((a, b) {
         final first = layout.place(a.at, a.anchor).center;
         final second = layout.place(b.at, b.anchor).center;
