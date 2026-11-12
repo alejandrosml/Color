@@ -3,7 +3,13 @@
 //! says its name, its colours, its shapes, the pieces of its decor, how they
 //! move and what a child may ask the name of; and the pictures of those
 //! pieces, SVG files drawn in the frame of the decor (1061 × 407 for the
-//! first ones, the sheet in its middle).
+//! first ones, the sheet in its middle). A universe may have no decor at
+//! all — « Classique », the workshop as it always was: it then has no
+//! picture, and only dresses the studio.
+//!
+//! Nothing of a decor goes beyond its frame (the owner, 12 November 2026):
+//! only the ground reaches the edges. The interface checks every piece, at
+//! its widest movement (test/universe_test.dart).
 //!
 //! As for the pictures of the interface, the folders are read before the
 //! build, by the tests, and what they make is compiled in
@@ -45,6 +51,8 @@ macro_rules! universe {
 /// The universes, in the order the child is shown them; the pictures of
 /// each in the order of their names.
 pub(crate) static UNIVERSES: &[Universe] = &[
+    // The workshop of always: a look and no decor, so no picture.
+    universe!("classique", []),
     universe!(
         "bureau",
         [
@@ -53,6 +61,7 @@ pub(crate) static UNIVERSES: &[Universe] = &[
             "ciel-matin",
             "ciel-nuit",
             "ciel-soir",
+            "crayons",
             "droite",
             "fenetre",
             "fond",
@@ -60,7 +69,8 @@ pub(crate) static UNIVERSES: &[Universe] = &[
             "milieu",
             "nuage",
             "plante",
-            "rideaux",
+            "rideau-droite",
+            "rideau-gauche",
         ]
     ),
     universe!("papier", ["crayon", "droite", "etoile", "fond", "gauche"]),

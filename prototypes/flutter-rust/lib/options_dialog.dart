@@ -168,9 +168,7 @@ class _OptionsDialogState extends State<OptionsDialog> {
               Text(tr('Qui choisit l’univers ?'), style: title),
               const SizedBox(height: 2),
               Text(
-                tr(
-                  'Le bouton « Univers » disparaît quand l’univers est fixé.',
-                ),
+                tr('Le bouton « Univers » disparaît quand l’univers est fixé.'),
                 style: small,
               ),
               const SizedBox(height: 8),
@@ -187,9 +185,8 @@ class _OptionsDialogState extends State<OptionsDialog> {
                       vertical: 10,
                     ),
                     selected: !options.universeFixed,
-                    onSelected: (_) => store.change(
-                      options.copyWith(universeFixed: false),
-                    ),
+                    onSelected: (_) =>
+                        store.change(options.copyWith(universeFixed: false)),
                   ),
                   for (final universe in universes)
                     ChoiceChip(
@@ -222,9 +219,16 @@ class _OptionsDialogState extends State<OptionsDialog> {
             Text(tr('Mouvement du décor'), style: title),
             const SizedBox(height: 2),
             Text(
-              tr(
-                'Les rideaux, les feuilles, le chat… Sur « Faible », le décor bouge à peine. Sur « Aucun », plus rien ne bouge ; Color suit aussi « Réduire les animations » de l’appareil.',
-              ),
+              // A tablet and a telephone show a decor on the whole screen
+              // only, where it moves as much as it can: there the choice
+              // is whether it moves.
+              touchFirst
+                  ? tr(
+                      'Quand on regarde un décor en plein écran, il bouge beaucoup. Sur « Aucun », plus rien ne bouge ; Color suit aussi « Réduire les animations » de l’appareil.',
+                    )
+                  : tr(
+                      'Les rideaux, les feuilles, le chat… Sur « Faible », le décor bouge à peine. Sur « Aucun », plus rien ne bouge ; Color suit aussi « Réduire les animations » de l’appareil. Regardé en plein écran, un décor bouge au maximum, sauf sur « Aucun ».',
+                    ),
               style: small,
             ),
             const SizedBox(height: 8),
@@ -232,12 +236,16 @@ class _OptionsDialogState extends State<OptionsDialog> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final motion in DecorMotion.values)
+                for (final motion
+                    in touchFirst
+                        ? const [DecorMotion.none, DecorMotion.low]
+                        : DecorMotion.values)
                   ChoiceChip(
                     key: Key('motion-${motion.code}'),
                     label: Text(switch (motion) {
                       DecorMotion.none => tr('Aucun (mode calme)'),
-                      DecorMotion.low => tr('Faible'),
+                      DecorMotion.low =>
+                        touchFirst ? tr('Le décor bouge') : tr('Faible'),
                       DecorMotion.medium => tr('Moyen'),
                       DecorMotion.high => tr('Maximum'),
                     }),
@@ -246,7 +254,9 @@ class _OptionsDialogState extends State<OptionsDialog> {
                       horizontal: 8,
                       vertical: 10,
                     ),
-                    selected: options.decorMotion == motion,
+                    selected: touchFirst
+                        ? options.decorMotion.moves == motion.moves
+                        : options.decorMotion == motion,
                     onSelected: (_) =>
                         store.change(options.copyWith(decorMotion: motion)),
                   ),
@@ -260,14 +270,25 @@ class _OptionsDialogState extends State<OptionsDialog> {
         title: tr('Fiches du décor'),
         subtitle: touchFirst
             ? tr(
-                'Deux appuis sur un élément du décor, ou un appui long, affichent son nom et une ou deux lignes.',
+                'Quand on regarde un décor en plein écran, un appui sur un élément affiche son nom et une ou deux lignes.',
               )
             : tr(
-                'Un double-clic sur un élément du décor affiche son nom et une ou deux lignes.',
+                'Un double-clic sur un élément du décor affiche son nom et une ou deux lignes ; un seul clic quand on regarde le décor en plein écran.',
               ),
         value: options.decorNames,
         onChanged: (value) => store.change(options.copyWith(decorNames: value)),
       ),
+      if (universes.any((universe) => universe.decor != null))
+        _switch(
+          key: const Key('optionDecorWatch'),
+          title: tr('Bouton « Regarder »'),
+          subtitle: tr(
+            'Dans « Choisis ton univers », il montre un décor sur tout l’écran, pour le regarder et apprendre le nom des choses.',
+          ),
+          value: options.decorWatch,
+          onChanged: (value) =>
+              store.change(options.copyWith(decorWatch: value)),
+        ),
     ];
   }
 

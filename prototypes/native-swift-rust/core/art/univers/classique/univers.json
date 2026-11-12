@@ -1,0 +1,9 @@
+{
+ "key": "classique",
+ "name": "Classique",
+ "about": "L’atelier de toujours, sans décor.",
+ "look": {
+  "colours": {},
+  "shapes": {}
+ }
+}

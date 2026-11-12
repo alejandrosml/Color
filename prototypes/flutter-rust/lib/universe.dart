@@ -6,6 +6,11 @@
 // move. The child chooses with the button « Univers »; an adult may fix one
 // in the options.
 //
+// A tablet and a telephone show no decor around the sheet, which takes the
+// whole screen there: the child looks at the decor on the whole screen
+// instead, with the button « Regarder » (decor_gaze.dart) — as on a
+// computer, where both are offered.
+//
 // The core holds them (src/universes.rs): for each one a description in
 // JSON and the pictures of its decor. Nothing here knows the studio: a
 // universe is a look and a decor, which another application built on Color
@@ -16,6 +21,7 @@ import 'package:flutter/widgets.dart';
 
 import 'decor.dart';
 import 'language.dart';
+import 'platform_words.dart';
 import 'rust_document.dart';
 import 'studio_colors.dart';
 
@@ -121,14 +127,25 @@ class UniverseCatalog {
   @visibleForTesting
   static void debugUse(UniverseCatalog? catalog) => _instance = catalog;
 
-  /// The universe an adult or a child chose; the first one for a key that
-  /// names none — another version of Color wrote it, or nobody chose yet.
+  /// The universe an adult or a child chose; that of the device for a key
+  /// that names none — another version of Color wrote it, or nobody chose
+  /// yet.
   Universe named(String? key) => universes.firstWhere(
     (universe) => universe.key == key,
+    orElse: () => ofDevice,
+  );
+
+  /// The universe of a studio that was told none (the owner, 12 November
+  /// 2026). On a computer, the first one that has a decor: the desk by the
+  /// window. On a tablet or a telephone, where no decor is shown around
+  /// the sheet, the first one without a decor: « Classique », the workshop
+  /// as it always was. The first one of all where there is no such one.
+  Universe get ofDevice => universes.firstWhere(
+    (universe) => (universe.decor == null) == touchFirst,
     orElse: () => universes.first,
   );
 
-  /// The first universe: that of a studio that was told none.
+  /// The first universe, in the order the child is shown them.
   Universe get first => universes.first;
 }
 

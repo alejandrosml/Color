@@ -3,6 +3,7 @@
 // each one as a short list of drawing instructions; this file reads that
 // description once and paints it with the engine of the interface, at any
 // size. Nothing here knows SVG: see src/art.rs of the core for the format.
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -392,6 +393,115 @@ class VectorPicture {
     for (final instruction in _instructions)
       if (instruction case _Open(:final name?)) name,
   ];
+
+  /// The box of everything the picture draws, in its own units — or, with
+  /// [placed], in the units that matrix leads to. Strokes are counted with
+  /// their width, groups with their transform and their clips. The box is
+  /// **not** cut at the edges of the picture: what goes beyond them is what
+  /// [paint] would not show, and the decor of a universe must draw nothing
+  /// there (Color 1.2). Null for a picture that draws nothing.
+  ///
+  /// Each outline is followed step by step, so that a curve counts for
+  /// what it draws and not for its control points: to within a tenth of a
+  /// unit. Made for the tests and for the layout of a decor, not for every
+  /// image.
+  Rect? drawnBounds({Float64List? placed}) {
+    var left = double.infinity;
+    var top = double.infinity;
+    var right = double.negativeInfinity;
+    var bottom = double.negativeInfinity;
+    // The matrix of the open groups, as six numbers a b c d e f, and what
+    // their clips leave, in the units of the result.
+    final matrices = <List<double>>[
+      placed == null
+          ? const [1, 0, 0, 1, 0, 0]
+          : [
+              placed[0],
+              placed[1],
+              placed[4],
+              placed[5],
+              placed[12],
+              placed[13],
+            ],
+    ];
+    final clips = <Rect?>[null];
+    Offset map(List<double> m, double x, double y) =>
+        Offset(m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]);
+    Rect? boxOf(Path path, List<double> m, double grow) {
+      var l = double.infinity;
+      var t = double.infinity;
+      var r = double.negativeInfinity;
+      var b = double.negativeInfinity;
+      void add(Offset point) {
+        if (point.dx < l) l = point.dx;
+        if (point.dy < t) t = point.dy;
+        if (point.dx > r) r = point.dx;
+        if (point.dy > b) b = point.dy;
+      }
+
+      for (final metric in path.computeMetrics()) {
+        final length = metric.length;
+        final steps = length <= 0 ? 1 : (length * 2).ceil().clamp(1, 4000);
+        for (var step = 0; step <= steps; step++) {
+          final tangent = metric.getTangentForOffset(length * step / steps);
+          if (tangent == null) continue;
+          add(map(m, tangent.position.dx, tangent.position.dy));
+        }
+      }
+      if (l > r) return null;
+      return Rect.fromLTRB(l - grow, t - grow, r + grow, b + grow);
+    }
+
+    for (final instruction in _instructions) {
+      switch (instruction) {
+        case _Open(:final matrix, clips: final groupClips):
+          final outer = matrices.last;
+          final m = matrix == null
+              ? outer
+              : [
+                  outer[0] * matrix[0] + outer[2] * matrix[1],
+                  outer[1] * matrix[0] + outer[3] * matrix[1],
+                  outer[0] * matrix[4] + outer[2] * matrix[5],
+                  outer[1] * matrix[4] + outer[3] * matrix[5],
+                  outer[0] * matrix[12] + outer[2] * matrix[13] + outer[4],
+                  outer[1] * matrix[12] + outer[3] * matrix[13] + outer[5],
+                ];
+          matrices.add(m);
+          var clip = clips.last;
+          for (final outline in groupClips) {
+            final box = boxOf(outline, m, 0) ?? Rect.zero;
+            clip = clip == null ? box : clip.intersect(box);
+          }
+          clips.add(clip);
+        case _Close():
+          matrices.removeLast();
+          clips.removeLast();
+        case _Draw(:final path, :final stroke):
+          final m = matrices.last;
+          // Half the width of the stroke, as the matrix stretches it; a
+          // pointed join may reach a little farther than a round one.
+          final stretch = math.sqrt((m[0] * m[3] - m[1] * m[2]).abs());
+          final grow = stroke == null
+              ? 0.0
+              : stroke.strokeWidth *
+                    stretch /
+                    2 *
+                    (stroke.strokeJoin == StrokeJoin.miter ? 1.5 : 1);
+          var box = boxOf(path, m, grow);
+          final clip = clips.last;
+          if (box != null && clip != null) {
+            if (!box.overlaps(clip)) continue;
+            box = box.intersect(clip);
+          }
+          if (box == null) continue;
+          if (box.left < left) left = box.left;
+          if (box.top < top) top = box.top;
+          if (box.right > right) right = box.right;
+          if (box.bottom > bottom) bottom = box.bottom;
+      }
+    }
+    return left > right ? null : Rect.fromLTRB(left, top, right, bottom);
+  }
 
   /// Paints the picture in [bounds]; [moves] moves the named groups of the
   /// picture, each by its matrix in the units of the picture, after its own

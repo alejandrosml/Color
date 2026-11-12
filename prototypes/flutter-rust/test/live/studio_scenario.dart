@@ -32,6 +32,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/app_folders.dart';
+import 'package:edupaint_flutter_study/decor_gaze.dart';
 import 'package:edupaint_flutter_study/decor_motion.dart';
 import 'package:edupaint_flutter_study/decor_view.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
@@ -92,9 +93,14 @@ void main() {
     // are drawn at night, under the lamp, which costs the most to paint.
     debugDecorStill = true;
     debugDecorNow = () => DateTime(2026, 11, 12, 14, 30);
+    // Where its images take long, a decor beats more slowly (Color 1.2):
+    // not here, where each image that is timed must be one of a decor that
+    // moved — thirty a second, whatever they cost.
+    debugDecorBeat = DecorView.period;
     addTearDown(() {
       debugDecorStill = false;
       debugDecorNow = null;
+      debugDecorBeat = null;
     });
     final root = Directory(folder);
     final shots = Directory('${root.path}/shots')..createSync(recursive: true);
@@ -130,8 +136,11 @@ void main() {
     // against the budgets (Q-03), and the first frame of Color itself.
     final frameTimes = <int, (int, int, int)>{};
     final traitFrames = <(int, int)>[];
-    // The frames of the decor while it moves, apart: no budget yet.
+    // The frames of the decor while it moves, apart: no budget yet. And
+    // those of a decor that is looked at on the whole window, which moves
+    // as much as it can.
     (int, int)? decorFrames;
+    (int, int)? gazeFrames;
     // The last frame built before Color is: the frames of the test
     // framework come before it.
     int? beforeColor;
@@ -1356,6 +1365,69 @@ void main() {
         return {'images': to - from};
       });
 
+      await step(
+        '« Regarder » : the desk on the whole window, its frames timed',
+        () async {
+          // « Choisis ton univers », then « Regarder » under the desk: its
+          // decor on the whole window, at night, moving as much as it can —
+          // the dearest image a decor has. The drawing is not touched.
+          final before = painter().strokes.length;
+          await tap('openUniverses');
+          expect(byKey('watch-bureau'), findsOneWidget);
+          expect(byKey('watch-classique'), findsNothing);
+          // It moves from its first image: it never lets the studio settle,
+          // so its images are pumped one by one.
+          debugDecorStill = false;
+          await tester.tap(byKey('watch-bureau'));
+          for (var image = 0; image < 20; image++) {
+            await tester.pump(DecorView.period);
+          }
+          expect(find.byType(DecorGaze), findsOneWidget);
+          expect(byKey('universeDialog'), findsNothing);
+          final view = tester.widget<DecorView>(
+            find.descendant(
+              of: find.byType(DecorGaze),
+              matching: find.byType(DecorView),
+            ),
+          );
+          expect(view.motion, DecorMotion.high);
+          expect(tester.getSize(find.byType(DecorGaze)), windowSize());
+          await shown();
+          final from = tester.platformDispatcher.frameData.frameNumber;
+          for (var image = 0; image < 90; image++) {
+            await tester.pump(DecorView.period);
+          }
+          await shown();
+          final to = tester.platformDispatcher.frameData.frameNumber;
+          gazeFrames = (from + 1, to);
+          // One press on the cat, at the bottom right: its card.
+          final window = windowSize();
+          final scale = view.layoutIn(window).scale;
+          await tester.tapAt(
+            Offset(
+              window.width - (1061 - 989) * scale,
+              window.height - (407 - 320) * scale,
+            ),
+          );
+          await tester.pump(DecorView.period);
+          expect(byKey('decorNameCard'), findsOneWidget);
+          expect(find.text('Le chat'), findsOneWidget);
+          await shot('31-decor-looked-at');
+          // « Mon dessin » : back in the studio, the drawing as it was.
+          debugDecorStill = true;
+          await tester.tap(byKey('leaveDecorGaze'));
+          for (var image = 0; image < 20; image++) {
+            await tester.pump(DecorView.period);
+          }
+          await settle();
+          expect(find.byType(DecorGaze), findsNothing);
+          expect(surface, findsOneWidget);
+          expect(painter().strokes.length, before);
+          expect(to - from, greaterThan(30));
+          return {'images': to - from};
+        },
+      );
+
       passed = true;
     } catch (error) {
       record['error'] = '$error';
@@ -1399,6 +1471,23 @@ void main() {
         if (moving.isNotEmpty) ...{
           'build_ms': _centiles([for (final (build, _, _) in moving) build]),
           'raster_ms': _centiles([for (final (_, raster, _) in moving) raster]),
+        },
+      };
+      final gazing = [
+        if (gazeFrames case (final first, final last))
+          for (var number = first; number <= last; number++)
+            ?frameTimes[number],
+      ];
+      record['gaze_frames'] = {
+        'scope':
+            'Frames built while the decor of the desk is looked at on the '
+            'whole window, at night, moving at « Maximum », three seconds '
+            'of them (FrameTiming), in milliseconds. No budget yet: a '
+            'first measure.',
+        'count': gazing.length,
+        if (gazing.isNotEmpty) ...{
+          'build_ms': _centiles([for (final (build, _, _) in gazing) build]),
+          'raster_ms': _centiles([for (final (_, raster, _) in gazing) raster]),
         },
       };
       // The first frame of Color: the first one built after it was given

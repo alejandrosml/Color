@@ -52,11 +52,17 @@ fn every_core_serves_the_pictures_and_the_pages() {
 #[test]
 fn every_core_serves_the_universes() {
     let count = ep_universe_count();
-    assert_eq!(count, 2);
+    assert_eq!(count, 3);
     let mut keys = Vec::new();
     for index in 0..count {
         let universe = text(ep_universe(index));
-        assert!(universe.is_ascii() && universe.ends_with("X\n"), "{index}");
+        // It ends with its last picture, or with its description when it
+        // has no decor.
+        assert!(universe.is_ascii() && universe.ends_with('\n'), "{index}");
+        assert!(
+            universe.ends_with("X\n") || universe.lines().count() == 2,
+            "{index}"
+        );
         let mut lines = universe.lines();
         let key = lines.next().unwrap().strip_prefix("U ").unwrap().to_owned();
         let manifest = lines.next().unwrap().strip_prefix("M ").unwrap();
@@ -82,15 +88,23 @@ fn every_core_serves_the_universes() {
             universe.lines().filter(|line| *line == "X").count(),
             "{key}"
         );
-        // Every decor has a ground.
-        assert!(
+        // Every decor has a ground; a universe without a decor has no
+        // picture at all.
+        assert_eq!(
             universe.lines().any(|line| line.starts_with("P fond ")),
+            manifest.contains("\"decor\":"),
+            "{key}"
+        );
+        assert_eq!(
+            universe.lines().any(|line| line.starts_with("P ")),
+            manifest.contains("\"decor\":"),
             "{key}"
         );
         keys.push(key);
     }
-    // The first one is the universe of a studio that was told none.
-    assert_eq!(keys, ["bureau", "papier"]);
+    // « Classique », without a decor, comes first; the interface takes the
+    // first one with a decor for a computer that was told none.
+    assert_eq!(keys, ["classique", "bureau", "papier"]);
     assert!(ep_universe(count).is_null());
     assert!(ep_universe(u32::MAX).is_null());
 }

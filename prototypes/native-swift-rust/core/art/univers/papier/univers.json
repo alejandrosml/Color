@@ -94,7 +94,7 @@
      14,
      334,
      150,
-     62
+     70
     ],
     "name": "Les crayons de cire",
     "text": "Faits de cire colorée, ils glissent sur le papier et donnent des couleurs bien vives."
@@ -152,7 +152,7 @@
     "anchor": "right",
     "at": [
      880,
-     312,
+     296,
      92,
      56
     ],
@@ -176,7 +176,7 @@
     "anchor": "right",
     "at": [
      806,
-     354,
+     338,
      120,
      44
     ],

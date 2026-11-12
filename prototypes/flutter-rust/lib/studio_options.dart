@@ -63,6 +63,7 @@ class StudioOptions {
     this.universeFixed = false,
     this.decorMotion = DecorMotion.low,
     this.decorNames = true,
+    this.decorWatch = true,
   });
 
   /// What a file that says nothing, or nothing readable, stands for: Color
@@ -111,8 +112,10 @@ class StudioOptions {
   final bool companionReacts;
 
   /// The universe the studio wears (Color 1.2), by its key; empty, or a key
-  /// this Color does not know, for the first one. The child chooses it with
-  /// the button « Univers », unless [universeFixed].
+  /// this Color does not know, for that of the device: the desk by the
+  /// window on a computer, « Classique », which has no decor, on a tablet
+  /// or a telephone. The child chooses it with the button « Univers »,
+  /// unless [universeFixed].
   final String universe;
 
   /// An adult fixed the universe: the button « Univers » is not shown.
@@ -124,6 +127,10 @@ class StudioOptions {
   /// A double click on something of the decor shows its name and a line or
   /// two about it.
   final bool decorNames;
+
+  /// The child may look at a decor on the whole screen, with the button
+  /// « Regarder » of « Choisis ton univers ».
+  final bool decorWatch;
 
   /// A multiplication keeps the door of « Options », so that the youngest
   /// do not open them by chance. Off until an adult switches it on: by
@@ -147,6 +154,7 @@ class StudioOptions {
     bool? universeFixed,
     DecorMotion? decorMotion,
     bool? decorNames,
+    bool? decorWatch,
   }) => StudioOptions(
     level: level ?? this.level,
     printing: printing ?? this.printing,
@@ -164,6 +172,7 @@ class StudioOptions {
     universeFixed: universeFixed ?? this.universeFixed,
     decorMotion: decorMotion ?? this.decorMotion,
     decorNames: decorNames ?? this.decorNames,
+    decorWatch: decorWatch ?? this.decorWatch,
   );
 
   /// The tools of the bar, in its order.
@@ -233,6 +242,7 @@ class StudioOptions {
     'universeFixed': universeFixed,
     'decorMotion': decorMotion.code,
     'decorNames': decorNames,
+    'decorWatch': decorWatch,
   };
 
   /// What a decoded options file says. Whatever is missing, of another type
@@ -276,6 +286,7 @@ class StudioOptions {
       universeFixed: flag('universeFixed', defaults.universeFixed),
       decorMotion: DecorMotion.fromCode(json['decorMotion']),
       decorNames: flag('decorNames', defaults.decorNames),
+      decorWatch: flag('decorWatch', defaults.decorWatch),
     );
   }
 
@@ -302,7 +313,8 @@ class StudioOptions {
       other.universe == universe &&
       other.universeFixed == universeFixed &&
       other.decorMotion == decorMotion &&
-      other.decorNames == decorNames;
+      other.decorNames == decorNames &&
+      other.decorWatch == decorWatch;
 
   @override
   int get hashCode => Object.hash(
@@ -322,6 +334,7 @@ class StudioOptions {
     universeFixed,
     decorMotion,
     decorNames,
+    decorWatch,
   );
 
   @override

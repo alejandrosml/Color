@@ -107,7 +107,7 @@ void main() {
       view.decor,
       DecorLayout(
         frame: frame,
-        sheetAtRest: view.sheetAtRest,
+        sheetAtRest: view.sheetAtRest!,
         decor: view.decor.size,
         decorSheet: view.decor.sheet,
       ),
@@ -144,7 +144,7 @@ void main() {
       // The sheet is where it was: white, in the middle, over the decor.
       final view = tester.widget<DecorView>(find.byType(DecorView));
       final frame = tester.getSize(surface);
-      expect(view.sheetAtRest.center.dx, closeTo(frame.width / 2, .5));
+      expect(view.sheetAtRest!.center.dx, closeTo(frame.width / 2, .5));
       final image = await picture(tester);
       // The wall above the sheet, the wood of the desk under it.
       final wall = pixel(image, Offset(frame.width / 2, 6));
@@ -506,7 +506,9 @@ void main() {
       debugDecorNow = null;
       var now = DateTime(2026, 11, 12, 15, 0);
       await start(tester, clock: () => now);
-      final clock = painting(tester).decor.live[4].clock!;
+      final clock = painting(tester).decor.live
+          .firstWhere((piece) => piece.clock != null)
+          .clock!;
       const ink = Color(0xff293d4b);
       bool dark(Color colour) =>
           colour.r < .35 && colour.g < .4 && colour.b < .45;
@@ -726,23 +728,24 @@ void main() {
   );
 
   testWidgets(
-    'the simplest interface: the pencils that the sheet would hide are not '
-    'shown, nor named',
+    'the simplest interface: what the sheet would hide is not shown; the '
+    'pencils, beside the sheet, always are',
     (tester) async {
       final handle = tester.ensureSemantics();
       // How far the colours of the band that the sheet leaves under it go
       // from one another, along the sheet: the widest gap of red, green or
-      // blue, out of 255. The grain of the wood is a few; a pencil, many.
+      // blue, out of 255. The grain of the wood is a few; an eraser or a
+      // brush, many.
       Future<int> band() async {
         final frame = tester.getSize(decorFinder);
         final sheet = tester.widget<DecorView>(find.byType(DecorView));
-        final below = (sheet.sheetAtRest.bottom + frame.height) / 2;
+        final below = (sheet.sheetAtRest!.bottom + frame.height) / 2;
         final image = await picture(tester);
         final low = [255, 255, 255];
         final high = [0, 0, 0];
         for (
-          var x = sheet.sheetAtRest.left + 4;
-          x < sheet.sheetAtRest.right - 4;
+          var x = sheet.sheetAtRest!.left + 4;
+          x < sheet.sheetAtRest!.right - 4;
           x += 3
         ) {
           final colour = pixel(image, Offset(x, below)).toARGB32();
@@ -758,19 +761,26 @@ void main() {
         ].reduce((a, b) => a > b ? a : b);
       }
 
-      // With the captions, the pencils lie in the band under the sheet.
+      // With the captions, the eraser and the brush lie in the band under
+      // the sheet. The pencils are on the left of the desk, in front of
+      // the books: nothing that has a name lies under the sheet.
       await start(tester);
       final pencils = painting(tester).decor.names
           .firstWhere((name) => name.key == 'crayons');
-      expect(pencils.anchor, DecorAnchor.middle);
+      expect(pencils.anchor, DecorAnchor.left);
+      expect(
+        painting(tester).decor.names
+            .where((name) => name.anchor == DecorAnchor.middle),
+        isEmpty,
+      );
       expect(painting(tester).layout.under, isTrue);
       expect(find.byKey(const Key('decorName-crayons')), findsOneWidget);
       expect(await band(), greaterThan(60));
       await tester.pumpWidget(const SizedBox());
 
-      // In the simplest interface the sheet takes the band: no pencil is
-      // painted there, a screen reader does not meet them, and F2 goes
-      // round the thirteen other things without naming them.
+      // In the simplest interface the sheet takes the band: nothing is
+      // painted there. The pencils stay, a screen reader meets them, and
+      // F2 goes round the fourteen things.
       await start(
         tester,
         options: const StudioOptions(level: InterfaceLevel.toddler),
@@ -778,24 +788,24 @@ void main() {
       final simple = painting(tester);
       expect(simple.layout.pieces, isTrue);
       expect(simple.layout.under, isFalse);
-      expect(simple.names, hasLength(13));
-      expect(find.byKey(const Key('decorName-crayons')), findsNothing);
+      expect(simple.names, hasLength(14));
+      expect(find.byKey(const Key('decorName-crayons')), findsOneWidget);
       expect(find.byKey(const Key('decorName-chat')), findsOneWidget);
       // What is left of the band: the ground alone, the wood of the desk.
       expect(await band(), lessThan(8));
       final seen = <String>{};
-      for (var step = 0; step < 14; step++) {
+      for (var step = 0; step < 15; step++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.f2);
         await tester.pump();
         expect(find.byKey(const Key('decorNameCard')), findsOneWidget);
-        expect(find.text(pencils.frenchName), findsNothing);
         for (final name in simple.decor.names) {
           if (find.text(name.frenchName).evaluate().isNotEmpty) {
             seen.add(name.key);
           }
         }
       }
-      expect(seen, hasLength(13));
+      expect(seen, hasLength(14));
+      expect(seen, contains('crayons'));
       handle.dispose();
       await tester.pumpWidget(const SizedBox());
     },
@@ -892,7 +902,66 @@ void main() {
     skip: !available,
   );
 
-  testWidgets('a narrow frame: the decor smaller, or its ground alone', (
+  testWidgets(
+    'over a decor the captions of the sheet stand along the sheet, and '
+    'cover nothing of the decor',
+    (tester) async {
+      const captions = ['MA FEUILLE', '1200 × 800 unités', 'Toute la feuille'];
+      for (final size in const [mac, Size(1920, 1080), Size(1024, 768)]) {
+        await start(tester, size: size);
+        final shown = painting(tester);
+        final origin = tester.getTopLeft(surface);
+        final sheet = tester
+            .widget<DecorView>(find.byType(DecorView))
+            .sheetAtRest!
+            .shift(origin);
+        for (final caption in captions) {
+          final pill = tester.getRect(
+            find.ancestor(
+              of: find.text(caption),
+              matching: find.byType(DecorCaption),
+            ),
+          );
+          // Within the width of the sheet, just above or just under it:
+          // the pieces of the decor stand beside the sheet, never there.
+          expect(pill.left, greaterThanOrEqualTo(sheet.left - .5));
+          expect(pill.right, lessThanOrEqualTo(sheet.right + .5));
+          expect(
+            pill.bottom <= sheet.top + .5 || pill.top >= sheet.bottom - .5,
+            isTrue,
+            reason: '$caption, $size',
+          );
+          for (final name in shown.names) {
+            expect(
+              pill.overlaps(
+                shown.layout.place(name.at, name.anchor).shift(origin),
+              ),
+              isFalse,
+              reason: '$caption sur ${name.key}, $size',
+            );
+          }
+        }
+        await tester.pumpWidget(const SizedBox());
+      }
+      // Without a decor they keep the corners of the frame, as always.
+      await start(tester, size: const Size(900, 1000));
+      expect(find.byType(DecorCaption), findsNothing);
+      final frame = tester.getRect(surface);
+      expect(
+        tester.getTopLeft(find.text('MA FEUILLE')),
+        frame.topLeft + const Offset(16, 10),
+      );
+      expect(
+        frame.bottomRight -
+            tester.getBottomRight(find.text('Toute la feuille')),
+        const Offset(16, 9),
+      );
+      await tester.pumpWidget(const SizedBox());
+    },
+    skip: !available,
+  );
+
+  testWidgets('a narrow frame: the decor smaller, or no decor at all', (
     tester,
   ) async {
     await start(tester, size: const Size(1024, 768));
@@ -901,7 +970,7 @@ void main() {
     expect(smaller.layout.pieces, isTrue);
     expect(smaller.layout.scale, lessThan(frame.height / 407));
     // Everything named stands beside the sheet at rest.
-    final sheet = tester.widget<DecorView>(find.byType(DecorView)).sheetAtRest;
+    final sheet = tester.widget<DecorView>(find.byType(DecorView)).sheetAtRest!;
     for (final name in smaller.decor.names) {
       if (name.anchor == DecorAnchor.middle) continue;
       final box = smaller.layout.place(name.at, name.anchor);
@@ -913,25 +982,93 @@ void main() {
     }
     await tester.pumpWidget(const SizedBox());
 
+    // Where the pieces would be too small to be looked at, a ground alone
+    // has no interest (the owner, 12 November 2026): no decor is shown,
+    // the frame is plain, in the colour of the universe.
     await start(tester, size: const Size(900, 1000));
-    expect(painting(tester).layout.pieces, isFalse);
+    expect(decorFinder, findsNothing);
+    expect(find.byType(DecorView), findsNothing);
     // Nothing to ask about, and the pointer of the tool everywhere.
     expect(find.byKey(const Key('decorName-chat')), findsNothing);
-    expect(decorFinder, findsOneWidget);
+    final stage = tester.getRect(surface);
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.ancestor(of: surface, matching: find.byType(RepaintBoundary)).first,
+    );
+    late Color corner;
+    await tester.runAsync(() async {
+      final image = await boundary.toImage();
+      final bytes = (await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      ))!;
+      final origin = boundary.localToGlobal(Offset.zero);
+      final at = stage.topLeft - origin + const Offset(40, 3);
+      final index = (at.dy.round() * image.width + at.dx.round()) * 4;
+      corner = Color.fromARGB(
+        255,
+        bytes.getUint8(index),
+        bytes.getUint8(index + 1),
+        bytes.getUint8(index + 2),
+      );
+      image.dispose();
+    });
+    expect(corner.toARGB32(), studioSheetBackdrop.toARGB32());
+    // The studio still wears the universe: its colours and its shapes.
+    expect(
+      identical(
+        studioLook.value,
+        UniverseCatalog.instance.named('bureau').look,
+      ),
+      isTrue,
+    );
     await tester.pumpWidget(const SizedBox());
   }, skip: !available);
 
-  testWidgets('on a telephone the sheet keeps all the room: the ground alone', (
-    tester,
-  ) async {
-    debugTouchFirstOverride = true;
-    addTearDown(() => debugTouchFirstOverride = null);
-    await start(tester, size: const Size(844, 390), phone: true);
-    await tester.pumpAndSettle();
-    expect(decorFinder, findsOneWidget);
-    expect(painting(tester).layout.pieces, isFalse);
-    expect(find.byKey(const Key('decorName-chat')), findsNothing);
-    await tester.pumpWidget(const SizedBox());
-    expect(testDecorTime.hour, 14);
-  }, skip: !available);
+  testWidgets(
+    'on a tablet and on a telephone, no decor around the sheet, whatever '
+    'their size',
+    (tester) async {
+      debugTouchFirstOverride = true;
+      addTearDown(() => debugTouchFirstOverride = null);
+      // A telephone on its side, a tablet, and the largest of the tablets:
+      // the sheet takes the screen. Nobody chose a universe: it is
+      // « Classique », which has no decor.
+      for (final size in const [
+        Size(844, 390),
+        Size(1180, 820),
+        Size(1366, 1024),
+      ]) {
+        await start(tester, size: size, phone: true);
+        await tester.pumpAndSettle();
+        expect(decorFinder, findsNothing, reason: '$size');
+        expect(find.byType(DecorView), findsNothing, reason: '$size');
+        expect(find.byKey(const Key('decorName-chat')), findsNothing);
+        expect(identical(studioLook.value, StudioLook.classic), isTrue);
+        await tester.pumpWidget(const SizedBox());
+      }
+      // The child took the paper: the studio wears its colours and its
+      // shapes, and still shows no decor around the sheet.
+      for (final universe in ['papier', 'bureau']) {
+        await start(
+          tester,
+          size: const Size(1366, 1024),
+          options: StudioOptions(universe: universe),
+          phone: true,
+        );
+        await tester.pumpAndSettle();
+        expect(decorFinder, findsNothing, reason: universe);
+        expect(find.byType(DecorView), findsNothing, reason: universe);
+        expect(
+          identical(
+            studioLook.value,
+            UniverseCatalog.instance.named(universe).look,
+          ),
+          isTrue,
+        );
+        await tester.pumpWidget(const SizedBox());
+      }
+      expect(studioLook.value.buttonDashed, isFalse);
+      expect(testDecorTime.hour, 14);
+    },
+    skip: !available,
+  );
 }

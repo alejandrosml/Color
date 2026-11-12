@@ -1,7 +1,7 @@
 {
  "key": "bureau",
- "name": "Classique",
- "about": "Le bureau près de la fenêtre, à l’heure qu’il est.",
+ "name": "Le bureau près de la fenêtre",
+ "about": "La lumière change avec l’heure, et le chat dort.",
  "look": {
   "colours": {},
   "shapes": {
@@ -29,7 +29,7 @@
     "picture": "ciel",
     "anchor": "left",
     "at": [
-     37,
+     47,
      41,
      166,
      188
@@ -38,6 +38,10 @@
    },
    {
     "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "crayons",
     "anchor": "left"
    },
    {
@@ -52,13 +56,13 @@
     "picture": "nuage",
     "anchor": "left",
     "at": [
-     49,
+     59,
      69,
      58,
      58
     ],
     "clip": [
-     37,
+     47,
      41,
      166,
      188
@@ -77,13 +81,26 @@
     "anchor": "left"
    },
    {
-    "picture": "rideaux",
+    "picture": "rideau-gauche",
     "anchor": "left",
     "move": {
      "name": "balance",
      "seconds": 9,
      "origin": [
-      119.9,
+      43,
+      22
+     ]
+    }
+   },
+   {
+    "picture": "rideau-droite",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 9,
+     "delay": -1.5,
+     "origin": [
+      217,
       22
      ]
     }
@@ -180,7 +197,7 @@
     "key": "fenetre",
     "anchor": "left",
     "at": [
-     62,
+     72,
      34,
      116,
      202
@@ -192,7 +209,7 @@
     "key": "rideau",
     "anchor": "left",
     "at": [
-     2,
+     12,
      24,
      42,
      274
@@ -334,9 +351,9 @@
    },
    {
     "key": "crayons",
-    "anchor": "middle",
+    "anchor": "left",
     "at": [
-     286,
+     9,
      382,
      250,
      22

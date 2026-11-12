@@ -2,7 +2,10 @@
 // Where a decor stands in the frame of the sheet (Color 1.2): each side
 // against its edge, everything on the bottom, as large as the height
 // allows; smaller when the sheet leaves less room than it was drawn for —
-// a child must see everything; only its ground where it would be too small.
+// a child must see everything; no piece at all where it would be too small
+// (the studio then shows no decor). And where it stands when it is looked
+// at without a sheet, on the whole screen: its two sides together, side by
+// side or one above the other.
 import 'package:edupaint_flutter_study/decor.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -120,12 +123,13 @@ void main() {
     },
   );
 
-  test('where even half its size would not fit, only the ground is shown', () {
+  test('where even half its size would not fit, its pieces are not shown', () {
     // A tall frame that the sheet fills from side to side.
     const frame = Size(790, 520);
     final none = layout(frame);
     expect(none.pieces, isFalse);
-    // The ground then fills the height.
+    // The studio then shows no decor at all: a ground alone has no
+    // interest (the owner, 12 November 2026).
     expect(none.scale, closeTo(520 / 407, 1e-9));
     // A telephone: the sheet takes all the room.
     expect(
@@ -173,7 +177,7 @@ void main() {
     expect(lowered(377).under, isTrue);
     expect(lowered(392).under, isTrue);
     expect(lowered(393).under, isFalse);
-    // Where only the ground is shown, nothing is, on any side.
+    // Where the pieces are too small, nothing is shown, on any side.
     final ground = layout(const Size(844, 390), ratio: 2.4, padding: 8);
     expect(ground.pieces, isFalse);
     for (final anchor in DecorAnchor.values) {
@@ -182,6 +186,230 @@ void main() {
     // A layout that shows what lies under the sheet is not one that
     // leaves it out.
     expect(lowered(392) == lowered(393), isFalse);
+  });
+
+  group('a decor that is looked at without a sheet', () {
+    // What lies under the sheet of the desk: an eraser, a brush.
+    const middle = Rect.fromLTRB(435.5, 382, 627.5, 400.5);
+    const leftSide = Rect.fromLTWH(0, 0, 266, 407);
+    const rightSide = Rect.fromLTWH(792, 0, 269, 407);
+    DecorLayout gaze(
+      Size frame, {
+      EdgeInsets safe = EdgeInsets.zero,
+      Rect? under = middle,
+      DecorGazeArrangement? arrangement,
+    }) => DecorLayout.gaze(
+      frame: frame,
+      safe: safe,
+      decor: decor,
+      decorSheet: decorSheet,
+      middle: under,
+      arrangement: arrangement,
+    );
+
+    test('a tablet on its side: the two sides meet and fill the screen', () {
+      const frame = Size(1366, 1024);
+      final layout = gaze(frame);
+      expect(layout.pieces, isTrue);
+      expect(layout.arrangement, DecorGazeArrangement.beside);
+      expect(layout.scale, closeTo(1024 / 407, 1e-9));
+      final left = layout.place(leftSide, DecorAnchor.left);
+      final right = layout.place(rightSide, DecorAnchor.right);
+      // Each against its edge, on the bottom, at the full height; they
+      // never cover one another.
+      expect(left.left, 0);
+      expect(right.right, closeTo(frame.width, 1e-9));
+      expect(left.top, closeTo(0, 1e-9));
+      expect(left.bottom, closeTo(frame.height, 1e-9));
+      expect(right.bottom, closeTo(frame.height, 1e-9));
+      expect(left.right, lessThanOrEqualTo(right.left + 1e-9));
+      expect(right.left - left.right, lessThan(30));
+      // No room between them for what lay under the sheet: it is left
+      // out rather than laid over the sides.
+      expect(layout.under, isFalse);
+      expect(layout.shows(DecorAnchor.middle), isFalse);
+      expect(layout.shows(DecorAnchor.left), isTrue);
+      // One ground, on the whole frame, its middle in the middle.
+      expect(layout.bands, hasLength(1));
+      expect(layout.bands.single.rect, Offset.zero & frame);
+      expect(
+        layout.bands.single.groundLeft + 1061 * layout.scale / 2,
+        closeTo(frame.width / 2, 1e-9),
+      );
+    });
+
+    test('a telephone on its side: away from what the screen hides', () {
+      const frame = Size(844, 390);
+      const safe = EdgeInsets.only(left: 47, right: 47);
+      final layout = gaze(frame, safe: safe);
+      expect(layout.arrangement, DecorGazeArrangement.beside);
+      expect(layout.scale, closeTo(390 / 407, 1e-9));
+      final left = layout.place(leftSide, DecorAnchor.left);
+      final right = layout.place(rightSide, DecorAnchor.right);
+      expect(left.left, 47);
+      expect(right.right, closeTo(844 - 47, 1e-9));
+      // The pieces stand on the bottom edge with their ground: nothing is
+      // kept away from the bottom.
+      expect(left.bottom, closeTo(frame.height, 1e-9));
+      // A wide wall between the sides: what lay under the sheet stands
+      // there, in the middle of the screen.
+      expect(layout.under, isTrue);
+      final between = layout.place(middle, DecorAnchor.middle);
+      expect(between.center.dx, closeTo(frame.width / 2, 1e-9));
+      expect(between.left, greaterThan(left.right));
+      expect(between.right, lessThan(right.left));
+      expect(between.bottom, lessThanOrEqualTo(frame.height));
+      // A decor with nothing under its sheet shows nothing there.
+      expect(gaze(frame, safe: safe, under: null).under, isFalse);
+    });
+
+    test('a computer: the wall between the sides, wide or not enough', () {
+      // 1440 × 900: the sides leave 116 units, the eraser and the brush
+      // need 192 and a margin.
+      final mac = gaze(const Size(1440, 900));
+      expect(mac.scale, closeTo(900 / 407, 1e-9));
+      expect(mac.under, isFalse);
+      // A very wide window: they fit.
+      final wide = gaze(const Size(2400, 900));
+      expect(wide.under, isTrue);
+      // The limit: the box and its margin on each side.
+      const height = 407.0;
+      double widthFor(double units) => 266 + 269 + units;
+      expect(
+        gaze(Size(widthFor(192 + 2 * DecorLayout.gazeMargin), height)).under,
+        isTrue,
+      );
+      expect(
+        gaze(Size(widthFor(192 + 2 * DecorLayout.gazeMargin - 1), height))
+            .under,
+        isFalse,
+      );
+    });
+
+    test('a telephone held upright: one side above the other', () {
+      const frame = Size(390, 844);
+      const safe = EdgeInsets.only(top: 47);
+      final layout = gaze(frame, safe: safe);
+      expect(layout.arrangement, DecorGazeArrangement.stacked);
+      expect(layout.scale, closeTo((844 - 47) / 2 / 407, 1e-9));
+      final left = layout.place(leftSide, DecorAnchor.left);
+      final right = layout.place(rightSide, DecorAnchor.right);
+      // The left side above, against the left edge; the right side below,
+      // against the right edge and on the bottom. Neither is cut.
+      expect(left.left, 0);
+      expect(right.right, closeTo(frame.width, 1e-9));
+      expect(right.bottom, closeTo(frame.height, 1e-9));
+      expect(left.bottom, closeTo(right.top, 1e-9));
+      expect(left.top, greaterThanOrEqualTo(47 - 1e-9));
+      expect(left.right, lessThanOrEqualTo(frame.width));
+      expect(right.left, greaterThanOrEqualTo(0));
+      // Each floor has its own ground; nothing is shown between them.
+      expect(layout.bands, hasLength(2));
+      expect(layout.bands.first.rect.bottom, closeTo(left.bottom, 1e-9));
+      expect(layout.bands.last.rect.top, closeTo(right.top, 1e-9));
+      expect(layout.bands.last.rect.bottom, frame.height);
+      expect(layout.under, isFalse);
+      // Much larger so than side by side, which is why.
+      final beside = gaze(
+        frame,
+        safe: safe,
+        arrangement: DecorGazeArrangement.beside,
+      );
+      expect(beside.arrangement, DecorGazeArrangement.beside);
+      expect(layout.scale, greaterThan(beside.scale * 1.3));
+      expect(beside.place(leftSide, DecorAnchor.left).bottom, frame.height);
+    });
+
+    test('a tablet held upright keeps the sides side by side', () {
+      // One above the other they would not be fifteen hundredths larger:
+      // side by side is how the decor was drawn.
+      for (final frame in const [Size(1024, 1366), Size(744, 1133)]) {
+        final layout = gaze(frame);
+        expect(
+          layout.arrangement,
+          DecorGazeArrangement.beside,
+          reason: '$frame',
+        );
+        expect(layout.scale, closeTo(frame.width / (266 + 269), 1e-9));
+        final left = layout.place(leftSide, DecorAnchor.left);
+        final right = layout.place(rightSide, DecorAnchor.right);
+        expect(left.right, closeTo(right.left, 1e-6));
+        expect(left.bottom, closeTo(frame.height, 1e-9));
+        expect(left.top, greaterThan(0));
+      }
+      expect(DecorLayout.stackedGain, 1.15);
+    });
+
+    test('nothing goes beyond the screen, in any frame', () {
+      for (final frame in const [
+        Size(320, 568),
+        Size(390, 844),
+        Size(844, 390),
+        Size(744, 1133),
+        Size(1024, 1366),
+        Size(1366, 1024),
+        Size(1180, 820),
+        Size(1440, 900),
+        Size(1920, 1080),
+        Size(3440, 1440),
+        Size(500, 900),
+        Size(900, 500),
+      ]) {
+        for (final safe in const [
+          EdgeInsets.zero,
+          EdgeInsets.only(left: 47, right: 47),
+          EdgeInsets.only(top: 59),
+        ]) {
+          final layout = gaze(frame, safe: safe);
+          expect(layout.pieces, isTrue, reason: '$frame');
+          final room = Rect.fromLTRB(
+            safe.left,
+            safe.top,
+            frame.width - safe.right,
+            frame.height,
+          ).inflate(1e-6);
+          final left = layout.place(leftSide, DecorAnchor.left);
+          final right = layout.place(rightSide, DecorAnchor.right);
+          for (final box in [left, right]) {
+            expect(
+              room.contains(box.topLeft) && room.contains(box.bottomRight),
+              isTrue,
+              reason: '$frame, $safe : $box',
+            );
+          }
+          // The two sides never cover one another.
+          expect(left.overlaps(right.deflate(1e-6)), isFalse, reason: '$frame');
+          if (layout.under) {
+            final between = layout.place(middle, DecorAnchor.middle);
+            expect(between.left, greaterThanOrEqualTo(left.right));
+            expect(between.right, lessThanOrEqualTo(right.left));
+          }
+        }
+      }
+      expect(gaze(Size.zero).pieces, isFalse);
+    });
+
+    test(
+      'two layouts of the same screen are the same, not that of a sheet',
+      () {
+        expect(gaze(const Size(1366, 1024)), gaze(const Size(1366, 1024)));
+        expect(
+          gaze(const Size(1366, 1024)).hashCode,
+          gaze(const Size(1366, 1024)).hashCode,
+        );
+        expect(gaze(const Size(390, 844)), isNot(gaze(const Size(844, 390))));
+        expect(
+          gaze(const Size(390, 844)),
+          isNot(
+            gaze(
+              const Size(390, 844),
+              arrangement: DecorGazeArrangement.beside,
+            ),
+          ),
+        );
+        expect(gaze(decor), isNot(layout(decor)));
+      },
+    );
   });
 
   test('two layouts of the same frame are the same', () {

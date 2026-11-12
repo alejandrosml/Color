@@ -11,8 +11,17 @@
 // stands on the bottom edge. The ground fills the frame. A child must be
 // able to see everything (the owner, 11 November 2026): when the sheet at
 // rest leaves less room beside it than the decor was drawn for, the decor
-// is made smaller rather than hidden under the sheet, and where even half
-// its size does not fit, only its ground is shown.
+// is made smaller rather than hidden under the sheet; where even half its
+// size does not fit, the studio shows no decor at all (12 November 2026:
+// a ground alone has no interest).
+//
+// Nothing of a decor goes beyond its frame (the owner, 12 November 2026):
+// only the ground reaches the edges. [Decor.drawnBox] says what a piece
+// draws, at any pose; test/universe_test.dart holds every piece to it.
+//
+// A decor may also be looked at without a sheet, on the whole screen
+// ([DecorLayout.gaze]): its two sides come together, side by side or, on a
+// tall screen, one above the other.
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -376,6 +385,90 @@ class Decor {
   /// The pieces painted at every image, above the still ones.
   late final List<DecorPiece> live = pieces.sublist(still.length);
 
+  /// The box of what [piece] draws at [pose], in the units of the decor:
+  /// its picture laid where it stands, moved as the pose says, and cut by
+  /// what it never leaves. A sky is that of [moment]; a clock is the round
+  /// its hands sweep. Null for a piece that draws nothing.
+  Rect? drawnBox(
+    DecorPiece piece, {
+    DecorPose pose = DecorPose.rest,
+    DayMoment moment = DayMoment.jour,
+  }) {
+    Rect? box;
+    if (piece.clock case final clock?) {
+      box = Rect.fromCircle(
+        center: clock.centre,
+        radius: math.max(clock.hour.height, clock.minute.height) + 3,
+      );
+    } else {
+      final name = piece.picture;
+      final picture = name == null
+          ? null
+          : pictures[piece.role == DecorRole.sky
+                ? '$name-${moment.name}'
+                : name];
+      if (picture == null) return null;
+      // As VectorPicture.paint lays it: as large as its place allows, in
+      // its middle.
+      final place = piece.at ?? Offset.zero & size;
+      final scale = math.min(
+        place.width / picture.width,
+        place.height / picture.height,
+      );
+      final dx = place.left + (place.width - picture.width * scale) / 2;
+      final dy = place.top + (place.height - picture.height * scale) / 2;
+      // The pose after the placing: one matrix for both.
+      final moved = pose.matrixAbout(
+        piece.move?.originX ?? 0,
+        piece.move?.originY ?? 0,
+      );
+      final whole = Float64List(16)
+        ..[10] = 1
+        ..[15] = 1;
+      if (moved == null) {
+        whole
+          ..[0] = scale
+          ..[5] = scale
+          ..[12] = dx
+          ..[13] = dy;
+      } else {
+        whole
+          ..[0] = moved[0] * scale
+          ..[1] = moved[1] * scale
+          ..[4] = moved[4] * scale
+          ..[5] = moved[5] * scale
+          ..[12] = moved[0] * dx + moved[4] * dy + moved[12]
+          ..[13] = moved[1] * dx + moved[5] * dy + moved[13];
+      }
+      box = picture.drawnBounds(placed: whole);
+    }
+    final clip = piece.clip;
+    if (box == null || clip == null) return box;
+    return box.overlaps(clip) ? box.intersect(clip) : null;
+  }
+
+  /// The box of everything that lies under the sheet, pieces and named
+  /// things, in the units of the decor; null when nothing does. When the
+  /// decor is looked at without a sheet, it says whether those pieces fit
+  /// between the two sides.
+  late final Rect? middleBox = () {
+    Rect? box;
+    void add(Rect? other) {
+      if (other != null) box = box?.expandToInclude(other) ?? other;
+    }
+
+    for (final piece in pieces) {
+      if (piece.anchor == DecorAnchor.middle &&
+          piece.role != DecorRole.ground) {
+        add(drawnBox(piece));
+      }
+    }
+    for (final name in names) {
+      if (name.anchor == DecorAnchor.middle) add(name.at);
+    }
+    return box;
+  }();
+
   /// What a description says, with the text of the pictures it names; null
   /// when it describes no decor that can be shown: no frame, or no ground.
   static Decor? fromJson(Object? json, {required String pictures}) {
@@ -433,17 +526,59 @@ class Decor {
   }
 }
 
-/// Where a decor stands in a frame: its scale, and whether its pieces are
-/// shown or only its ground.
+/// How the two sides of a decor are laid when it is looked at without a
+/// sheet ([DecorLayout.gaze]).
+enum DecorGazeArrangement {
+  /// Side by side, as around a sheet: the left one against the left edge,
+  /// the right one against the right edge.
+  beside,
+
+  /// One above the other, each with its own ground: for a tall screen,
+  /// where they would be too small side by side.
+  stacked,
+}
+
+/// A part of the frame that a ground fills: the whole frame around a
+/// sheet; one of two floors when the sides of the decor are one above the
+/// other.
+@immutable
+class DecorBand {
+  const DecorBand(this.rect, this.groundLeft);
+
+  /// The part of the frame: the ground stands on its bottom edge.
+  final Rect rect;
+
+  /// The left edge, in the frame, of the ground as it was drawn; it is
+  /// repeated, mirrored, on each side of it.
+  final double groundLeft;
+
+  @override
+  bool operator ==(Object other) =>
+      other is DecorBand &&
+      other.rect == rect &&
+      other.groundLeft == groundLeft;
+
+  @override
+  int get hashCode => Object.hash(rect, groundLeft);
+}
+
+/// Where a decor stands in a frame: its scale, where each of its sides is,
+/// and whether its pieces are shown.
 @immutable
 class DecorLayout {
   const DecorLayout._({
     required this.frame,
     required this.decor,
     required this.scale,
-    required this.middle,
     required this.pieces,
     required this.under,
+    required this._leftOfLeft,
+    required this._leftOfMiddle,
+    required this._leftOfRight,
+    required this._topOfLeft,
+    required this._topOfRest,
+    required this.bands,
+    this.arrangement = DecorGazeArrangement.beside,
   });
 
   /// The decor in a [frame], around a sheet that lies at [sheetAtRest] when
@@ -470,23 +605,123 @@ class DecorLayout {
     // hidden under it: it is then left out, with its name.
     final band = (decor.height - decorSheet.bottom) * scale;
     final below = frame.height - sheetAtRest.bottom;
+    // The middle of the sheet at rest in the frame is the middle of the
+    // sheet of the decor.
+    final middle = sheetAtRest.center.dx - decorSheet.center.dx * scale;
+    final top = frame.height - decor.height * scale;
     return DecorLayout._(
       frame: frame,
       decor: decor,
       scale: scale,
-      middle: Offset(sheetAtRest.center.dx, decorSheet.center.dx),
       pieces: pieces && frame.width > 0 && frame.height > 0,
       under: band <= 0 || below >= band * underShare,
+      leftOfLeft: 0,
+      leftOfMiddle: middle,
+      leftOfRight: frame.width - decor.width * scale,
+      topOfLeft: top,
+      topOfRest: top,
+      bands: [DecorBand(Offset.zero & frame, middle)],
+    );
+  }
+
+  /// The decor looked at without a sheet, on the whole of [frame] (Color
+  /// 1.2, « les décors à contempler »): its two sides come together, as
+  /// large as the frame allows without anything going beyond it.
+  ///
+  /// Side by side when that is not much smaller; on a tall frame, the left
+  /// side above the right one, each on its own ground. [safe] is what the
+  /// device hides at the left, the right and the top of the frame — a
+  /// notch, a status bar: the pieces keep away from it, the ground goes
+  /// under it. Nothing is kept away from the bottom: the pieces stand on
+  /// the ground, which stands on the bottom edge.
+  ///
+  /// What lies under the sheet ([middle], in the units of the decor) is
+  /// shown between the two sides when they leave room for it, and not at
+  /// all otherwise: it never covers them.
+  factory DecorLayout.gaze({
+    required Size frame,
+    EdgeInsets safe = EdgeInsets.zero,
+    required Size decor,
+    required Rect decorSheet,
+    Rect? middle,
+    DecorGazeArrangement? arrangement,
+  }) {
+    final roomWidth = math.max(0.0, frame.width - safe.left - safe.right);
+    final roomHeight = math.max(0.0, frame.height - safe.top);
+    final leftNeed = math.max(1.0, decorSheet.left);
+    final rightNeed = math.max(1.0, decor.width - decorSheet.right);
+    final beside = math.min(
+      roomHeight / decor.height,
+      roomWidth / (leftNeed + rightNeed),
+    );
+    final stacked = math.min(
+      roomWidth / math.max(leftNeed, rightNeed),
+      roomHeight / 2 / decor.height,
+    );
+    final chosen =
+        arrangement ??
+        (stacked > beside * stackedGain
+            ? DecorGazeArrangement.stacked
+            : DecorGazeArrangement.beside);
+    final shown = frame.width > 0 && frame.height > 0 && beside > 0;
+    final centre = safe.left + roomWidth / 2;
+    if (chosen == DecorGazeArrangement.stacked) {
+      final scale = stacked;
+      final floor = frame.height - decor.height * scale;
+      final ground = centre - decor.width * scale / 2;
+      return DecorLayout._(
+        frame: frame,
+        decor: decor,
+        scale: scale,
+        pieces: shown,
+        under: false,
+        leftOfLeft: safe.left,
+        leftOfMiddle: ground,
+        leftOfRight: frame.width - safe.right - decor.width * scale,
+        topOfLeft: floor - decor.height * scale,
+        topOfRest: floor,
+        bands: [
+          DecorBand(Rect.fromLTRB(0, 0, frame.width, floor), ground),
+          DecorBand(Rect.fromLTRB(0, floor, frame.width, frame.height), ground),
+        ],
+        arrangement: DecorGazeArrangement.stacked,
+      );
+    }
+    final scale = beside;
+    final gap = roomWidth - (leftNeed + rightNeed) * scale;
+    final top = frame.height - decor.height * scale;
+    return DecorLayout._(
+      frame: frame,
+      decor: decor,
+      scale: scale,
+      pieces: shown,
+      under: middle != null && gap >= (middle.width + 2 * gazeMargin) * scale,
+      leftOfLeft: safe.left,
+      // The middle of what lies under the sheet, in the middle of the
+      // frame.
+      leftOfMiddle: centre - (middle?.center.dx ?? decor.width / 2) * scale,
+      leftOfRight: frame.width - safe.right - decor.width * scale,
+      topOfLeft: top,
+      topOfRest: top,
+      bands: [DecorBand(Offset.zero & frame, centre - decor.width * scale / 2)],
     );
   }
 
   /// Below this share of the size the height allows, the pieces of a decor
-  /// are too small to be looked at: only its ground is shown.
+  /// are too small to be looked at: the studio shows no decor.
   static const minimumShare = .45;
 
   /// With less than this share of the band that was drawn for it under
   /// the sheet, what lies there is not shown: a child must see everything.
   static const underShare = .5;
+
+  /// One above the other only when the decor is this much larger so: side
+  /// by side is how it was drawn.
+  static const stackedGain = 1.15;
+
+  /// What is kept free, in units of the decor, on each side of what lies
+  /// between the two sides of a decor that is looked at.
+  static const gazeMargin = 8.0;
 
   final Size frame;
   final Size decor;
@@ -494,14 +729,26 @@ class DecorLayout {
   /// Pixels of the frame for one unit of the decor.
   final double scale;
 
-  // The middle of the sheet at rest in the frame, and in the decor.
-  final Offset middle;
-
-  /// Whether the pieces are shown; the ground always is.
+  /// Whether the pieces are shown: they are not where they would be too
+  /// small to be looked at.
   final bool pieces;
 
-  /// Whether the sheet leaves room for what lies under it.
+  /// Whether what lies under the sheet is shown: the sheet leaves room for
+  /// it, or — without a sheet — the two sides do.
   final bool under;
+
+  /// Where the grounds are laid, from the top of the frame down.
+  final List<DecorBand> bands;
+
+  /// How the two sides stand: always [DecorGazeArrangement.beside] around
+  /// a sheet.
+  final DecorGazeArrangement arrangement;
+
+  final double _leftOfLeft;
+  final double _leftOfMiddle;
+  final double _leftOfRight;
+  final double _topOfLeft;
+  final double _topOfRest;
 
   /// Whether what keeps to [anchor] is shown, a piece or a named thing.
   bool shows(DecorAnchor anchor) =>
@@ -510,25 +757,27 @@ class DecorLayout {
   /// The left edge, in the frame, of what is drawn at x = 0 of the decor
   /// and keeps to [anchor].
   double left(DecorAnchor anchor) => switch (anchor) {
-    DecorAnchor.left => 0,
-    DecorAnchor.right => frame.width - decor.width * scale,
-    DecorAnchor.middle => middle.dx - middle.dy * scale,
+    DecorAnchor.left => _leftOfLeft,
+    DecorAnchor.right => _leftOfRight,
+    DecorAnchor.middle => _leftOfMiddle,
   };
 
-  /// The top edge, in the frame, of what is drawn at y = 0 of the decor.
-  double get top => frame.height - decor.height * scale;
+  /// The top edge, in the frame, of what is drawn at y = 0 of the decor
+  /// and keeps to [anchor].
+  double top(DecorAnchor anchor) =>
+      anchor == DecorAnchor.left ? _topOfLeft : _topOfRest;
 
   /// The place in the frame of [box] of the decor, for a piece that keeps
   /// to [anchor].
   Rect place(Rect box, DecorAnchor anchor) => Rect.fromLTWH(
     left(anchor) + box.left * scale,
-    top + box.top * scale,
+    top(anchor) + box.top * scale,
     box.width * scale,
     box.height * scale,
   );
 
   Offset point(Offset at, DecorAnchor anchor) =>
-      Offset(left(anchor) + at.dx * scale, top + at.dy * scale);
+      Offset(left(anchor) + at.dx * scale, top(anchor) + at.dy * scale);
 
   @override
   bool operator ==(Object other) =>
@@ -536,12 +785,31 @@ class DecorLayout {
       other.frame == frame &&
       other.decor == decor &&
       other.scale == scale &&
-      other.middle == middle &&
       other.pieces == pieces &&
-      other.under == under;
+      other.under == under &&
+      other.arrangement == arrangement &&
+      other._leftOfLeft == _leftOfLeft &&
+      other._leftOfMiddle == _leftOfMiddle &&
+      other._leftOfRight == _leftOfRight &&
+      other._topOfLeft == _topOfLeft &&
+      other._topOfRest == _topOfRest &&
+      listEquals(other.bands, bands);
 
   @override
-  int get hashCode => Object.hash(frame, decor, scale, middle, pieces, under);
+  int get hashCode => Object.hash(
+    frame,
+    decor,
+    scale,
+    pieces,
+    under,
+    arrangement,
+    _leftOfLeft,
+    _leftOfMiddle,
+    _leftOfRight,
+    _topOfLeft,
+    _topOfRest,
+    Object.hashAll(bands),
+  );
 }
 
 /// Paints a decor. Nothing here keeps time or listens to anything: the
@@ -560,7 +828,7 @@ class DecorPainting {
   // one unit of the canvas until the matching restore.
   void _enter(Canvas canvas, DecorAnchor anchor) {
     canvas.save();
-    canvas.translate(layout.left(anchor), layout.top);
+    canvas.translate(layout.left(anchor), layout.top(anchor));
     canvas.scale(layout.scale);
   }
 
@@ -608,23 +876,30 @@ class DecorPainting {
     canvas.drawRect(frame, Paint()..color = decor.top);
     final ground = decor.pictures[decor.pieces.first.picture];
     if (ground != null) {
-      // In the middle of the frame, on its bottom edge; on a wider frame,
-      // again on each side, mirrored: its edges meet themselves.
+      // On the bottom edge of each band; on a band wider than it, again on
+      // each side, mirrored: its edges meet themselves.
       final width = decor.size.width * layout.scale;
-      final first = layout.middle.dx - layout.middle.dy * layout.scale;
       final box = Offset.zero & decor.size;
-      var tile = ((0 - first) / width).floor();
-      while (first + tile * width < layout.frame.width) {
+      for (final band in layout.bands) {
+        if (band.rect.isEmpty || width <= 0) continue;
         canvas.save();
-        canvas.translate(first + tile * width, layout.top);
-        canvas.scale(layout.scale);
-        if (tile.isOdd) {
-          canvas.translate(decor.size.width, 0);
-          canvas.scale(-1, 1);
+        canvas.clipRect(band.rect);
+        final first = band.groundLeft;
+        final top = band.rect.bottom - decor.size.height * layout.scale;
+        var tile = ((band.rect.left - first) / width).floor();
+        while (first + tile * width < band.rect.right) {
+          canvas.save();
+          canvas.translate(first + tile * width, top);
+          canvas.scale(layout.scale);
+          if (tile.isOdd) {
+            canvas.translate(decor.size.width, 0);
+            canvas.scale(-1, 1);
+          }
+          ground.paint(canvas, box);
+          canvas.restore();
+          tile++;
         }
-        ground.paint(canvas, box);
         canvas.restore();
-        tile++;
       }
     }
     if (layout.pieces) {
@@ -848,6 +1123,6 @@ class DecorPainting {
     ..[5] = layout.scale
     ..[10] = 1
     ..[12] = layout.left(anchor)
-    ..[13] = layout.top
+    ..[13] = layout.top(anchor)
     ..[15] = 1;
 }

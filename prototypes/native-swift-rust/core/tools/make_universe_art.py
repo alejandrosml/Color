@@ -15,6 +15,12 @@ art/univers/, then
 
 A decor is drawn in a frame of 1061 × 407, the sheet in its middle
 (266–792 × 26–377). Every piece keeps the coordinates of that frame.
+
+The desk and the paper were retouched in the repository since (step 3 bis,
+12 November 2026: nothing goes beyond the frame, the curtain rod is whole
+and apart from the curtains, the pencils of the desk stand on its left).
+Running this tool again on the mock-ups would undo that: it is kept as the
+record of how the first cut was made, and as a start for the next decors.
 """
 import re
 import sys

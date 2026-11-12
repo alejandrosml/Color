@@ -115,7 +115,9 @@ Set<String> frenchOfValues() => {
 List<String> frenchOfUniverse(Map<String, dynamic> universe) => [
   universe['name'] as String,
   universe['about'] as String,
-  for (final name in (universe['decor'] as Map)['names'] as List) ...[
+  // A universe without a decor has nothing a child may ask about.
+  for (final name
+      in ((universe['decor'] as Map?)?['names'] as List?) ?? const []) ...[
     (name as Map)['name'] as String,
     name['text'] as String,
   ],

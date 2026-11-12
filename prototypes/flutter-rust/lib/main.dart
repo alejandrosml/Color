@@ -81,6 +81,7 @@ import 'companion.dart';
 import 'sheet_hint.dart';
 import 'tool_pointer.dart';
 import 'decor.dart';
+import 'decor_gaze.dart';
 import 'decor_view.dart';
 import 'studio_shapes.dart';
 import 'universe.dart';
@@ -627,22 +628,8 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (painting == null || !_namesOffered || _busy || _confirmationOpen) {
       return;
     }
-    final layout = painting.layout;
-    final names = [...painting.names]
-      ..sort((a, b) {
-        final first = layout.place(a.at, a.anchor).center;
-        final second = layout.place(b.at, b.anchor).center;
-        final across = first.dx.compareTo(second.dx);
-        return across != 0 ? across : first.dy.compareTo(second.dy);
-      });
-    if (names.isEmpty) return;
-    final at = names.indexOf(_shownName.value ?? names.first);
-    final shown = _shownName.value == null;
-    _showName(
-      names[shown
-          ? (step > 0 ? 0 : names.length - 1)
-          : (at + step) % names.length],
-    );
+    final next = nextDecorName(painting, _shownName.value, step);
+    if (next != null) _showName(next);
   }
 
   // A pointer is at [at] in the frame of the sheet: beside the sheet, over
@@ -687,23 +674,46 @@ class _DrawingStudioState extends State<DrawingStudio>
     _asking.down(at, event.timeStamp, under);
   }
 
-  /// « Univers » : the child chooses how the workshop is dressed. The
-  /// drawing is not touched.
+  /// « Univers » : the child chooses how the workshop is dressed, or looks
+  /// at a decor on the whole screen. The drawing is not touched.
   Future<void> _openUniverses() async {
     _settleLatch();
     if (!_dialogAllowed || !_choosesUniverse) return;
     _finishStroke();
     _closeName();
-    final chosen = await _guardedDialog<Universe>(
+    final chosen = await _guardedDialog<UniverseChoice>(
       () => showUniverseDialog(
         context,
         catalog: UniverseCatalog.instance,
         current: _universe,
+        watch: _options.decorWatch,
         now: widget.clock,
       ),
     );
     if (!mounted || chosen == null) return;
-    await _optionsStore.change(_options.copyWith(universe: chosen.key));
+    if (chosen.watch) {
+      await _watchDecor(chosen.universe);
+      return;
+    }
+    await _optionsStore.change(
+      _options.copyWith(universe: chosen.universe.key),
+    );
+  }
+
+  /// « Regarder » : the decor of [universe] on the whole screen, until the
+  /// child comes back to the drawing (decor_gaze.dart). Nothing of the
+  /// studio changes: neither the drawing nor the universe it wears.
+  Future<void> _watchDecor(Universe universe) async {
+    if (!mounted || universe.decor == null || !_options.decorWatch) return;
+    await _guardedDialog<void>(
+      () => showDecorGaze(
+        context,
+        universe: universe,
+        motion: _options.decorMotion,
+        names: _options.decorNames,
+        now: widget.clock,
+      ),
+    );
   }
 
   @override
@@ -6499,7 +6509,10 @@ class _DrawingStudioState extends State<DrawingStudio>
           // (Color 1.2): where the sheet lies when the whole of it is
           // shown says how large the decor may be.
           final look = studioLook.value;
-          final decor = _universe.decor;
+          // None on a tablet or a telephone, whatever its size (the owner,
+          // 12 November 2026): the sheet takes the screen there, and the
+          // decor is looked at on the whole screen instead.
+          final worn = touchFirst ? null : _universe.decor;
           final rest = ViewTransform.fit(
             viewWidth: constraints.maxWidth,
             viewHeight: constraints.maxHeight,
@@ -6513,19 +6526,41 @@ class _DrawingStudioState extends State<DrawingStudio>
             rest.width,
             rest.height,
           );
-          final painting = decor == null
+          final layout = worn == null
               ? null
-              : DecorPainting(
-                  decor,
-                  DecorLayout(
-                    frame: constraints.biggest,
-                    sheetAtRest: sheetAtRest,
-                    decor: decor.size,
-                    decorSheet: decor.sheet,
-                  ),
+              : DecorLayout(
+                  frame: constraints.biggest,
+                  sheetAtRest: sheetAtRest,
+                  decor: worn.size,
+                  decorSheet: worn.sheet,
                 );
+          // And none where its pieces would be too small to be looked at:
+          // a ground alone has no interest. The frame is then plain, in
+          // the colour of the universe.
+          final decor = layout != null && layout.pieces ? worn : null;
+          final painting = decor == null || layout == null
+              ? null
+              : DecorPainting(decor, layout);
           _decorPainting = painting;
           final corners = BorderRadius.circular(look.stageRadius);
+          // The captions of the sheet stand in the corners of its frame.
+          // Over a decor they would cover what stands there — the knob of
+          // the curtain rod, the pencils on the desk — and a child must
+          // see everything: they stand along the sheet at rest instead,
+          // above its top left corner and under its bottom corners, in the
+          // margin that the sheet keeps for them. Nothing of a decor that
+          // has a name lies there.
+          final onDecor = painting != null;
+          final captionTop = onDecor
+              ? math.max(4.0, sheetAtRest.top - 23)
+              : 10.0;
+          final captionBottom = onDecor
+              ? math.max(4.0, constraints.maxHeight - sheetAtRest.bottom - 23)
+              : 9.0;
+          final captionLeft = onDecor ? math.max(4.0, sheetAtRest.left) : 16.0;
+          final captionRight = onDecor
+              ? math.max(4.0, constraints.maxWidth - sheetAtRest.right)
+              : 16.0;
           // A caption on a decor is written on a pill of the surface.
           Widget caption(Widget text) => painting == null
               ? text
@@ -6693,8 +6728,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                 ),
                 if (showCaptions)
                   Positioned(
-                    top: 10,
-                    left: 16,
+                    top: captionTop,
+                    left: captionLeft,
                     child: IgnorePointer(
                       child: caption(
                         Text(
@@ -6710,8 +6745,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                   ),
                 if (showCaptions)
                   Positioned(
-                    bottom: 9,
-                    left: 16,
+                    bottom: captionBottom,
+                    left: captionLeft,
                     child: IgnorePointer(
                       child: caption(
                         Text(
@@ -6729,8 +6764,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                   ),
                 if (showCaptions)
                   Positioned(
-                    bottom: 9,
-                    right: 16,
+                    bottom: captionBottom,
+                    right: captionRight,
                     child: IgnorePointer(
                       child: caption(
                         Text(

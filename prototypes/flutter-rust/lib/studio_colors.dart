@@ -175,6 +175,11 @@ class StudioLook {
     if (json is! Map) return classic;
     final colours = json['colours'];
     final shapes = json['shapes'];
+    // A description that changes nothing is « Classique » itself.
+    if ((colours is! Map || colours.isEmpty) &&
+        (shapes is! Map || shapes.isEmpty)) {
+      return classic;
+    }
     Color colour(String name, Color fallback) =>
         (colours is Map ? parseColour(colours[name]) : null) ?? fallback;
     double number(String name, double fallback, double most) {
