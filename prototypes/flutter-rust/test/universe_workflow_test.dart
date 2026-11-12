@@ -445,7 +445,7 @@ void main() {
     tester.view.physicalSize = mac;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final decor = UniverseCatalog.instance.named('bureau')!.decor!;
+    final decor = UniverseCatalog.instance.named('bureau').decor!;
     const behind = Color(0xff224466);
     final made = debugDecorStillImages;
     await tester.pumpWidget(
