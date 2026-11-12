@@ -3,15 +3,24 @@
      Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
      changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
      l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
-     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56.
+     Créé par Alejandro San Martin Lamas (https://github.com/alejandrosml). -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <title>Couronne</title>
-  <path d="M 10 82 L 10 32 L 31 54 L 50 20 L 69 54 L 90 32 L 90 82 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 10 68 L 90 68 L 90 82 L 10 82 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 16 30 C 16 33.31 13.31 36 10 36 C 6.69 36 4 33.31 4 30 C 4 26.69 6.69 24 10 24 C 13.31 24 16 26.69 16 30 Z" fill="#ed8c88" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 56 18 C 56 21.31 53.31 24 50 24 C 46.69 24 44 21.31 44 18 C 44 14.69 46.69 12 50 12 C 53.31 12 56 14.69 56 18 Z" fill="#43ac9c" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 96 30 C 96 33.31 93.31 36 90 36 C 86.69 36 84 33.31 84 30 C 84 26.69 86.69 24 90 24 C 93.31 24 96 26.69 96 30 Z" fill="#9a82c9" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 33.5 75 C 33.5 76.93 31.93 78.5 30 78.5 C 28.07 78.5 26.5 76.93 26.5 75 C 26.5 73.07 28.07 71.5 30 71.5 C 31.93 71.5 33.5 73.07 33.5 75 Z" fill="#ffcd62"/>
-  <path d="M 53.5 75 C 53.5 76.93 51.93 78.5 50 78.5 C 48.07 78.5 46.5 76.93 46.5 75 C 46.5 73.07 48.07 71.5 50 71.5 C 51.93 71.5 53.5 73.07 53.5 75 Z" fill="#ffcd62"/>
-  <path d="M 73.5 75 C 73.5 76.93 71.93 78.5 70 78.5 C 68.07 78.5 66.5 76.93 66.5 75 C 66.5 73.07 68.07 71.5 70 71.5 C 71.93 71.5 73.5 73.07 73.5 75 Z" fill="#ffcd62"/>
+  <path d="M 14 70 L 9 31 L 30 50 L 50 21 L 70 50 L 91 31 L 86 70 Z" fill="#d75e56" data-fill="couleur"/>
+  <path d="M 50 21 L 70 50 L 91 31 L 86 70 L 74 70 L 66 56 L 50 36 Z" fill="#96413c" data-fill="sombre"/>
+  <path d="M 14 70 L 9 31 L 30 50 L 50 21 L 70 50 L 91 31 L 86 70 Z" fill="none" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 16 42 L 19 62" fill="none" stroke="#efbebb" data-stroke="claire" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 44 36 L 36 48" fill="none" stroke="#efbebb" data-stroke="claire" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 13 70 L 87 70 L 87 87 L 13 87 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 17 74 L 83 74" fill="none" stroke="#d75e56" data-stroke="couleur" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34.2 79.4 C 34.2 81.72 32.32 83.6 30 83.6 C 27.68 83.6 25.8 81.72 25.8 79.4 C 25.8 77.08 27.68 75.2 30 75.2 C 32.32 75.2 34.2 77.08 34.2 79.4 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 74.2 79.4 C 74.2 81.72 72.32 83.6 70 83.6 C 67.68 83.6 65.8 81.72 65.8 79.4 C 65.8 77.08 67.68 75.2 70 75.2 C 72.32 75.2 74.2 77.08 74.2 79.4 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 50 73.4 L 56 79.4 L 50 85.4 L 44 79.4 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 15.4 29 C 15.4 32.53 12.53 35.4 9 35.4 C 5.47 35.4 2.6 32.53 2.6 29 C 2.6 25.47 5.47 22.6 9 22.6 C 12.53 22.6 15.4 25.47 15.4 29 Z" fill="#ed8c88" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 57 18 C 57 21.87 53.87 25 50 25 C 46.13 25 43 21.87 43 18 C 43 14.13 46.13 11 50 11 C 53.87 11 57 14.13 57 18 Z" fill="#43ac9c" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 97.4 29 C 97.4 32.53 94.53 35.4 91 35.4 C 87.47 35.4 84.6 32.53 84.6 29 C 84.6 25.47 87.47 22.6 91 22.6 C 94.53 22.6 97.4 25.47 97.4 29 Z" fill="#9a82c9" stroke="#293d4b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 49.8 16 C 49.8 16.99 48.99 17.8 48 17.8 C 47.01 17.8 46.2 16.99 46.2 16 C 46.2 15.01 47.01 14.2 48 14.2 C 48.99 14.2 49.8 15.01 49.8 16 Z" fill="#ffffff"/>
+  <path d="M 9 27.4 C 9 28.28 8.28 29 7.4 29 C 6.52 29 5.8 28.28 5.8 27.4 C 5.8 26.52 6.52 25.8 7.4 25.8 C 8.28 25.8 9 26.52 9 27.4 Z" fill="#ffffff"/>
+  <path d="M 91 27.4 C 91 28.28 90.28 29 89.4 29 C 88.52 29 87.8 28.28 87.8 27.4 C 87.8 26.52 88.52 25.8 89.4 25.8 C 90.28 25.8 91 26.52 91 27.4 Z" fill="#ffffff"/>
 </svg>

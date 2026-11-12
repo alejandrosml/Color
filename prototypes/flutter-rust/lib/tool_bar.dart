@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'child_art.dart';
 import 'studio_colors.dart';
+import 'studio_shapes.dart';
 import 'studio_tool.dart';
 import 'language.dart';
 
@@ -125,11 +126,24 @@ class StudioToolBar extends StatelessWidget {
   Widget _button(ToolGroup tool, {double height = 80, bool label = true}) {
     final isSelected = tool == selected;
     final side = railButton(large);
+    // In a look of stickers the tile goes: the picture stands on a round
+    // of colour, ringed when it is the chosen one (Color 1.2).
+    final sticker = studioLook.value.tool == ToolShape.sticker;
+    Widget picture(double size) => studioToolPicture(
+      EduIllustration(art: tool.art, size: sticker ? size - 6 : size),
+      index: tools.indexOf(tool),
+      chosen: isSelected,
+      size: size - 6,
+    );
     final button = OutlinedButton(
       key: Key(tool.keyName),
       onPressed: onSelected == null ? null : () => onSelected!(tool),
       style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? studioSelected : studioSurface,
+        backgroundColor: sticker
+            ? Colors.transparent
+            : isSelected
+            ? studioSelected
+            : studioSurface,
         foregroundColor: isSelected ? studioGreen : studioInk,
         minimumSize: rail
             ? Size.square(side)
@@ -144,9 +158,15 @@ class StudioToolBar extends StatelessWidget {
                 horizontal: horizontal ? (label ? 6 : 2) : 4,
                 vertical: horizontal || height >= 76 ? 8 : 4,
               ),
-        side: BorderSide(
-          color: isSelected ? studioGreen : studioLine,
-          width: isSelected ? 2 : 1,
+        side: sticker
+            ? BorderSide.none
+            : BorderSide(
+                color: isSelected ? studioGreen : studioLine,
+                width: isSelected ? 2 : 1,
+              ),
+        // A tile keeps its corners in every look.
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(sticker ? 24 : 13),
         ),
       ),
       // The chosen state is announced on the button itself, with its name
@@ -155,13 +175,13 @@ class StudioToolBar extends StatelessWidget {
         selected: isSelected,
         label: label ? null : tool.label,
         child: rail
-            ? EduIllustration(art: tool.art, size: large ? 40 : 30)
+            ? picture(large ? 40 : 30)
             : horizontal
             ? label
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        EduIllustration(art: tool.art, size: 23),
+                        picture(23),
                         const SizedBox(width: 5),
                         Flexible(
                           child: Text(
@@ -172,13 +192,12 @@ class StudioToolBar extends StatelessWidget {
                         ),
                       ],
                     )
-                  : EduIllustration(art: tool.art, size: 28)
+                  : picture(28)
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  EduIllustration(
-                    art: tool.art,
-                    size: height >= 96
+                  picture(
+                    height >= 96
                         ? 54
                         : height >= 76
                         ? 39
@@ -327,11 +346,7 @@ class StudioToolBar extends StatelessWidget {
             primary: false,
             child: Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: studioSurface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: studioLine),
-              ),
+              decoration: studioPanel(),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -339,7 +354,7 @@ class StudioToolBar extends StatelessWidget {
                     padding: EdgeInsets.only(top: 5, bottom: roomy ? 14 : 8),
                     child: Text(
                       tr('OUTILS'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
                         letterSpacing: 1.5,
                         color: studioCaption,

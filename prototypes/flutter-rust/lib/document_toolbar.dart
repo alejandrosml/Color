@@ -162,7 +162,7 @@ class DocumentToolbar extends StatelessWidget {
                         caption,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           color: studioDocumentCaption,
                         ),

@@ -146,7 +146,7 @@ void main() {
         'exportImage',
         'printDrawing',
       ]);
-      expect(menuName(tester), 'Galerie, image, aide, options et informations');
+      expect(menuName(tester), 'Galerie, image, aide, univers, options et informations');
       await tester.tap(find.byKey(const Key('moreFileActions')));
       await tester.pumpAndSettle();
       expect(find.text('Mes dessins'), findsOneWidget);
@@ -167,10 +167,10 @@ void main() {
         'exportImage',
         'printDrawing',
       ]);
-      expect(menuName(tester), 'Image, aide, options et informations');
+      expect(menuName(tester), 'Image, aide, univers, options et informations');
       await resize(tester, 910);
       expect(buttons(tester), order);
-      expect(menuName(tester), 'Aide, options et informations');
+      expect(menuName(tester), 'Aide, univers, options et informations');
       await studio.finish();
     },
     skip: !available,
@@ -193,7 +193,7 @@ void main() {
       ]);
       expect(
         menuName(tester),
-        'Galerie, image, impression, aide, options et informations',
+        'Galerie, image, impression, aide, univers, options et informations',
       );
       expect(
         tester.getSize(find.byType(StudioHeader)).height,
@@ -215,7 +215,7 @@ void main() {
         'exportImage',
         'printDrawing',
       ]);
-      expect(menuName(tester), 'Galerie, image, aide, options et informations');
+      expect(menuName(tester), 'Galerie, image, aide, univers, options et informations');
       await studio.finish();
     },
     skip: !available,
@@ -251,7 +251,7 @@ void main() {
       'exportImage',
       'printDrawing',
     ]);
-    expect(menuName(tester), 'Image, aide, options et informations');
+    expect(menuName(tester), 'Image, aide, univers, options et informations');
     await tester.tap(find.byKey(const Key('moreFileActions')));
     await tester.pumpAndSettle();
     expect(find.text('Mes dessins'), findsNothing);

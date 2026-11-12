@@ -3,14 +3,23 @@
      Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
      changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
      l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
-     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56.
+     Créé par Alejandro San Martin Lamas (https://github.com/alejandrosml). -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <title>Poisson</title>
-  <path d="M 66 50 L 94 30 L 88 50 L 94 70 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 76 50 C 76 62.7 60.78 73 42 73 C 23.22 73 8 62.7 8 50 C 8 37.3 23.22 27 42 27 C 60.78 27 76 37.3 76 50 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 40 28 C 46 14 60 14 62 28 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 30.5 44 C 30.5 47.59 27.59 50.5 24 50.5 C 20.41 50.5 17.5 47.59 17.5 44 C 17.5 40.41 20.41 37.5 24 37.5 C 27.59 37.5 30.5 40.41 30.5 44 Z" fill="#fffcf0"/>
-  <path d="M 26 44 C 26 45.66 24.66 47 23 47 C 21.34 47 20 45.66 20 44 C 20 42.34 21.34 41 23 41 C 24.66 41 26 42.34 26 44 Z" fill="#293d4b"/>
-  <path d="M 12 56 C 16 60 22 61 26 58" fill="none" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 46 42 C 52 46 52 54 46 58" fill="none" stroke="#96413c" data-stroke="sombre" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 76 50 L 95 30 C 91 43 91 58 95 71 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 38 28 C 42 14 58 12 63 21 C 61 26 59 28 57 30 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 9 52 C 13 34 35 23 56 27 C 69 30 77 38 81 49 C 77 63 65 73 50 75 C 31 77 13 68 9 52 Z" fill="#d75e56" data-fill="couleur"/>
+  <path d="M 13 60 C 26 71 46 73 62 66 C 50 78 26 77 13 60 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 9 52 C 13 34 35 23 56 27 C 69 30 77 38 81 49 C 77 63 65 73 50 75 C 31 77 13 68 9 52 Z" fill="none" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 36 36 C 41 45 41 57 36 66" fill="none" stroke="#96413c" data-stroke="sombre" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 49 39 C 53 43 53 50 49 54 M 59 41 C 63 45 63 52 59 56 M 68 45 C 71 48 71 53 68 56" fill="none" stroke="#96413c" data-stroke="sombre" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 44 57 C 50 55 56 59 56 65 C 50 65 46 63 44 57 Z" fill="#96413c" data-fill="sombre" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 30.2 46 C 30.2 49.42 27.42 52.2 24 52.2 C 20.58 52.2 17.8 49.42 17.8 46 C 17.8 42.58 20.58 39.8 24 39.8 C 27.42 39.8 30.2 42.58 30.2 46 Z" fill="#ffffff" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 26 46.4 C 26 48.06 24.66 49.4 23 49.4 C 21.34 49.4 20 48.06 20 46.4 C 20 44.74 21.34 43.4 23 43.4 C 24.66 43.4 26 44.74 26 46.4 Z" fill="#293d4b"/>
+  <path d="M 23 45 C 23 45.55 22.55 46 22 46 C 21.45 46 21 45.55 21 45 C 21 44.45 21.45 44 22 44 C 22.55 44 23 44.45 23 45 Z" fill="#ffffff"/>
+  <path d="M 11 56 C 14 59 18 59 20.6 57" fill="none" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 34 54 C 34 55.66 32.66 57 31 57 C 29.34 57 28 55.66 28 54 C 28 52.34 29.34 51 31 51 C 32.66 51 34 52.34 34 54 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 13.2 30 C 13.2 32.32 11.32 34.2 9 34.2 C 6.68 34.2 4.8 32.32 4.8 30 C 4.8 27.68 6.68 25.8 9 25.8 C 11.32 25.8 13.2 27.68 13.2 30 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 19.6 19 C 19.6 20.44 18.44 21.6 17 21.6 C 15.56 21.6 14.4 20.44 14.4 19 C 14.4 17.56 15.56 16.4 17 16.4 C 18.44 16.4 19.6 17.56 19.6 19 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

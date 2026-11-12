@@ -32,6 +32,8 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/app_folders.dart';
+import 'package:edupaint_flutter_study/decor_motion.dart';
+import 'package:edupaint_flutter_study/decor_view.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
 import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/language.dart';
@@ -82,6 +84,18 @@ void main() {
     if (folder == null || folder.isEmpty) {
       fail('COLOR_SCENARIO_DIR names the folder of the scenario.');
     }
+    // The decor of the universe (Color 1.2) stands still while the
+    // scenario plays: one that moves never lets the studio settle, and
+    // every step waits for that. Its movement has a step of its own, at
+    // the end. And its hour is fixed — the afternoon — so that the
+    // pictures and the frames of two runs can be compared; the last traits
+    // are drawn at night, under the lamp, which costs the most to paint.
+    debugDecorStill = true;
+    debugDecorNow = () => DateTime(2026, 11, 12, 14, 30);
+    addTearDown(() {
+      debugDecorStill = false;
+      debugDecorNow = null;
+    });
     final root = Directory(folder);
     final shots = Directory('${root.path}/shots')..createSync(recursive: true);
     final drawings = Directory('${root.path}/Dessins')
@@ -116,6 +130,8 @@ void main() {
     // against the budgets (Q-03), and the first frame of Color itself.
     final frameTimes = <int, (int, int, int)>{};
     final traitFrames = <(int, int)>[];
+    // The frames of the decor while it moves, apart: no budget yet.
+    (int, int)? decorFrames;
     // The last frame built before Color is: the frames of the test
     // framework come before it.
     int? beforeColor;
@@ -409,6 +425,7 @@ void main() {
     var passed = false;
     try {
       late final String support;
+      late final StudioOptionsStore studioOptions;
       late final String albumFolder;
       late final String recoveryFolder;
 
@@ -419,6 +436,7 @@ void main() {
         // As main() starts it: the options of Color's own folder, read
         // before the first frame, and the sounds of the system.
         final options = await StudioOptionsStore.open();
+        studioOptions = options;
         addTearDown(options.dispose);
         expect(options.storage, isNotNull);
         expect(options.value, StudioOptions.defaults);
@@ -1281,6 +1299,63 @@ void main() {
         return {'samples': 121};
       });
 
+      await step(
+        'the same trait at night, under the lamp of the desk',
+        () async {
+          // Night falls on the desk by the window: the room is tinted, the
+          // lamp is lit. The decor looks at the hour again when the level
+          // of its movement changes.
+          debugDecorNow = () => DateTime(2026, 11, 12, 22, 10);
+          await studioOptions.change(
+            studioOptions.value.copyWith(decorMotion: DecorMotion.medium),
+          );
+          await settle();
+          expect(find.byKey(const Key('decor')), findsOneWidget);
+          final before = painter().strokes.length;
+          await drag([
+            for (var i = 0; i <= 120; i++)
+              Offset(
+                sheetWidth * (.1 + .8 * i / 120),
+                sheetHeight * (.72 + .12 * math.sin(i / 10)),
+              ),
+          ]);
+          expect(painter().strokes.length, before + 1);
+          await shot('30-night');
+          return {'samples': 121};
+        },
+      );
+
+      await step('the decor moves, its frames timed', () async {
+        // Three seconds of the decor as it moves by default, nothing else
+        // happening: what an image costs when only the curtains sway.
+        debugDecorStill = false;
+        await studioOptions.change(
+          studioOptions.value.copyWith(decorMotion: DecorMotion.low),
+        );
+        await tester.pump();
+        final from = tester.platformDispatcher.frameData.frameNumber;
+        for (var image = 0; image < 90; image++) {
+          await tester.pump(DecorView.period);
+        }
+        await shown();
+        final to = tester.platformDispatcher.frameData.frameNumber;
+        decorFrames = (from + 1, to);
+        // And still again, for what waits for the studio to settle; the
+        // options are left as an adult would find them, the movement at
+        // its default: the released program starts on this profile next.
+        debugDecorStill = true;
+        await studioOptions.change(
+          studioOptions.value.copyWith(decorMotion: DecorMotion.medium),
+        );
+        await studioOptions.change(
+          studioOptions.value.copyWith(decorMotion: DecorMotion.low),
+        );
+        await settle();
+        expect(studioOptions.value.decorMotion, DecorMotion.low);
+        expect(to - from, greaterThan(30));
+        return {'images': to - from};
+      });
+
       passed = true;
     } catch (error) {
       record['error'] = '$error';
@@ -1307,6 +1382,23 @@ void main() {
         if (micros.isNotEmpty) ...{
           'build_ms': _centiles([for (final (build, _, _) in micros) build]),
           'raster_ms': _centiles([for (final (_, raster, _) in micros) raster]),
+        },
+      };
+      final moving = [
+        if (decorFrames case (final first, final last))
+          for (var number = first; number <= last; number++)
+            ?frameTimes[number],
+      ];
+      record['decor_frames'] = {
+        'scope':
+            'Frames built while the decor of the universe moves at its '
+            'default level and nothing else happens, three seconds of them, '
+            'at night under the lamp (FrameTiming), in milliseconds. No '
+            'budget yet: a first measure.',
+        'count': moving.length,
+        if (moving.isNotEmpty) ...{
+          'build_ms': _centiles([for (final (build, _, _) in moving) build]),
+          'raster_ms': _centiles([for (final (_, raster, _) in moving) raster]),
         },
       };
       // The first frame of Color: the first one built after it was given

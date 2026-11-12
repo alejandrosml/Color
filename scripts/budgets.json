@@ -9,16 +9,16 @@
         "mesure": "1.1.1, cœur des boutiques (sans SVG, avec la compression des projets v6, panic = abort), Rust 1.99, NDK 28.2 (r28c, sous Linux), llvm-strip --strip-unneeded comme Gradle, le 11 novembre 2026 : +5,0 % sur la 1.1.0 (1 229 176 o de référence ; 1 228 632 o reconstruite le même jour sur la même machine). Comme pour le cœur de Linux, toute la différence est le catalogue des douze pages à colorier redessinées (src/catalogues/pages.bin : +61 420 o)."
       },
       "core-linux-x86_64": {
-        "reference": 1459104,
-        "mesure": "1.1.1, cœur des boutiques tel que la recette Linux le construit (--no-default-features --features deflate), avec la Rust de scripts/rust-reference.json (1.99), le 11 novembre 2026 : +4,4 % sur la 1.1.0 (1 399 000 o de référence ; 1 397 408 o reconstruite le même jour sur la même machine). Toute la différence est le catalogue des douze pages à colorier redessinées pour la 1.1.1, plus détaillées : src/catalogues/pages.bin passe de 178 804 à 240 224 o (+61 420 o) ; le reste du cœur ne bouge pas. La 1.1.1 n'était pas passée par la recette Linux avant son envoi : son cœur dépassait l'ancienne référence, marge comprise."
+        "reference": 1620784,
+        "mesure": "1.2.0+43, étape 3 (les deux premiers univers), cœur des boutiques tel que la recette Linux le construit (--no-default-features --features deflate), avec la Rust de scripts/rust-reference.json (1.99), le 12 novembre 2026 : +11,1 % sur la 1.1.1 (1 459 104 o de référence), +131 208 o sur l'étape 2 (1 489 576 o). Presque toute la différence est le catalogue des univers (src/catalogues/univers.txt : 127 808 o pour « Classique » — le bureau, 102 294 o — et « Papier et crayons », 25 514 o), compilé tel quel, sans compression ; le dessin du bouton « Univers » ajoute 671 o au catalogue de l'interface. Les sept univers de l'étape 4 demanderont une nouvelle référence, et l'étape 6 dira s'il faut compresser ce catalogue."
       },
       "core-windows-x64": {
-        "reference": 1149440,
-        "mesure": "1.1.1 avec l'impression de Windows dans le cœur, cœur des boutiques (--no-default-features --features deflate) pour x86_64-pc-windows-msvc, Rust 1.99, outils de Visual Studio de la machine windows-latest de GitHub (MSVC 14.51), le 11 novembre 2026 : première mesure, par scripts/windows-desktop/recette.py."
+        "reference": 1306248,
+        "mesure": "1.2.0+43, étape 3 (les deux premiers univers) : ESTIMATION du 12 novembre 2026, en attendant la mesure des machines de GitHub — la taille de l'étape 2 (1 175 040 o) plus ce que le cœur de Linux a pris à l'étape 3 (+131 208 o, le catalogue des univers pour l'essentiel). À remplacer par la mesure de scripts/windows-desktop/recette.py."
       },
       "core-windows-arm64": {
-        "reference": 1095168,
-        "mesure": "1.1.1 avec l'impression de Windows dans le cœur, cœur des boutiques pour aarch64-pc-windows-msvc, Rust 1.99, outils de Visual Studio de la machine windows-11-arm de GitHub (MSVC 14.51), le 11 novembre 2026 : première mesure, par scripts/windows-desktop/recette.py."
+        "reference": 1252488,
+        "mesure": "1.2.0+43, étape 3 (les deux premiers univers) : ESTIMATION du 12 novembre 2026, en attendant la mesure des machines de GitHub — la taille de l'étape 2 (1 121 280 o) plus ce que le cœur de Linux a pris à l'étape 3 (+131 208 o, le catalogue des univers pour l'essentiel). À remplacer par la mesure de scripts/windows-desktop/recette.py."
       },
       "android-aab-arm64-v8a": {
         "reference": null,

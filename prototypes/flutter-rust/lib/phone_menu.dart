@@ -90,7 +90,7 @@ class PhoneMenu extends StatelessWidget {
             onPressed: onPressed,
             style: style.copyWith(
               backgroundColor: const WidgetStatePropertyAll(Color(0xffffd575)),
-              foregroundColor: const WidgetStatePropertyAll(studioInk),
+              foregroundColor: WidgetStatePropertyAll(studioInk),
             ),
             child: content,
           )
@@ -137,7 +137,7 @@ class PhoneMenu extends StatelessWidget {
                         caption,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
                           color: studioDocumentCaption,
                         ),

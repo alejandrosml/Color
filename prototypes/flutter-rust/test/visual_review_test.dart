@@ -13,8 +13,10 @@ import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
+import 'package:flutter/cupertino.dart' show CupertinoSlider;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
@@ -227,7 +229,7 @@ void main() {
       await shot(tester, '31-outil-remplir');
       await tap(tester, 'color-eebf4e');
       await click(tester, const Offset(-130, -20));
-      await tap(tester, 'color-a8d8f0'.replaceAll('a8d8f0', '9385bc'));
+      await tap(tester, 'color-477fb2'.replaceAll('a8d8f0', '9385bc'));
       await click(tester, const Offset(100, 0));
       await tap(tester, 'color-e69976');
       await click(tester, const Offset(230, -120));
@@ -394,7 +396,8 @@ void main() {
       );
       await tap(tester, 'tool-stamp');
       await click(tester, const Offset(40, 20));
-      // The rainbow, small and large: four bows, no cloud at their feet.
+      // The rainbow, small and large: six bows in their outline, no cloud at
+      // their feet.
       await tap(tester, 'chooseStamp');
       await tap(tester, 'stamp-arcenciel');
       await click(tester, const Offset(150, -70));
@@ -605,4 +608,157 @@ void main() {
       debugTouchFirstOverride = null;
     }
   }, skip: !available);
+
+  testWidgets(
+    'review pictures of the pointers and of what a tool shows before it acts',
+    (tester) async {
+      debugDisableShadows = false;
+      try {
+        await tester.runAsync(loadReviewFonts);
+        final options = StudioOptionsStore.memory(
+          const StudioOptions(keyboardPointer: true),
+        );
+        await start(tester, const Size(1280, 820), options: options);
+        final center = tester.getCenter(
+          find.byKey(const Key('drawingSurface')),
+        );
+        final mouse = await tester.createGesture(
+          kind: ui.PointerDeviceKind.mouse,
+        );
+        await mouse.addPointer(location: center);
+        addTearDown(mouse.removePointer);
+        Future<void> hover(Offset at, {bool pot = false}) async {
+          await mouse.moveTo(center + at);
+          await tester.pump();
+          if (pot) {
+            // The pot looks once the pointer has rested.
+            await tester.pump(const Duration(milliseconds: 80));
+            await engine(tester);
+          }
+        }
+
+        // A house drawn by hand, a sun, a frame: something to pour into.
+        await tap(tester, 'tool-stroke');
+        await tap(tester, 'color-33484d');
+        for (final corners in const [
+          [
+            Offset(-200, 120),
+            Offset(-200, -20),
+            Offset(-60, -20),
+            Offset(-60, 120),
+            Offset(-200, 120),
+          ],
+          [Offset(-215, -20), Offset(-130, -110), Offset(-45, -20)],
+        ]) {
+          final gesture = await tester.startGesture(center + corners.first);
+          for (var corner = 1; corner < corners.length; corner++) {
+            for (var step = 1; step <= 8; step++) {
+              await gesture.moveTo(
+                center +
+                    Offset.lerp(
+                      corners[corner - 1],
+                      corners[corner],
+                      step / 8,
+                    )!,
+              );
+              await tester.pump(const Duration(milliseconds: 16));
+            }
+          }
+          await gesture.up();
+          await tester.pumpAndSettle();
+        }
+        await tap(tester, 'tool-ellipse');
+        await tap(tester, 'color-eebf4e');
+        await drag(tester, const Offset(110, -150), const Offset(210, -50));
+
+        await tap(tester, 'tool-stroke');
+        await tap(tester, 'color-d75e56');
+        await hover(const Offset(60, 60));
+        await shot(tester, '80-pointe-pinceau-et-son-point');
+        // The widest trait.
+        final slider = find.descendant(
+          of: find.byKey(const Key('brushWidthSemantics')),
+          matching: find.byType(CupertinoSlider),
+        );
+        final track = tester.getRect(slider);
+        await tester.tapAt(Offset(track.right - 6, track.center.dy));
+        await tester.pumpAndSettle();
+        await hover(const Offset(60, 60));
+        await shot(tester, '81-pointe-pinceau-gros-trait');
+        await tester.tapAt(
+          Offset(track.left + track.width * .22, track.center.dy),
+        );
+        await tester.pumpAndSettle();
+
+        await tap(tester, 'tool-fill');
+        await tap(tester, 'color-78a66f');
+        await hover(const Offset(-130, 50), pot: true);
+        await shot(tester, '82-pot-la-maison-se-hachure');
+        await hover(const Offset(160, -100), pot: true);
+        await shot(tester, '83-pot-le-soleil-se-hachure');
+        await tap(tester, 'color-477fb2');
+        await hover(const Offset(40, 120), pot: true);
+        await shot(tester, '84-pot-le-papier-autour-se-hachure');
+        await tap(tester, 'color-ffffff');
+        await hover(const Offset(-130, 50), pot: true);
+        await shot(tester, '85-pot-une-couleur-tres-claire');
+
+        await tap(tester, 'tool-stamp');
+        await tap(tester, 'color-d75e56');
+        await hover(const Offset(120, 80));
+        await shot(tester, '86-tampon-en-transparence');
+
+        await tap(tester, 'tool-text');
+        await hover(const Offset(-10, -120));
+        await shot(tester, '87-texte-le-trait-de-la-premiere-lettre');
+
+        await tap(tester, 'tool-eraser');
+        await hover(const Offset(-60, 40));
+        await shot(tester, '88-gomme-son-rond');
+
+        await tap(tester, 'tool-select');
+        await hover(const Offset(-130, 50));
+        await shot(tester, '89-choisir-garde-sa-fleche');
+
+        await tap(tester, 'tool-magic');
+        await tap(tester, 'magic-mirror');
+        await tap(tester, 'color-9385bc');
+        await hover(const Offset(-150, 150));
+        await shot(tester, '90-magie-le-miroir-montre-deux-points');
+
+        await tap(tester, 'tool-rectangle');
+        await hover(const Offset(40, 20));
+        await shot(tester, '91-rectangle-la-pointe-et-son-point');
+
+        // The pointer of the keyboard: the same tip, in its ring.
+        await mouse.moveTo(center + const Offset(-900, -900));
+        await tester.pump();
+        await tap(tester, 'tool-fill');
+        await tap(tester, 'color-e69976');
+        for (var step = 0; step < 14; step++) {
+          await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+          await tester.pump();
+        }
+        await tester.pump(const Duration(milliseconds: 80));
+        await engine(tester);
+        await shot(tester, '92-pointeur-du-clavier-et-pot');
+
+        // A colouring page.
+        await tap(tester, 'newProject');
+        await tap(tester, 'page-maison');
+        if (find.byKey(const Key('discardChanges')).evaluate().isNotEmpty) {
+          await tap(tester, 'discardChanges');
+        }
+        await tap(tester, 'tool-fill');
+        await tap(tester, 'color-d75e56');
+        await hover(Offset.zero, pot: true);
+        await shot(tester, '93-coloriage-la-zone-se-hachure');
+        await hover(const Offset(-330, -200), pot: true);
+        await shot(tester, '94-coloriage-autre-zone');
+      } finally {
+        debugDisableShadows = true;
+      }
+    },
+    skip: !available,
+  );
 }

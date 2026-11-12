@@ -79,11 +79,28 @@ static INTERFACE: &[(&str, &str)] = &[
     ("ouvrir", include_str!("../art/interface/ouvrir.svg")),
     ("ovale", include_str!("../art/interface/ovale.svg")),
     ("pinceau", include_str!("../art/interface/pinceau.svg")),
+    (
+        "pointeur-choisir",
+        include_str!("../art/interface/pointeur-choisir.svg"),
+    ),
+    (
+        "pointeur-pinceau",
+        include_str!("../art/interface/pointeur-pinceau.svg"),
+    ),
+    (
+        "pointeur-pointe",
+        include_str!("../art/interface/pointeur-pointe.svg"),
+    ),
+    (
+        "pointeur-remplir",
+        include_str!("../art/interface/pointeur-remplir.svg"),
+    ),
     ("rectangle", include_str!("../art/interface/rectangle.svg")),
     ("remplir", include_str!("../art/interface/remplir.svg")),
     ("retablir", include_str!("../art/interface/retablir.svg")),
     ("tampon", include_str!("../art/interface/tampon.svg")),
     ("texte", include_str!("../art/interface/texte.svg")),
+    ("univers", include_str!("../art/interface/univers.svg")),
 ];
 
 /// Why a picture is not handed over.

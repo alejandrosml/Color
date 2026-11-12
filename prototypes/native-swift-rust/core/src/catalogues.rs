@@ -11,7 +11,9 @@
 //! - `pages.txt`: the catalogue of the pages, the text of `ep_page_catalog`;
 //! - `pages.bin`: the project (version 5) of the document of every page, in
 //!   the order of their identifiers, each one after its length as four
-//!   bytes, little-endian, the number of pages first, the same way.
+//!   bytes, little-endian, the number of pages first, the same way;
+//! - `univers.txt`: the universes of the studio (Color 1.2), one after the
+//!   other, as universes.rs describes them; `ep_universe` hands over one.
 //!
 //! A test writes them again from the files and compares them to the byte;
 //! after a change of a picture or of a page, or of how they are read:
@@ -27,6 +29,19 @@ pub const MAX_SVG_BYTES: usize = 1024 * 1024;
 const INTERFACE: &str = include_str!("catalogues/interface.txt");
 const PAGE_CATALOGUE: &str = include_str!("catalogues/pages.txt");
 const PAGE_PROJECTS: &[u8] = include_bytes!("catalogues/pages.bin");
+const UNIVERSES: &str = include_str!("catalogues/univers.txt");
+
+/// The text of universe `index` in `univers.txt`: from its `U` line to the
+/// line before the next one.
+fn universe_text(index: u32) -> Option<&'static str> {
+    let mut starts = UNIVERSES
+        .match_indices("U ")
+        .map(|(at, _)| at)
+        .filter(|&at| at == 0 || UNIVERSES.as_bytes()[at - 1] == b'\n');
+    let start = starts.nth(index as usize)?;
+    let end = starts.next().unwrap_or(UNIVERSES.len());
+    UNIVERSES.get(start..end)
+}
 
 /// The project of page `page`, as `pages.bin` holds it.
 fn page_project(page: u32) -> Option<&'static [u8]> {
@@ -98,6 +113,36 @@ pub unsafe extern "C" fn ep_picture_from_svg(svg: *const u8, len: usize) -> *mut
         let _ = (svg, len);
         ptr::null_mut()
     }
+}
+
+/// Number of universes of the studio compiled into this core (Color 1.2);
+/// their indices are 0..count, in the order the child is shown them. The
+/// first one is the universe of a studio that was told none.
+#[no_mangle]
+pub extern "C" fn ep_universe_count() -> u32 {
+    UNIVERSES
+        .lines()
+        .filter(|line| line.starts_with("U "))
+        .count() as u32
+}
+
+/// Returns universe `index` as owned, NUL-terminated ASCII text, or NULL for
+/// an unknown index or when memory is short:
+///
+/// ```text
+/// U <key>
+/// M <its description, JSON on one line; beyond ASCII as \uXXXX>
+/// ```
+///
+/// then each of its pictures, described as ep_art_catalog describes one,
+/// from `P <name> <width> <height>` to `X`, in the order of their names. The
+/// description says the name of the universe, its colours and shapes, the
+/// pieces of its decor with the picture each one shows, how they move, and
+/// what a child may ask the name of; the interface reads it, the core does
+/// not. Release with ep_string_free only.
+#[no_mangle]
+pub extern "C" fn ep_universe(index: u32) -> *mut c_char {
+    universe_text(index).map_or(ptr::null_mut(), owned_text)
 }
 
 /// Number of colouring pages of this core; identifiers are 0..count.

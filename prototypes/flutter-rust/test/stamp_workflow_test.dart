@@ -32,7 +32,7 @@ void main() {
       expect(studio.isDirty, isTrue);
       final exported = await studio.svg();
       // The star's own outline, tinted with the current colour.
-      expect(exported, contains('<path d="M 50 10 L 60.58 38.44'));
+      expect(exported, contains('<path d="M 50 10 L 61.46 37.22'));
       expect(exported, contains('fill="#477fb2"'));
       expect(exported, contains('scale(1.5 1.5)'));
       final document = await studio.saved();

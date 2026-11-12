@@ -10,6 +10,13 @@
 // the system are Roboto's here, as in the review pictures; the iPhone's
 // island and the bar at the foot of its screen are left empty.
 //
+// The first picture is « Mon jardin » (Color 1.2): the gestures of
+// support/my_garden.dart, each made through the controls of the studio — a
+// finger on the telephone and the tablet, the mouse on the computer. The
+// colours that the palette does not show are made in « Autres couleurs »;
+// what is too small for the screen is drawn from closer, two fingers moved
+// apart or ⌘ and the wheel.
+//
 //   COLOR_STORE_DIR=/absolute/output flutter test test/store_pictures_test.dart
 //
 // Without that variable the test is skipped and writes nothing. With
@@ -18,19 +25,25 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
-import 'package:edupaint_flutter_study/coloring_pages.dart';
+import 'package:edupaint_flutter_study/country_signs.dart';
 import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/replay_dialog.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
+import 'package:edupaint_flutter_study/studio_painters.dart';
+import 'package:edupaint_flutter_study/text_layout.dart';
 import 'package:edupaint_flutter_study/view_transform.dart';
+import 'package:flutter/cupertino.dart' show CupertinoThumbPainter;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/my_garden.dart';
 import 'support/review_fonts.dart';
 
 class _Device {
@@ -87,38 +100,44 @@ const _devices = [
 const _boundaryKey = ValueKey('store-boundary');
 
 // The colouring page of the third picture, and where the pot is poured on
-// it, in the units of the page, with the colours of the row that the tablet
-// and the computer show at once: the way a child would colour it.
+// it, in the units of the page: in every zone of the page of Color 1.1.1,
+// the point farthest from its lines (core/tools/page_zones.py), with the
+// colours of the row that the tablet and the computer show at once, the way
+// a child would colour it. The eggs and the eye stay white.
 const _page = 'dinosaure';
 const _pours = [
   (Offset(31, 30), 0xa8d8f0), // the sky: Ciel
-  (Offset(721, 563), 0x78a66f), // the dinosaur: Prairie
-  (Offset(376, 194), 0x78a66f), // its head
-  (Offset(983, 588), 0x78a66f), // its tail
-  (Offset(576, 596), 0x78a66f), // its legs
-  (Offset(757, 596), 0x78a66f),
-  (Offset(680, 470), 0x388778), // its spots: Sapin
-  (Offset(786, 485), 0x388778),
-  (Offset(598, 519), 0x388778),
-  (Offset(630, 366), 0xef9439), // the plates of its back: Orange
-  (Offset(717, 363), 0xef9439),
-  (Offset(803, 378), 0xef9439),
-  (Offset(650, 141), 0xeebf4e), // the sun: Soleil
-  (Offset(113, 210), 0x388778), // the palm leaves: Sapin
-  (Offset(269, 194), 0x388778),
-  (Offset(195, 120), 0x388778),
-  (Offset(176, 260), 0x79513e), // the coconuts: Chocolat
-  (Offset(228, 269), 0x79513e),
-  (Offset(1016, 457), 0x79513e), // the volcano: Chocolat
-  (Offset(950, 309), 0xd75e56), // its lava: Coquelicot
-  (Offset(943, 202), 0x9aa3a5), // its smoke: Gris
-  (Offset(988, 153), 0x9aa3a5),
-  (Offset(1049, 103), 0x9aa3a5),
-  (Offset(898, 700), 0xd75e56), // the stones: Coquelicot, Bleu denim
-  (Offset(1065, 695), 0x477fb2),
-  (Offset(163, 522), 0xe69976), // the trunk of the palm: Pêche
-  (Offset(356, 654), 0xef9439), // the nest: Orange
-  (Offset(146, 711), 0xeebf4e), // the sand, last: Soleil
+  (Offset(557, 438), 0x78a66f), // the dinosaur: Prairie
+  (Offset(918, 548), 0x78a66f), // its tail
+  (Offset(571, 616), 0x78a66f), // its four legs
+  (Offset(771, 627), 0x78a66f),
+  (Offset(633, 613), 0x78a66f),
+  (Offset(817, 604), 0x78a66f),
+  (Offset(679, 469), 0x388778), // its spots: Sapin
+  (Offset(787, 485), 0x388778),
+  (Offset(599, 519), 0x388778),
+  (Offset(635, 374), 0xef9439), // the plates of its back: Orange
+  (Offset(717, 362), 0xef9439),
+  (Offset(799, 378), 0xef9439),
+  (Offset(597, 89), 0xef9439), // the rays of the sun
+  (Offset(650, 109), 0xeebf4e), // the sun: Soleil
+  (Offset(109, 262), 0x388778), // the five palm leaves: Sapin
+  (Offset(130, 212), 0x388778),
+  (Offset(187, 181), 0x388778),
+  (Offset(279, 195), 0x388778),
+  (Offset(278, 255), 0x388778),
+  (Offset(176, 263), 0x79513e), // the coconuts: Chocolat
+  (Offset(227, 267), 0x79513e),
+  (Offset(995, 485), 0x79513e), // the volcano: Chocolat
+  (Offset(949, 308), 0xd75e56), // its lava: Coquelicot
+  (Offset(939, 202), 0x9aa3a5), // its smoke: Gris
+  (Offset(984, 153), 0x9aa3a5),
+  (Offset(1051, 102), 0x9aa3a5),
+  (Offset(899, 696), 0xd75e56), // the stones: Coquelicot, Bleu denim
+  (Offset(1064, 695), 0x477fb2),
+  (Offset(155, 642), 0xe69976), // the trunk of the palm: Pêche
+  (Offset(313, 649), 0xef9439), // the nest: Orange
+  (Offset(488, 688), 0xeebf4e), // the sand, last: Soleil
 ];
 
 class _Pictures {
@@ -128,8 +147,26 @@ class _Pictures {
   final String output;
   int _count = 0;
 
+  // What the hand holds, to ask the studio only for what changes: the tool,
+  // the stamp, the colour of the trait and of the inside, where the next
+  // colour goes, the width.
+  String? _tool;
+  String? _stamp;
+  int? _ink;
+  int? _inside;
+  bool _toInside = false;
+  int? _width;
+
+  /// A finger on the glass of the telephone and of the tablet, the pointer
+  /// of the mouse on the computer.
+  PointerDeviceKind get _hand =>
+      device.touch ? PointerDeviceKind.touch : PointerDeviceKind.mouse;
+
   Future<void> start({StudioOptionsStore? options}) async {
     final d = device;
+    _tool = _stamp = null;
+    _ink = _inside = _width = null;
+    _toInside = false;
     tester.view.devicePixelRatio = d.ratio;
     tester.view.physicalSize = d.pixels;
     // The screen, which tells a telephone from a tablet.
@@ -156,6 +193,8 @@ class _Pictures {
           files: MemoryFiles(),
           recoveryStorage: MemoryRecovery(),
           options: options,
+          // The same pot on every machine: in France, it closes small gaps.
+          countrySigns: () async => CountrySigns(codes: const ['FR']),
         ),
       ),
     );
@@ -184,6 +223,8 @@ class _Pictures {
     });
   }
 
+  bool _shown(String key) => find.byKey(Key(key)).evaluate().isNotEmpty;
+
   Future<void> tap(String key) async {
     final control = find.byKey(Key(key));
     // The rectangle and the oval are chosen in « Formes ».
@@ -197,34 +238,178 @@ class _Pictures {
     await tester.pumpAndSettle();
   }
 
-  /// A colour of the palette, in the column of the telephone too.
-  Future<void> colour(int rgb) => tap('color-${rgb.toRadixString(16)}');
+  /// A tool taken, when the hand does not hold it already. Taking a tool
+  /// lets go of the element that was chosen, and the next colour is the
+  /// colour of the trait again.
+  Future<void> hold(String tool) async {
+    if (_tool == tool) return;
+    await tap(tool);
+    _tool = tool;
+    _toInside = false;
+  }
 
-  Offset get _centre =>
-      tester.getCenter(find.byKey(const Key('drawingSurface')));
+  /// A colour: in the palette when it is there, or else found in « Autres
+  /// couleurs » — among the recent ones, among the shades, or made with the
+  /// three slides, each clicked where the colour lies.
+  Future<void> colour(int rgb) async {
+    final hex = rgb.toRadixString(16);
+    if (_shown('color-$hex')) return tap('color-$hex');
+    await tap('morePaintColors');
+    for (final known in ['dialog-recent-color-$hex', 'shade-$hex']) {
+      if (_shown(known)) {
+        await tap(known);
+        return tap('confirmPaintColor');
+      }
+    }
+    final wanted = HSVColor.fromColor(Color(0xff000000 | rgb));
+    await _slide(_axis('paintHue'), wanted.hue / 360);
+    await _slide(_axis('paintIntensity'), wanted.saturation);
+    await _slide(_axis('paintLightness'), wanted.value);
+    await tap('confirmPaintColor');
+  }
 
-  /// Where a point of a sheet of [width] × [height] lies on the screen.
-  Offset at(double x, double y, {double width = 1200, double height = 800}) {
-    final size = tester.getSize(find.byKey(const Key('drawingSurface')));
-    final view = ViewTransform.fit(
-      viewWidth: size.width,
-      viewHeight: size.height,
-      padding: !device.phone && size.height >= 160 ? 28 : 8,
-      documentWidth: width,
-      documentHeight: height,
+  /// The slide of one of the three axes of a colour, under its name.
+  Finder _axis(String key) => find.descendant(
+    of: find.byKey(Key(key)),
+    matching: find.byWidgetPredicate(
+      (widget) =>
+          widget is Semantics &&
+          widget.key is ValueKey<String> &&
+          (widget.key! as ValueKey<String>).value.startsWith('paintAxis-'),
+    ),
+  );
+
+  /// A click on a slide where [share] of its way lies, as its thumb goes:
+  /// 8 pixels of track and the radius of the thumb are left at both ends.
+  Future<void> _slide(Finder slide, double share) async {
+    await tester.ensureVisible(slide);
+    await tester.pumpAndSettle();
+    final box = tester.getRect(slide);
+    const inset = 8.0 + CupertinoThumbPainter.radius;
+    await tester.tapAt(
+      Offset(box.left + inset + (box.width - 2 * inset) * share, box.center.dy),
     );
-    return _centre +
-        Offset((x - width / 2) * view.scale, (y - height / 2) * view.scale);
+    await tester.pumpAndSettle();
+  }
+
+  /// The colour of the trait, of a stamp, of the pot, of the letters.
+  Future<void> ink(int rgb) async {
+    if (_ink == rgb && !_toInside) return;
+    if (_toInside) {
+      await tap('paint-target-stroke');
+      _toInside = false;
+    }
+    if (_ink == rgb) return;
+    await colour(rgb);
+    _ink = rgb;
+  }
+
+  /// The colours of a rectangle or an oval: its outline, then its inside.
+  Future<void> paints(int line, int inside) async {
+    await ink(line);
+    if (_inside == inside) return;
+    await tap('paint-target-fill');
+    _toInside = true;
+    await colour(inside);
+    _inside = inside;
+  }
+
+  /// The width of the trait, from 2 to 48 units, clicked on its slide.
+  Future<void> width(int units) async {
+    if (_width == units) return;
+    await _slide(
+      find.byKey(const Key('brushWidthSemantics')),
+      (units - 2) / 46,
+    );
+    _width = units;
+  }
+
+  /// The view of the sheet, as the studio paints it: where the sheet is
+  /// on the screen, and how large.
+  ViewTransform get _view {
+    final picture = tester.widget<CustomPaint>(
+      find
+          .descendant(
+            of: find.byKey(const Key('sheetPicture')),
+            matching: find.byType(CustomPaint),
+          )
+          .first,
+    );
+    return (picture.painter! as DocumentPainter).viewport.transform;
+  }
+
+  /// Where a point of the sheet lies on the screen, the view as it is.
+  Offset at(double x, double y) {
+    final view = _view;
+    return tester.getTopLeft(find.byKey(const Key('sheetPicture'))) +
+        Offset(view.left + x * view.scale, view.top + y * view.scale);
+  }
+
+  /// The whole sheet in view again.
+  Future<void> wholeSheet() async {
+    if (_view.isFit) return;
+    // On the telephone « Toute la feuille » is in the menu.
+    if (device.phone) await tap('phoneMenu');
+    await tap('fitPage');
+    expect(_view.isFit, isTrue);
+  }
+
+  /// Before a gesture on [box] of the sheet, which must travel [pixels] on
+  /// the screen along its longer side to be a drag and not a click: on a
+  /// small screen a child looks closer to draw something small, with two
+  /// fingers moved apart, or the wheel of the mouse and ⌘; the whole sheet
+  /// comes back for what is large.
+  Future<void> see(Rect box, {double pixels = 0}) async {
+    final wanted = pixels == 0 ? 0.0 : pixels / box.longestSide;
+    var view = _view;
+    final surface = tester.getRect(find.byKey(const Key('sheetPicture')));
+    bool visible() {
+      final onScreen = Rect.fromPoints(
+        at(box.left, box.top),
+        at(box.right, box.bottom),
+      );
+      return surface.deflate(4).contains(onScreen.topLeft) &&
+          surface.deflate(4).contains(onScreen.bottomRight);
+    }
+
+    if (view.scale >= wanted && (view.isFit || visible())) return;
+    await wholeSheet();
+    view = _view;
+    if (view.scale >= wanted) return;
+    final factor = wanted / view.scale * 1.15;
+    final focus = at(box.center.dx, box.center.dy);
+    if (device.touch) {
+      // Two fingers, one on each side, moved apart.
+      const apart = Offset(24, 0);
+      final first = await tester.startGesture(focus - apart, pointer: 31);
+      final second = await tester.startGesture(focus + apart, pointer: 32);
+      await first.moveTo(focus - apart * factor);
+      await second.moveTo(focus + apart * factor);
+      await first.up();
+      await second.up();
+    } else {
+      // The pointer over the place, ⌘ held, the wheel turned.
+      final mouse = TestPointer(33, PointerDeviceKind.mouse)..hover(focus);
+      await tester.sendKeyDownEvent(LogicalKeyboardKey.metaLeft);
+      await tester.sendEventToBinding(
+        mouse.scroll(Offset(0, -math.log(factor) / .002)),
+      );
+      await tester.sendKeyUpEvent(LogicalKeyboardKey.metaLeft);
+    }
+    await tester.pumpAndSettle();
+    expect(_view.scale, greaterThanOrEqualTo(wanted));
+    expect(visible(), isTrue);
   }
 
   Future<void> click(double x, double y) async {
-    await tester.tapAt(at(x, y));
+    await tester.tapAt(at(x, y), kind: _hand);
     await tester.pumpAndSettle();
   }
 
   Future<void> drag(List<Offset> points) async {
     final gesture = await tester.startGesture(
       at(points.first.dx, points.first.dy),
+      kind: _hand,
     );
     for (final point in points.skip(1)) {
       await gesture.moveTo(at(point.dx, point.dy));
@@ -233,60 +418,204 @@ class _Pictures {
     await tester.pumpAndSettle();
   }
 
-  Future<void> stamp(
-    String name,
-    int rgb,
-    double x,
-    double y, {
-    bool large = false,
-  }) async {
-    await tap('chooseStamp');
-    await tap('stamp-$name');
-    if (rgb >= 0) await colour(rgb);
-    await tap(large ? 'size-large' : 'size-medium');
-    await click(x, y);
+  /// The pot at a point of the sheet, then what it pours: on the paper the
+  /// pot reads the drawing as an image, which the engine makes outside the
+  /// clock of the test.
+  Future<void> pour(double x, double y) async {
+    await tester.tapAt(at(x, y), kind: _hand);
+    await tester.pump();
+    final pouring = find.byKey(const Key('pouring'));
+    for (var turn = 0; turn < 600 && pouring.evaluate().isNotEmpty; turn++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pump();
+    }
+    expect(pouring, findsNothing);
+    await tester.pumpAndSettle();
   }
 
-  /// A garden: the sky, the grass, the sun, a rainbow, a house, a tree,
-  /// flowers, a cat, a butterfly, a balloon, a bird, and a title.
+  /// The way of a brush through [points]: a supple curve, as a hand draws
+  /// it, a point every dozen units.
+  static List<Offset> _supple(List<Offset> points) {
+    if (points.length < 3) return points;
+    final all = [points.first, ...points, points.last];
+    final way = [points.first];
+    for (var index = 1; index < all.length - 2; index++) {
+      final [before, from, to, after] = all.sublist(index - 1, index + 3);
+      final leave = from + (to - before) / 6;
+      final arrive = to - (after - from) / 6;
+      final steps = math.max(2, ((to - from).distance / 12).ceil());
+      for (var step = 1; step <= steps; step++) {
+        final t = step / steps;
+        final u = 1 - t;
+        way.add(
+          from * (u * u * u) +
+              leave * (3 * u * u * t) +
+              arrive * (3 * u * t * t) +
+              to * (t * t * t),
+        );
+      }
+    }
+    return way;
+  }
+
+  static Rect _around(List<Offset> points) => points
+      .skip(1)
+      .fold(
+        Rect.fromPoints(points.first, points.first),
+        (box, point) => box.expandToInclude(Rect.fromPoints(point, point)),
+      );
+
+  /// A rectangle or an oval, dragged from one corner of [box] to the other.
+  Future<void> _boxed(
+    String tool,
+    Rect box,
+    int inside,
+    int? line,
+    int outline,
+  ) async {
+    await hold(tool);
+    await paints(line ?? inside, inside);
+    // Without a line, the thinnest outline, in the colour of the inside,
+    // and a box that much smaller.
+    await width(line == null ? 2 : outline);
+    if (line == null) box = box.deflate(1);
+    // Twice what tells a drag from a click.
+    await see(box, pixels: device.touch ? 24 : 12);
+    await drag([box.topLeft, box.center, box.bottomRight]);
+  }
+
+  /// One gesture of « Mon jardin », made with the controls of the studio.
+  Future<void> make(Gesture gesture) async {
+    switch (gesture) {
+      case Pour(:final rgb, :final x, :final y):
+        await hold('tool-fill');
+        await ink(rgb);
+        await wholeSheet();
+        await pour(x, y);
+      case Crest(:final rgb, width: final wide, :final points):
+        await hold('tool-stroke');
+        await ink(rgb);
+        await width(wide);
+        await wholeSheet();
+        await drag(points);
+      case Brush(:final rgb, width: final wide, :final points):
+        await hold('tool-stroke');
+        await ink(rgb);
+        await width(wide);
+        await see(_around(points));
+        await drag(_supple(points));
+      case Dot(:final rgb, width: final wide, :final x, :final y):
+        await hold('tool-stroke');
+        await ink(rgb);
+        await width(wide);
+        await see(Rect.fromCircle(center: Offset(x, y), radius: 1));
+        await click(x, y);
+      case Behind(:final x, :final y):
+        await hold('tool-select');
+        await wholeSheet();
+        await click(x, y);
+        await tap('selectionOrder');
+        await tap('sendSelectionToBack');
+      case Box(
+        :final left,
+        :final top,
+        :final right,
+        :final bottom,
+        :final inside,
+        :final line,
+        width: final wide,
+      ):
+        await _boxed(
+          'tool-rectangle',
+          Rect.fromLTRB(left, top, right, bottom),
+          inside,
+          line,
+          wide,
+        );
+      case Oval(
+        :final x,
+        :final y,
+        :final across,
+        :final up,
+        :final inside,
+        :final line,
+        width: final wide,
+      ):
+        await _boxed(
+          'tool-ellipse',
+          Rect.fromCenter(
+            center: Offset(x, y),
+            width: 2 * across,
+            height: 2 * up,
+          ),
+          inside,
+          line,
+          wide,
+        );
+      case Stamp(:final name, :final rgb, :final x, :final y, :final side):
+        await hold('tool-stamp');
+        if (_stamp != name) {
+          await tap('chooseStamp');
+          await tap('stamp-$name');
+          _stamp = name;
+        }
+        await ink(rgb);
+        // Its box, moved just enough to stay on the sheet.
+        var box = Rect.fromCenter(
+          center: Offset(x, y),
+          width: side,
+          height: side,
+        );
+        box = box.shift(
+          Offset(
+            math.max(0, -box.left) - math.max(0, box.right - 1200),
+            math.max(0, -box.top) - math.max(0, box.bottom - 800),
+          ),
+        );
+        // A drag sizes a stamp from 18 pixels on: a little more than that.
+        await see(box, pixels: 24);
+        await drag([box.topLeft, box.center, box.bottomRight]);
+      case Words(:final x, :final y, :final size, :final rgb):
+        await hold('tool-text');
+        await ink(rgb);
+        expect(size, 96, reason: 'the large letters of a sheet of 800');
+        await tap('size-large');
+        await wholeSheet();
+        // The click is the top left corner of the text; the mock-up gave
+        // the line its letters stand on, in the round letters of Color.
+        final round = textFonts.indexWhere((font) => font.name == 'Ronde');
+        await click(x, y - textFonts[round].baseline * size);
+        await tap('textFont-$round');
+        await tester.enterText(
+          find.byKey(const Key('textField')),
+          inEnglish ? 'My garden' : 'Mon jardin',
+        );
+        await tester.pumpAndSettle();
+        await tap('confirmText');
+    }
+  }
+
+  /// « Mon jardin »: every gesture of test/support/my_garden.dart, then the
+  /// whole sheet in view and the brush in the hand.
   Future<void> garden() async {
-    await tap('tool-rectangle');
-    await tap('paint-target-stroke');
-    await colour(0xa8d8f0);
-    await tap('paint-target-fill');
-    await colour(0xa8d8f0);
-    await drag(const [Offset(14, 14), Offset(600, 300), Offset(1186, 540)]);
-    await tap('paint-target-stroke');
-    await colour(0x78a66f);
-    await tap('paint-target-fill');
-    await colour(0x78a66f);
-    await drag(const [Offset(14, 540), Offset(600, 680), Offset(1186, 786)]);
-    await tap('tool-stamp');
-    await stamp('soleil', 0xeebf4e, 1030, 140, large: true);
-    await stamp('arcenciel', -1, 560, 170, large: true);
-    await stamp('maison', 0xd75e56, 300, 450, large: true);
-    await stamp('arbre', 0x388778, 760, 440, large: true);
-    await stamp('chat', 0x79513e, 960, 600);
-    await stamp('fleur', 0xc96d93, 130, 690);
-    await stamp('fleur', 0xef9439, 520, 700);
-    await stamp('fleur', 0x9385bc, 690, 690);
-    await stamp('papillon', 0xf4b7cf, 1090, 470);
-    await stamp('ballon', 0xd75e56, 140, 300);
-    await stamp('oiseau', 0x477fb2, 330, 170);
-    await tap('tool-text');
-    await colour(0xd75e56);
-    await click(40, 40);
-    await tester.enterText(
-      find.byKey(const Key('textField')),
-      inEnglish ? 'My garden' : 'Mon jardin',
-    );
-    await tester.pumpAndSettle();
-    await tap('confirmText');
-    await tap('tool-stroke');
+    for (final gesture in myGarden) {
+      await make(gesture);
+    }
+    await wholeSheet();
+    await hold('tool-stroke');
+    // Every gesture left its element, but the first, which coloured the
+    // paper, and those that sent an element behind. The telephone keeps
+    // this count in its menu.
+    final made = myGarden.where((gesture) => gesture is! Behind).length - 1;
+    if (!device.phone) {
+      expect(find.textContaining(RegExp('^$made ')), findsOneWidget);
+    }
   }
 
   /// Opens « Revoir ton dessin », lets the film run once to learn its
-  /// length, then shows it again up to seven tenths of it.
+  /// length, then shows it again up to eight tenths of it.
   Future<void> film() async {
     if (device.phone) await tap('phoneMenu');
     // Not settled: settling would play the whole film.
@@ -298,37 +627,29 @@ class _Pictures {
     const step = Duration(milliseconds: 50);
     final finished = find.text(ReplayDialog.finishedStatus);
     var steps = 0;
-    while (finished.evaluate().isEmpty && steps < 400) {
+    while (finished.evaluate().isEmpty && steps < 600) {
       await tester.pump(step);
       steps++;
     }
     expect(finished, findsOneWidget);
-    // « Revoir », and the film stopped when the butterfly comes in.
+    // « Revoir », and the film stopped at eight tenths: the cat is there,
+    // the butterflies have just come in; the grass and the title are to come.
     await tester.tap(find.byKey(const Key('replayAgain')));
     await tester.pump();
-    for (var turn = 0; turn < steps * 0.7; turn++) {
+    for (var turn = 0; turn < steps * 0.8; turn++) {
       await tester.pump(step);
     }
   }
 
   /// A colouring page, coloured.
   Future<void> colouring() async {
-    final page = ColoringPages.all.singleWhere((page) => page.key == _page);
     if (device.phone) await tap('phoneMenu');
     await tap('newProject');
     await tap('page-$_page');
     await tap('tool-fill');
     for (final (point, rgb) in _pours) {
       await colour(rgb);
-      await tester.tapAt(
-        at(
-          point.dx,
-          point.dy,
-          width: page.width.toDouble(),
-          height: page.height.toDouble(),
-        ),
-      );
-      await tester.pumpAndSettle();
+      await click(point.dx, point.dy);
     }
   }
 
@@ -364,6 +685,8 @@ class _Pictures {
     await colour(0xeebf4e);
     await click(150, 150);
     await click(1060, 200);
+    await tap('chooseStamp');
+    await tap('stamp-coeur');
     await colour(0xf4b7cf);
     await click(600, 560);
   }

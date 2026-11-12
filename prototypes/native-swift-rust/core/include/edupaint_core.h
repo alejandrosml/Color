@@ -812,6 +812,21 @@ uint32_t ep_art_count(void);
  * after the other, in the order of their keys. NULL on allocation failure.
  * Release ONLY with ep_string_free. */
 char *ep_art_catalog(void);
+/* The universes of the studio compiled into the core (Color 1.2): what
+ * dresses the workshop around the sheet. Their indices are 0..count, in the
+ * order the child is shown them; the first one is the universe of a studio
+ * that was told none. No document is used: any thread may call them. */
+uint32_t ep_universe_count(void);
+/* Universe `index` as ASCII text:
+ *   U <key>
+ *   M <its description, JSON on one line; beyond ASCII as \uXXXX>
+ * then each of its pictures, described like one picture of ep_art_catalog,
+ * from `P <name> <width> <height>` to `X`, in the order of their names. The
+ * description gives its name, its colours and shapes, the pieces of its
+ * decor with the picture each one shows, how they move and what a child may
+ * ask the name of (src/universes.rs); the interface reads it. NULL for an
+ * unknown index or on allocation failure. Release ONLY with ep_string_free. */
+char *ep_universe(uint32_t index);
 /* The description of one SVG text of len bytes, with the key `-`. NULL for a
  * NULL pointer, more than 1 MiB, text that is not UTF-8, an SVG that cannot
  * be read or that uses what is not drawn, or exhausted memory; always NULL in

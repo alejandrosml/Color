@@ -288,7 +288,7 @@ void main() {
           )
           .getSemanticsData();
       // Without an album, every action but the help has room on the line.
-      expect(more.label, 'Aide, options et informations');
+      expect(more.label, 'Aide, univers, options et informations');
       expect(
         tester
             .widget<PopupMenuButton<String>>(

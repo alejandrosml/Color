@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le pointeur de « Choisir » (Color 1.2) : il garde sa flèche, dont le bout est en haut à gauche, au
+     point (3, 3), comme la pointe des autres outils. Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Le pointeur de Choisir</title>
+  <path d="M3 3 L3 45 L14.4 35.4 L22.4 54 L31.6 50 L23.6 32 L39 32 Z" fill="#ffffff" stroke="#ffffff" stroke-width="6.4" stroke-linejoin="round"/>
+  <path d="M3 3 L3 45 L14.4 35.4 L22.4 54 L31.6 50 L23.6 32 L39 32 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

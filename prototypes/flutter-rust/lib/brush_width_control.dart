@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 import 'language.dart';
+import 'studio_colors.dart';
 
 /// A bounded desktop control without Material Slider's value-indicator overlay.
 class BrushWidthControl extends StatefulWidget {
@@ -134,7 +135,7 @@ class _BrushWidthControlState extends State<BrushWidthControl> {
                     decoration: BoxDecoration(
                       border: Border.all(
                         color: _enabled && _focused
-                            ? const Color(0xff176c5f)
+                            ? studioGreen
                             : const Color(0x00000000),
                         width: 2,
                       ),
@@ -147,7 +148,7 @@ class _BrushWidthControlState extends State<BrushWidthControl> {
                         min: 2,
                         max: 48,
                         divisions: 46,
-                        activeColor: const Color(0xff176c5f),
+                        activeColor: studioGreen,
                         onChanged: _enabled ? _change : null,
                         onChangeEnd: _enabled
                             ? (_) => widget.onChangeEnd?.call()

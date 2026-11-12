@@ -89,4 +89,6 @@ _ep_sync_path
 _ep_third_party_notices
 _ep_undo
 _ep_undo_count
+_ep_universe
+_ep_universe_count
 _ep_write_project

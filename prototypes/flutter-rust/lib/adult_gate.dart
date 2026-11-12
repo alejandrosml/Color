@@ -323,7 +323,7 @@ class _AdultGateDialogState extends State<AdultGateDialog> {
                                   ),
                             key: const Key('adultGateWrong'),
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
                               color: studioWarning,
                             ),

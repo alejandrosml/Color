@@ -102,7 +102,6 @@ int paletteRowCount(double width, double gap) => width.isFinite && width > 0
     : 0;
 
 const _paletteInk = Color(0xff263f43);
-const _paletteGreen = Color(0xff176c5f);
 
 Color _color(int rgb) {
   RangeError.checkValueInInterval(rgb, 0, 0xffffff, 'rgb');
@@ -648,7 +647,7 @@ class _ColorSwatch extends StatelessWidget {
           disabledBackgroundColor: color.withValues(alpha: .4),
           foregroundColor: paletteTickColor(rgb),
           side: BorderSide(
-            color: selected ? _paletteGreen : studioSwatchRing,
+            color: selected ? studioGreen : studioSwatchRing,
             width: selected ? 3 : 1,
           ),
           padding: EdgeInsets.zero,
@@ -1051,7 +1050,7 @@ class _ColorAxisSliderState extends State<_ColorAxisSlider> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: _focused
-                                ? _paletteGreen
+                                ? studioGreen
                                 : Colors.transparent,
                             width: 2,
                           ),
@@ -1063,7 +1062,7 @@ class _ColorAxisSliderState extends State<_ColorAxisSlider> {
                             min: 0,
                             max: 1,
                             divisions: 100,
-                            activeColor: _paletteGreen,
+                            activeColor: studioGreen,
                             onChanged: _change,
                           ),
                         ),

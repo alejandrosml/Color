@@ -1,0 +1,349 @@
+{
+ "key": "bureau",
+ "name": "Classique",
+ "about": "Le bureau près de la fenêtre, à l’heure qu’il est.",
+ "look": {
+  "colours": {},
+  "shapes": {
+   "panelShadow": "soft"
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#f3eefa",
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "ciel",
+    "anchor": "left",
+    "at": [
+     37,
+     41,
+     166,
+     188
+    ],
+    "role": "sky"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "milieu",
+    "anchor": "middle"
+   },
+   {
+    "picture": "nuage",
+    "anchor": "left",
+    "at": [
+     49,
+     69,
+     58,
+     58
+    ],
+    "clip": [
+     37,
+     41,
+     166,
+     188
+    ],
+    "moments": [
+     "matin",
+     "jour"
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 34
+    }
+   },
+   {
+    "picture": "fenetre",
+    "anchor": "left"
+   },
+   {
+    "picture": "rideaux",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 9,
+     "origin": [
+      119.9,
+      22
+     ]
+    }
+   },
+   {
+    "picture": "plante",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 7,
+     "delay": -2,
+     "origin": [
+      214.3,
+      313.4
+     ]
+    }
+   },
+   {
+    "role": "clock",
+    "anchor": "right",
+    "centre": [
+     848,
+     66
+    ],
+    "hour": [
+     11,
+     3.6
+    ],
+    "minute": [
+     16.5,
+     2.6
+    ],
+    "ink": "#293d4b",
+    "hub": "#d75e56"
+   },
+   {
+    "picture": "chat",
+    "anchor": "right",
+    "at": [
+     924,
+     284,
+     130,
+     66
+    ],
+    "move": {
+     "name": "souffle",
+     "seconds": 4.6,
+     "origin": [
+      989,
+      350
+     ]
+    }
+   }
+  ],
+  "light": {
+   "veils": {
+    "matin": {
+     "gradient": [
+      100,
+      "#ffc48c42",
+      "#ffd6aa0f"
+     ]
+    },
+    "soir": {
+     "multiply": "#e2804638"
+    },
+    "nuit": {
+     "multiply": "#1a205c8f"
+    }
+   },
+   "lamp": {
+    "anchor": "right",
+    "pivot": [
+     846.0,
+     234.0
+    ],
+    "angle": 52,
+    "half": 24,
+    "rim": 34,
+    "rimHalf": 27,
+    "bulb": [
+     870.63,
+     265.52
+    ],
+    "bulbRadius": 10.5,
+    "moments": [
+     "soir",
+     "nuit"
+    ]
+   }
+  },
+  "names": [
+   {
+    "key": "fenetre",
+    "anchor": "left",
+    "at": [
+     62,
+     34,
+     116,
+     202
+    ],
+    "name": "La fenêtre",
+    "text": "Elle laisse entrer la lumière du jour. Regarde bien : le ciel change avec l’heure !"
+   },
+   {
+    "key": "rideau",
+    "anchor": "left",
+    "at": [
+     2,
+     24,
+     42,
+     274
+    ],
+    "name": "Le rideau",
+    "text": "On le tire le soir pour être tranquille, et on l’ouvre le matin pour laisser entrer le soleil."
+   },
+   {
+    "key": "livres",
+    "anchor": "left",
+    "at": [
+     8,
+     304,
+     90,
+     42
+    ],
+    "name": "Les livres",
+    "text": "Pleins d’histoires et d’images. On peut les lire et les relire autant qu’on veut."
+   },
+   {
+    "key": "pinceaux",
+    "anchor": "left",
+    "at": [
+     108,
+     256,
+     54,
+     90
+    ],
+    "name": "Le pot à pinceaux",
+    "text": "Les pinceaux s’y reposent la tête en l’air, pour ne pas abîmer leurs poils."
+   },
+   {
+    "key": "plante",
+    "anchor": "left",
+    "at": [
+     172,
+     244,
+     86,
+     102
+    ],
+    "name": "La plante verte",
+    "text": "Elle a besoin d’eau et de lumière pour grandir. Ses feuilles se tournent vers la fenêtre."
+   },
+   {
+    "key": "horloge",
+    "anchor": "right",
+    "at": [
+     812,
+     30,
+     72,
+     72
+    ],
+    "name": "L’horloge",
+    "text": "Elle donne l’heure : la petite aiguille montre les heures, la grande montre les minutes."
+   },
+   {
+    "key": "dessin",
+    "anchor": "right",
+    "at": [
+     898,
+     16,
+     156,
+     82
+    ],
+    "name": "Les dessins au mur",
+    "text": "Un arc-en-ciel et une marguerite, accrochés comme dans une exposition. Et si le prochain était le tien ?"
+   },
+   {
+    "key": "livres2",
+    "anchor": "right",
+    "at": [
+     822,
+     122,
+     72,
+     58
+    ],
+    "name": "Les livres rangés",
+    "text": "Debout sur l’étagère, bien serrés, pour retrouver vite son histoire préférée."
+   },
+   {
+    "key": "ours",
+    "anchor": "right",
+    "at": [
+     900,
+     118,
+     44,
+     62
+    ],
+    "name": "L’ours en peluche",
+    "text": "Un vieil ami tout doux, qui regarde chaque dessin depuis son étagère."
+   },
+   {
+    "key": "globe",
+    "anchor": "right",
+    "at": [
+     954,
+     112,
+     48,
+     68
+    ],
+    "name": "Le globe terrestre",
+    "text": "Une petite Terre penchée sur son axe, comme la vraie. On la fait tourner pour voir tous les pays et tous les océans."
+   },
+   {
+    "key": "cubes",
+    "anchor": "right",
+    "at": [
+     1006,
+     138,
+     46,
+     42
+    ],
+    "name": "Les cubes",
+    "text": "Des cubes en bois pour construire des tours… et recommencer quand elles tombent."
+   },
+   {
+    "key": "lampe",
+    "anchor": "right",
+    "at": [
+     798,
+     216,
+     92,
+     132
+    ],
+    "name": "La lampe de bureau",
+    "text": "Quand le jour baisse, son ampoule s’allume et éclaire le bureau pour continuer à dessiner."
+   },
+   {
+    "key": "chat",
+    "anchor": "right",
+    "at": [
+     926,
+     290,
+     126,
+     62
+    ],
+    "name": "Le chat",
+    "text": "Roulé en boule sur son coussin, il dort : un chat peut dormir plus de douze heures par jour."
+   },
+   {
+    "key": "crayons",
+    "anchor": "middle",
+    "at": [
+     286,
+     382,
+     250,
+     22
+    ],
+    "name": "Les crayons de couleur",
+    "text": "Une mine de couleur dans un habit de bois à six côtés, pour ne pas rouler. On les taille quand la pointe s’arrondit."
+   }
+  ]
+ }
+}

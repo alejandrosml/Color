@@ -17,11 +17,11 @@ fn text(pointer: *mut c_char) -> String {
 
 #[test]
 fn every_core_serves_the_pictures_and_the_pages() {
-    assert_eq!(ep_art_count(), 25);
+    assert_eq!(ep_art_count(), 30);
     let art = text(ep_art_catalog());
     assert_eq!(
         art.lines().filter(|line| line.starts_with("P ")).count(),
-        25
+        30
     );
     assert!(art.is_ascii() && art.ends_with("X\n"));
     let count = ep_page_count();
@@ -49,6 +49,52 @@ fn every_core_serves_the_pictures_and_the_pages() {
     assert!(ep_document_from_page(u32::MAX).is_null());
 }
 
+#[test]
+fn every_core_serves_the_universes() {
+    let count = ep_universe_count();
+    assert_eq!(count, 2);
+    let mut keys = Vec::new();
+    for index in 0..count {
+        let universe = text(ep_universe(index));
+        assert!(universe.is_ascii() && universe.ends_with("X\n"), "{index}");
+        let mut lines = universe.lines();
+        let key = lines.next().unwrap().strip_prefix("U ").unwrap().to_owned();
+        let manifest = lines.next().unwrap().strip_prefix("M ").unwrap();
+        // The description names its own key, and is one object of JSON.
+        assert!(
+            manifest.starts_with('{') && manifest.ends_with('}'),
+            "{key}"
+        );
+        assert!(manifest.contains(&format!("\"key\":\"{key}\"")), "{key}");
+        // One universe only: no other begins in its text.
+        assert_eq!(
+            universe
+                .lines()
+                .filter(|line| line.starts_with("U "))
+                .count(),
+            1
+        );
+        assert_eq!(
+            universe
+                .lines()
+                .filter(|line| line.starts_with("P "))
+                .count(),
+            universe.lines().filter(|line| *line == "X").count(),
+            "{key}"
+        );
+        // Every decor has a ground.
+        assert!(
+            universe.lines().any(|line| line.starts_with("P fond ")),
+            "{key}"
+        );
+        keys.push(key);
+    }
+    // The first one is the universe of a studio that was told none.
+    assert_eq!(keys, ["bureau", "papier"]);
+    assert!(ep_universe(count).is_null());
+    assert!(ep_universe(u32::MAX).is_null());
+}
+
 #[cfg(not(feature = "svg"))]
 #[test]
 fn a_core_without_svg_reads_no_svg() {
@@ -73,7 +119,9 @@ fn the_catalogues_are_those_that_the_files_make() {
     let interface = art::interface_catalogue().expect("every picture reads");
     let pages = pages::page_catalogue().expect("every page reads");
     let projects = packed(&pages::page_projects().expect("every page makes its document"));
+    let universes = universes::universe_catalogue().expect("every universe reads");
     if std::env::var_os("COLOR_REGENERATE_CATALOGUES").is_some() {
+        std::fs::write("src/catalogues/univers.txt", &universes).unwrap();
         std::fs::write("src/catalogues/interface.txt", &interface).unwrap();
         std::fs::write("src/catalogues/pages.txt", &pages).unwrap();
         std::fs::write("src/catalogues/pages.bin", &projects).unwrap();
@@ -92,6 +140,54 @@ fn the_catalogues_are_those_that_the_files_make() {
         PAGE_PROJECTS == projects.as_slice(),
         "pages.bin is not what the files make: {again}"
     );
+    assert!(
+        UNIVERSES == universes,
+        "univers.txt is not what the files make: {again}"
+    );
+}
+
+#[cfg(feature = "svg")]
+#[test]
+fn a_description_is_brought_to_one_line_of_ascii() {
+    let line =
+        universes::one_line("{\n \"nom\": \"L\u{2019}\u{e9}t\u{e9} \\\" 1\",\n \"a\": [1, 2]\n}\n");
+    assert_eq!(
+        line.as_deref(),
+        Some("{\"nom\":\"L\\u2019\\u00e9t\\u00e9 \\\" 1\",\"a\":[1,2]}")
+    );
+    // Beyond the first plane: the two halves.
+    assert_eq!(
+        universes::one_line("\"\u{1f3a8}\"").as_deref(),
+        Some("\"\\ud83c\\udfa8\"")
+    );
+    assert_eq!(universes::one_line("\"open"), None);
+    assert_eq!(universes::one_line("\"a\nb\""), None);
+    assert_eq!(universes::one_line("  \n"), None);
+    // Every universe of this core: its key is its folder, and each picture
+    // that its description names is one of its files.
+    for (key, manifest, pictures) in universes::UNIVERSES {
+        let line = universes::one_line(manifest).expect(key);
+        assert!(line.is_ascii() && !line.contains('\n'), "{key}");
+        assert!(line.contains(&format!("\"key\":\"{key}\"")), "{key}");
+        let mut sorted: Vec<&str> = pictures.iter().map(|(name, _)| *name).collect();
+        sorted.sort_unstable();
+        assert_eq!(
+            sorted,
+            pictures.iter().map(|(name, _)| *name).collect::<Vec<_>>(),
+            "{key}: the pictures in the order of their names"
+        );
+        let mut rest = line.as_str();
+        while let Some(at) = rest.find("\"picture\":\"") {
+            rest = &rest[at + 11..];
+            let name = &rest[..rest.find('"').unwrap()];
+            assert!(
+                pictures
+                    .iter()
+                    .any(|(file, _)| *file == name || file.starts_with(&format!("{name}-"))),
+                "{key}: no picture {name}"
+            );
+        }
+    }
 }
 
 /// The project that a document writes.

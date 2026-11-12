@@ -29,7 +29,8 @@ enum EduArt {
   film,
   magic,
   shapes,
-  magnet;
+  magnet,
+  universes;
 
   /// The SVG file of the core that draws it, `art/interface/<key>.svg` (Color
   /// 1.1: every picture of the interface is a file; see vector_art.dart).
@@ -58,6 +59,7 @@ enum EduArt {
     magic => 'magie',
     shapes => 'formes',
     magnet => 'aimant',
+    universes => 'univers',
   };
 }
 
@@ -197,6 +199,11 @@ class _EduArtPainter extends CustomPainter {
             ..close(),
           coral,
         );
+      case 'univers':
+        // Three rounds of colour.
+        _oval(canvas, const Rect.fromLTWH(8, 10, 28, 28), sunshine);
+        _oval(canvas, const Rect.fromLTWH(30, 13, 26, 26), coral);
+        _oval(canvas, const Rect.fromLTWH(18, 29, 28, 28), mint);
       default:
         // A wheel: a disc with its hub.
         _oval(canvas, const Rect.fromLTWH(10, 10, 44, 44), purple);
@@ -269,6 +276,8 @@ class _EduArtPainter extends CustomPainter {
         _picture(canvas, 'formes');
       case EduArt.magnet:
         _picture(canvas, 'aimant');
+      case EduArt.universes:
+        _picture(canvas, 'univers');
       case EduArt.select:
         _shape(
           canvas,
@@ -409,38 +418,52 @@ class _EduArtPainter extends CustomPainter {
     _shape(canvas, sheet(7), coral);
   }
 
-  // A tilted pot of paint with its handle, and the drop that falls from it.
+  // A pot of paint seen from above, tilted, which pours towards its tip, at
+  // the top left: where the paint will go (Color 1.2).
   void _bucket(Canvas canvas) {
     canvas.save();
-    canvas.translate(27, 35);
-    canvas.rotate(-math.pi / 7);
+    canvas.translate(41, 43);
+    canvas.rotate(-50 * math.pi / 180);
+    canvas.scale(.84);
     canvas.drawArc(
       const Rect.fromLTRB(-16, -31, 16, 3),
       math.pi,
       math.pi,
       false,
-      _stroke(ink, 2.5),
+      _stroke(ink, 2.4),
     );
-    _shape(
-      canvas,
-      Path()
-        ..moveTo(-18, -13)
-        ..lineTo(18, -13)
-        ..lineTo(13, 20)
-        ..lineTo(-13, 20)
-        ..close(),
-      teal,
+    final pot = Path()
+      ..moveTo(-18, -13)
+      ..lineTo(18, -13)
+      ..lineTo(13, 20)
+      ..lineTo(-13, 20)
+      ..close();
+    canvas.drawPath(pot, _fill(teal));
+    canvas.drawPath(pot, _stroke(ink, 2.4));
+    // A light on its side.
+    canvas.drawLine(
+      const Offset(-12, -4),
+      const Offset(-10, 14),
+      _stroke(const Color(0xff8fd6c8), 3),
     );
-    _oval(canvas, const Rect.fromLTRB(-18, -18, 18, -8), sunshine);
+    const mouth = Rect.fromLTRB(-18, -18.4, 18, -7.6);
+    canvas.drawOval(mouth, _fill(coral));
+    canvas.drawOval(mouth, _stroke(ink, 2.4));
     canvas.restore();
-    _shape(
-      canvas,
+    // The paint, from the mouth of the pot to the tip, and its light.
+    final paint = Path()
+      ..moveTo(3, 3)
+      ..cubicTo(12, 4.4, 24, 12, 33.6, 23)
+      ..lineTo(24.4, 33)
+      ..cubicTo(14, 24, 5.4, 13, 3, 3)
+      ..close();
+    canvas.drawPath(paint, _fill(coral));
+    canvas.drawPath(paint, _stroke(ink, 2.4));
+    canvas.drawPath(
       Path()
-        ..moveTo(52, 28)
-        ..cubicTo(61, 41, 59, 53, 52, 53)
-        ..cubicTo(45, 53, 43, 41, 52, 28)
-        ..close(),
-      coral,
+        ..moveTo(8.6, 8)
+        ..cubicTo(13, 10, 18, 14, 22, 18.4),
+      _stroke(const Color(0xbfffffff), 2),
     );
   }
 

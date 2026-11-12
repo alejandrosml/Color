@@ -60,6 +60,7 @@ void main() {
       EduArt.magic,
       EduArt.shapes,
       EduArt.magnet,
+      EduArt.universes,
     };
     for (final art in EduArt.values) {
       expect(catalogue!.keys, contains(art.svgKey), reason: art.name);

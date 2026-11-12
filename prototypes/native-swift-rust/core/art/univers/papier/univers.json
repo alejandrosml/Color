@@ -1,0 +1,188 @@
+{
+ "key": "papier",
+ "name": "Papier et crayons",
+ "about": "Du papier, du ruban et des gommettes.",
+ "look": {
+  "colours": {
+   "ink": "#3a2c22",
+   "accent": "#8a2a24",
+   "background": "#d9bd92",
+   "line": "#a98c5c",
+   "surface": "#fffaf0",
+   "selected": "#fbe1dc",
+   "sheetBackdrop": "#d2b282",
+   "banner": "#f7c9d9",
+   "ideaCard": "#ffe58a",
+   "previewBox": "#f3ead6",
+   "title": "#c94f47",
+   "helpText": "#5a2a3c",
+   "caption": "#5f4c3a",
+   "inspectorCaption": "#5f4c3a",
+   "inspectorText": "#5f4c3a",
+   "documentCaption": "#3a2c22",
+   "statusText": "#3a2c22",
+   "sheetTitle": "#3a2c22",
+   "sheetCaption": "#3a2c22",
+   "ideaTitle": "#4d400c",
+   "ideaText": "#4d400c",
+   "quietMark": "#8a7455",
+   "swatchRing": "#7a6548"
+  },
+  "shapes": {
+   "buttonRadius": 5,
+   "buttonDashed": true,
+   "buttonBorder": 2,
+   "panelRadius": 6,
+   "panelBorder": 0,
+   "panelShadow": "paper",
+   "stageRadius": 6,
+   "stageBorder": 2,
+   "tool": "sticker"
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#d2b282",
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "etoile",
+    "anchor": "left",
+    "move": {
+     "name": "craie",
+     "seconds": 6
+    }
+   },
+   {
+    "picture": "crayon",
+    "anchor": "left",
+    "move": {
+     "name": "bascule",
+     "seconds": 8,
+     "origin": [
+      191,
+      284.9
+     ]
+    }
+   }
+  ],
+  "names": [
+   {
+    "key": "cire",
+    "anchor": "left",
+    "at": [
+     14,
+     334,
+     150,
+     62
+    ],
+    "name": "Les crayons de cire",
+    "text": "Faits de cire colorée, ils glissent sur le papier et donnent des couleurs bien vives."
+   },
+   {
+    "key": "crayon",
+    "anchor": "left",
+    "at": [
+     100,
+     224,
+     162,
+     104
+    ],
+    "name": "Le crayon à papier",
+    "text": "Sa mine grise est en graphite. Au bout, une petite gomme pour effacer."
+   },
+   {
+    "key": "taille",
+    "anchor": "left",
+    "at": [
+     192,
+     366,
+     46,
+     32
+    ],
+    "name": "Le taille-crayon",
+    "text": "Sa petite lame taille le bois et refait une pointe toute neuve."
+   },
+   {
+    "key": "gommette",
+    "anchor": "left",
+    "at": [
+     26,
+     286,
+     28,
+     28
+    ],
+    "name": "La gommette",
+    "text": "Un petit autocollant de couleur, à coller où l’on veut."
+   },
+   {
+    "key": "craie",
+    "anchor": "left",
+    "at": [
+     60,
+     34,
+     116,
+     116
+    ],
+    "name": "Le dessin à la craie",
+    "text": "La craie laisse un trait blanc et doux, qui s’efface d’un coup de chiffon."
+   },
+   {
+    "key": "gomme",
+    "anchor": "right",
+    "at": [
+     880,
+     312,
+     92,
+     56
+    ],
+    "name": "La gomme",
+    "text": "Elle efface le crayon : on frotte doucement et le trait disparaît."
+   },
+   {
+    "key": "trombone",
+    "anchor": "right",
+    "at": [
+     996,
+     128,
+     44,
+     100
+    ],
+    "name": "Le trombone",
+    "text": "Un fil de métal plié qui tient plusieurs feuilles ensemble."
+   },
+   {
+    "key": "regle",
+    "anchor": "right",
+    "at": [
+     806,
+     354,
+     120,
+     44
+    ],
+    "name": "La règle",
+    "text": "Elle sert à tracer des traits bien droits et à mesurer en centimètres."
+   }
+  ]
+ }
+}

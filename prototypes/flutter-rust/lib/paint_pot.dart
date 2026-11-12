@@ -26,12 +26,25 @@ const maxMaskPixels = 2048 * 1536;
 /// is drawn, 0 where the paper shows; [scaleX] and [scaleY] pixels per
 /// unit of the sheet.
 class InkMask {
-  const InkMask(this.bytes, this.width, this.height, this.scaleX, this.scaleY);
+  const InkMask(
+    this.bytes,
+    this.width,
+    this.height,
+    this.scaleX,
+    this.scaleY, {
+    this.image,
+  });
   final Uint8List bytes;
   final int width;
   final int height;
   final double scaleX;
   final double scaleY;
+
+  /// The picture the mask was read from, when it was asked to be kept: the
+  /// drawing with nothing under it. What shows the paper before the pot
+  /// pours on it paints through it (Color 1.2). Whoever keeps the mask
+  /// disposes of it.
+  final ui.Image? image;
 
   /// The pixel under a point of the sheet, inside the mask.
   (int, int) pixelAt(DocumentPoint point) => (
@@ -55,11 +68,13 @@ class InkMask {
 
 /// Paints [elements] into the mask of a sheet of the given size. Where an
 /// element covers a pixel by a quarter or more, the pixel is ink: a
-/// see-through marker holds the paint as well as a pencil does.
+/// see-through marker holds the paint as well as a pencil does. With
+/// [keepImage] the mask comes with the picture it was read from.
 Future<InkMask> renderInkMask(
   Iterable<RenderedElement> elements, {
   required int sheetWidth,
   required int sheetHeight,
+  bool keepImage = false,
 }) async {
   final (width, height) = maskSizeFor(sheetWidth, sheetHeight);
   final scaleX = width / sheetWidth;
@@ -91,7 +106,9 @@ Future<InkMask> renderInkMask(
       final alpha = rgba[a];
       mask[i] = alpha >= 128 ? 255 : alpha * 2;
     }
-    return InkMask(mask, width, height, scaleX, scaleY);
+    final kept = keepImage ? image : null;
+    if (keepImage) image = null;
+    return InkMask(mask, width, height, scaleX, scaleY, image: kept);
   } finally {
     image?.dispose();
     picture?.dispose();

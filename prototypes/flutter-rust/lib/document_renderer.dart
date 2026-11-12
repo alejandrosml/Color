@@ -415,6 +415,21 @@ final class RenderedElement {
     if (transform != null) canvas.restore();
   }
 
+  /// Paints the inside of a rectangle, an oval or a contour with [paint],
+  /// whether it has one or not, where the sheet shows it: what the paint pot
+  /// would colour (Color 1.2). Nothing for any other element.
+  void paintInside(Canvas canvas, Paint paint) {
+    final path = _path;
+    if (path == null || !data.kind.canFill) return;
+    final transform = _transform;
+    if (transform != null) {
+      canvas.save();
+      canvas.transform(transform);
+    }
+    canvas.drawPath(path, paint);
+    if (transform != null) canvas.restore();
+  }
+
   void _paintUntransformed(Canvas canvas) {
     final marks = _markGroups;
     if (marks != null) {

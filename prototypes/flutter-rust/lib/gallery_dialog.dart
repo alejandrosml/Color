@@ -202,7 +202,7 @@ class _GalleryDialogState extends State<GalleryDialog> {
               padding: const EdgeInsets.all(8),
               backgroundColor: Colors.white,
               foregroundColor: studioInk,
-              side: const BorderSide(color: studioSwatchRing),
+              side: BorderSide(color: studioSwatchRing),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),

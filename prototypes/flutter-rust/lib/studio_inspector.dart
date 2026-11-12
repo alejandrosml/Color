@@ -7,6 +7,7 @@ import 'rust_document.dart' show NewShape;
 import 'stamp_catalog.dart';
 import 'stamp_dialog.dart';
 import 'studio_colors.dart';
+import 'studio_shapes.dart';
 import 'studio_painters.dart';
 import 'studio_tool.dart';
 import 'text_layout.dart';
@@ -133,17 +134,13 @@ class StudioInspector extends StatelessWidget {
         const SizedBox(height: 67),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: studioSurface,
-            borderRadius: BorderRadius.circular(19),
-            border: Border.all(color: studioLine),
-          ),
+          decoration: studioPanel(radius: 19),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 tool.label.toUpperCase(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   letterSpacing: 1.5,
                   color: studioInspectorCaption,
@@ -169,7 +166,7 @@ class StudioInspector extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 help,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   height: 1.6,
                   color: studioInspectorText,
@@ -181,9 +178,10 @@ class StudioInspector extends StatelessWidget {
         const SizedBox(height: 16),
         Container(
           padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
+          decoration: studioPanel(
             color: studioIdeaCard,
-            borderRadius: BorderRadius.circular(19),
+            radius: 19,
+            line: false,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

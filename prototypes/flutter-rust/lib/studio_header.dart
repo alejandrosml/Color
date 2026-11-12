@@ -53,6 +53,8 @@ class StudioHeader extends StatelessWidget {
     required this.onHelp,
     required this.onMenuVisibilityChanged,
     this.onOptions,
+    this.onUniverses,
+    this.showUniverses = false,
     this.showOpen = true,
     this.showImportImage = true,
     this.showExport = true,
@@ -82,6 +84,12 @@ class StudioHeader extends StatelessWidget {
 
   /// « Options », for the adult: the toothed wheel beside the name.
   final VoidCallback? onOptions;
+
+  /// « Univers », for the child (Color 1.2): the workshop dresses
+  /// otherwise. Shown only when [showUniverses]: there is more than one to
+  /// choose from, and no adult fixed one.
+  final VoidCallback? onUniverses;
+  final bool showUniverses;
 
   /// What the options leave in the header. « Nouveau », « Enregistrer » and
   /// « Options » are always there.
@@ -270,7 +278,7 @@ class StudioHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-    decoration: const BoxDecoration(
+    decoration: BoxDecoration(
       color: studioSurface,
       border: Border(bottom: BorderSide(color: studioLine)),
     ),
@@ -298,25 +306,47 @@ class StudioHeader extends StatelessWidget {
             12 +
             (showHelp ? 96 : 0) +
             48;
+        // « Univers » beside them (Color 1.2): with its name, or, where
+        // that would cost the sheet a line, its picture alone.
+        final universesNamed = showUniverses
+            ? 8 + _actionWidth(context, tr('Univers'), _tight) + 4
+            : 0.0;
+        final universesAlone = showUniverses ? 8.0 + 48 : 0.0;
+        // And where even that would: its picture takes the room of the
+        // brush beside the name, which is only an ornament. The line is
+        // then exactly as long as it was before Color had universes.
+        const brush = 36.0 + 10;
+        const nameGap = 12.0;
+        const tightGap = 2.0;
+        final universesTight = universesAlone - brush - (nameGap - tightGap);
         // One line of actions less is that much more room for the sheet:
         // the actions are as generous as one line beside the name allows,
         // down to a snug form, and only then take a line of their own.
-        bool fitsBesideName(_Form form) =>
-            titleWidth + 16 + _lineWidth(context, all, form) + 12 <=
+        bool fitsBesideName(_Form form, double universes) =>
+            titleWidth + universes + 16 + _lineWidth(context, all, form) + 12 <=
             constraints.maxWidth;
+        _Form? besideName(double universes) =>
+            constraints.maxWidth >= 1200 && fitsBesideName(_roomy, universes)
+            ? _roomy
+            : fitsBesideName(_regular, universes)
+            ? _regular
+            : fitsBesideName(_tight, universes)
+            ? _tight
+            : fitsBesideName(_snug, universes)
+            ? _snug
+            : null;
+        final named = small ? null : besideName(universesNamed);
+        final alone = small || named != null || !showUniverses
+            ? null
+            : besideName(universesAlone);
+        final tight = small || named != null || alone != null || !showUniverses
+            ? null
+            : besideName(universesTight);
+        // Its name stays whenever the actions have a line of their own.
+        final universesName = alone == null && tight == null;
         final form = small
             ? _small
-            : constraints.maxWidth >= 1200 && fitsBesideName(_roomy)
-            ? _roomy
-            : fitsBesideName(_regular)
-            ? _regular
-            : fitsBesideName(_tight)
-            ? _tight
-            : fitsBesideName(_snug)
-            ? _snug
-            : fits(_regular)
-            ? _regular
-            : _tight;
+            : named ?? alone ?? tight ?? (fits(_regular) ? _regular : _tight);
         final actionText = studioLabelStyle(context, form.text);
         // In the small form the actions of every day are always there. The
         // others join them, in their order, while the line has room beside
@@ -359,6 +389,7 @@ class StudioHeader extends StatelessWidget {
             for (final id in _heldNames.keys)
               if (held.any((action) => action.id == id)) _heldNames[id]!,
             if (showHelp) 'aide',
+            if (showUniverses) 'univers',
             'options',
             if (showHelp) 'informations',
           ];
@@ -382,6 +413,7 @@ class StudioHeader extends StatelessWidget {
                     for (final action in held) action.onPressed,
                     if (showHelp) onHelp,
                     if (showHelp) onAbout,
+                    if (showUniverses) onUniverses,
                     onOptions,
                   ].any((action) => action != null),
                   tooltip: menuName,
@@ -397,6 +429,8 @@ class StudioHeader extends StatelessWidget {
                         onAbout?.call();
                       case 'options':
                         onOptions?.call();
+                      case 'universes':
+                        onUniverses?.call();
                       default:
                         for (final action in held) {
                           if (_menuValues[action.id] == value) {
@@ -426,6 +460,13 @@ class StudioHeader extends StatelessWidget {
                         value: 'about',
                         child: Text(tr('À propos de Color')),
                       ),
+                    if (showUniverses)
+                      PopupMenuItem(
+                        key: const Key('openUniverses'),
+                        value: 'universes',
+                        enabled: onUniverses != null,
+                        child: Text(tr('Univers…')),
+                      ),
                     PopupMenuItem(
                       key: const Key('openOptions'),
                       value: 'options',
@@ -443,14 +484,16 @@ class StudioHeader extends StatelessWidget {
         final title = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const EduIllustration(art: EduArt.brush, size: 36),
-            const SizedBox(width: 10),
+            if (tight == null) ...[
+              const EduIllustration(art: EduArt.brush, size: 36),
+              const SizedBox(width: 10),
+            ],
             Text(
               tr('Color'),
               maxLines: 1,
               style: _nameStyle.copyWith(color: studioTitle),
             ),
-            const SizedBox(width: 12),
+            SizedBox(width: tight == null ? nameGap : tightGap),
             if (showHelp) ...[
               IconButton(
                 key: const Key('showHelp'),
@@ -478,6 +521,34 @@ class StudioHeader extends StatelessWidget {
                 child: const EduIllustration(art: EduArt.options, size: 28),
               ),
             ),
+            if (showUniverses && universesName) ...[
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                key: const Key('openUniverses'),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(horizontal: _tight.padding),
+                  textStyle: studioLabelStyle(context, _tight.text),
+                  shape: const StadiumBorder(),
+                ),
+                onPressed: onUniverses,
+                icon: EduIllustration(
+                  art: EduArt.universes,
+                  size: _tight.picture,
+                ),
+                label: Text(tr('Univers')),
+              ),
+            ] else if (showUniverses) ...[
+              const SizedBox(width: 8),
+              IconButton(
+                key: const Key('openUniverses'),
+                tooltip: tr('Univers'),
+                onPressed: onUniverses,
+                icon: Semantics(
+                  label: tr('Univers'),
+                  child: const EduIllustration(art: EduArt.universes, size: 28),
+                ),
+              ),
+            ],
           ],
         );
         // One line when the name and every action fit, the name on the left

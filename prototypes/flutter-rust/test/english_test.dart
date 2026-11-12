@@ -3,10 +3,12 @@
 // `tr` or `trf` has its English, nothing is left in the table that the code
 // no longer says, and the studio speaks English when it is asked to — by
 // the options, or by a device that prefers English.
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show Locale;
 
 import 'package:edupaint_flutter_study/color_palette.dart';
+import 'package:edupaint_flutter_study/decor_motion.dart';
 import 'package:edupaint_flutter_study/english.dart';
 import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/new_sheet_dialog.dart';
@@ -17,6 +19,7 @@ import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:edupaint_flutter_study/studio_tool.dart';
 import 'package:edupaint_flutter_study/text_layout.dart';
 import 'package:edupaint_flutter_study/tool_variants.dart';
+import 'package:edupaint_flutter_study/universe.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -92,7 +95,31 @@ Set<String> frenchOfValues() => {
   ).readAsLinesSync())
     if (line.startsWith('T '))
       Uri.decodeComponent(line.split(' ').skip(5).join(' ').trim()),
+  // The universes (Color 1.2): the levels of movement, and what the
+  // description of each universe says — its name, its line, and the name
+  // and the lines of everything a child may ask about in its decor.
+  for (final motion in DecorMotion.values) motion.frenchLabel,
+  Universe.plain.frenchName,
+  Universe.plain.frenchAbout,
+  for (final folder in Directory(
+    '${Platform.environment['EDUPAINT_CORE_SOURCES'] ?? '../native-swift-rust/core'}'
+    '/art/univers',
+  ).listSync().whereType<Directory>())
+    ...frenchOfUniverse(
+      jsonDecode(File('${folder.path}/univers.json').readAsStringSync())
+          as Map<String, dynamic>,
+    ),
 };
+
+/// What the description of one universe says in French.
+List<String> frenchOfUniverse(Map<String, dynamic> universe) => [
+  universe['name'] as String,
+  universe['about'] as String,
+  for (final name in (universe['decor'] as Map)['names'] as List) ...[
+    (name as Map)['name'] as String,
+    name['text'] as String,
+  ],
+];
 
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;

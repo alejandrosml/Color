@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'dart:ui' show AppExitResponse;
 import 'dart:ui' as ui show Image;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -77,6 +78,13 @@ import 'kept_colours.dart';
 import 'paint_pot.dart';
 import 'language.dart';
 import 'companion.dart';
+import 'sheet_hint.dart';
+import 'tool_pointer.dart';
+import 'decor.dart';
+import 'decor_view.dart';
+import 'studio_shapes.dart';
+import 'universe.dart';
+import 'universe_dialog.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,6 +99,10 @@ Future<void> main() async {
   final options = await StudioOptionsStore.open();
   // And in the language they ask for, from the first frame.
   appLanguage.value = languageOf(options.value.language);
+  // And in the universe they name: the first frame wears its colours.
+  studioLook.value = UniverseCatalog.instance
+      .named(options.value.universe)
+      .look;
   final kept = await KeptColours.open();
   runApp(
     EduPaintApp(options: options, sounds: SystemSounds(), keptColours: kept),
@@ -118,9 +130,14 @@ class EduPaintApp extends StatelessWidget {
     this.sounds = const SilentSounds(),
     this.countrySigns = readCountrySigns,
     this.keptColours,
+    this.clock,
   });
   final StudioFiles files;
   final ProjectStorage? recoveryStorage;
+
+  /// The time of the device, for a decor that follows it (Color 1.2): the
+  /// clock of the system unless a test gives its own.
+  final DateTime Function()? clock;
 
   /// Where the device says it is: the paint pot closes small gaps only
   /// where that is allowed (lib/country_signs.dart).
@@ -145,12 +162,20 @@ class EduPaintApp extends StatelessWidget {
   /// recovery is injected gets no album unless one is injected too.
   final GalleryStorage? gallery;
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<AppLanguage>(
-    // A change of language builds the studio again, in the new one: its
-    // state, the drawing first, is kept.
-    valueListenable: appLanguage,
-    builder: (context, language, _) => materialApp(language),
-  );
+  Widget build(BuildContext context) {
+    // Dressed before it is built: the first frame wears the universe that
+    // the options name (Color 1.2), the first one when they name none.
+    studioLook.wearBeforeBuild(
+      UniverseCatalog.instance.named(options?.value.universe).look,
+    );
+    return ListenableBuilder(
+      // A change of language builds the studio again, in the new one: its
+      // state, the drawing first, is kept. A change of universe does the
+      // same for its colours and the shapes of its buttons.
+      listenable: Listenable.merge([appLanguage, studioLook]),
+      builder: (context, _) => materialApp(appLanguage.value),
+    );
+  }
 
   /// The application in [language], as [build] makes it.
   @visibleForTesting
@@ -191,8 +216,10 @@ class EduPaintApp extends StatelessWidget {
           foregroundColor: Colors.white,
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20),
+          // The corners of the universe, never its dashes: a full button
+          // has no line around it.
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
+            borderRadius: BorderRadius.circular(studioLook.value.buttonRadius),
           ),
         ),
       ),
@@ -200,10 +227,8 @@ class EduPaintApp extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: studioInk,
           minimumSize: const Size(48, 48),
-          side: const BorderSide(color: studioLine),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
+          side: studioButtonSide(),
+          shape: studioButtonShape(),
         ),
       ),
     ),
@@ -216,6 +241,7 @@ class EduPaintApp extends StatelessWidget {
       sounds: sounds,
       countrySigns: countrySigns,
       keptColours: keptColours,
+      clock: clock,
     ),
   );
 }
@@ -231,10 +257,14 @@ class DrawingStudio extends StatefulWidget {
     this.sounds = const SilentSounds(),
     this.countrySigns = readCountrySigns,
     this.keptColours,
+    this.clock,
   });
   final StudioFiles files;
   final ProjectStorage? recoveryStorage;
   final GalleryStorage? gallery;
+
+  /// The time of the device for the decor; null for the clock of the system.
+  final DateTime Function()? clock;
   final StudioPrinter printer;
   final StudioOptionsStore? options;
   final SoundPlayer sounds;
@@ -252,6 +282,22 @@ enum _HistoryChange { edit, undo, redo, amend }
 /// that began it and the click that ends it: a trait, the move of the chosen
 /// element, or the sheet under the hand.
 enum _Latch { stroke, move, pan }
+
+/// What the paint pot does on the paper: it gives its colour to a zone it
+/// poured before, or to the sheet ([zone] null), or it pours a new zone,
+/// [points] and [rings], over the zone [above] or under everything.
+final class _PotPaper {
+  const _PotPaper.over(this.zone) : points = null, rings = null, above = null;
+  const _PotPaper.zone(
+    List<DocumentPoint> this.points,
+    List<int> this.rings,
+    this.above,
+  ) : zone = null;
+  final int? zone;
+  final List<DocumentPoint>? points;
+  final List<int>? rings;
+  final int? above;
+}
 
 class _DrawingStudioState extends State<DrawingStudio>
     with WidgetsBindingObserver {
@@ -533,6 +579,133 @@ class _DrawingStudioState extends State<DrawingStudio>
       widget.options ?? StudioOptionsStore.memory();
   StudioOptions get _options => _optionsStore.value;
 
+  // The universe the studio wears (Color 1.2): its look, and its decor
+  // around the sheet. See universe.dart, decor.dart and decor_view.dart.
+
+  /// The universe the options name; the first one when they name none.
+  Universe get _universe => UniverseCatalog.instance.named(_options.universe);
+
+  /// The child may change it: more than one to choose from, and no adult
+  /// fixed one.
+  bool get _choosesUniverse =>
+      !_options.universeFixed && UniverseCatalog.instance.universes.length > 1;
+
+  /// The decor as the frame of the sheet shows it; null without a decor.
+  DecorPainting? _decorPainting;
+
+  /// The thing of the decor whose card is open.
+  final _shownName = ValueNotifier<DecorName?>(null);
+  Timer? _nameTimer;
+  late final _asking = DecorAsking(onAsk: _showName);
+
+  /// The pointer of the system in the frame of the sheet: none on the
+  /// sheet, where « la pointe » is drawn; an arrow beside it, over a decor,
+  /// and the arrow that asks over what has a name.
+  final _stageCursor = ValueNotifier<MouseCursor>(SystemMouseCursors.none);
+
+  /// Whether the names of the decor can be asked for now.
+  bool get _namesOffered =>
+      _options.decorNames && (_decorPainting?.layout.pieces ?? false);
+
+  void _showName(DecorName name) {
+    if (!mounted || !_namesOffered || _busy || _confirmationOpen) return;
+    _nameTimer?.cancel();
+    _shownName.value = name;
+    _nameTimer = Timer(DecorNameLayer.shownFor, _closeName);
+  }
+
+  void _closeName() {
+    _nameTimer?.cancel();
+    _nameTimer = null;
+    _shownName.value = null;
+  }
+
+  // The next named thing of the decor, from left to right, for the
+  // keyboard: F2 goes on, Maj + F2 back.
+  void _nextName(int step) {
+    final painting = _decorPainting;
+    if (painting == null || !_namesOffered || _busy || _confirmationOpen) {
+      return;
+    }
+    final layout = painting.layout;
+    final names = [...painting.decor.names]
+      ..sort((a, b) {
+        final first = layout.place(a.at, a.anchor).center;
+        final second = layout.place(b.at, b.anchor).center;
+        final across = first.dx.compareTo(second.dx);
+        return across != 0 ? across : first.dy.compareTo(second.dy);
+      });
+    if (names.isEmpty) return;
+    final at = names.indexOf(_shownName.value ?? names.first);
+    final shown = _shownName.value == null;
+    _showName(
+      names[shown
+          ? (step > 0 ? 0 : names.length - 1)
+          : (at + step) % names.length],
+    );
+  }
+
+  // A pointer is at [at] in the frame of the sheet: beside the sheet, over
+  // a decor, the pointer of the system shows, and « la pointe » of the
+  // tool is not drawn — it is for the sheet.
+  void _pointerOverDecor(Offset at, {required bool mouse}) {
+    final viewport = _keyViewport;
+    final painting = _decorPainting;
+    final beside =
+        painting != null &&
+        painting.layout.pieces &&
+        viewport != null &&
+        !viewport.contains(at.dx, at.dy);
+    _stageCursor.value = !beside
+        ? SystemMouseCursors.none
+        : _options.decorNames && painting.nameAt(at) != null
+        ? SystemMouseCursors.help
+        : SystemMouseCursors.basic;
+    if (beside && mouse) _hint.mouseAt = null;
+  }
+
+  // A pointer came down in the frame of the sheet: beside the sheet, it
+  // may be asking the name of something. Nothing is taken from the tool.
+  void _decorDown(PointerDownEvent event) {
+    final viewport = _keyViewport;
+    final painting = _decorPainting;
+    if (painting == null || viewport == null) return;
+    final at = event.localPosition;
+    final asks =
+        _namesOffered &&
+        !_busy &&
+        !_confirmationOpen &&
+        !_panning &&
+        !_spaceHeld &&
+        (event.buttons & kPrimaryButton) != 0 &&
+        !viewport.contains(at.dx, at.dy);
+    final under = asks ? painting.nameAt(at) : null;
+    // A press anywhere else puts the open card away.
+    if (_shownName.value != null && !identical(under, _shownName.value)) {
+      _closeName();
+    }
+    _asking.down(at, event.timeStamp, under);
+  }
+
+  /// « Univers » : the child chooses how the workshop is dressed. The
+  /// drawing is not touched.
+  Future<void> _openUniverses() async {
+    _settleLatch();
+    if (!_dialogAllowed || !_choosesUniverse) return;
+    _finishStroke();
+    _closeName();
+    final chosen = await _guardedDialog<Universe>(
+      () => showUniverseDialog(
+        context,
+        catalog: UniverseCatalog.instance,
+        current: _universe,
+        now: widget.clock,
+      ),
+    );
+    if (!mounted || chosen == null) return;
+    await _optionsStore.change(_options.copyWith(universe: chosen.key));
+  }
+
   @override
   void initState() {
     super.initState();
@@ -576,6 +749,14 @@ class _DrawingStudioState extends State<DrawingStudio>
         if (mounted) appLanguage.value = languageOf(_options.language);
       });
     }
+    // The universe of the options: the application dressed the studio
+    // before it built it; a studio built alone, in a test, dresses itself
+    // after its first frame.
+    if (!identical(studioLook.value, _universe.look)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) wearUniverse(_universe);
+      });
+    }
     if (_options.simpleControls) _fitSimpleControls();
     if (!_options.tools.contains(_tool)) _tool = StudioTool.brush;
     _lifecycle = AppLifecycleListener(
@@ -617,6 +798,14 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (widget.options == null) _optionsStore.dispose();
     _bounceTimer?.cancel();
     _savedTimer?.cancel();
+    _nameTimer?.cancel();
+    _asking.dispose();
+    _shownName.dispose();
+    _stageCursor.dispose();
+    _pourHintTimer?.cancel();
+    _pourHintSerial++;
+    _forgetInk();
+    _hint.dispose();
     _phoneRail.dispose();
     _recoveryScheduler.dispose();
     clearNativeExitHandler();
@@ -643,6 +832,9 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (!mounted) return;
     final options = _options;
     appLanguage.value = languageOf(options.language);
+    // The universe may be another: the studio wears it at once.
+    wearUniverse(_universe);
+    if (!options.decorNames || _shownName.value != null) _closeName();
     if (!options.tools.contains(_tool)) _cancelDraft();
     setState(() {
       if (!options.tools.contains(_tool)) {
@@ -685,6 +877,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _refreshAfterMutation({_HistoryChange change = _HistoryChange.edit}) {
     // Keep monotonic work invalidation independent from the reversible save point.
     _documentRevision++;
+    _forgetInk();
     final document = _document!;
     final state = _saveState!;
     switch (change) {
@@ -952,6 +1145,10 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   void _escape() {
     if (_busy || _confirmationOpen) return;
+    if (_shownName.value != null) {
+      _closeName();
+      return;
+    }
     if (_picking) {
       setState(() => _picking = false);
       return;
@@ -1268,31 +1465,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _fillAt(DocumentPoint point, double scale) {
     if (_pouring) return;
     final document = _document!;
-    // The zones the pot poured on this layer are paper to it: it fills
-    // within them or over them.
-    final poured = _pouredZones();
-    // What the pot can colour, bottom first: everything seen but the lines
-    // of a page, whose locked layer keeps them as they are.
-    final order = document.lockedLayers.isEmpty && poured.isEmpty
-        ? document.paintOrder
-        : [
-            for (final index in document.paintOrder)
-              if (!poured.contains(index) &&
-                  (!document.isLockedObject(index) ||
-                      document.strokes[index].fillRgb != null))
-                index,
-          ];
-    // The pot touches what is seen under the pointer, then the frame around
-    // it; a neighbour that is only near is not what the child pointed at.
-    final index =
-        _objectAt(
-          point,
-          scale,
-          tolerancePixels: precisePixels,
-          insideShapes: true,
-          order: order,
-        ) ??
-        _zoneAlongLine(point, scale);
+    final (:index, :order, :poured) = _potTouch(point, scale);
     if (index == null) {
       if (_backgroundImage != null) {
         _showProblem(StudioProblem.notice(_imageCoversSheet));
@@ -1373,6 +1546,44 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
   }
 
+  /// What the paint pot touches at [point]: the element [index] under it,
+  /// null on the paper; [order], what it can colour, bottom first; [poured],
+  /// the zones it poured on the active layer. Nothing is changed: the pot
+  /// that pours and the preview of what it would colour (Color 1.2) both
+  /// ask here.
+  ({int? index, List<int> order, Set<int> poured}) _potTouch(
+    DocumentPoint point,
+    double scale,
+  ) {
+    final document = _document!;
+    // The zones the pot poured on this layer are paper to it: it fills
+    // within them or over them.
+    final poured = _pouredZones();
+    // What the pot can colour, bottom first: everything seen but the lines
+    // of a page, whose locked layer keeps them as they are.
+    final order = document.lockedLayers.isEmpty && poured.isEmpty
+        ? document.paintOrder
+        : [
+            for (final index in document.paintOrder)
+              if (!poured.contains(index) &&
+                  (!document.isLockedObject(index) ||
+                      document.strokes[index].fillRgb != null))
+                index,
+          ];
+    // The pot touches what is seen under the pointer, then the frame around
+    // it; a neighbour that is only near is not what the child pointed at.
+    final index =
+        _objectAt(
+          point,
+          scale,
+          tolerancePixels: precisePixels,
+          insideShapes: true,
+          order: order,
+        ) ??
+        _zoneAlongLine(point, scale);
+    return (index: index, order: order, poured: poured);
+  }
+
   /// The zones that the paint pot poured on the active layer.
   Set<int> _pouredZones() {
     final document = _document!;
@@ -1398,6 +1609,62 @@ class _DrawingStudioState extends State<DrawingStudio>
     Set<int> poured,
   ) async {
     final document = _document!;
+    final found = _potPaperAt(point, viewScale, poured);
+    final _PotPaper? paper;
+    if (found is Future<_PotPaper?>) {
+      // The pot reads the drawing as an image: a moment.
+      setState(() => _pouring = true);
+      try {
+        paper = await found;
+      } catch (error) {
+        _error(error);
+        return;
+      } finally {
+        _pouring = false;
+        if (mounted) setState(() {});
+      }
+    } else {
+      paper = found;
+    }
+    // Anything done meanwhile won: nothing to pour.
+    if (paper == null || !mounted || !identical(_document, document)) return;
+    final points = paper.points;
+    if (points == null) {
+      _pourOver(paper.zone);
+      return;
+    }
+    try {
+      final rings = paper.rings!;
+      final before = document.undoCount;
+      document.addObject(
+        VectorKind.contour,
+        points,
+        rgb: _color,
+        width: _zoneOutline,
+        fillRgb: _color,
+        look: _pourKind.lookOf(ObjectLook.pouredZone, _previousColor),
+        rings: rings.length > 1 ? rings : null,
+        quant: 4,
+        bottom: paper.above == null,
+        above: paper.above,
+      );
+      setState(() => _refreshAfterEdits(before));
+      _sound(StudioSound.fill);
+    } catch (error) {
+      _error(error);
+    }
+  }
+
+  /// What the pot would do on the paper at [point], or on a zone it poured
+  /// before: null when it would do nothing — on the edge of a line —, or
+  /// when the drawing changed while it was read. At once where no image of
+  /// the drawing is needed; nothing is changed either way.
+  FutureOr<_PotPaper?> _potPaperAt(
+    DocumentPoint point,
+    double viewScale,
+    Set<int> poured,
+  ) {
+    final document = _document!;
     final under = poured.isEmpty
         ? null
         : _objectAt(
@@ -1412,98 +1679,110 @@ class _DrawingStudioState extends State<DrawingStudio>
           );
     final ink = [
       for (final index in document.paintOrder)
-        if (!poured.contains(index)) _strokes[index],
+        if (!poured.contains(index)) index,
     ];
     // A colouring page draws its zones itself: beside them is the sheet, as
     // in Color 1.0.
     if (ink.isEmpty || document.lockedLayers.isNotEmpty) {
-      _pourOver(under);
-      return;
+      return _PotPaper.over(under);
     }
+    return _potZoneAt(point, viewScale, poured, under, ink);
+  }
+
+  Future<_PotPaper?> _potZoneAt(
+    DocumentPoint point,
+    double viewScale,
+    Set<int> poured,
+    int? under,
+    List<int> ink,
+  ) async {
+    final document = _document!;
     final revision = _documentRevision;
-    setState(() => _pouring = true);
-    try {
-      final mask = await renderInkMask(
-        ink,
-        sheetWidth: document.width,
-        sheetHeight: document.height,
-      );
-      // Anything done meanwhile wins: the drawing the zone was found in is
-      // no longer the one shown.
-      if (!mounted ||
-          !identical(_document, document) ||
-          revision != _documentRevision) {
-        return;
-      }
-      final (x, y) = mask.pixelAt(point);
-      final zone = RustDocument.fillZone(
-        mask.bytes,
-        mask.width,
-        mask.height,
-        x,
-        y,
-        potRadius(
-          viewScale: viewScale,
-          mask: mask,
-          closesGaps: potClosesGaps(_countrySigns, DateTime.now()),
-        ),
-      );
-      if (zone.onInk || zone.wholeSheet) {
-        // On the edge of a line, nothing to pour but what is under it.
-        if (zone.wholeSheet || under != null) _pourOver(under);
-        return;
-      }
-      final points = zonePointsOnSheet(
-        zone,
-        mask,
-        sheetWidth: document.width,
-        sheetHeight: document.height,
-      );
-      final rings = zone.rings!.toList();
-      final pixel = 1 / math.min(mask.scaleX, mask.scaleY);
-      if (under != null &&
-          isSameZone(
-            document.strokes[under],
-            points,
-            rings,
-            tolerance: 2 * pixel + 1,
-          )) {
-        _pourOver(under);
-        return;
-      }
-      // Over every zone poured before that it overlaps, under the rest.
-      final box = shownBounds(
-        StrokeData(points, _color, 1, kind: VectorKind.contour),
-        includeStroke: false,
-      );
-      int? above;
-      for (final index in poured) {
-        if ((above == null || index > above) &&
-            _boundsForObject(index, document.strokes[index]).overlaps(box)) {
-          above = index;
-        }
-      }
-      final before = document.undoCount;
-      document.addObject(
-        VectorKind.contour,
-        points,
-        rgb: _color,
-        width: _zoneOutline,
-        fillRgb: _color,
-        look: _pourKind.lookOf(ObjectLook.pouredZone, _previousColor),
-        rings: rings.length > 1 ? rings : null,
-        quant: 4,
-        bottom: above == null,
-        above: above,
-      );
-      setState(() => _refreshAfterEdits(before));
-      _sound(StudioSound.fill);
-    } catch (error) {
-      _error(error);
-    } finally {
-      _pouring = false;
-      if (mounted) setState(() {});
+    final mask = await _inkMask(ink);
+    // Anything done meanwhile wins: the drawing the zone was found in is
+    // no longer the one shown.
+    if (!mounted ||
+        !identical(_document, document) ||
+        revision != _documentRevision) {
+      return null;
     }
+    final (x, y) = mask.pixelAt(point);
+    final zone = RustDocument.fillZone(
+      mask.bytes,
+      mask.width,
+      mask.height,
+      x,
+      y,
+      potRadius(
+        viewScale: viewScale,
+        mask: mask,
+        closesGaps: potClosesGaps(_countrySigns, DateTime.now()),
+      ),
+    );
+    if (zone.onInk || zone.wholeSheet) {
+      // On the edge of a line, nothing to pour but what is under it.
+      return zone.wholeSheet || under != null ? _PotPaper.over(under) : null;
+    }
+    final points = zonePointsOnSheet(
+      zone,
+      mask,
+      sheetWidth: document.width,
+      sheetHeight: document.height,
+    );
+    final rings = zone.rings!.toList();
+    final pixel = 1 / math.min(mask.scaleX, mask.scaleY);
+    if (under != null &&
+        isSameZone(
+          document.strokes[under],
+          points,
+          rings,
+          tolerance: 2 * pixel + 1,
+        )) {
+      return _PotPaper.over(under);
+    }
+    // Over every zone poured before that it overlaps, under the rest.
+    final box = shownBounds(
+      StrokeData(points, _color, 1, kind: VectorKind.contour),
+      includeStroke: false,
+    );
+    int? above;
+    for (final index in poured) {
+      if ((above == null || index > above) &&
+          _boundsForObject(index, document.strokes[index]).overlaps(box)) {
+        above = index;
+      }
+    }
+    return _PotPaper.zone(points, rings, above);
+  }
+
+  // The ink of the drawing as the paint pot reads it, kept while the
+  // drawing stays what it is: the preview of the pot asks for it each time
+  // the pointer rests, and the press that follows finds it made (Color
+  // 1.2). By the elements it holds, in their order.
+  final _inkMasks = <String, Future<InkMask>>{};
+
+  Future<InkMask> _inkMask(List<int> indices) {
+    final document = _document!;
+    if (_inkMasks.length >= 3) _forgetInk();
+    return _inkMasks[indices.join(',')] ??= renderInkMask(
+      [for (final index in indices) _strokes[index]],
+      sheetWidth: document.width,
+      sheetHeight: document.height,
+      keepImage: true,
+    );
+  }
+
+  /// The drawing changed, or the pot is put down: its images go, and with
+  /// them the preview that was painted through one.
+  void _forgetInk() {
+    if (_inkMasks.isEmpty) return;
+    if (_hint.preview is PourPreview) _hint.preview = null;
+    for (final mask in _inkMasks.values) {
+      unawaited(
+        mask.then<void>((mask) => mask.image?.dispose(), onError: (_) {}),
+      );
+    }
+    _inkMasks.clear();
   }
 
   /// The outline of a poured zone, in its colour: it hides the seam between
@@ -1777,6 +2056,361 @@ class _DrawingStudioState extends State<DrawingStudio>
     _focus.requestFocus();
   }
 
+  // « La pointe » and the preview before a tool acts (Color 1.2).
+
+  /// What the layer over the sheet shows: the pointer of the tool in hand,
+  /// and what a press would do where it is. See sheet_hint.dart.
+  final _hint = SheetHint();
+
+  /// Where the pointer that the preview follows is, in the frame of the
+  /// sheet: the mouse that hovers, the finger on the sheet, the pointer of
+  /// the keyboard. Null when none is over the sheet.
+  Offset? _hintAt;
+
+  /// The pointer of the keyboard moved last: a mouse that leaves the sheet
+  /// does not take its preview away.
+  bool _hintByKey = false;
+
+  /// That pointer is a finger. A finger does not hover: it shows a preview
+  /// only of what it is doing — the pot it holds, the eraser it rubs with.
+  bool _hintByFinger = false;
+
+  /// A finger or a pen holds the paint pot on the sheet: the part it would
+  /// colour is hatched and follows the finger; the paint flows where the
+  /// finger is lifted. [_potAt] is where it is, in the frame of the sheet.
+  bool _potHeld = false;
+  Offset? _potAt;
+
+  /// How long the pointer rests before the pot looks at what it would
+  /// colour there: while it travels, nothing is read.
+  static const _pourHintRest = Duration(milliseconds: 60);
+  Timer? _pourHintTimer;
+  int _pourHintSerial = 0;
+
+  /// What the preview of the pot was last asked for: nothing is read again
+  /// for the same point of the same drawing in the same colour.
+  ({double x, double y, int revision, int rgb, PourKind kind})? _pourHintAsked;
+
+  /// Where the pot has just poured: no preview there, over what the child
+  /// has just coloured, until the pointer moves away.
+  Offset? _pourHintQuiet;
+
+  /// The pointer of the tool in hand; null where the pointer of the system
+  /// says more: the hand that moves the sheet, the pipette.
+  ToolPointer? get _toolPointer =>
+      _panning || _spaceHeld || _picking ? null : ToolPointer(_tool, _color);
+
+  /// A real pointer is on the sheet: the preview follows it, and « la
+  /// pointe » when it is a mouse.
+  void _hintFollows(PointerEvent event) {
+    _hintAt = event.localPosition;
+    _hintByKey = false;
+    _hintByFinger = event.kind == PointerDeviceKind.touch;
+    if (event.kind == PointerDeviceKind.mouse) {
+      _hint.mouseAt = event.localPosition;
+    }
+    _pointerOverDecor(
+      event.localPosition,
+      mouse: event.kind == PointerDeviceKind.mouse,
+    );
+  }
+
+  /// A finger or a pen left the sheet: nothing is under it any more. A
+  /// mouse stays where it is.
+  void _hintLifted(PointerEvent event) {
+    if (event.kind != PointerDeviceKind.mouse && !_hintByKey) _hintAt = null;
+  }
+
+  /// The mouse left the frame of the sheet.
+  void _hintLeft() {
+    if (!mounted) return;
+    _hint.mouseAt = null;
+    if (!_hintByKey && !_potHeld) _hintAt = null;
+    _refreshHint();
+  }
+
+  void _dropPourHint() {
+    _pourHintTimer?.cancel();
+    _pourHintTimer = null;
+    _pourHintSerial++;
+    _pourHintAsked = null;
+  }
+
+  /// Says again what the layer over the sheet shows: after every move of a
+  /// pointer, and at every build of the sheet — the tool, the colour, a
+  /// size or the view may have changed. It builds nothing.
+  void _refreshHint() {
+    if (!mounted) return;
+    final viewport = _keyViewport;
+    final pointer = _toolPointer;
+    _hint
+      ..pointer = pointer
+      ..keyAt = _options.keyboardPointer ? _keyPointerAt : null;
+    final document = _document;
+    if (_tool != StudioTool.fill) _dropPourHint();
+    if (viewport == null ||
+        document == null ||
+        pointer == null ||
+        _busy ||
+        _confirmationOpen ||
+        _viewMoving) {
+      _dropPourHint();
+      _hint.preview = null;
+      return;
+    }
+    // The text waits for the pointer to be released: its stroke stays where
+    // the press began.
+    final anchor = _textAnchor;
+    if (anchor != null) {
+      _hint.preview = _caretAt(anchor);
+      return;
+    }
+    final at = _hintAt;
+    if (at == null) {
+      _dropPourHint();
+      _hint.preview = null;
+      return;
+    }
+    final onSheet = viewport.contains(at.dx, at.dy);
+    // Nothing is promised while a gesture goes on: what it makes is seen.
+    final idle = _pointer == null && _latch == null && !_hintByFinger;
+    switch (_tool) {
+      case StudioTool.fill:
+        if (onSheet && (idle || _potHeld)) {
+          _pourHintAt(at, viewport.point(at.dx, at.dy), viewport.scale);
+        } else {
+          _dropPourHint();
+          _hint.preview = null;
+        }
+      case StudioTool.eraser:
+        _hint.preview = idle || _erasing
+            ? EraserPreview(at: at, radius: _eraserPixels)
+            : null;
+      case StudioTool.select:
+        _hint.preview = null;
+      case StudioTool.text:
+        _hint.preview = onSheet && idle
+            ? _caretAt(viewport.point(at.dx, at.dy))
+            : null;
+      case StudioTool.stamp:
+        _hint.preview = onSheet && idle
+            ? _stampPreviewAt(viewport.point(at.dx, at.dy))
+            : null;
+      case StudioTool.brush ||
+          StudioTool.magic ||
+          StudioTool.magnet ||
+          StudioTool.line ||
+          StudioTool.rectangle ||
+          StudioTool.ellipse ||
+          StudioTool.shapes:
+        // Between the two clicks of a shape, the shape itself is shown.
+        _hint.preview = onSheet && idle && _shapeAnchor == null
+            ? _dotAt(at)
+            : null;
+    }
+  }
+
+  // A dot of the size and colour of the trait the tool would begin.
+  DotPreview _dotAt(Offset at) {
+    final tool = _strokeTool;
+    return DotPreview(
+      at: at,
+      width: _width,
+      rgb: _color,
+      square: tool == BrushTool.felt,
+      opacity: tool == BrushTool.felt ? markerAlpha / 255 : 1,
+      // The rainbow and the confetti have colours of their own.
+      hollow: tool == BrushTool.rainbow || tool == BrushTool.confetti,
+      mirrored: _tool == StudioTool.magic && _magic == Magic.mirror,
+    );
+  }
+
+  // The stroke where the first letter of a text begun at [anchor] would be
+  // written, at the size chosen last: the top of its first line, kept on
+  // the sheet as the text will be.
+  CaretPreview _caretAt(DocumentPoint anchor) {
+    final document = _document!;
+    final height =
+        textSizeFor(_textSize, width: document.width, height: document.height) *
+        textFonts[_textFont].lineHeight;
+    return CaretPreview(
+      top: DocumentPoint(
+        anchor.x,
+        anchor.y.clamp(0.0, math.max(0.0, document.height - height)).toDouble(),
+      ),
+      height: height,
+      rgb: _color,
+    );
+  }
+
+  // The stamp a click at [point] would pose: the chosen one, at the chosen
+  // size, turned and mirrored as chosen, where [_stampBox] puts it.
+  PosedStampPreview? _stampPreviewAt(DocumentPoint point) {
+    try {
+      final box = _stampBox(point, point);
+      return PosedStampPreview(
+        RenderedElement(
+          StrokeData(
+            [box.first, box.second],
+            _color,
+            1,
+            kind: VectorKind.stamp,
+            stamp: _stampId,
+            look: _stampLook,
+          ),
+        ),
+      );
+    } catch (_) {
+      // A stamp that cannot be shown is still posed by the click.
+      return null;
+    }
+  }
+
+  /// The preview of the paint pot for the pointer at [at], [point] of the
+  /// sheet. What is shown stays while the pointer travels on it; the pot
+  /// looks again once the pointer has rested, at once under a finger that
+  /// has just come down.
+  void _pourHintAt(Offset at, DocumentPoint point, double scale) {
+    final quiet = _pourHintQuiet;
+    if (quiet != null) {
+      if ((at - quiet).distance < 4) {
+        _dropPourHint();
+        _hint.preview = null;
+        return;
+      }
+      _pourHintQuiet = null;
+    }
+    final asked = _pourHintAsked;
+    final same =
+        asked != null &&
+        asked.revision == _documentRevision &&
+        asked.rgb == _color &&
+        asked.kind == _pourKind;
+    if (same && asked.x == point.x && asked.y == point.y) return;
+    final shown = _hint.preview;
+    if (!(same && shown is PourPreview && shown.covers(point))) {
+      _hint.preview = null;
+    }
+    final first = asked == null && _potHeld;
+    _pourHintAsked = (
+      x: point.x,
+      y: point.y,
+      revision: _documentRevision,
+      rgb: _color,
+      kind: _pourKind,
+    );
+    final serial = ++_pourHintSerial;
+    _pourHintTimer?.cancel();
+    _pourHintTimer = Timer(
+      first ? Duration.zero : _pourHintRest,
+      () => unawaited(_showPourHint(serial, point, scale)),
+    );
+  }
+
+  Future<void> _showPourHint(
+    int serial,
+    DocumentPoint point,
+    double scale,
+  ) async {
+    _pourHintTimer = null;
+    if (!mounted || serial != _pourHintSerial || _document == null) return;
+    PourPreview? preview;
+    try {
+      preview = await _pourPreviewAt(point, scale);
+    } catch (_) {
+      // Without its preview the pot still pours.
+    }
+    if (!mounted || serial != _pourHintSerial) return;
+    _hint.preview = preview;
+  }
+
+  /// More elements than this over what the pot would colour are left out
+  /// of its hatching as one picture rather than one by one.
+  static const _pourOverMost = 48;
+
+  /// What the pot would colour at [point], found as [_fillAt] finds it;
+  /// null where a press would change nothing that can be seen.
+  Future<PourPreview?> _pourPreviewAt(DocumentPoint point, double scale) async {
+    final document = _document!;
+    if (_pouring) return null;
+    final plain = _pourKind == PourKind.plain;
+    final revision = _documentRevision;
+    bool stale() =>
+        !mounted ||
+        !identical(document, _document) ||
+        revision != _documentRevision;
+    Future<PourPreview?> onElement(int index) async {
+      final object = document.strokes[index];
+      if (_keepsOwnColours(object)) return null;
+      final fills = object.kind.canFill;
+      if (plain &&
+          !object.look.hasGradient &&
+          (fills ? object.fillRgb : object.rgb) == _color) {
+        return null;
+      }
+      // What is painted after it and lies on it hides a part of it.
+      final seen = document.paintOrder;
+      final area = _strokes[index].shownBounds.inflate(object.width / 2 + 1);
+      final rank = seen.indexOf(index);
+      final above = [
+        for (final other in rank < 0 ? const <int>[] : seen.skip(rank + 1))
+          if (_strokes[other].shownBounds
+              .inflate(document.strokes[other].width / 2 + 1)
+              .overlaps(area))
+            other,
+      ];
+      ui.Image? ink;
+      if (above.length > _pourOverMost) {
+        ink = (await _inkMask(above)).image;
+        if (stale()) return null;
+      }
+      return PourPreview.element(
+        _strokes[index],
+        inside: fills,
+        rgb: _color,
+        ink: ink,
+        over: ink == null
+            ? [for (final other in above) _strokes[other]]
+            : const [],
+      );
+    }
+
+    final (:index, order: _, :poured) = _potTouch(point, scale);
+    if (index != null) return onElement(index);
+    if (_backgroundImage != null) return null;
+    final paper = await _potPaperAt(point, scale, poured);
+    if (paper == null || stale()) return null;
+    final points = paper.points;
+    if (points != null) {
+      final zone = Path()..fillType = PathFillType.evenOdd;
+      var at = 0;
+      for (final ring in paper.rings!) {
+        zone.moveTo(points[at].x, points[at].y);
+        for (var k = 1; k < ring; k++) {
+          zone.lineTo(points[at + k].x, points[at + k].y);
+        }
+        zone.close();
+        at += ring;
+      }
+      // It is poured under the lines that close it, which were just read.
+      final mask = await _inkMask([
+        for (final index in document.paintOrder)
+          if (!poured.contains(index)) index,
+      ]);
+      if (stale()) return null;
+      return PourPreview.zone(zone, rgb: _color, ink: mask.image);
+    }
+    final zone = paper.zone;
+    if (zone != null) return onElement(zone);
+    // The paper itself: all of it, but what is drawn on it.
+    if (plain && document.paperRgb == _color) return null;
+    final seen = document.paintOrder;
+    if (seen.isEmpty) return PourPreview.sheet(rgb: _color);
+    final mask = await _inkMask(seen);
+    if (stale()) return null;
+    return PourPreview.sheet(rgb: _color, ink: mask.image);
+  }
+
   void _pointerDown(PointerDownEvent event, DocumentViewport viewport) {
     if (_latch != null) {
       // The click that ends what a click began. It does nothing else, and
@@ -1880,7 +2514,21 @@ class _DrawingStudioState extends State<DrawingStudio>
       event.localPosition.dy,
     );
     if (_tool == StudioTool.fill) {
-      _fillAt(point, viewport.scale);
+      if (event.kind == PointerDeviceKind.mouse) {
+        // The mouse saw what would be coloured before it clicked.
+        _pourHintQuiet = event.localPosition;
+        _fillAt(point, viewport.scale);
+        return;
+      }
+      // A finger or a pen shows it first: the part it would colour is
+      // hatched under it, follows it, and takes the paint when it is lifted
+      // (Color 1.2).
+      _pointer = event.pointer;
+      _potHeld = true;
+      _potAt = event.localPosition;
+      _pressPosition = event.localPosition;
+      _pressTravel = 0;
+      _pressByTouch = event.kind == PointerDeviceKind.touch;
       return;
     }
     if (_choosing) {
@@ -2250,6 +2898,10 @@ class _DrawingStudioState extends State<DrawingStudio>
       if (path.isNotEmpty) _rubAlong(path, viewport.scale);
       return;
     }
+    if (_pointer == event.pointer && _potHeld) {
+      _potAt = event.localPosition;
+      return;
+    }
     if (_pointer != event.pointer || _draft.isEmpty) return;
     final pressed = _pressPosition;
     if (pressed != null) {
@@ -2368,6 +3020,24 @@ class _DrawingStudioState extends State<DrawingStudio>
     _latch = null;
     _endViewGesture();
     _finishSelectionDrag();
+    if (_potHeld) {
+      // The finger that held the paint pot is lifted: the paint flows where
+      // it was, on the sheet; beside the sheet, and when a command ended
+      // the gesture, nothing is poured.
+      final at = _potAt;
+      final viewport = _keyViewport;
+      _potHeld = false;
+      _potAt = null;
+      _pointer = null;
+      _pressPosition = null;
+      if (released &&
+          at != null &&
+          viewport != null &&
+          viewport.contains(at.dx, at.dy)) {
+        _fillAt(viewport.point(at.dx, at.dy), viewport.scale);
+      }
+      return;
+    }
     if (_erasing) {
       // A click on a trait takes it whole; a rub already did its work.
       final press = _eraserPress;
@@ -3048,6 +3718,8 @@ class _DrawingStudioState extends State<DrawingStudio>
     _eraserLast = null;
     _eraserShield.clear();
     _textAnchor = null;
+    _potHeld = false;
+    _potAt = null;
     _selectionStart = null;
     _selectionDragBounds = null;
     _selectionOffset.value = Offset.zero;
@@ -3202,8 +3874,12 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (event is KeyUpEvent) return true;
     final at = _keyPointerAt ?? size.center(Offset.zero);
     final time = _keyClock.elapsed;
+    // What the tool would do is shown where this pointer is (Color 1.2).
+    _hintByKey = true;
+    _hintByFinger = false;
     if (press) {
       if (event is KeyRepeatEvent) return true;
+      _hintAt = at;
       _keyDown = !_keyDown;
       if (_keyDown) {
         _pointerDown(
@@ -3235,6 +3911,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       (at.dx + direction!.dx * distance).clamp(0, size.width),
       (at.dy + direction.dy * distance).clamp(0, size.height),
     );
+    _hintAt = next;
     if (_keyDown) {
       _pointerMove(
         PointerMoveEvent(
@@ -3659,6 +4336,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       _strokes = strokes;
       _saveState = tracking;
       _documentRevision++;
+      _forgetInk();
       _revision++;
       _status =
           status ??
@@ -4653,6 +5331,8 @@ class _DrawingStudioState extends State<DrawingStudio>
           : _exportPng,
       onPrint: _busy || !_options.printing ? null : _printDrawing,
       onOptions: _busy ? null : _openOptions,
+      onUniverses: _busy ? null : _openUniverses,
+      hasUniverses: _choosesUniverse,
       onReplay: _canReplay ? _showReplay : null,
       onUndo: _canUndo ? () => _history(false) : null,
       onRedo: !_busy && _document!.canRedo ? () => _history(true) : null,
@@ -4678,6 +5358,10 @@ class _DrawingStudioState extends State<DrawingStudio>
       child: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.f1): _showHelp,
+          // The names of the decor, one after the other (Color 1.2).
+          const SingleActivator(LogicalKeyboardKey.f2): () => _nextName(1),
+          const SingleActivator(LogicalKeyboardKey.f2, shift: true): () =>
+              _nextName(-1),
           const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () =>
               _history(false),
           const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
@@ -4811,6 +5495,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                           onHelp: _busy ? null : _showHelp,
                           onMenuVisibilityChanged: _colorDialogChanged,
                           onOptions: _busy ? null : _openOptions,
+                          onUniverses: _busy ? null : _openUniverses,
+                          showUniverses: _choosesUniverse,
                           showOpen: _options.opensFiles,
                           showImportImage: _options.opensFiles,
                           showExport: _options.exports,
@@ -4998,12 +5684,12 @@ class _DrawingStudioState extends State<DrawingStudio>
   // options — is in the menu.
   Widget _phoneBody() {
     final simple = _options.simpleControls;
-    const railSide = BorderSide(color: studioLine);
+    final railSide = BorderSide(color: studioLine);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: studioSurface,
             border: Border(right: railSide),
           ),
@@ -5020,7 +5706,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           child: Padding(padding: const EdgeInsets.all(6), child: _canvas()),
         ),
         DecoratedBox(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: studioSurface,
             border: Border(left: railSide),
           ),
@@ -5054,7 +5740,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           ? Semantics(
               liveRegion: true,
               label: tr('Dessin enregistré'),
-              child: const Icon(
+              child: Icon(
                 Icons.check_circle,
                 key: Key('savedTick'),
                 size: 30,
@@ -5154,6 +5840,14 @@ class _DrawingStudioState extends State<DrawingStudio>
           picture: (size) => Icon(Icons.help_outline, size: size),
           enabled: true,
         ),
+      if (_choosesUniverse)
+        PhoneMenuEntry(
+          id: 'openUniverses',
+          name: tr('Univers'),
+          picture: (size) =>
+              EduIllustration(art: EduArt.universes, size: size),
+          enabled: true,
+        ),
       PhoneMenuEntry(
         id: 'openOptions',
         name: tr('Options'),
@@ -5204,6 +5898,8 @@ class _DrawingStudioState extends State<DrawingStudio>
         _fitView();
       case 'showHelp':
         _showHelp();
+      case 'openUniverses':
+        _openUniverses();
       case 'openOptions':
         _openOptions();
       case 'aboutColor':
@@ -5327,7 +6023,7 @@ class _DrawingStudioState extends State<DrawingStudio>
             status,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, color: studioStatusText),
+            style: TextStyle(fontSize: 11, color: studioStatusText),
           ),
         ),
       ],
@@ -5477,6 +6173,9 @@ class _DrawingStudioState extends State<DrawingStudio>
       _picking = false;
       _colorTarget = PaintColorTarget.stroke;
     });
+    // The pot put down keeps no image of the drawing.
+    _pourHintQuiet = null;
+    if (tool != StudioTool.fill) _forgetInk();
     _sound(StudioSound.tool);
     _focus.requestFocus();
     // The colours were scrolled to: the choices of the new tool are above.
@@ -5782,14 +6481,72 @@ class _DrawingStudioState extends State<DrawingStudio>
           // What the pointer of the keyboard moves on (Color 1.1).
           _keyViewport = viewport;
           _keySheetSize = constraints.biggest;
+          // The tool, the colour, a size or the view may have changed: the
+          // pointer and the preview over the sheet follow (Color 1.2).
+          _refreshHint();
+          // The decor of the universe, around the sheet and under it
+          // (Color 1.2): where the sheet lies when the whole of it is
+          // shown says how large the decor may be.
+          final look = studioLook.value;
+          final decor = _universe.decor;
+          final rest = ViewTransform.fit(
+            viewWidth: constraints.maxWidth,
+            viewHeight: constraints.maxHeight,
+            padding: showCaptions ? 28 : 8,
+            documentWidth: _document!.width.toDouble(),
+            documentHeight: _document!.height.toDouble(),
+          );
+          final sheetAtRest = Rect.fromLTWH(
+            rest.left,
+            rest.top,
+            rest.width,
+            rest.height,
+          );
+          final painting = decor == null
+              ? null
+              : DecorPainting(
+                  decor,
+                  DecorLayout(
+                    frame: constraints.biggest,
+                    sheetAtRest: sheetAtRest,
+                    decor: decor.size,
+                    decorSheet: decor.sheet,
+                  ),
+                );
+          _decorPainting = painting;
+          final corners = BorderRadius.circular(look.stageRadius);
+          // A caption on a decor is written on a pill of the surface.
+          Widget caption(Widget text) => painting == null
+              ? text
+              : DecorCaption(
+                  color: studioSurface.withValues(alpha: .94),
+                  child: text,
+                );
           return DecoratedBox(
             decoration: BoxDecoration(
               color: studioSheetBackdrop,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: studioLine),
+              borderRadius: corners,
             ),
             child: Stack(
               children: [
+                if (decor != null)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: ExcludeSemantics(
+                        child: RepaintBoundary(
+                          child: ClipRRect(
+                            borderRadius: corners,
+                            child: DecorView(
+                              decor: decor,
+                              sheetAtRest: sheetAtRest,
+                              motion: _options.decorMotion,
+                              now: widget.clock,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned.fill(
                   child: Semantics(
                     label: forTouch(
@@ -5798,33 +6555,56 @@ class _DrawingStudioState extends State<DrawingStudio>
                         [_document!.width, _document!.height],
                       ),
                     ),
-                    child: MouseRegion(
-                      cursor: _panning || _spaceHeld || _choosing
+                    child: _StageMouseRegion(
+                      // The interface draws the pointer of the tool itself,
+                      // « la pointe » (Color 1.2): the pointer of the
+                      // system shows only where it says more — the hand
+                      // that moves the sheet, the pipette, and beside the
+                      // sheet over a decor.
+                      held: _panning || _spaceHeld
                           ? SystemMouseCursors.grab
-                          : SystemMouseCursors.precise,
+                          : _picking
+                          ? SystemMouseCursors.precise
+                          : null,
+                      beside: _stageCursor,
+                      onEnter: (event) {
+                        _hintFollows(event);
+                        _refreshHint();
+                      },
                       onExit: (_) {
                         _forgetAnchorEnd();
                         // A gesture without a held button ends where the
                         // pointer leaves the frame of the sheet.
                         _endLatch();
+                        _hintLeft();
+                        _asking.lift();
                       },
                       child: Listener(
                         key: const Key('drawingSurface'),
                         behavior: HitTestBehavior.opaque,
                         onPointerDown: (raw) {
                           final event = _touchShifted(raw);
+                          _decorDown(event);
                           if (!_fingerDown(event)) {
+                            _hintFollows(event);
                             _pointerDown(event, viewport);
                           }
+                          _refreshHint();
                         },
                         onPointerMove: (raw) {
                           final event = _touchShifted(raw);
+                          _asking.move(event.localPosition);
                           if (!_fingerMove(event)) {
+                            _hintFollows(event);
                             _pointerMove(event, viewport);
                           }
+                          _refreshHint();
                         },
-                        onPointerHover: (event) =>
-                            _pointerHover(event, viewport),
+                        onPointerHover: (event) {
+                          _hintFollows(event);
+                          _pointerHover(event, viewport);
+                          _refreshHint();
+                        },
                         onPointerSignal: _pointerSignal,
                         onPointerPanZoomStart: _trackpadStart,
                         onPointerPanZoomUpdate: _trackpadUpdate,
@@ -5833,12 +6613,23 @@ class _DrawingStudioState extends State<DrawingStudio>
                             _endViewGesture();
                           }
                         },
-                        onPointerUp: (raw) =>
-                            _pointerUp(_touchShifted(raw), viewport),
+                        onPointerUp: (raw) {
+                          final event = _touchShifted(raw);
+                          _asking.lift();
+                          _pointerUp(event, viewport);
+                          _hintLifted(event);
+                          _refreshHint();
+                        },
                         onPointerCancel: (event) {
-                          if (_fingerUp(event)) return;
-                          if (_panPointer == event.pointer) _endViewGesture();
-                          if (_pointer == event.pointer) _cancelDraft();
+                          _asking.lift();
+                          _hintLifted(event);
+                          if (!_fingerUp(event)) {
+                            if (_panPointer == event.pointer) {
+                              _endViewGesture();
+                            }
+                            if (_pointer == event.pointer) _cancelDraft();
+                          }
+                          _refreshHint();
                         },
                         // The picture of the sheet, as the reference
                         // images of test/reference_images_test.dart take it.
@@ -5893,12 +6684,14 @@ class _DrawingStudioState extends State<DrawingStudio>
                     top: 10,
                     left: 16,
                     child: IgnorePointer(
-                      child: Text(
-                        tr('MA FEUILLE'),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          letterSpacing: 1.2,
-                          color: studioSheetTitle,
+                      child: caption(
+                        Text(
+                          tr('MA FEUILLE'),
+                          style: TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            color: studioSheetTitle,
+                          ),
                         ),
                       ),
                     ),
@@ -5908,14 +6701,16 @@ class _DrawingStudioState extends State<DrawingStudio>
                     bottom: 9,
                     left: 16,
                     child: IgnorePointer(
-                      child: Text(
-                        trf('{0} × {1} unités', [
-                          _document!.width,
-                          _document!.height,
-                        ]),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: studioSheetCaption,
+                      child: caption(
+                        Text(
+                          trf('{0} × {1} unités', [
+                            _document!.width,
+                            _document!.height,
+                          ]),
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: studioSheetCaption,
+                          ),
                         ),
                       ),
                     ),
@@ -5925,13 +6720,61 @@ class _DrawingStudioState extends State<DrawingStudio>
                     bottom: 9,
                     right: 16,
                     child: IgnorePointer(
-                      child: Text(
-                        _view!.isFit
-                            ? tr('Toute la feuille')
-                            : '${(viewport.scale * 100).round()} %',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: studioSheetCaption,
+                      child: caption(
+                        Text(
+                          _view!.isFit
+                              ? tr('Toute la feuille')
+                              : '${(viewport.scale * 100).round()} %',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: studioSheetCaption,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                // « La pointe » of the tool, and what a press would do
+                // where it is (Color 1.2): painted apart from the sheet,
+                // which a pointer that moves never paints again.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        key: const Key('sheetHint'),
+                        painter: SheetHintPainter(
+                          viewport: viewport,
+                          hint: _hint,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // The names of the decor: what a screen reader may ask
+                // about, and the card of the thing that was asked.
+                if (painting != null && _namesOffered)
+                  Positioned.fill(
+                    child: ValueListenableBuilder<DecorName?>(
+                      valueListenable: _shownName,
+                      builder: (context, shown, _) => DecorNameLayer(
+                        painting: painting,
+                        sheetAtRest: sheetAtRest,
+                        shown: shown,
+                        onAsk: _showName,
+                        onClose: _closeName,
+                      ),
+                    ),
+                  ),
+                // The line around the frame, over the decor.
+                if (look.stageBorder > 0)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: corners,
+                          border: Border.all(
+                            color: studioLine,
+                            width: look.stageBorder,
+                          ),
                         ),
                       ),
                     ),
@@ -6005,11 +6848,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (rail) return palette;
     return Container(
       padding: EdgeInsets.all(compact ? 10 : 16),
-      decoration: BoxDecoration(
-        color: studioSurface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: studioLine),
-      ),
+      decoration: studioPanel(radius: 18),
       child: palette,
     );
   }
@@ -6238,4 +7077,36 @@ class _GalleryCard {
     background?.dispose();
     background = null;
   }
+}
+
+/// The frame of the sheet for a mouse: its pointer is [held] while the
+/// studio holds one — the hand, the pipette — and otherwise the one of
+/// [beside], which changes when the pointer goes from the sheet to the
+/// decor beside it. Only this region is built again then, not what it
+/// holds.
+class _StageMouseRegion extends StatelessWidget {
+  const _StageMouseRegion({
+    required this.held,
+    required this.beside,
+    required this.onEnter,
+    required this.onExit,
+    required this.child,
+  });
+  final MouseCursor? held;
+  final ValueListenable<MouseCursor> beside;
+  final PointerEnterEventListener onEnter;
+  final PointerExitEventListener onExit;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<MouseCursor>(
+    valueListenable: beside,
+    child: child,
+    builder: (context, cursor, child) => MouseRegion(
+      cursor: held ?? cursor,
+      onEnter: onEnter,
+      onExit: onExit,
+      child: child,
+    ),
+  );
 }

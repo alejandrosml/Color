@@ -970,6 +970,13 @@ class _Bindings {
       .lookupFunction<Pointer<Utf8> Function(), Pointer<Utf8> Function()>(
         'ep_art_catalog',
       );
+  late final universeCount = library
+      .lookupFunction<Uint32 Function(), int Function()>('ep_universe_count');
+  late final universe = library
+      .lookupFunction<
+        Pointer<Utf8> Function(Uint32),
+        Pointer<Utf8> Function(int)
+      >('ep_universe');
   late final pictureFromSvg = library
       .lookupFunction<
         Pointer<Utf8> Function(Pointer<Uint8>, Size),
@@ -1453,6 +1460,8 @@ const coreFunctionNames = <String>[
   'ep_third_party_notices',
   'ep_undo',
   'ep_undo_count',
+  'ep_universe',
+  'ep_universe_count',
   'ep_write_project',
 ];
 
@@ -1979,6 +1988,38 @@ class RustDocument {
       return catalog;
     } finally {
       bindings.freeString(text); // Rust allocation: never free with calloc.
+    }
+  }
+
+  /// How many universes the core has (Color 1.2): 0 for a library older
+  /// than this interface, which has none.
+  static int universeCount({String? libraryPath}) {
+    try {
+      return _process(libraryPath).universeCount();
+    } on ArgumentError {
+      return 0;
+    }
+  }
+
+  /// Universe [index] as the core describes it: a « U » line with its key,
+  /// an « M » line with its description in JSON, then its pictures in the
+  /// format of [readArtCatalog]. See universe.dart. Null when the core has
+  /// no such universe.
+  static String? readUniverse(int index, {String? libraryPath}) {
+    if (index < 0) return null;
+    final bindings = _process(libraryPath);
+    final Pointer<Utf8> text;
+    try {
+      text = bindings.universe(index);
+    } on ArgumentError {
+      // A library older than this interface.
+      return null;
+    }
+    if (text == nullptr) return null;
+    try {
+      return text.toDartString();
+    } finally {
+      bindings.freeString(text);
     }
   }
 

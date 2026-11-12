@@ -395,12 +395,16 @@ class VectorPicture {
 
   /// Paints the picture in [bounds]; [moves] moves the named groups of the
   /// picture, each by its matrix in the units of the picture, after its own
-  /// transform: how the companion stands up and paints.
+  /// transform: how the companion stands up and paints. [tints] gives the
+  /// named groups a colour of the moment: every plain inside drawn in such a
+  /// group takes it, with the opacity it had — how the tip of a pointer
+  /// takes the colour the child chose (Color 1.2).
   void paint(
     Canvas canvas,
     Rect bounds, {
     double minimumStroke = 0,
     Map<String, Float64List> moves = const {},
+    Map<String, Color> tints = const {},
   }) {
     if (bounds.isEmpty) return;
     final scale = bounds.width / width < bounds.height / height
@@ -428,14 +432,29 @@ class VectorPicture {
     canvas.clipRect(Rect.fromLTWH(0, 0, width, height));
     // Whether each open group was given a layer of its own.
     final layered = <bool>[];
+    // The colour given to each open group: its own, or that of the group it
+    // lies in; null where the picture keeps its colours.
+    final tinted = <Color?>[];
     for (final instruction in _instructions) {
       switch (instruction) {
         case _Draw(:final path, :final fill, :final stroke, :final strokeFirst):
           if (strokeFirst && stroke != null) drawStroke(path, stroke);
-          if (fill != null) canvas.drawPath(path, fill);
+          if (fill != null) {
+            final tint = tinted.isEmpty ? null : tinted.last;
+            if (tint != null && fill.shader == null) {
+              // The paint belongs to the picture: it gets its colour back.
+              final own = fill.color;
+              fill.color = tint.withValues(alpha: own.a * tint.a);
+              canvas.drawPath(path, fill);
+              fill.color = own;
+            } else {
+              canvas.drawPath(path, fill);
+            }
+          }
           if (!strokeFirst && stroke != null) drawStroke(path, stroke);
         case _Open(:final opacity, :final matrix, :final clips, :final name):
           canvas.save();
+          tinted.add(tints[name] ?? (tinted.isEmpty ? null : tinted.last));
           if (matrix != null) canvas.transform(matrix);
           final move = moves[name];
           if (move != null) canvas.transform(move);
@@ -452,6 +471,7 @@ class VectorPicture {
           layered.add(layer);
         case _Close():
           if (layered.removeLast()) canvas.restore();
+          tinted.removeLast();
           canvas.restore();
       }
     }

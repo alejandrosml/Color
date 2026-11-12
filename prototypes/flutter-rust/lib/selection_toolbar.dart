@@ -187,7 +187,7 @@ class SelectionToolbar extends StatelessWidget {
               // row taller, and the sheet smaller, when an element is chosen.
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, color: studioGreen),
+              style: TextStyle(fontSize: 11, color: studioGreen),
             ),
           ),
         ],
