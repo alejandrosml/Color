@@ -542,11 +542,22 @@ void main() {
       expect(inked(image, hand(tester, 0, 12)), isFalse);
       // By day: the wall is light, the bulb is off, the cloud is in the sky.
       final wallAt = Offset(tester.getSize(surface).width / 2, 6);
-      final bulb = inFrame(
+      final lamp = painting(tester).decor.lamp!;
+      final bulb = inFrame(tester, lamp.bulb, DecorAnchor.right);
+      // The bulb comes out of the shade: towards the head of the lamp, the
+      // last of its circle is behind the shade, which is red there — by
+      // day, and when the bulb is lit.
+      final towardsTheHead = lamp.pivot - lamp.bulb;
+      final hidden = inFrame(
         tester,
-        const Offset(870.63, 265.52),
+        lamp.bulb +
+            towardsTheHead / towardsTheHead.distance * (lamp.bulbRadius - 1.5),
         DecorAnchor.right,
       );
+      bool red(Color colour) =>
+          colour.r > colour.g + .15 && colour.r > colour.b + .15;
+      expect(red(pixel(image, hidden)), isTrue);
+      expect(red(pixel(image, bulb)), isFalse);
       final day = pixel(image, wallAt);
       expect(day.computeLuminance(), greaterThan(.8));
       final made = debugDecorStillImages;
@@ -574,6 +585,8 @@ void main() {
       expect(evening.r, greaterThan(evening.b));
       final lit = pixel(image, bulb);
       expect(lit.computeLuminance(), greaterThan(.85));
+      expect(red(pixel(image, hidden)), isTrue);
+      expect(pixel(image, hidden).computeLuminance(), lessThan(.5));
 
       // Ten past ten at night: dark, but for the beam of the lamp.
       now = DateTime(2026, 11, 12, 22, 10);

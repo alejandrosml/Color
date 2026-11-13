@@ -181,6 +181,21 @@ void main() {
       expect(cloud.move!.name, 'nuage');
       // The lamp is lit in the evening and at night; the day has no veil.
       expect(decor.lamp!.moments, {DayMoment.soir, DayMoment.nuit});
+      // Its bulb comes out of the shade, which hides the part of it that is
+      // towards the head of the lamp: not the whole circle is seen.
+      final lamp = decor.lamp!;
+      final hood = Path()..addPolygon(lamp.hood, true);
+      final towardsTheHead =
+          (lamp.pivot - lamp.bulb) / (lamp.pivot - lamp.bulb).distance;
+      expect(hood.contains(lamp.bulb), isFalse);
+      expect(
+        hood.contains(lamp.bulb + towardsTheHead * (lamp.bulbRadius - 1)),
+        isTrue,
+      );
+      expect(
+        hood.contains(lamp.bulb - towardsTheHead * (lamp.bulbRadius - 1)),
+        isFalse,
+      );
       expect(decor.veils.keys.toSet(), {
         DayMoment.matin,
         DayMoment.soir,

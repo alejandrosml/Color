@@ -73,6 +73,20 @@ Offset? _point(Object? json) {
   return Offset((json[0] as num).toDouble(), (json[1] as num).toDouble());
 }
 
+/// An outline written as `[x, y, x, y, …]`: three points at least, or
+/// nothing.
+List<Offset> _outline(Object? json) {
+  if (json is! List || json.length < 6 || json.length.isOdd) return const [];
+  if (!json.every((value) => value is num && value.isFinite)) return const [];
+  return [
+    for (var index = 0; index < json.length; index += 2)
+      Offset(
+        (json[index] as num).toDouble(),
+        (json[index + 1] as num).toDouble(),
+      ),
+  ];
+}
+
 Set<DayMoment>? _moments(Object? json) {
   if (json is! List) return null;
   return {for (final name in json) ?DayMoment.named(name)};
@@ -216,7 +230,8 @@ class DecorVeil {
 /// The lamp of the desk: where its head turns, the direction of its light
 /// in degrees (to the right, then down), half the opening of its beam, how
 /// far from the pivot the rim of its shade is and half the width of that
-/// rim, its bulb, and the moments it is lit at.
+/// rim, its bulb, what hides a part of that bulb, and the moments it is lit
+/// at.
 class DecorLamp {
   const DecorLamp({
     required this.anchor,
@@ -228,6 +243,7 @@ class DecorLamp {
     required this.bulb,
     required this.bulbRadius,
     required this.moments,
+    this.hood = const [],
   });
   final DecorAnchor anchor;
   final Offset pivot;
@@ -238,6 +254,12 @@ class DecorLamp {
   final Offset bulb;
   final double bulbRadius;
   final Set<DayMoment> moments;
+
+  /// The outline of what stands in front of the bulb — the shade, up to the
+  /// near edge of its rim, strokes included —, in units of the decor: the
+  /// bulb comes out of the shade, and its light is never painted over this.
+  /// Empty when nothing hides the bulb.
+  final List<Offset> hood;
 
   static DecorLamp? fromJson(Object? json) {
     if (json is! Map) return null;
@@ -275,6 +297,7 @@ class DecorLamp {
       bulb: bulb,
       bulbRadius: radius,
       moments: _moments(json['moments']) ?? const {},
+      hood: _outline(json['hood']),
     );
   }
 }
@@ -1102,8 +1125,22 @@ class DecorPainting {
           const [0, 80 / 280, 190 / 280, 1],
         ),
     );
-    // The lit bulb: a glow that fades, a golden ring, and the bulb.
+    // The lit bulb: a glow that fades, a golden ring, and the bulb — but
+    // for what the shade hides of it: the bulb comes out of the shade, and
+    // neither it nor its glow is painted over the shade.
     final radius = lamp.bulbRadius * scale;
+    final hooded = lamp.hood.length >= 3;
+    if (hooded) {
+      canvas.save();
+      canvas.clipPath(
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(Rect.fromCircle(center: bulb, radius: radius + 41 * scale))
+          ..addPolygon([
+            for (final point in lamp.hood) layout.point(point, lamp.anchor),
+          ], true),
+      );
+    }
     void glow(double reach, Color colour) => canvas.drawCircle(
       bulb,
       radius + reach * scale,
@@ -1133,6 +1170,7 @@ class DecorPainting {
           const [0, .42, 1],
         ),
     );
+    if (hooded) canvas.restore();
   }
 
   /// What a child may ask the name of at [position] of the frame: the
