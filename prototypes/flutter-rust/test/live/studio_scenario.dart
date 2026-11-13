@@ -136,6 +136,9 @@ void main() {
     // against the budgets (Q-03), and the first frame of Color itself.
     final frameTimes = <int, (int, int, int)>{};
     final traitFrames = <(int, int)>[];
+    // The step that drew each of them, to tell their frames apart.
+    final traitSteps = <String>[];
+    var stepNow = '';
     // The frames of the decor while it moves, apart: no budget yet. And
     // those of a decor that is looked at on the whole window, which moves
     // as much as it can.
@@ -291,6 +294,7 @@ void main() {
     }
 
     Future<void> step(String name, Future<Object?> Function() body) async {
+      stepNow = name;
       final watch = Stopwatch()..start();
       try {
         final detail = await body();
@@ -481,6 +485,7 @@ void main() {
         from + 1,
         tester.platformDispatcher.frameData.frameNumber,
       ));
+      if (into == null) traitSteps.add(stepNow);
     }
 
     /// What the drawing holds and whether it is saved, as the studio says
@@ -1718,6 +1723,23 @@ void main() {
           'raster_ms': _centiles([for (final (_, raster, _) in micros) raster]),
         },
       };
+      // The same frames trait by trait, in the order they were drawn: the
+      // traits of a scenario are not all drawn in the same studio, at the
+      // same hour or in the same window.
+      record['frames_by_trait'] = [
+        for (final (index, (first, last)) in traitFrames.indexed)
+          () {
+            final raster = [
+              for (var number = first; number <= last; number++)
+                if (frameTimes[number] case (_, final raster, _)) raster,
+            ];
+            return {
+              'step': traitSteps[index],
+              'count': raster.length,
+              if (raster.isNotEmpty) 'raster_ms': _centiles(raster),
+            };
+          }(),
+      ];
       final moving = [
         if (decorFrames case (final first, final last))
           for (var number = first; number <= last; number++)
