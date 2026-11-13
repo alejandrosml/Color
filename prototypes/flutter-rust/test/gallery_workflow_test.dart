@@ -21,10 +21,9 @@ const _saved = '/drawings/Mon dessin.edupaint';
 
 // What the studio says of a drawing taken from the album's copy: it names
 // the day of that copy.
-final _fromGallery = find.textContaining(
-  RegExp(
-    r'^Dessin repris de la galerie, tel qu’il était aujourd’hui à \d+\u00a0h\u00a0\d\d · Enregistrer te demandera où le ranger\.$',
-  ),
+// What « Mon dessin » says of a drawing taken back from the album.
+final _fromGallery = RegExp(
+  r'Dessin repris de la galerie, tel qu’il était aujourd’hui à \d+\u00a0h\u00a0\d\d · Enregistrer te demandera où le ranger\.',
 );
 
 class _Files extends MemoryFiles {
@@ -97,7 +96,7 @@ void main() {
   // A rectangle with a red outline and a yellow inside, at 200..500 × 200..450.
   Future<void> yellowRectangle(StudioDriver studio) async {
     await studio.tap('tool-rectangle');
-    await studio.tap('color-d75e56');
+    await studio.tap('color-e83d48');
     await studio.tap('paint-target-fill');
     await studio.tap('color-eebf4e');
     await studio.drag(studio.at(200, 200), studio.at(500, 450));
@@ -105,7 +104,7 @@ void main() {
 
   Future<void> blueTrait(StudioDriver studio, [double y = 600]) async {
     await studio.tap('tool-stroke');
-    await studio.tap('color-477fb2');
+    await studio.tap('color-3370d1');
     await studio.drag(studio.at(700, y), studio.at(1000, y + 50));
   }
 
@@ -156,7 +155,7 @@ void main() {
     await studio.tap('tool-stroke');
     await studio.click();
     await studio.tap('saveProject');
-    expect(find.textContaining('Projet enregistré'), findsWidgets);
+    expect(await drawingStatus(tester), contains('Projet enregistré'));
     expect(tester.takeException(), isNull);
     await studio.finish();
   }, skip: !available);
@@ -167,7 +166,10 @@ void main() {
       final gallery = MemoryGallery();
       final studio = StudioDriver(tester, gallery: gallery);
       await studio.start();
+      // « Mes dessins » waits in « Mon dessin ».
+      await studio.openMyDrawing();
       expect(find.byKey(const Key('openGallery')), findsOneWidget);
+      await studio.closePanel();
       expect(studio.menu.hasGallery, isTrue);
       // The help explains the album, and the information says what it keeps.
       await studio.tap('showHelp');
@@ -199,7 +201,10 @@ void main() {
       expect(gallery.entries, isEmpty);
 
       await saveWithCard(studio, gallery, 1);
-      expect(find.textContaining('Projet enregistré : $_saved'), findsWidgets);
+      expect(
+        await drawingStatus(tester),
+        contains('Projet enregistré : $_saved'),
+      );
       expect(problem(tester), isNull);
       final entry = gallery.entries.single;
       expect(entry.name, 'Mon dessin.edupaint');
@@ -216,7 +221,7 @@ void main() {
       // One pixel for 3.75 units of the sheet.
       expect(pixels.at(10, 10), 0xffffffff, reason: 'paper');
       expect(pixels.at(93, 86), 0xffeebf4e, reason: 'inside of the rectangle');
-      expect(pixels.at(53, 86), 0xffd75e56, reason: 'its outline');
+      expect(pixels.at(53, 86), 0xffe83d48, reason: 'its outline');
       expect(pixels.at(250, 160), 0xffffffff, reason: 'paper again');
 
       // Saving the same file again refreshes the same card.
@@ -226,7 +231,7 @@ void main() {
       expect(refreshed.elementCount, 2);
       expect(gallery.copyOf(refreshed), studio.files.projects[_saved]);
       final again = await _decode(tester, gallery.thumbnailOf(refreshed)!);
-      expect(again.at(226, 166), 0xff477fb2, reason: 'the new trait');
+      expect(again.at(226, 166), 0xff3370d1, reason: 'the new trait');
       expect(studio.files.saveDialogCount, 1);
       expect(tester.takeException(), isNull);
       await studio.finish();
@@ -273,7 +278,7 @@ void main() {
 
       await studio.newSheet('portrait');
       await studio.tap('tool-fill');
-      await studio.tap('color-78a66f');
+      await studio.tap('color-4db266');
       await studio.click();
       studio.files.savePath = '/drawings/Forêt.edupaint';
       await saveWithCard(studio, gallery, 2);
@@ -290,8 +295,8 @@ void main() {
       expect(forest.elementCount, 0);
       final pixels = await _decode(tester, gallery.thumbnailOf(forest)!);
       expect((pixels.width, pixels.height), (213, 320));
-      expect(pixels.at(100, 160), 0xff78a66f);
-      expect(pixels.at(0, 0), 0xff78a66f);
+      expect(pixels.at(100, 160), 0xff4db266);
+      expect(pixels.at(0, 0), 0xff4db266);
       await studio.finish();
     },
     skip: !available,
@@ -313,8 +318,8 @@ void main() {
       await reopen(studio, _saved);
       expect(find.byKey(const Key('galleryDialog')), findsNothing);
       studio.expectCount(1);
-      expect(find.text('Mon dessin.edupaint'), findsOneWidget);
-      expect(find.textContaining('projet enregistré'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('Mon dessin.edupaint'));
+      expect(await drawingStatus(tester), contains('projet enregistré'));
       expect(studio.isDirty, isFalse);
       expect(problem(tester), isNull);
 
@@ -352,10 +357,10 @@ void main() {
 
       await reopen(studio, _saved);
       studio.expectCount(1);
-      expect(_fromGallery, findsOneWidget);
+      expect(await studio.status(), contains(_fromGallery));
       // It is the drawing, not yet a file: its name is the default one.
       expect(find.text('Mon dessin'), findsOneWidget);
-      expect(find.textContaining('nouvelle feuille'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('nouvelle feuille'));
       expect(studio.isDirty, isFalse);
       expect(problem(tester), isNull);
       // Nothing was written anywhere by looking.
@@ -368,7 +373,7 @@ void main() {
       await saveWithCard(studio, gallery, 2);
       expect(files.saveDialogCount, 2);
       expect(files.suggestions, [null, _saved]);
-      expect(find.text('Mon dessin.edupaint'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('Mon dessin.edupaint'));
       expect(gallery.entries.single.elementCount, 2);
 
       // Once it has a file again, the next save needs no panel.
@@ -394,7 +399,7 @@ void main() {
       await studio.newSheet('square');
       files.outOfReach.add(_saved);
       await reopen(studio, _saved);
-      expect(_fromGallery, findsOneWidget);
+      expect(await studio.status(), contains(_fromGallery));
 
       // Another sheet: its first save must not point at the old drawing's file.
       await studio.newSheet('portrait');
@@ -422,7 +427,7 @@ void main() {
 
       await reopen(studio, _saved);
       studio.expectCount(1);
-      expect(_fromGallery, findsOneWidget);
+      expect(await studio.status(), contains(_fromGallery));
       expect(problem(tester), isNull);
       // The damaged file was only read.
       expect(files.projects[_saved], 'pas un dessin'.codeUnits);
@@ -476,7 +481,7 @@ void main() {
       await reopen(studio, _saved);
       await studio.tap('discardChanges');
       studio.expectCount(1);
-      expect(find.text('Mon dessin.edupaint'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('Mon dessin.edupaint'));
       expect(tester.takeException(), isNull);
       await studio.finish();
     },
@@ -521,7 +526,7 @@ void main() {
       await cardMade(tester, gallery, 2);
       studio.expectCount(3);
       expect(studio.isDirty, isFalse);
-      expect(find.text('Mon dessin.edupaint'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('Mon dessin.edupaint'));
       expect(gallery.entries.single.elementCount, 3);
       expect(files.saveDialogCount, 1);
       expect(tester.takeException(), isNull);
@@ -547,7 +552,7 @@ void main() {
       await reopen(studio, _saved);
       expect(problem(tester), contains('version plus récente de Color'));
       expect(problem(tester), contains('Le dessin actuel est conservé'));
-      expect(_fromGallery, findsNothing);
+      expect(await studio.status(), isNot(contains(_fromGallery)));
       studio.expectCount(2);
       expect(studio.isDirty, isTrue);
       expect(tester.takeException(), isNull);
@@ -566,7 +571,10 @@ void main() {
     await yellowRectangle(studio);
     await saveWithCard(studio, gallery, 1);
     expect(files.projects[_saved], isNotNull);
-    expect(find.textContaining('Projet enregistré : $_saved'), findsWidgets);
+    expect(
+      await drawingStatus(tester),
+      contains('Projet enregistré : $_saved'),
+    );
     expect(studio.isDirty, isFalse);
     expect(problem(tester), isNull);
     expect(gallery.entries, isEmpty);
@@ -680,8 +688,7 @@ void main() {
       await studio.click();
       await saveWithCard(studio, gallery, 1);
 
-      await tester.tap(find.byKey(const Key('moreFileActions')));
-      await tester.pumpAndSettle();
+      await studio.openMyDrawing();
       await tester.tap(find.byKey(const Key('openGallery')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('galleryDialog')), findsOneWidget);
@@ -723,7 +730,7 @@ void main() {
       expect(gallery.entries, isEmpty);
       expect(files.projects[_saved], savedBytes);
       studio.expectCount(1);
-      expect(find.text('Mon dessin.edupaint'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('Mon dessin.edupaint'));
       expect(studio.isDirty, isFalse);
 
       // The next save of the same file brings its card back.
@@ -750,7 +757,7 @@ void main() {
       await studio.newSheet('square');
       files.outOfReach.add(_saved);
       await reopen(studio, _saved);
-      expect(_fromGallery, findsOneWidget);
+      expect(await studio.status(), contains(_fromGallery));
       studio.expectCount(1);
       // Two more traits, not yet saved; the same card is chosen again, and
       // the question answered with Enregistrer. The panel proposes the place
@@ -768,8 +775,8 @@ void main() {
       // What was read before the question, one element, is not what stays.
       studio.expectCount(3);
       expect(studio.isDirty, isFalse);
-      expect(find.text('Mon dessin.edupaint'), findsOneWidget);
-      expect(_fromGallery, findsNothing);
+      expect(await drawingStatus(tester), contains('Mon dessin.edupaint'));
+      expect(await studio.status(), isNot(contains(_fromGallery)));
       // The next save goes to that file, with everything in it.
       await studio.tap('tool-stroke');
       await studio.click(studio.at(100, 700));
@@ -801,7 +808,7 @@ void main() {
       expect(countIn(files.projects[_saved]!), 3);
       studio.expectCount(3);
       expect(studio.isDirty, isFalse);
-      expect(find.text('Mon dessin.edupaint'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('Mon dessin.edupaint'));
       await studio.finish();
     },
     skip: !available,
@@ -910,7 +917,10 @@ void main() {
         () => Future<void>.delayed(const Duration(milliseconds: 300)),
       );
       await tester.pump();
-      expect(find.textContaining('Projet enregistré : $_saved'), findsWidgets);
+      expect(
+        await drawingStatus(tester),
+        contains('Projet enregistré : $_saved'),
+      );
 
       ui.AppExitResponse? response;
       unawaited(
@@ -937,6 +947,7 @@ void main() {
     await yellowRectangle(studio);
     await studio.tap('saveProject');
     expect(gallery.rememberCalls, 0);
+    await studio.openMyDrawing();
     await tester.tap(find.byKey(const Key('openGallery')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));

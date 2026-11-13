@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 class _Recovery extends MemoryRecovery {
   int clears = 0;
@@ -28,6 +29,7 @@ void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
   final surface = find.byKey(const Key('drawingSurface'));
   Future<void> tap(WidgetTester tester, String key) async {
+    key = await revealControl(tester, key);
     final target = find.byKey(Key(key));
     await tester.ensureVisible(target);
     await tester.tap(target);
@@ -166,8 +168,8 @@ void main() {
         await tap(tester, 'cancelNewSheet');
         await tap(tester, 'undo');
         expect(
-          find.textContaining('1 élément · projet enregistré'),
-          findsOneWidget,
+          drawingCaption(tester),
+          contains('1 élément · projet enregistré'),
         );
         await tap(tester, 'redo');
         expect(await svg(tester, files), before);
@@ -263,8 +265,8 @@ void main() {
       if (replaced) {
         expect(recovery.bytes, isNull);
         expect(
-          find.textContaining('0 élément · nouvelle feuille'),
-          findsOneWidget,
+          drawingCaption(tester),
+          contains('0 élément · nouvelle feuille'),
         );
         expect(menu(tester).onUndo, isNull);
         expect(menu(tester).onRedo, isNull);
@@ -336,7 +338,7 @@ void main() {
                 VectorKind.rectangle,
                 const DocumentPoint(400, 250),
                 const DocumentPoint(650, 500),
-                rgb: 0x477fb2,
+                rgb: 0x3370d1,
                 width: 12,
                 fillRgb: 0xeebf4e,
               );

@@ -26,11 +26,14 @@ void main() {
       await studio.tap('saveProject');
 
       await studio.tap('tool-fill');
-      expect(find.text('Épaisseur'), findsNothing);
-      // Where its help would be, the pot shows how it pours (Color 1.1).
+      // The pot has nothing to size; « lequel » shows how it pours
+      // (Color 1.1).
+      expect(onPressedOf(tester, 'galetSize'), isNull);
+      await studio.reveal('pour-plain');
       for (final pour in ['plain', 'linear', 'radial']) {
         expect(find.byKey(Key('pour-$pour')), findsOneWidget);
       }
+      await studio.closePanel();
       await studio.tap('color-eebf4e');
       // The middle of a hollow rectangle: Choisir would find nothing there.
       await studio.click(studio.at(350, 325));
@@ -48,8 +51,8 @@ void main() {
         expect(rectangle.fillRgb, 0xeebf4e);
         expect(oval.fillRgb, 0x9385bc);
         // Outlines keep their colour and their width.
-        expect(rectangle.rgb, 0x477fb2);
-        expect(oval.rgb, 0x477fb2);
+        expect(rectangle.rgb, 0x3370d1);
+        expect(oval.rgb, 0x3370d1);
         expect(rectangle.width, 12);
         expect(document.paperRgb, whitePaper);
         // Color 1.1 writes version 6; filling shapes needed no new version
@@ -60,8 +63,8 @@ void main() {
         document.dispose();
       }
       final exported = await studio.svg();
-      expect(exported, contains('fill="#eebf4e" stroke="#477fb2"'));
-      expect(exported, contains('fill="#9385bc" stroke="#477fb2"'));
+      expect(exported, contains('fill="#eebf4e" stroke="#3370d1"'));
+      expect(exported, contains('fill="#9385bc" stroke="#3370d1"'));
 
       // The same colour again changes nothing: no step is added.
       await studio.click(studio.at(800, 325));
@@ -96,7 +99,7 @@ void main() {
       studio.expectCount(4);
 
       await studio.tap('tool-fill');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.click(studio.at(200, 125));
       await studio.click(studio.at(200, 300));
       await studio.click(studio.at(520, 120));
@@ -104,7 +107,7 @@ void main() {
       final document = await studio.saved();
       try {
         expect(document.strokes.map((object) => object.rgb).toSet(), {
-          0xd75e56,
+          0xe83d48,
         });
         expect(document.strokes.map((object) => object.fillRgb).toSet(), {
           null,
@@ -120,7 +123,7 @@ void main() {
       for (var step = 0; step < 4; step++) {
         await studio.tap('undo');
       }
-      expect(await studio.svg(), isNot(contains('#d75e56')));
+      expect(await studio.svg(), isNot(contains('#e83d48')));
       await studio.finish();
     },
     skip: !available,
@@ -151,7 +154,7 @@ void main() {
       // On both sides of the line, the same paper.
       expect(await studio.pixel(png, 350, 325), [0xe6, 0x99, 0x76, 255]);
       expect(await studio.pixel(png, 100, 325), [0xe6, 0x99, 0x76, 255]);
-      expect(await studio.pixel(png, 200, 325), [0x47, 0x7f, 0xb2, 255]);
+      expect(await studio.pixel(png, 200, 325), [0x33, 0x70, 0xd1, 255]);
 
       var document = await studio.saved();
       try {
@@ -201,13 +204,13 @@ void main() {
       await studio.tap('tool-ellipse');
       await studio.drag(studio.at(400, 300), studio.at(800, 600));
       await studio.tap('tool-fill');
-      await studio.tap('color-78a66f');
+      await studio.tap('color-4db266');
       // Where both overlap, the oval of the upper layer is in front.
       await studio.click(studio.at(500, 400));
       var document = await studio.saved();
       try {
         expect(document.strokes[0].fillRgb, isNull);
-        expect(document.strokes[1].fillRgb, 0x78a66f);
+        expect(document.strokes[1].fillRgb, 0x4db266);
         expect(document.paperRgb, 0xeebf4e);
       } finally {
         document.dispose();
@@ -220,7 +223,7 @@ void main() {
       document = await studio.saved();
       try {
         expect(document.strokes[0].fillRgb, 0xc96d93);
-        expect(document.strokes[1].fillRgb, 0x78a66f);
+        expect(document.strokes[1].fillRgb, 0x4db266);
       } finally {
         document.dispose();
       }
@@ -280,7 +283,7 @@ void main() {
       await studio.tap('openProject');
       studio.expectCount(1);
       await studio.tap('tool-fill');
-      await studio.tap('color-78a66f');
+      await studio.tap('color-4db266');
       await studio.click(studio.at(30, 22, width: 32, height: 24));
       expect(
         find.textContaining('Une image couvre toute la feuille'),
@@ -315,7 +318,7 @@ void main() {
                 .first,
           )
           .painter;
-      expect(painter.strokes.single.data.rgb, 0x78a66f);
+      expect(painter.strokes.single.data.rgb, 0x4db266);
       expect(painter.paperRgb, whitePaper);
       expect(tester.takeException(), isNull);
       await studio.finish();

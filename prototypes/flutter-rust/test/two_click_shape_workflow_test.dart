@@ -139,7 +139,7 @@ void main() {
         expect(shape.points.first.y, closeTo(250, .01));
         expect(shape.points.last.x, closeTo(700, .01));
         expect(shape.points.last.y, closeTo(500, .01));
-        expect(shape.rgb, 0x477fb2);
+        expect(shape.rgb, 0x3370d1);
         // The circle is gone with the click that used it.
         expect(await painted(studio, 300, 250), isNot(startMark[tool]));
 
@@ -327,7 +327,7 @@ void main() {
       expect(posed.end!.x, closeTo(700, .01));
       expect(posed.end!.y, closeTo(400, .01));
       // The outline of the shape to come is painted, in the current colour.
-      expect(await painted(studio, 500, 200), [0x47, 0x7f, 0xb2]);
+      expect(await painted(studio, 500, 200), [0x33, 0x70, 0xd1]);
       // And a second little circle follows the pointer, in the other colour
       // of the pictures of the tools.
       expect(await painted(studio, 700, 400), [0xed, 0x8c, 0x88]);
@@ -593,15 +593,15 @@ void main() {
   testWidgets(
     'the pipette, between the two clicks, gives its colour to the shape to come',
     (tester) async {
-      final studio = StudioDriver(tester);
+      final studio = StudioDriver(tester, options: grownUpOptions());
       // The widest window of the studio of before: the pebbles of a wider
       // one have no pipette until the setting of the older children.
       await studio.start(size: const Size(1128, 820));
       // A red line to take a colour from.
       await studio.tap('tool-line');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.drag(studio.at(900, 200), studio.at(1100, 200));
-      await studio.tap('color-477fb2');
+      await studio.tap('color-3370d1');
       await studio.click(studio.at(300, 300));
       final posed = anchor(tester);
       expect(posed, isNotNull);
@@ -611,12 +611,12 @@ void main() {
       await studio.click(studio.at(1000, 200));
       expect(anchor(tester), same(posed));
       studio.expectCount(1);
-      expect(painter(tester).anchorRgb, 0xd75e56);
+      expect(painter(tester).anchorRgb, 0xe83d48);
       await studio.click(studio.at(600, 500));
       studio.expectCount(2);
       final document = await studio.saved();
       try {
-        expect(document.strokes.last.rgb, 0xd75e56);
+        expect(document.strokes.last.rgb, 0xe83d48);
         expect(document.strokes.last.points.first.x, closeTo(300, .01));
       } finally {
         document.dispose();

@@ -65,13 +65,17 @@ class PhoneMenu extends StatelessWidget {
       children: [
         entry.picture(28),
         const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            entry.name,
-            maxLines: 1,
-            softWrap: false,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        // With enlarged letters the name takes the height that is left,
+        // and no more: it is never cut.
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              entry.name,
+              maxLines: 1,
+              softWrap: false,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
           ),
         ),
       ],

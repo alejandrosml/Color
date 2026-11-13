@@ -179,11 +179,8 @@ void main() {
     (tester) async {
       final studio = StudioDriver(tester);
       await studio.start(size: const Size(680, 480), textScale: 2);
-      // In a narrow window the help is in the « … » menu of the top bar.
-      await tester.tap(find.byKey(const Key('moreFileActions')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('showHelp')));
-      await tester.pumpAndSettle();
+      // In a small window the help waits in « Mon dessin ».
+      await pressAction(tester, 'showHelp');
       expect(find.byKey(const Key('helpDialog')), findsOneWidget);
       expect(tester.takeException(), isNull);
       // The last line is reached by scrolling, the way back stays in view.
@@ -230,7 +227,9 @@ void main() {
       }
       await tester.sendKeyEvent(LogicalKeyboardKey.digit3);
       await tester.pumpAndSettle();
+      await studio.reveal('tool-rectangle');
       expect(selectedTool(tester), StudioTool.rectangle);
+      await studio.closePanel();
       // The numeric keypad too.
       await tester.sendKeyEvent(LogicalKeyboardKey.numpad7);
       await tester.pumpAndSettle();

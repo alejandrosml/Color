@@ -9,6 +9,7 @@ import 'package:edupaint_flutter_study/rust_document.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
@@ -37,10 +38,8 @@ void main() {
   }
 
   Future<void> tap(WidgetTester tester, String key) async {
-    if (key == 'exportSvg') {
-      await tester.tap(find.byKey(const Key('exportImage')));
-      await tester.pumpAndSettle();
-    }
+    key = await revealControl(tester, key);
+    if (key == 'exportSvg') await pressAction(tester, 'exportImage');
     await tester.tap(find.byKey(Key(key)));
     if (key == 'openProject') {
       await waitForPreparedOpen(tester, allowSaveDecision: true);
@@ -66,13 +65,13 @@ void main() {
       expect(files.exportSourcePath, isNull);
       await tap(tester, 'saveProject');
       expect(files.projects.length, 1);
-      expect(find.textContaining('projet enregistré'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('projet enregistré'));
       await tap(tester, 'newProject');
       await tap(tester, 'createNewSheet');
-      expect(find.textContaining('0 élément · '), findsOneWidget);
+      expect(drawingCaption(tester), contains('0 élément · '));
       files.openPath = files.savePath;
       await tap(tester, 'openProject');
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       tester.view.physicalSize = const Size(680, 520);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -80,9 +79,9 @@ void main() {
       expect(files.svg, before);
       expect(files.exportSourcePath, files.savePath);
       await tap(tester, 'undo');
-      expect(find.textContaining('0 élément · '), findsOneWidget);
+      expect(drawingCaption(tester), contains('0 élément · '));
       await tap(tester, 'redo');
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       await tap(tester, 'saveProject');
       expect(
         files.saveDialogCount,
@@ -105,7 +104,7 @@ void main() {
       files.openPath = files.savePath;
       await tap(tester, 'openProject');
       await tap(tester, 'saveChanges');
-      expect(find.textContaining('2 éléments'), findsOneWidget);
+      expect(drawingCaption(tester), contains('2 éléments'));
       final reopened = RustDocument.fromProject(
         files.projects[files.savePath]!,
       );
@@ -128,18 +127,18 @@ void main() {
       expect(find.byKey(const Key('saveChanges')), findsOneWidget);
       files.savePath = null;
       await tap(tester, 'saveChanges');
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       files.savePath = '/drawings/new.edupaint';
       files.failWrite = true;
       await tap(tester, 'newProject');
       await tap(tester, 'createNewSheet');
       await tap(tester, 'saveChanges');
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       expect(files.projects, isEmpty);
       await tap(tester, 'newProject');
       await tap(tester, 'createNewSheet');
       await tap(tester, 'cancelChanges');
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       await finish(tester);
     },
     skip: !available,
@@ -158,7 +157,7 @@ void main() {
       files.openPath = '/drawings/broken.edupaint';
       files.projects[files.openPath!] = Uint8List.fromList([1, 2, 3]);
       await tap(tester, 'openProject');
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       expect(find.byKey(const Key('discardChanges')), findsNothing);
       expect(recovery.bytes, before);
       await finish(tester);
@@ -172,7 +171,7 @@ void main() {
       final original = RustDocument(width: 640, height: 480);
       original.addStroke(
         const [DocumentPoint(30, 40), DocumentPoint(200, 180)],
-        rgb: 0xd75e56,
+        rgb: 0xe83d48,
         width: 13,
       );
       final bytes = original.exportProject();
@@ -182,8 +181,7 @@ void main() {
       final files = MemoryFiles();
       await start(tester, files, recovery);
       await tap(tester, 'restoreRecovery');
-      expect(find.textContaining('1 élément'), findsOneWidget);
-      expect(find.text('640 × 480 unités'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       await tap(tester, 'exportSvg');
       expect(files.svg, svg);
       await tap(tester, 'saveProject');
@@ -205,7 +203,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
       expect(recovery.bytes, [1, 2, 3]);
       expect(recovery.writes, 0);
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       await finish(tester);
     },
     skip: !available,

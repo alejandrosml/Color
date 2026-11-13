@@ -36,7 +36,11 @@ void main() {
     tester,
   ) async {
     final kept = KeptColours.memory([0xf4b7cf]);
-    final studio = StudioDriver(tester, keptColours: kept);
+    final studio = StudioDriver(
+      tester,
+      keptColours: kept,
+      options: grownUpOptions(),
+    );
     await studio.start();
     // The blue of the start, then the paint.
     await studio.tap('morePaintColors');
@@ -46,7 +50,7 @@ void main() {
     await studio.tap('mixColours');
     await studio.tap('confirmPaintColor');
     // The colour mixed is kept, the latest first, with those of before.
-    expect(kept.colours.first, isNot(0x477fb2));
+    expect(kept.colours.first, isNot(0x3370d1));
     expect(kept.colours, contains(0xf4b7cf));
     await studio.tap('tool-stroke');
     await studio.drag(studio.at(300, 300), studio.at(600, 400));

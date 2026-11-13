@@ -13,7 +13,6 @@ import 'package:edupaint_flutter_study/gallery_storage.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
-import 'package:flutter/cupertino.dart' show CupertinoSlider;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +21,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/memory_files.dart';
 import 'support/memory_gallery.dart';
 import 'support/review_fonts.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final output = Platform.environment['COLOR_REVIEW_DIR'];
@@ -103,17 +103,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  // A press on a control of the studio, as a person finds it: what holds
+  // it is opened first (support/studio_driver.dart).
   Future<void> tap(WidgetTester tester, String key) async {
-    final control = find.byKey(Key(key));
-    // The rectangle and the oval are chosen in « Formes ».
-    if (control.evaluate().isEmpty &&
-        (key == 'tool-rectangle' || key == 'tool-ellipse')) {
-      await tap(tester, 'tool-shapes');
+    if (find.byKey(Key(key)).evaluate().isEmpty) {
+      await closePebblePanel(tester);
     }
-    await tester.ensureVisible(control);
-    await tester.pumpAndSettle();
-    await tester.tap(control);
-    await tester.pumpAndSettle();
+    await pressControl(tester, key);
   }
 
   Future<void> drag(WidgetTester tester, Offset from, Offset to) async {
@@ -152,7 +148,7 @@ void main() {
       await click(tester, const Offset(150, -85));
       await tap(tester, 'chooseStamp');
       await tap(tester, 'stamp-chat');
-      await tap(tester, 'color-477fb2');
+      await tap(tester, 'color-3370d1');
       await tap(tester, 'size-large');
       await click(tester, const Offset(40, 50));
       await tap(tester, 'chooseStamp');
@@ -217,7 +213,8 @@ void main() {
     debugDisableShadows = false;
     try {
       await tester.runAsync(loadReviewFonts);
-      await start(tester, const Size(1280, 900));
+      // The pipette is one of the colours « pour les grands ».
+      await start(tester, const Size(1280, 900), options: grownUpOptions());
       await shot(tester, '30-outils-une-colonne');
       await tap(tester, 'tool-rectangle');
       await drag(tester, const Offset(-200, -80), const Offset(-60, 40));
@@ -229,7 +226,7 @@ void main() {
       await shot(tester, '31-outil-remplir');
       await tap(tester, 'color-eebf4e');
       await click(tester, const Offset(-130, -20));
-      await tap(tester, 'color-477fb2'.replaceAll('a8d8f0', '9385bc'));
+      await tap(tester, 'color-3370d1'.replaceAll('a8d8f0', '9385bc'));
       await click(tester, const Offset(100, 0));
       await tap(tester, 'color-e69976');
       await click(tester, const Offset(230, -120));
@@ -261,8 +258,11 @@ void main() {
       tester.view.physicalSize = const Size(700, 620);
       await tester.pumpAndSettle();
       await shot(tester, '42-fenetre-etroite-outils');
-      await tap(tester, 'bigSheet');
-      await shot(tester, '43-fenetre-etroite-en-grand');
+      // « Dessiner en grand » is offered only where the sheet gains by it.
+      if (find.byKey(const Key('bigSheet')).evaluate().isNotEmpty) {
+        await tap(tester, 'bigSheet');
+        await shot(tester, '43-fenetre-etroite-en-grand');
+      }
       await tester.pumpWidget(const SizedBox.shrink());
     } finally {
       debugDisableShadows = true;
@@ -294,9 +294,9 @@ void main() {
       await tap(tester, 'size-large');
       await click(tester, const Offset(110, -70));
       await tap(tester, 'tool-rectangle');
-      await tap(tester, 'color-388778');
+      await tap(tester, 'color-2f854a');
       await tap(tester, 'paint-target-fill');
-      await tap(tester, 'color-78a66f');
+      await tap(tester, 'color-4db266');
       await drag(tester, const Offset(-190, 60), const Offset(190, 125));
       files.savePath = '/dessins/Jardin.edupaint';
       await tap(tester, 'saveProject');
@@ -306,7 +306,7 @@ void main() {
       await tap(tester, 'newSheet-portrait');
       await tap(tester, 'createNewSheet');
       await tap(tester, 'tool-fill');
-      await tap(tester, 'color-477fb2');
+      await tap(tester, 'color-3370d1');
       await click(tester, Offset.zero);
       await tap(tester, 'tool-stamp');
       await tap(tester, 'chooseStamp');
@@ -321,7 +321,7 @@ void main() {
       await tap(tester, 'newSheet-landscape');
       await tap(tester, 'createNewSheet');
       await tap(tester, 'tool-ellipse');
-      await tap(tester, 'color-d75e56');
+      await tap(tester, 'color-e83d48');
       await tap(tester, 'paint-target-fill');
       await tap(tester, 'color-e69976');
       await drag(tester, const Offset(-120, -60), const Offset(120, 80));
@@ -370,11 +370,9 @@ void main() {
       }
       tester.view.physicalSize = const Size(700, 620);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('moreFileActions')));
-      await tester.pumpAndSettle();
+      await openMyDrawingOf(tester);
       await shot(tester, '55-fenetre-etroite-menu');
-      await tester.tap(find.byKey(const Key('openGallery')));
-      await tester.pumpAndSettle();
+      await tap(tester, 'openGallery');
       await engine(tester);
       await shot(tester, '56-fenetre-etroite-mes-dessins');
       await tap(tester, 'closeGallery');
@@ -577,13 +575,14 @@ void main() {
         await shot(tester, '75-$name-dialogue-texte');
         await tap(tester, 'cancelText');
         await tap(tester, 'tool-stroke');
-        final scroll = find.descendant(
-          of: find.byKey(const Key('phoneSideRail')),
-          matching: find.byType(Scrollable),
-        );
-        await tester.drag(scroll, const Offset(0, -260));
-        await tester.pumpAndSettle();
-        await shot(tester, '76-$name-colonne-defilee');
+        // The rails do not scroll: the other tools wait in the drawer,
+        // the other colours behind the one in hand.
+        await tap(tester, 'toolDrawer');
+        await shot(tester, '76-$name-tiroir');
+        await closePebblePanel(tester);
+        await tap(tester, 'railColour');
+        await shot(tester, '76-$name-couleurs');
+        await closePebblePanel(tester);
         await tester.pumpWidget(const SizedBox.shrink());
         for (final level in [InterfaceLevel.child, InterfaceLevel.toddler]) {
           await store.change(store.value.copyWith(level: level));
@@ -672,31 +671,22 @@ void main() {
         await drag(tester, const Offset(110, -150), const Offset(210, -50));
 
         await tap(tester, 'tool-stroke');
-        await tap(tester, 'color-d75e56');
+        await tap(tester, 'color-e83d48');
         await hover(const Offset(60, 60));
         await shot(tester, '80-pointe-pinceau-et-son-point');
-        // The widest trait.
-        final slider = find.descendant(
-          of: find.byKey(const Key('brushWidthSemantics')),
-          matching: find.byType(CupertinoSlider),
-        );
-        final track = tester.getRect(slider);
-        await tester.tapAt(Offset(track.right - 6, track.center.dy));
-        await tester.pumpAndSettle();
+        // The widest trait, then the middle one again.
+        await tap(tester, 'width-4');
         await hover(const Offset(60, 60));
         await shot(tester, '81-pointe-pinceau-gros-trait');
-        await tester.tapAt(
-          Offset(track.left + track.width * .22, track.center.dy),
-        );
-        await tester.pumpAndSettle();
+        await tap(tester, 'width-2');
 
         await tap(tester, 'tool-fill');
-        await tap(tester, 'color-78a66f');
+        await tap(tester, 'color-4db266');
         await hover(const Offset(-130, 50), pot: true);
         await shot(tester, '82-pot-la-maison-se-hachure');
         await hover(const Offset(160, -100), pot: true);
         await shot(tester, '83-pot-le-soleil-se-hachure');
-        await tap(tester, 'color-477fb2');
+        await tap(tester, 'color-3370d1');
         await hover(const Offset(40, 120), pot: true);
         await shot(tester, '84-pot-le-papier-autour-se-hachure');
         await tap(tester, 'color-ffffff');
@@ -704,7 +694,7 @@ void main() {
         await shot(tester, '85-pot-une-couleur-tres-claire');
 
         await tap(tester, 'tool-stamp');
-        await tap(tester, 'color-d75e56');
+        await tap(tester, 'color-e83d48');
         await hover(const Offset(120, 80));
         await shot(tester, '86-tampon-en-transparence');
 
@@ -750,7 +740,7 @@ void main() {
           await tap(tester, 'discardChanges');
         }
         await tap(tester, 'tool-fill');
-        await tap(tester, 'color-d75e56');
+        await tap(tester, 'color-e83d48');
         await hover(Offset.zero, pot: true);
         await shot(tester, '93-coloriage-la-zone-se-hachure');
         await hover(const Offset(-330, -200), pot: true);

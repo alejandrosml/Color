@@ -2,6 +2,7 @@
 // Real Rust documents; only dialogs' destinations and storage are in memory.
 import 'dart:io';
 
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:edupaint_flutter_study/stamp_catalog.dart';
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
 import 'support/studio_driver.dart';
 
@@ -22,10 +22,13 @@ void main() {
       final studio = StudioDriver(tester);
       await studio.start();
       await studio.tap('tool-stamp');
-      // « How big? » is answered by three sizes, not by the outline slider.
-      expect(find.text('Épaisseur'), findsNothing);
-      expect(find.byKey(const Key('chooseStamp')), findsOneWidget);
+      // « How big? » is answered by three sizes, and « lequel » by the
+      // stamps.
+      expect(onPressedOf(tester, 'galetWhich'), isNotNull);
+      await studio.reveal('size-medium');
       expect(find.byKey(const Key('size-medium')), findsOneWidget);
+      expect(find.byKey(const Key('width-0')), findsNothing);
+      await studio.closePanel();
 
       await studio.click();
       studio.expectCount(1);
@@ -33,14 +36,14 @@ void main() {
       final exported = await studio.svg();
       // The star's own outline, tinted with the current colour.
       expect(exported, contains('<path d="M 50 10 L 61.46 37.22'));
-      expect(exported, contains('fill="#477fb2"'));
+      expect(exported, contains('fill="#3370d1"'));
       expect(exported, contains('scale(1.5 1.5)'));
       final document = await studio.saved();
       try {
         final stamp = document.strokes.single;
         expect(stamp.kind, VectorKind.stamp);
         expect(stamp.stamp, 0);
-        expect(stamp.rgb, 0x477fb2);
+        expect(stamp.rgb, 0x3370d1);
         expect(stamp.width, 1);
         expect(stamp.text, isNull);
         // A medium stamp measures 150 units, centred on the pointer.
@@ -67,7 +70,9 @@ void main() {
     'the chooser shows the whole catalogue; cancelling keeps the current stamp',
     (tester) async {
       final studio = StudioDriver(tester);
-      await studio.start();
+      // Between two rails — a small window, a telephone — the stamps are
+      // chosen in a dialog of their own.
+      await studio.start(size: const Size(680, 520));
       await studio.tap('tool-stamp');
       await studio.tap('chooseStamp');
       expect(find.byKey(const Key('stampDialog')), findsOneWidget);
@@ -114,10 +119,13 @@ void main() {
       } finally {
         document.dispose();
       }
-      // The button names the current stamp for screen readers.
+      // Above a line, « lequel » names the stamp in hand for screen
+      // readers.
+      tester.view.physicalSize = const Size(1280, 800);
+      await tester.pumpAndSettle();
       expect(
-        find.bySemanticsLabel('Tampon Chat · choisir un autre tampon'),
-        findsOneWidget,
+        tester.widget<GaletButton>(find.byKey(const Key('galetWhich'))).label,
+        'Tampon Chat · choisir un autre tampon',
       );
       await studio.finish();
     },
@@ -129,7 +137,7 @@ void main() {
     (tester) async {
       final studio = StudioDriver(tester);
       await studio.start();
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.tap('tool-stamp');
       await studio.tap('size-small');
       await studio.click(studio.at(300, 200));
@@ -143,7 +151,7 @@ void main() {
       final document = await studio.saved();
       try {
         final stamps = document.strokes;
-        expect(stamps.map((object) => object.rgb).toSet(), {0xd75e56});
+        expect(stamps.map((object) => object.rgb).toSet(), {0xe83d48});
         expect(left(stamps[0]), closeTo(255, .5));
         expect(top(stamps[0]), closeTo(155, .5));
         expect(right(stamps[0]) - left(stamps[0]), closeTo(90, .01));
@@ -161,8 +169,8 @@ void main() {
       }
       // The shades of a stamp derive from its colour, as in the catalogue.
       final exported = await studio.svg();
-      expect(exported, contains('fill="#d75e56"'));
-      expect(exported, contains('fill="#efbebb"'));
+      expect(exported, contains('fill="#e83d48"'));
+      expect(exported, contains('fill="#f5b1b5"'));
       expect(exported, contains('stroke="#293d4b"'));
       await studio.finish();
     },
@@ -246,11 +254,11 @@ void main() {
       expect(find.byKey(const Key('fillShapeCheckbox')), findsNothing);
 
       // A click on a colour colours it at once.
-      await studio.tap('color-78a66f');
+      await studio.tap('color-4db266');
       expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
-      expect(await studio.svg(), contains('fill="#78a66f"'));
+      expect(await studio.svg(), contains('fill="#4db266"'));
       await studio.tap('undo');
-      expect(await studio.svg(), contains('fill="#477fb2"'));
+      expect(await studio.svg(), contains('fill="#3370d1"'));
       await studio.tap('redo');
 
       await studio.tap('tool-select');
@@ -264,7 +272,7 @@ void main() {
         final stamps = document.strokes;
         expect(stamps, hasLength(2));
         expect(stamps.map((object) => object.kind).toSet(), {VectorKind.stamp});
-        expect(stamps.map((object) => object.rgb).toSet(), {0x78a66f});
+        expect(stamps.map((object) => object.rgb).toSet(), {0x4db266});
         expect(left(stamps[0]), closeTo(480, .5));
         // 24 units for the copy, then 300 to the left and 200 upwards.
         expect(left(stamps[1]), closeTo(480 + 24 - 300, 1));
@@ -288,14 +296,14 @@ void main() {
   ) async {
     final studio = StudioDriver(tester);
     await studio.start();
-    await studio.tap('color-d75e56');
+    await studio.tap('color-e83d48');
     await studio.tap('tool-stamp');
     await studio.tap('size-large');
     await studio.click();
     final png = await studio.png();
     // The middle of the star carries the chosen colour; the corner of its box
     // and the rest of the sheet stay white.
-    expect(await studio.pixel(png, 600, 410), [0xd7, 0x5e, 0x56, 255]);
+    expect(await studio.pixel(png, 600, 410), [0xe8, 0x3d, 0x48, 255]);
     expect(await studio.pixel(png, 484, 284), [255, 255, 255, 255]);
     expect(await studio.pixel(png, 100, 100), [255, 255, 255, 255]);
     // Exporting is not saving.
@@ -405,25 +413,6 @@ void main() {
       find.text('Glisse pour déplacer. Clique une couleur pour le colorier.'),
       findsOneWidget,
     );
-    await studio.finish();
-  }, skip: !available);
-
-  testWidgets('the stamp tool shows its stamp in the wide inspector', (
-    tester,
-  ) async {
-    final files = MemoryFiles();
-    final studio = StudioDriver(tester, files: files);
-    // The widest window of the studio of before: a wider one is the
-    // studio of the pebbles, where the companion says it in a bubble.
-    await studio.start(size: const Size(1128, 820));
-    await studio.tap('tool-stamp');
-    expect(find.text('TAMPON'), findsOneWidget);
-    expect(find.text('Un tampon, et hop !'), findsOneWidget);
-    expect(
-      find.textContaining('Choisis un tampon, puis clique sur la feuille'),
-      findsWidgets,
-    );
-    expect(tester.takeException(), isNull);
     await studio.finish();
   }, skip: !available);
 }

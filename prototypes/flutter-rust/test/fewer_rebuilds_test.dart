@@ -62,15 +62,14 @@ void main() {
     studio.expectCount(1);
     // The copy of recovery, written meanwhile, says so on its line alone.
     await _until(tester, () => recovery.writes >= 1, 'a copy of recovery');
-    await _until(
-      tester,
-      () => find
-          .text('Copie de récupération à jour · projet à enregistrer.')
-          .evaluate()
-          .isNotEmpty,
-      'the line of status',
-    );
+    await tester.pump();
     expect(debugStudioBuilds, 1);
+    // « Mon dessin » says it, once opened: the studio was not built again
+    // to say it.
+    expect(
+      await studio.status(),
+      contains('Copie de récupération à jour · projet à enregistrer.'),
+    );
     await studio.finish();
   }, skip: !available);
 

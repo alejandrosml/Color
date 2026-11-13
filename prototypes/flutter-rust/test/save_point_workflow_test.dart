@@ -11,6 +11,7 @@ import 'package:edupaint_flutter_study/rust_document.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 class _ControlledRecovery extends MemoryRecovery {
   Completer<void>? nextWrite;
@@ -130,28 +131,22 @@ void main() {
       await recover(tester);
       expect(count(recovery.bytes!), 2);
       await action(tester, menu(tester).onUndo);
-      expect(
-        find.textContaining('1 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('1 élément · projet enregistré'));
       await action(tester, menu(tester).onExportSvg);
       expect(files.svg, expectedSvg);
       await recover(tester);
       expect(recovery.bytes, isNull);
       await action(tester, menu(tester).onRedo);
       expect(
-        find.textContaining('2 éléments · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('2 éléments · modifications non enregistrées'),
       );
       await action(tester, menu(tester).onUndo);
       await action(tester, menu(tester).onNew);
       await tester.tap(find.byKey(const Key('createNewSheet')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('saveChanges')), findsNothing);
-      expect(
-        find.textContaining('0 élément · nouvelle feuille'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('0 élément · nouvelle feuille'));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     },
@@ -169,8 +164,8 @@ void main() {
       await action(tester, menu(tester).onUndo);
       await draw(tester, -80);
       expect(
-        find.textContaining('2 éléments · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('2 éléments · modifications non enregistrées'),
       );
       await action(tester, menu(tester).onNew);
       await tester.tap(find.byKey(const Key('createNewSheet')));
@@ -178,7 +173,7 @@ void main() {
       expect(find.byKey(const Key('saveChanges')), findsOneWidget);
       await tester.tap(find.byKey(const Key('cancelChanges')));
       await tester.pumpAndSettle();
-      expect(find.textContaining('2 éléments'), findsOneWidget);
+      expect(drawingCaption(tester), contains('2 éléments'));
       await tester.pumpWidget(const SizedBox.shrink());
     },
     skip: !available,
@@ -201,10 +196,7 @@ void main() {
       await workerAction(tester, menu(tester).onOpen);
       await action(tester, menu(tester).onUndo);
       await action(tester, menu(tester).onRedo);
-      expect(
-        find.textContaining('1 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('1 élément · projet enregistré'));
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pumpWidget(
         EduPaintApp(
@@ -218,8 +210,8 @@ void main() {
       await action(tester, menu(tester).onUndo);
       await action(tester, menu(tester).onRedo);
       expect(
-        find.textContaining('1 élément · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('1 élément · modifications non enregistrées'),
       );
       await tester.pumpWidget(const SizedBox.shrink());
     },
@@ -234,21 +226,21 @@ void main() {
       await start(tester, files, recovery);
       await workerAction(tester, menu(tester).onImportImage);
       expect(
-        find.textContaining('0 élément · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('0 élément · modifications non enregistrées'),
       );
       await draw(tester);
       await action(tester, menu(tester).onUndo);
       expect(
-        find.textContaining('0 élément · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('0 élément · modifications non enregistrées'),
       );
       files.savePath = null;
       await action(tester, menu(tester).onSaveAs);
       expect(files.projects, isEmpty);
       expect(
-        find.textContaining('modifications non enregistrées'),
-        findsOneWidget,
+        await drawingStatus(tester),
+        contains('modifications non enregistrées'),
       );
       files.savePath = '/background.edupaint';
       await workerAction(tester, menu(tester).onSave);
@@ -256,28 +248,19 @@ void main() {
       expect(saved.backgroundInfo, isNotNull);
       final originalPng = saved.copyBackgroundPng();
       saved.dispose();
-      expect(
-        find.textContaining('0 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('0 élément · projet enregistré'));
       await draw(tester);
       await action(tester, menu(tester).onUndo);
-      expect(
-        find.textContaining('0 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('0 élément · projet enregistré'));
       await action(tester, menu(tester).onRedo);
       expect(
-        find.textContaining('1 élément · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('1 élément · modifications non enregistrées'),
       );
       files.failWrite = true;
       await workerAction(tester, menu(tester).onSave);
       await action(tester, menu(tester).onUndo);
-      expect(
-        find.textContaining('0 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('0 élément · projet enregistré'));
       final unchanged = RustDocument.fromProject(
         files.projects[files.savePath]!,
       );
@@ -301,19 +284,13 @@ void main() {
       files.savePath = null;
       await action(tester, menu(tester).onSaveAs);
       await action(tester, menu(tester).onUndo);
-      expect(
-        find.textContaining('1 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('1 élément · projet enregistré'));
       await action(tester, menu(tester).onRedo);
       files.savePath = '/failed-save-as.edupaint';
       files.failWrite = true;
       await action(tester, menu(tester).onSaveAs);
       await action(tester, menu(tester).onUndo);
-      expect(
-        find.textContaining('1 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('1 élément · projet enregistré'));
       files.failWrite = false;
       await action(tester, menu(tester).onExportSvg);
       expect(files.exportSourcePath, originalPath);
@@ -337,10 +314,7 @@ void main() {
       await action(tester, menu(tester).onUndo);
       await recover(tester);
       expect(files.projects, isEmpty);
-      expect(
-        find.textContaining('0 élément · nouvelle feuille'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('0 élément · nouvelle feuille'));
       expect(find.textContaining('Dessin enregistré'), findsNothing);
       expect(find.textContaining('Ton dessin est enregistré'), findsNothing);
       expect(
@@ -384,10 +358,7 @@ void main() {
       await recover(tester);
       expect(recovery.bytes, isNull);
       expect(recovery.clearsStarted, before + 1);
-      expect(
-        find.textContaining('1 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('1 élément · projet enregistré'));
       await tester.pumpWidget(const SizedBox.shrink());
     },
     skip: !available,
@@ -420,8 +391,8 @@ void main() {
     expect(count(recovery.bytes!), 2);
     expect(recovery.captured.length, captured + 1);
     expect(
-      find.textContaining('2 éléments · modifications non enregistrées'),
-      findsOneWidget,
+      drawingCaption(tester),
+      contains('2 éléments · modifications non enregistrées'),
     );
     await tester.pumpWidget(const SizedBox.shrink());
   }, skip: !available);

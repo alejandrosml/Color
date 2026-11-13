@@ -46,7 +46,7 @@ void main() {
       final document = await studio.saved();
       try {
         expect(document.strokes.single.stamp, 23);
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -117,9 +117,6 @@ void main() {
         // The colour hidden in the stamp did not replace the current one.
         expect(paintColorName(0xeebf4e), 'Soleil');
         expect(swatchSelected(tester, 'color-eebf4e'), isTrue);
-        // The colour of the start, which the line does not offer, left it
-        // with the choice of another.
-        expect(find.byKey(const Key('color-477fb2')), findsNothing);
 
         // Choosing a colour now is a choice for what comes next, not a
         // change of this stamp.
@@ -137,7 +134,7 @@ void main() {
       expect(studio.isDirty, isTrue);
       final document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -169,7 +166,7 @@ void main() {
           ),
           findsOneWidget,
         );
-        expect(swatchSelected(tester, 'color-477fb2'), isTrue);
+        expect(swatchSelected(tester, 'color-3370d1'), isTrue);
         await studio.tap('color-e83d48');
         expect(swatchSelected(tester, 'color-e83d48'), isTrue);
         expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
@@ -186,7 +183,7 @@ void main() {
       await studio.tap('undo');
       document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }

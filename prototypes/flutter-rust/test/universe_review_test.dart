@@ -26,6 +26,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'flutter_test_config.dart';
 import 'support/memory_files.dart';
 import 'support/review_fonts.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final output = Platform.environment['COLOR_REVIEW_DIR'];
@@ -133,8 +134,8 @@ void main() {
     await tester.tap(find.byKey(const Key('universe-papier')));
     await tester.pumpAndSettle();
     await shot(tester, 'apres-le-choix-du-papier');
-    await tester.tap(find.byKey(const Key('openOptions')));
-    await tester.pumpAndSettle();
+    // The options wait in « Mon dessin ».
+    await pressControl(tester, 'openOptions');
     await tester.pump(const Duration(milliseconds: 500));
     await tester.ensureVisible(find.byKey(const Key('optionDecorNames')));
     await tester.pumpAndSettle();

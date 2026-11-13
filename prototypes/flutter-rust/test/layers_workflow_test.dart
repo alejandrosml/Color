@@ -107,21 +107,21 @@ void main() {
       await studio.start();
       await rectangle(
         studio,
-        '477fb2',
+        '3370d1',
         const Offset(100, 100),
         const Offset(500, 500),
       );
       await studio.layers(() => studio.tap('addLayer'));
       await rectangle(
         studio,
-        'd75e56',
+        'e83d48',
         const Offset(300, 300),
         const Offset(700, 700),
       );
       studio.expectCount(2);
       var png = await studio.png();
-      expect(await studio.pixel(png, 200, 200), [0x47, 0x7f, 0xb2, 255]);
-      expect(await studio.pixel(png, 400, 400), [0xd7, 0x5e, 0x56, 255]);
+      expect(await studio.pixel(png, 200, 200), [0x33, 0x70, 0xd1, 255]);
+      expect(await studio.pixel(png, 400, 400), [0xe8, 0x3d, 0x48, 255]);
       var exported = await studio.svg();
       expect(exported, contains('<g id="calque-1">'));
       expect(exported, contains('<g id="calque-2">'));
@@ -143,15 +143,15 @@ void main() {
       studio.expectCount(2);
       png = await studio.png();
       expect(await studio.pixel(png, 200, 200), [255, 255, 255, 255]);
-      expect(await studio.pixel(png, 400, 400), [0xd7, 0x5e, 0x56, 255]);
+      expect(await studio.pixel(png, 400, 400), [0xe8, 0x3d, 0x48, 255]);
       exported = await studio.svg();
       expect(exported, isNot(contains('calque-1')));
-      expect(exported, isNot(contains('#477fb2')));
+      expect(exported, isNot(contains('#3370d1')));
       expect(exported, contains('<g id="calque-2">'));
       // A hidden object cannot be chosen through the sheet.
       await studio.tap('tool-select');
       await studio.click(studio.at(200, 200));
-      expect(find.text('Clique un élément pour le choisir.'), findsOneWidget);
+      expect(find.byKey(const Key('galetSelection')), findsNothing);
 
       final document = await studio.saved();
       try {
@@ -164,7 +164,7 @@ void main() {
       }
       await studio.layers(() => studio.tap('layer-visible-0'));
       png = await studio.png();
-      expect(await studio.pixel(png, 200, 200), [0x47, 0x7f, 0xb2, 255]);
+      expect(await studio.pixel(png, 200, 200), [0x33, 0x70, 0xd1, 255]);
       await studio.finish();
     },
     skip: !available,
@@ -177,19 +177,19 @@ void main() {
       await studio.start();
       await rectangle(
         studio,
-        '477fb2',
+        '3370d1',
         const Offset(100, 100),
         const Offset(500, 500),
       );
       await studio.layers(() => studio.tap('addLayer'));
       await rectangle(
         studio,
-        'd75e56',
+        'e83d48',
         const Offset(300, 300),
         const Offset(700, 700),
       );
       var png = await studio.png();
-      expect(await studio.pixel(png, 400, 400), [0xd7, 0x5e, 0x56, 255]);
+      expect(await studio.pixel(png, 400, 400), [0xe8, 0x3d, 0x48, 255]);
 
       await studio.layers(() async {
         await studio.tap('layer-up-0');
@@ -202,7 +202,7 @@ void main() {
         expect(enabled(tester, 'layer-down-0'), isTrue);
       });
       png = await studio.png();
-      expect(await studio.pixel(png, 400, 400), [0x47, 0x7f, 0xb2, 255]);
+      expect(await studio.pixel(png, 400, 400), [0x33, 0x70, 0xd1, 255]);
       final exported = await studio.svg();
       expect(
         exported.indexOf('calque-2'),
@@ -217,7 +217,7 @@ void main() {
       studio.expectCount(1);
       var document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0xd75e56);
+        expect(document.strokes.single.rgb, 0xe83d48);
         expect(document.layers.map((layer) => layer.id), [1, 0]);
       } finally {
         document.dispose();
@@ -226,13 +226,13 @@ void main() {
       await studio.tap('undo');
       await studio.tap('undo');
       png = await studio.png();
-      expect(await studio.pixel(png, 400, 400), [0xd7, 0x5e, 0x56, 255]);
+      expect(await studio.pixel(png, 400, 400), [0xe8, 0x3d, 0x48, 255]);
       await studio.layers(() async {
         await studio.tap('layer-down-1');
         expect(enabled(tester, 'layer-down-1'), isFalse);
       });
       png = await studio.png();
-      expect(await studio.pixel(png, 400, 400), [0x47, 0x7f, 0xb2, 255]);
+      expect(await studio.pixel(png, 400, 400), [0x33, 0x70, 0xd1, 255]);
       expect(tester.takeException(), isNull);
       await studio.finish();
     },
@@ -363,7 +363,7 @@ void main() {
     await studio.start();
     await rectangle(
       studio,
-      '477fb2',
+      '3370d1',
       const Offset(100, 100),
       const Offset(500, 500),
     );
@@ -379,7 +379,7 @@ void main() {
     await studio.layers(() => studio.tap('addLayer'));
     await rectangle(
       studio,
-      'd75e56',
+      'e83d48',
       const Offset(300, 300),
       const Offset(700, 700),
     );
@@ -400,13 +400,13 @@ void main() {
     await tester.pumpAndSettle();
     // The blue rectangle now covers the red one, and stays chosen.
     var png = await studio.png();
-    expect(await studio.pixel(png, 400, 400), [0x47, 0x7f, 0xb2, 255]);
+    expect(await studio.pixel(png, 400, 400), [0x33, 0x70, 0xd1, 255]);
     var document = await studio.saved();
     try {
       expect(document.strokes.map((object) => object.layer), [1, 1]);
       expect(document.strokes.map((object) => object.rgb), [
-        0xd75e56,
-        0x477fb2,
+        0xe83d48,
+        0x3370d1,
       ]);
     } finally {
       document.dispose();
@@ -416,7 +416,7 @@ void main() {
     await studio.tap('undo');
     await studio.tap('undo');
     png = await studio.png();
-    expect(await studio.pixel(png, 400, 400), [0xd7, 0x5e, 0x56, 255]);
+    expect(await studio.pixel(png, 400, 400), [0xe8, 0x3d, 0x48, 255]);
 
     // Sending an element to a hidden layer shows that layer.
     await studio.layers(() => studio.tap('layer-visible-0'));
@@ -447,12 +447,7 @@ void main() {
       await studio.tap('addLayer');
     }
     expect(find.text('Tu as déjà 8 calques'), findsOneWidget);
-    expect(
-      tester
-          .widget<OutlinedButton>(find.byKey(const Key('addLayer')))
-          .onPressed,
-      isNull,
-    );
+    expect(onPressedOf(tester, 'addLayer'), isNull);
     for (var layer = 0; layer < 8; layer++) {
       expect(
         find.byKey(Key('layer-row-$layer'), skipOffstage: false),
@@ -537,7 +532,7 @@ void main() {
       await studio.start();
       await rectangle(
         studio,
-        '477fb2',
+        '3370d1',
         const Offset(100, 100),
         const Offset(500, 500),
       );
@@ -606,7 +601,7 @@ void main() {
       try {
         source.addStroke(
           const [DocumentPoint(100, 100), DocumentPoint(300, 300)],
-          rgb: 0x477fb2,
+          rgb: 0x3370d1,
           width: 12,
         );
         source.addLayer();

@@ -63,7 +63,7 @@ final _drawing = [
     width: 6,
   ),
   _element([(100, 10), (100, 230)], 1, width: 3),
-  _element([(10, 220), (230, 20)], 1, rgb: 0xd75e56, width: 5),
+  _element([(10, 220), (230, 20)], 1, rgb: 0xe83d48, width: 5),
 ];
 
 /// The first three: those under what is drawn on the layer underneath.

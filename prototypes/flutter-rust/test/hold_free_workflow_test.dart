@@ -201,7 +201,7 @@ void main() {
     final document = await studio.saved();
     addTearDown(document.dispose);
     expect(document.strokes, hasLength(2));
-    expect(document.strokes[0].rgb, 0x477fb2);
+    expect(document.strokes[0].rgb, 0x3370d1);
     expect(document.strokes[1].rgb, 0xe83d48);
     await studio.finish();
   }, skip: !available);

@@ -31,7 +31,7 @@ void main() {
         VectorKind.rectangle,
         const DocumentPoint(500, 300),
         const DocumentPoint(800, 600),
-        rgb: 0xd75e56,
+        rgb: 0xe83d48,
         width: 6,
       );
       final bytes = document.exportProject();

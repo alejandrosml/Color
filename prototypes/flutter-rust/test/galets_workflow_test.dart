@@ -49,13 +49,15 @@ void main() {
 
   Rect sheet(WidgetTester tester) => tester.getRect(key('sheetAtRest'));
 
-  testWidgets('a wide window is the studio of the pebbles; the others keep '
-      'the studio of before', (tester) async {
+  testWidgets('the pebbles are the studio of every window — a line, two '
+      'lines or two rails — and the drawing is kept through every change', (
+    tester,
+  ) async {
     final store = StudioOptionsStore.memory();
     addTearDown(store.dispose);
     final studio = StudioDriver(tester, options: store);
     await studio.start(size: mac);
-    expect(studio.galets, isTrue);
+    expect(key('galetLine'), findsOneWidget);
     // No header, no column of tools, no side panel, no line of state, and
     // nothing written around the sheet.
     for (final gone in ['drawingControls', 'documentToolbar', 'toolsRail']) {
@@ -63,38 +65,61 @@ void main() {
     }
     expect(find.text('MA FEUILLE'), findsNothing);
     expect(find.textContaining('récupération'), findsNothing);
+    void expectForm(GaletsForm form, String reason) {
+      expect(
+        key('galetLine'),
+        form == GaletsForm.rails ? findsNothing : findsOneWidget,
+        reason: reason,
+      );
+      expect(
+        key('galetColours'),
+        form == GaletsForm.two ? findsOneWidget : findsNothing,
+        reason: reason,
+      );
+      expect(
+        key('galetLeftRail'),
+        form == GaletsForm.rails ? findsOneWidget : findsNothing,
+        reason: reason,
+      );
+      expect(
+        key('galetRightRail'),
+        form == GaletsForm.rails ? findsOneWidget : findsNothing,
+        reason: reason,
+      );
+    }
+
     // A trait, kept through every change of window.
     await studio.drag(studio.at(300, 300), studio.at(500, 400));
     studio.expectCount(1);
-    for (final (size, pebbles) in const [
-      (Size(1130, 600), true),
-      (Size(1129, 900), false),
-      (Size(1440, 599), false),
-      (Size(900, 1000), false),
-      (Size(1920, 1080), true),
-      (Size(680, 520), false),
-      (Size(1440, 900), true),
+    for (final (size, form) in const [
+      (Size(1130, 600), GaletsForm.line),
+      (Size(1024, 768), GaletsForm.line),
+      (Size(1440, 599), GaletsForm.rails),
+      (Size(900, 1000), GaletsForm.two),
+      (Size(1920, 1080), GaletsForm.line),
+      (Size(680, 520), GaletsForm.rails),
+      (Size(1440, 900), GaletsForm.line),
     ]) {
       tester.view.physicalSize = size;
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull, reason: '$size');
-      expect(studio.galets, pebbles, reason: '$size');
+      expectForm(form, '$size');
       studio.expectCount(1);
     }
-    // Large letters keep the studio of before.
-    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    // Large letters keep the pebbles: what is written follows them.
+    tester.platformDispatcher.textScaleFactorTestValue = 2;
     await tester.pumpAndSettle();
-    expect(studio.galets, isFalse);
+    expect(tester.takeException(), isNull);
+    expectForm(GaletsForm.line, 'large letters');
     tester.platformDispatcher.textScaleFactorTestValue = 1;
     await tester.pumpAndSettle();
-    expect(studio.galets, isTrue);
     // So does the simplest interface.
     await store.change(store.value.copyWith(level: InterfaceLevel.toddler));
     await tester.pumpAndSettle();
-    expect(studio.galets, isFalse);
+    expectForm(GaletsForm.line, 'the simplest interface');
     await store.change(store.value.copyWith(level: InterfaceLevel.child));
     await tester.pumpAndSettle();
-    expect(studio.galets, isTrue);
+    expectForm(GaletsForm.line, 'the interface of a child');
     studio.expectCount(1);
     expect(tester.takeException(), isNull);
     await studio.finish();
@@ -144,7 +169,7 @@ void main() {
     final squeezed = tester.getRect(key('galetLine'));
     expect(squeezed.left, greaterThanOrEqualTo(0));
     expect(squeezed.right, lessThanOrEqualTo(1130));
-    expect(tester.getRect(key('color-477fb2')).width, greaterThan(44));
+    expect(tester.getRect(key('color-3370d1')).width, greaterThan(44));
     // One of the ten in hand: every button has its full size.
     await tester.tap(key('color-3370d1'));
     await tester.pumpAndSettle();
@@ -347,10 +372,11 @@ void main() {
         tester.getRect(key('color-${colour.rgb.toRadixString(16)}')).left,
     ];
     expect(lefts, [...lefts]..sort());
-    // The colour of a new studio is none of them: it has the last place
-    // while it is in hand.
-    expect(swatch('color-477fb2').chosen, isTrue);
-    expect(tester.getRect(key('color-477fb2')).left, greaterThan(lefts.last));
+    // The colour of a new studio is the blue of the line: ten swatches, no
+    // more.
+    expect(swatch('color-3370d1').chosen, isTrue);
+    expect(swatch('color-3370d1').ticked, isTrue);
+    expect(find.byType(GaletSwatch), findsNWidgets(10));
 
     // One press takes a colour; nothing opens.
     await tester.tap(key('color-e83d48'));
@@ -358,7 +384,7 @@ void main() {
     expect(key('galetPanel-shades'), findsNothing);
     expect(swatch('color-e83d48').chosen, isTrue);
     expect(swatch('color-e83d48').ticked, isTrue);
-    expect(key('color-477fb2'), findsNothing);
+    expect(swatch('color-3370d1').chosen, isFalse);
     await studio.drag(studio.at(200, 200), studio.at(400, 300));
 
     // A long press on the blue one: its five shades, from the lightest to
@@ -573,7 +599,7 @@ void main() {
       final heart = document.strokes[2];
       expect(heart.kind, VectorKind.contour);
       expect(heart.fillRgb, 0xeebf4e);
-      expect(heart.rgb, 0x477fb2);
+      expect(heart.rgb, 0x3370d1);
     } finally {
       document.dispose();
     }

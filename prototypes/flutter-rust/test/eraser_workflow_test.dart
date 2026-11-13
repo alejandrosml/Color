@@ -3,7 +3,6 @@
 import 'dart:io';
 
 import 'package:edupaint_flutter_study/rust_document.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -32,12 +31,9 @@ void main() {
 
       await studio.tap('tool-eraser');
       // The eraser has nothing to size: no slider, no stamp chooser.
-      expect(find.text('Épaisseur'), findsNothing);
-      expect(find.byKey(const Key('chooseStamp')), findsNothing);
-      expect(
-        find.textContaining('Touche un élément pour l’effacer'),
-        findsOneWidget,
-      );
+      expect(onPressedOf(tester, 'galetSize'), isNull);
+      expect(onPressedOf(tester, 'galetWhich'), isNull);
+      expect(isChosen(tester, 'tool-eraser'), isTrue);
       // The bare sheet has nothing to erase.
       await studio.click(studio.at(100, 100));
       studio.expectCount(3);

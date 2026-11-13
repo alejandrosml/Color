@@ -378,12 +378,24 @@ class _OptionsDialogState extends State<OptionsDialog> {
               key: const Key('optionCompanion'),
               title: tr('Le personnage réagit'),
               subtitle: tr(
-                'Il se lève et donne un coup de pinceau quand l’enfant enregistre un dessin ou prend une nouvelle feuille.',
+                'Il fait un petit saut quand l’enfant enregistre un dessin ou prend une nouvelle feuille.',
               ),
               value: options.companionReacts,
               onChanged: (value) =>
                   store.change(options.copyWith(companionReacts: value)),
             ),
+            // The simplest interface never has it: ten colours, no more.
+            if (options.level != InterfaceLevel.toddler)
+              _switch(
+                key: const Key('optionGrownUpColours'),
+                title: tr('Toutes les couleurs, pour les grands'),
+                subtitle: tr(
+                  'Un bouton au bout des couleurs ouvre un dégradé, la pipette, le mélange et les dernières couleurs choisies. Sans lui, l’enfant a dix couleurs, et leurs nuances d’un appui long.',
+                ),
+                value: options.grownUpColours,
+                onChanged: (value) =>
+                    store.change(options.copyWith(grownUpColours: value)),
+              ),
             const SizedBox(height: 8),
             Text(tr('Univers et effets'), style: _heading),
             ..._universeOptions(options),

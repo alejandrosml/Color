@@ -90,28 +90,24 @@ void main() {
     tester,
   ) async {
     final studio = StudioDriver(tester);
-    // The widest window of the studio of before, with its side panel: a
-    // wider one is the studio of the pebbles (galets_workflow_test.dart).
-    await studio.start(size: const Size(1128, 820));
+    await studio.start(size: const Size(1280, 820));
     Color? colorOf(Finder finder) => tester.widget<Text>(finder).style?.color;
-    expect(colorOf(find.text('OUTILS')), studioCaption);
-    expect(colorOf(find.text('MA FEUILLE')), studioSheetTitle);
-    expect(colorOf(find.text('1200 × 800 unités')), studioSheetCaption);
-    expect(colorOf(find.text('Toute la feuille')), studioSheetCaption);
-    expect(colorOf(find.text('PINCEAU')), studioInspectorCaption);
-    expect(colorOf(find.text('UNE PETITE IDÉE')), studioIdeaTitle);
+    // What « Mon dessin » says of the drawing, and the last thing that
+    // happened to it.
+    await studio.openMyDrawing();
     expect(
       colorOf(find.textContaining('0 élément · nouvelle feuille')),
-      studioDocumentCaption,
+      studioCaption,
     );
     expect(
       colorOf(find.textContaining('Nouvelle feuille · récupération')),
       studioStatusText,
     );
-    expect(
-      colorOf(find.textContaining('Un petit atelier pour les grandes idées')),
-      studioHelpText,
-    );
+    await studio.closePanel();
+    // The title of a panel.
+    await studio.tap('galetSize');
+    expect(colorOf(find.text('Taille du trait')), studioCaption);
+    await studio.closePanel();
     await studio.finish();
   }, skip: !available);
 

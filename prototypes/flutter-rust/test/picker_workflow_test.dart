@@ -13,14 +13,12 @@ import 'support/studio_driver.dart';
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
-  bool armed(WidgetTester tester) => tester
-      .widget<IconButton>(find.byKey(const Key('pickPaintColor')))
-      .isSelected!;
+  bool armed(WidgetTester tester) => pipetteArmed(tester);
 
   // A rectangle with a red outline and a yellow inside, at 200..500 × 200..450.
   Future<void> twoColourRectangle(StudioDriver studio) async {
     await studio.tap('tool-rectangle');
-    await studio.tap('color-d75e56');
+    await studio.tap('color-e83d48');
     await studio.tap('paint-target-fill');
     await studio.tap('color-eebf4e');
     await studio.drag(studio.at(200, 200), studio.at(500, 450));
@@ -42,13 +40,12 @@ void main() {
   testWidgets(
     'the pipette takes the colour under the pointer and gives the tool back',
     (tester) async {
-      final studio = StudioDriver(tester);
-      // A window tall enough for the line of recent colours.
-      await studio.start(size: const Size(1100, 1000));
+      final studio = StudioDriver(tester, options: grownUpOptions());
+      await studio.start();
       await twoColourRectangle(studio);
       await studio.tap('saveProject');
       await studio.tap('tool-stroke');
-      await studio.tap('color-477fb2');
+      await studio.tap('color-3370d1');
       expect(armed(tester), isFalse);
 
       await studio.tap('pickPaintColor');
@@ -63,18 +60,18 @@ void main() {
       // Reading a colour is not an edit.
       studio.expectCount(1);
       expect(studio.isDirty, isFalse);
-      expect(find.textContaining('Soleil'), findsWidgets);
-      expect(
-        find.byKey(const Key('recent-paint-color-eebf4e')),
-        findsOneWidget,
-      );
+      expect(colourInHand(tester), 0xeebf4e);
+      // The colour taken is among those chosen last.
+      await studio.tap('everyColour');
+      expect(find.byKey(const Key('recent-eebf4e')), findsOneWidget);
+      await studio.closePanel();
       // The brush is still the tool, and now draws in that colour.
       expect(await brushColour(studio), 0xeebf4e);
 
       await studio.tap('pickPaintColor');
       // On the border the pipette reads the outline.
       await studio.click(studio.at(200, 325));
-      expect(await brushColour(studio), 0xd75e56);
+      expect(await brushColour(studio), 0xe83d48);
 
       await studio.tap('pickPaintColor');
       // On the bare sheet: the colour of the paper.
@@ -89,11 +86,11 @@ void main() {
   testWidgets(
     'Échap, the same button or another tool put the pipette away, colour unchanged',
     (tester) async {
-      final studio = StudioDriver(tester);
+      final studio = StudioDriver(tester, options: grownUpOptions());
       await studio.start();
       await twoColourRectangle(studio);
       await studio.tap('tool-stroke');
-      await studio.tap('color-477fb2');
+      await studio.tap('color-3370d1');
 
       await studio.tap('pickPaintColor');
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
@@ -114,7 +111,7 @@ void main() {
       expect(armed(tester), isTrue);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
-      expect(await brushColour(studio), 0x477fb2);
+      expect(await brushColour(studio), 0x3370d1);
       await studio.finish();
     },
     skip: !available,
@@ -123,14 +120,14 @@ void main() {
   testWidgets(
     'a chosen element takes the picked colour at once, inside or outline',
     (tester) async {
-      final studio = StudioDriver(tester);
+      final studio = StudioDriver(tester, options: grownUpOptions());
       await studio.start();
       await twoColourRectangle(studio);
       // An oval with a green outline and a blue inside.
       await studio.tap('tool-ellipse');
-      await studio.tap('color-78a66f');
+      await studio.tap('color-4db266');
       await studio.tap('paint-target-fill');
-      await studio.tap('color-477fb2');
+      await studio.tap('color-3370d1');
       await studio.drag(studio.at(650, 200), studio.at(950, 450));
       studio.expectCount(2);
 
@@ -145,7 +142,7 @@ void main() {
       var document = await studio.saved();
       try {
         expect(document.strokes[1].fillRgb, 0xeebf4e);
-        expect(document.strokes[1].rgb, 0x78a66f);
+        expect(document.strokes[1].rgb, 0x4db266);
       } finally {
         document.dispose();
       }
@@ -156,10 +153,10 @@ void main() {
       await studio.click(studio.at(200, 325));
       document = await studio.saved();
       try {
-        expect(document.strokes[1].rgb, 0xd75e56);
+        expect(document.strokes[1].rgb, 0xe83d48);
         expect(document.strokes[1].fillRgb, 0xeebf4e);
         // The rectangle that lent its colours is untouched.
-        expect(document.strokes[0].rgb, 0xd75e56);
+        expect(document.strokes[0].rgb, 0xe83d48);
         expect(document.strokes[0].fillRgb, 0xeebf4e);
       } finally {
         document.dispose();
@@ -167,7 +164,7 @@ void main() {
       await studio.tap('undo');
       document = await studio.saved();
       try {
-        expect(document.strokes[1].rgb, 0x78a66f);
+        expect(document.strokes[1].rgb, 0x4db266);
         expect(document.strokes[1].fillRgb, 0xeebf4e);
       } finally {
         document.dispose();
@@ -180,7 +177,7 @@ void main() {
   testWidgets(
     'with an element chosen, the pipette on bare paper changes nothing and stays ready',
     (tester) async {
-      final studio = StudioDriver(tester);
+      final studio = StudioDriver(tester, options: grownUpOptions());
       await studio.start();
       await twoColourRectangle(studio);
       await studio.tap('tool-select');
@@ -196,7 +193,7 @@ void main() {
       expect(armed(tester), isTrue);
       final document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0xd75e56);
+        expect(document.strokes.single.rgb, 0xe83d48);
         expect(document.strokes.single.fillRgb, 0xeebf4e);
       } finally {
         document.dispose();
@@ -214,8 +211,10 @@ void main() {
   testWidgets(
     'the pipette sees stamps, texts, coloured paper and only visible layers',
     (tester) async {
-      final studio = StudioDriver(tester);
-      await studio.start();
+      final studio = StudioDriver(tester, options: grownUpOptions());
+      // A window whose line has every colour in its place: the shades of
+      // brown among them.
+      await studio.start(size: const Size(1280, 800));
       await studio.tap('tool-fill');
       await studio.tap('color-e69976');
       await studio.click(studio.at(1000, 100));
@@ -223,7 +222,7 @@ void main() {
       await studio.tap('color-9385bc');
       await studio.click(studio.at(300, 300));
       await studio.layers(() => studio.tap('addLayer'));
-      await studio.tap('color-388778');
+      await studio.tap('color-2f854a');
       await studio.addText('mot', x: 700, y: 300);
 
       await studio.tap('color-33484d');
@@ -232,7 +231,7 @@ void main() {
       expect(await brushColour(studio), 0x9385bc);
       await studio.tap('pickPaintColor');
       await studio.click(studio.at(720, 320));
-      expect(await brushColour(studio), 0x388778);
+      expect(await brushColour(studio), 0x2f854a);
       await studio.tap('pickPaintColor');
       await studio.click(studio.at(1100, 400));
       expect(await brushColour(studio), 0xe69976);
@@ -256,7 +255,11 @@ void main() {
           .readAsBytesSync();
       final files = MemoryFiles()..openPath = '/drawings/photo.edupaint';
       files.projects[files.openPath!] = bytes;
-      final studio = StudioDriver(tester, files: files);
+      final studio = StudioDriver(
+        tester,
+        files: files,
+        options: grownUpOptions(),
+      );
       await studio.start();
       await studio.tap('openProject');
       await studio.tap('pickPaintColor');
@@ -269,7 +272,7 @@ void main() {
       // The red text of the fixture answers.
       await studio.click(studio.at(11, 6.75, width: 32, height: 24));
       expect(armed(tester), isFalse);
-      expect(find.textContaining('Coquelicot'), findsWidgets);
+      expect(colourInHand(tester), 0xd75e56);
       expect(studio.isDirty, isFalse);
       expect(tester.takeException(), isNull);
       await studio.finish();
@@ -280,11 +283,12 @@ void main() {
   testWidgets('the pipette is a full-size button in a small window too', (
     tester,
   ) async {
-    final studio = StudioDriver(tester);
+    final studio = StudioDriver(tester, options: grownUpOptions());
     await studio.start(size: const Size(680, 520), textScale: 1.5);
+    // Between two rails, the colour in hand opens the colours, and there
+    // the button of every colour.
+    await studio.reveal('pickPaintColor');
     final button = find.byKey(const Key('pickPaintColor'));
-    await tester.ensureVisible(button);
-    await tester.pumpAndSettle();
     final size = tester.getSize(button);
     expect(size.width, greaterThanOrEqualTo(48));
     expect(size.height, greaterThanOrEqualTo(48));

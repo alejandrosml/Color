@@ -6,7 +6,7 @@
 // window, and so does a telephone held upright.
 import 'dart:io';
 
-import 'package:edupaint_flutter_study/color_palette.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:edupaint_flutter_study/studio_tool.dart';
@@ -38,58 +38,74 @@ void main() {
   setUp(() => debugTouchFirstOverride = true);
   tearDown(() => debugTouchFirstOverride = null);
 
-  testWidgets(
-    'the sheet takes the whole height between the tools and the colours',
-    (tester) async {
-      final studio = StudioDriver(tester);
-      await studio.start(size: iPhone, phone: true, padding: iPhoneInsets);
-      for (final key in ['phoneMenu', 'toolsRail', 'phoneSideRail']) {
-        expect(_key(key), findsOneWidget, reason: key);
-      }
-      // Nothing of the studio of a computer: its bars would take the room
-      // of the sheet.
-      for (final key in ['documentToolbar', 'drawingControls', 'saveProject']) {
-        expect(_key(key), findsNothing, reason: key);
-      }
-      final surface = _key('drawingSurface');
-      // Laid out for the screen itself, not scaled down.
-      expect(_scaled(surface), isFalse);
-      final sheet = tester.getRect(surface);
-      final tools = tester.getRect(_key('toolsRail'));
-      final side = tester.getRect(_key('phoneSideRail'));
-      // The whole height of the room the island and the bar leave, but for
-      // a thin margin.
-      expect(sheet.height, greaterThanOrEqualTo(393 - 21 - 14));
-      expect(sheet.left, greaterThan(tools.right));
-      expect(sheet.right, lessThan(side.left));
-      // Nothing under the island, nor under the bar at the foot.
-      expect(tools.left, greaterThanOrEqualTo(59));
-      expect(side.right, lessThanOrEqualTo(852 - 59));
-      expect(side.bottom, lessThanOrEqualTo(393 - 21));
-      // Every tool is in view, a full target for a finger.
-      for (final tool in ToolGroup.values) {
-        final button = tester.getRect(_key(tool.keyName));
-        expect(button.width, greaterThanOrEqualTo(48), reason: tool.keyName);
-        expect(button.height, greaterThanOrEqualTo(48), reason: tool.keyName);
-        expect(button.top, greaterThanOrEqualTo(0), reason: tool.keyName);
-        expect(
-          button.bottom,
-          lessThanOrEqualTo(393 - 21),
-          reason: tool.keyName,
-        );
-      }
-      // Annuler and Rétablir are at the top of the column, in view.
-      expect(tester.getRect(_key('undo')).bottom, lessThan(side.top + 80));
-      await studio.drag(const Offset(-40, -20), const Offset(30, 20));
-      await studio.expectPhoneCount(1);
-      await tester.tap(_key('undo'));
-      await tester.pumpAndSettle();
-      await studio.expectPhoneCount(0);
-      expect(tester.takeException(), isNull);
-      await studio.finish();
-    },
-    skip: !available,
-  );
+  testWidgets('the sheet takes the whole height between the two rails', (
+    tester,
+  ) async {
+    final studio = StudioDriver(tester);
+    await studio.start(size: iPhone, phone: true, padding: iPhoneInsets);
+    for (final key in [
+      'phoneMenu',
+      'galetLeftRail',
+      'galetRightRail',
+      'toolDrawer',
+      'saveProject',
+      'railColour',
+    ]) {
+      expect(_key(key), findsOneWidget, reason: key);
+    }
+    // Nothing of a wider window: no line, no pebble at the top — they
+    // would take the room of the sheet.
+    for (final key in ['galetLine', 'galetColours', 'openUniverses']) {
+      expect(_key(key), findsNothing, reason: key);
+    }
+    final surface = _key('drawingSurface');
+    // Laid out for the screen itself, not scaled down.
+    expect(_scaled(surface), isFalse);
+    final sheet = tester.getRect(_key('sheetAtRest'));
+    final tools = tester.getRect(_key('galetLeftRail'));
+    final side = tester.getRect(_key('galetRightRail'));
+    // The whole height of the room the island and the bar leave, but for
+    // a thin margin: 534 by 356, as it was drawn.
+    expect(sheet.height, closeTo(356, 1));
+    expect(sheet.width, closeTo(534, 1));
+    expect(sheet.left, greaterThan(tools.right));
+    expect(sheet.right, lessThan(side.left));
+    // Nothing under the island, nor under the bar at the foot.
+    expect(tools.left, greaterThanOrEqualTo(59));
+    expect(side.right, lessThanOrEqualTo(852 - 59));
+    expect(tools.bottom, lessThanOrEqualTo(393 - 21));
+    expect(side.bottom, lessThanOrEqualTo(393 - 21));
+    // Four tools under the thumb, each a full target for a finger.
+    for (final tool in [
+      ToolGroup.brush,
+      ToolGroup.fill,
+      ToolGroup.stamp,
+      ToolGroup.eraser,
+    ]) {
+      final button = tester.getRect(_key(tool.keyName));
+      expect(button.width, greaterThanOrEqualTo(48), reason: tool.keyName);
+      expect(button.height, greaterThanOrEqualTo(48), reason: tool.keyName);
+      expect(button.top, greaterThanOrEqualTo(0), reason: tool.keyName);
+      expect(button.bottom, lessThanOrEqualTo(393 - 21), reason: tool.keyName);
+    }
+    // Every tool waits in the drawer, with its name.
+    await tester.tap(_key('toolDrawer'));
+    await tester.pumpAndSettle();
+    for (final tool in ToolGroup.values) {
+      expect(_key('drawer-${tool.keyName}'), findsOneWidget);
+      expect(find.text(tool.label), findsOneWidget, reason: tool.keyName);
+    }
+    await studio.closePanel();
+    // Annuler and Rétablir are on the right, in view.
+    expect(tester.getRect(_key('undo')).bottom, lessThan(393 - 21));
+    await studio.drag(const Offset(-40, -20), const Offset(30, 20));
+    await studio.expectPhoneCount(1);
+    await tester.tap(_key('undo'));
+    await tester.pumpAndSettle();
+    await studio.expectPhoneCount(0);
+    expect(tester.takeException(), isNull);
+    await studio.finish();
+  }, skip: !available);
 
   testWidgets('the menu holds the actions and closes after a choice', (
     tester,
@@ -132,7 +148,7 @@ void main() {
     expect(studio.files.projects, hasLength(1));
     expect(_key('savedTick'), findsOneWidget);
     await studio.openPhoneMenu();
-    expect(find.textContaining('projet enregistré'), findsOneWidget);
+    expect(await drawingStatus(tester), contains('projet enregistré'));
     expect(
       tester.widget<OutlinedButton>(_key('replayDrawing')).onPressed,
       isNotNull,
@@ -205,31 +221,39 @@ void main() {
     await studio.finish();
   }, skip: !available);
 
-  testWidgets('the column on the right follows the tool', (tester) async {
+  testWidgets('the drawer follows the tool', (tester) async {
     final studio = StudioDriver(tester);
     await studio.start(size: smallAndroid, phone: true);
-    final side = tester.getRect(_key('phoneSideRail'));
 
     await studio.tap('tool-rectangle');
+    await studio.reveal('fillShapeCheckbox');
     expect(_key('fillShapeCheckbox'), findsOneWidget);
     expect(_key('paint-target-fill'), findsOneWidget);
     await studio.tap('fillShapeCheckbox');
+    await studio.reveal('fillShapeCheckbox');
     expect(tester.widget<Checkbox>(_key('fillShapeCheckbox')).value, isTrue);
+    await studio.closePanel();
     await studio.drag(const Offset(-60, -40), const Offset(20, 30));
 
     await studio.tap('tool-stamp');
+    await studio.reveal('chooseStamp');
     expect(_key('fillShapeCheckbox'), findsNothing);
     expect(_key('chooseStamp'), findsOneWidget);
     await studio.tap('size-large');
     await studio.click(const Offset(70, 0));
 
-    // A chosen element: what can be done with it comes before the colours.
+    // A chosen element: what can be done with it stands at the foot of
+    // the sheet, between the rails.
     await studio.tap('tool-select');
     await studio.click(const Offset(70, 0));
     expect(_key('deleteSelection'), findsOneWidget);
     final delete = tester.getRect(_key('deleteSelection'));
-    expect(delete.top, lessThan(tester.getRect(_key('paintColorRail')).top));
-    expect(delete.bottom, lessThanOrEqualTo(side.bottom));
+    expect(
+      delete.left,
+      greaterThan(tester.getRect(_key('galetLeftRail')).right),
+    );
+    expect(delete.right, lessThan(tester.getRect(_key('galetRightRail')).left));
+    expect(delete.bottom, lessThanOrEqualTo(360));
     await studio.tap('deleteSelection');
     await studio.expectPhoneCount(1);
     expect(tester.takeException(), isNull);
@@ -251,40 +275,53 @@ void main() {
           options: StudioOptionsStore.memory(options),
         );
         await studio.start(size: size, phone: true, padding: insets);
-        final scroll = find.descendant(
-          of: _key('phoneSideRail'),
-          matching: find.byType(Scrollable),
+        final screen = Rect.fromLTRB(
+          insets.left,
+          insets.top,
+          size.width - insets.right,
+          size.height - insets.bottom,
         );
-        final lastColour =
-            (options.simpleControls ? simplePaintColors : morePaintColors)
-                .last
-                .rgb
-                .toRadixString(16);
+        void onScreen(String when) {
+          for (final element in find.byType(GaletButton).evaluate()) {
+            final box = element.renderObject! as RenderBox;
+            final rect = box.localToGlobal(Offset.zero) & box.size;
+            final label = (element.widget as GaletButton).label;
+            expect(rect.left, greaterThanOrEqualTo(screen.left), reason: label);
+            expect(rect.right, lessThanOrEqualTo(screen.right), reason: label);
+            expect(rect.top, greaterThanOrEqualTo(screen.top), reason: label);
+            expect(
+              rect.bottom,
+              lessThanOrEqualTo(screen.bottom),
+              reason: '$label with $when',
+            );
+            expect(rect.width, greaterThanOrEqualTo(48), reason: label);
+            expect(rect.height, greaterThanOrEqualTo(48), reason: label);
+          }
+        }
+
         for (final tool in options.tools) {
           await studio.tap(tool.keyName);
           expect(tester.takeException(), isNull, reason: tool.keyName);
-          // Every button of the bar stays on the screen.
-          for (final other in options.groups) {
-            final rect = tester.getRect(_key(other.keyName));
-            expect(
-              rect.bottom,
-              lessThanOrEqualTo(size.height - insets.bottom),
-              reason: '${other.keyName} with ${tool.keyName}',
-            );
-          }
-          // The end of the column is reached by scrolling it.
-          await tester.scrollUntilVisible(
-            _key('color-$lastColour'),
-            120,
-            scrollable: scroll,
+          // The tool in hand is always on the rail, shown as chosen, and
+          // every button of the two rails stays on the screen.
+          expect(isChosen(tester, tool.group.keyName), isTrue);
+          onScreen(tool.keyName);
+        }
+        // The ten colours are one press away, all in view.
+        await tester.tap(_key('railColour'));
+        await tester.pumpAndSettle();
+        for (final colour in galetColours) {
+          final swatch = tester.getRect(
+            _key('color-${colour.rgb.toRadixString(16)}'),
           );
-          expect(tester.takeException(), isNull, reason: tool.keyName);
-          await tester.scrollUntilVisible(
-            _key('undo'),
-            -120,
-            scrollable: scroll,
+          expect(screen.contains(swatch.topLeft), isTrue, reason: colour.name);
+          expect(
+            screen.contains(swatch.bottomRight - const Offset(1, 1)),
+            isTrue,
+            reason: colour.name,
           );
         }
+        expect(tester.takeException(), isNull);
         await studio.finish();
       }, skip: !available);
     }
@@ -310,14 +347,14 @@ void main() {
     await studio.finish();
   }, skip: !available);
 
-  testWidgets('a tablet keeps its studio, even in a small window', (
-    tester,
-  ) async {
+  testWidgets('a tablet in a small window is not a telephone', (tester) async {
     final studio = StudioDriver(tester);
     // The window of a tablet, as small as a telephone's screen on its side.
     await studio.start(size: const Size(700, 500));
-    expect(_key('phoneMenu'), findsNothing);
-    expect(_key('documentToolbar'), findsOneWidget);
+    // Laid out for the smallest window of a computer — eight cells in each
+    // rail, where a telephone has five or six —, and scaled down.
+    expect(_key('galetLeftRail'), findsOneWidget);
+    expect(_key('tool-line'), findsOneWidget);
     expect(_scaled(_key('drawingSurface')), isTrue);
     await studio.finish();
   }, skip: !available);
@@ -327,8 +364,10 @@ void main() {
   ) async {
     final studio = StudioDriver(tester);
     await studio.start(size: const Size(393, 852), phone: true);
+    // Taller than wide: the two lines of a tablet held upright.
     expect(_key('phoneMenu'), findsNothing);
-    expect(_key('documentToolbar'), findsOneWidget);
+    expect(_key('galetLine'), findsOneWidget);
+    expect(_key('galetColours'), findsOneWidget);
     expect(_scaled(_key('drawingSurface')), isTrue);
     await studio.drag(const Offset(-30, -15), const Offset(20, 15));
     studio.expectCount(1);

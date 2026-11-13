@@ -64,6 +64,7 @@ class StudioOptions {
     this.decorMotion = DecorMotion.low,
     this.decorNames = true,
     this.decorWatch = true,
+    this.grownUpColours = false,
   });
 
   /// What a file that says nothing, or nothing readable, stands for: Color
@@ -132,6 +133,13 @@ class StudioOptions {
   /// « Regarder » of « Choisis ton univers ».
   final bool decorWatch;
 
+  /// « Toutes les couleurs, pour les grands » (Color 1.2): a button at the
+  /// end of the colours opens a field of every colour, the pipette, the
+  /// mixing and the colours chosen last. Off until an adult switches it
+  /// on: by default a child has ten colours and their shades, and nothing
+  /// else to find its way in (the owner, 12 November 2026).
+  final bool grownUpColours;
+
   /// A multiplication keeps the door of « Options », so that the youngest
   /// do not open them by chance. Off until an adult switches it on: by
   /// default everything is within reach.
@@ -155,6 +163,7 @@ class StudioOptions {
     DecorMotion? decorMotion,
     bool? decorNames,
     bool? decorWatch,
+    bool? grownUpColours,
   }) => StudioOptions(
     level: level ?? this.level,
     printing: printing ?? this.printing,
@@ -173,6 +182,7 @@ class StudioOptions {
     decorMotion: decorMotion ?? this.decorMotion,
     decorNames: decorNames ?? this.decorNames,
     decorWatch: decorWatch ?? this.decorWatch,
+    grownUpColours: grownUpColours ?? this.grownUpColours,
   );
 
   /// The tools of the bar, in its order.
@@ -221,6 +231,10 @@ class StudioOptions {
   /// The line that says where the project is saved.
   bool get statusLine => _full;
 
+  /// The field of every colour, the pipette and the mixing: where an adult
+  /// asked for them, and never in the simplest interface.
+  bool get everyColour => grownUpColours && !_toddler;
+
   /// A few large colours and three sizes, instead of every colour, the
   /// pipette and the slider.
   bool get simpleControls => _toddler;
@@ -243,6 +257,7 @@ class StudioOptions {
     'decorMotion': decorMotion.code,
     'decorNames': decorNames,
     'decorWatch': decorWatch,
+    'grownUpColours': grownUpColours,
   };
 
   /// What a decoded options file says. Whatever is missing, of another type
@@ -287,6 +302,7 @@ class StudioOptions {
       decorMotion: DecorMotion.fromCode(json['decorMotion']),
       decorNames: flag('decorNames', defaults.decorNames),
       decorWatch: flag('decorWatch', defaults.decorWatch),
+      grownUpColours: flag('grownUpColours', defaults.grownUpColours),
     );
   }
 
@@ -314,7 +330,8 @@ class StudioOptions {
       other.universeFixed == universeFixed &&
       other.decorMotion == decorMotion &&
       other.decorNames == decorNames &&
-      other.decorWatch == decorWatch;
+      other.decorWatch == decorWatch &&
+      other.grownUpColours == grownUpColours;
 
   @override
   int get hashCode => Object.hash(
@@ -335,6 +352,7 @@ class StudioOptions {
     decorMotion,
     decorNames,
     decorWatch,
+    grownUpColours,
   );
 
   @override

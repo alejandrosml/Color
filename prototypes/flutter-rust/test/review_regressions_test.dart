@@ -6,6 +6,8 @@
 // matters, and the desktop platforms the program ships on.
 import 'dart:io';
 
+import 'package:edupaint_flutter_study/platform_words.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -179,7 +181,14 @@ void main() {
         await tester.pumpAndSettle();
         // Nothing was slid: the sheet is still shown whole, fitted to the
         // window as it is now.
-        expect(find.text('Toute la feuille'), findsOneWidget);
+        // (Between the rails of this smaller window, « Toute la feuille »
+        // waits in the menu.)
+        await studio.reveal('fitPage');
+        expect(onPressedOf(tester, 'fitPage'), isNull);
+        if (find.byKey(const Key('closePhoneMenu')).evaluate().isNotEmpty) {
+          await tester.tap(find.byKey(const Key('closePhoneMenu')));
+          await tester.pumpAndSettle();
+        }
         await studio.tap('panPage');
         await studio.tap('tool-rectangle');
         await studio.drag(studio.at(100, 100), studio.at(300, 300));
@@ -205,18 +214,18 @@ void main() {
       // Red, drawn first; blue in front, beside it: white paper in between.
       await filled(
         studio,
-        'd75e56',
+        'e83d48',
         const Offset(200, 300),
         const Offset(400, 500),
       );
       await filled(
         studio,
-        '477fb2',
+        '3370d1',
         const Offset(430, 300),
         const Offset(630, 500),
       );
       final png = await studio.png();
-      expect(await studio.pixel(png, 398, 400), [0xd7, 0x5e, 0x56, 255]);
+      expect(await studio.pixel(png, 398, 400), [0xe8, 0x3d, 0x48, 255]);
       expect(await studio.pixel(png, 415, 400), [255, 255, 255, 255]);
       // (398, 400) is in the red rectangle, a few screen pixels from the
       // outline of the blue one.
@@ -225,7 +234,7 @@ void main() {
       await studio.tap('deleteSelection');
       var document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -234,7 +243,7 @@ void main() {
       await studio.click(studio.at(398, 400));
       document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -256,12 +265,12 @@ void main() {
         await studio.tap('tool-rectangle');
         await studio.drag(studio.at(300, 200), studio.at(900, 600));
         await studio.tap('tool-fill');
-        await studio.tap('color-d75e56');
+        await studio.tap('color-e83d48');
         await studio.click(studio.at(600, 400));
         var document = await studio.saved();
         try {
           expect(document.strokes[1].fillRgb, isNull);
-          expect(document.strokes[0].rgb, 0xd75e56);
+          expect(document.strokes[0].rgb, 0xe83d48);
           expect(document.paperRgb, 0xffffff);
         } finally {
           document.dispose();
@@ -276,7 +285,7 @@ void main() {
           expect(zone.look.zone, isTrue);
           expect(zone.fillRgb, 0xeebf4e);
           expect(zone.rings, hasLength(2));
-          expect(star.rgb, 0xd75e56);
+          expect(star.rgb, 0xe83d48);
           expect(frame.fillRgb, isNull);
           expect(document.paperRgb, 0xffffff);
         } finally {
@@ -295,7 +304,7 @@ void main() {
         await studio.tap('color-33484d');
         await studio.addText('MMM', x: 500, y: 350);
         await studio.tap('tool-rectangle');
-        await studio.tap('color-477fb2');
+        await studio.tap('color-3370d1');
         await studio.drag(studio.at(300, 200), studio.at(900, 600));
         await studio.tap('tool-fill');
         await studio.tap('color-eebf4e');
@@ -308,7 +317,7 @@ void main() {
         final document = await studio.saved();
         try {
           expect(document.strokes[0].fillRgb, 0xeebf4e);
-          expect(document.strokes[0].rgb, 0x477fb2);
+          expect(document.strokes[0].rgb, 0x3370d1);
           expect(document.strokes[1].text, 'MMM');
         } finally {
           document.dispose();
@@ -337,7 +346,7 @@ void main() {
         // The sky: a filled rectangle. The sun: a hollow oval on it.
         await filled(
           studio,
-          '477fb2',
+          '3370d1',
           const Offset(100, 100),
           const Offset(1100, 500),
         );
@@ -350,7 +359,7 @@ void main() {
         await studio.click(studio.at(800, 250));
         var document = await studio.saved();
         try {
-          expect(document.strokes[0].fillRgb, 0x477fb2);
+          expect(document.strokes[0].fillRgb, 0x3370d1);
           // The oval stays in front of the sky, with its new inside.
           expect(document.strokes[1].kind.name, 'ellipse');
           expect(document.strokes[1].fillRgb, 0xeebf4e);
@@ -369,18 +378,18 @@ void main() {
         await studio.tap('redo');
         final png = await studio.png();
         expect(await studio.pixel(png, 800, 250), [0xee, 0xbf, 0x4e, 255]);
-        expect(await studio.pixel(png, 300, 300), [0x47, 0x7f, 0xb2, 255]);
+        expect(await studio.pixel(png, 300, 300), [0x33, 0x70, 0xd1, 255]);
 
         // A large hollow frame drawn last around the whole picture: a click
         // on the sun colours the sun, the smaller of the two.
         await studio.tap('tool-rectangle');
         await studio.drag(studio.at(50, 50), studio.at(1150, 750));
         await studio.tap('tool-fill');
-        await studio.tap('color-d75e56');
+        await studio.tap('color-e83d48');
         await studio.click(studio.at(800, 250));
         document = await studio.saved();
         try {
-          expect(document.strokes[1].fillRgb, 0xd75e56);
+          expect(document.strokes[1].fillRgb, 0xe83d48);
           expect(document.strokes[2].fillRgb, isNull);
         } finally {
           document.dispose();
@@ -448,35 +457,35 @@ void main() {
     testWidgets('the pipette takes the colour seen under the pointer', (
       tester,
     ) async {
-      final studio = StudioDriver(tester);
+      final studio = StudioDriver(tester, options: grownUpOptions());
       await studio.start();
       await filled(
         studio,
-        'd75e56',
+        'e83d48',
         const Offset(300, 200),
         const Offset(900, 600),
       );
       await studio.tap('tool-stamp');
-      await studio.tap('color-477fb2');
+      await studio.tap('color-3370d1');
       // A blue star on the red rectangle: its box is 525..675 × 325..475.
       await studio.click(studio.at(600, 400));
       final png = await studio.png();
       // In the corner of its box the star paints nothing: red is seen there.
-      expect(await studio.pixel(png, 530, 330), [0xd7, 0x5e, 0x56, 255]);
+      expect(await studio.pixel(png, 530, 330), [0xe8, 0x3d, 0x48, 255]);
       await studio.tap('tool-stroke');
       await studio.tap('color-33484d');
       await studio.tap('pickPaintColor');
       await studio.click(studio.at(530, 330));
       await studio.drag(studio.at(100, 700), studio.at(160, 720));
       // On the star itself, its own blue.
-      expect(await studio.pixel(png, 600, 420), [0x47, 0x7f, 0xb2, 255]);
+      expect(await studio.pixel(png, 600, 420), [0x33, 0x70, 0xd1, 255]);
       await studio.tap('pickPaintColor');
       await studio.click(studio.at(600, 420));
       await studio.drag(studio.at(100, 750), studio.at(160, 770));
       final document = await studio.saved();
       try {
-        expect(document.strokes[2].rgb, 0xd75e56);
-        expect(document.strokes[3].rgb, 0x477fb2);
+        expect(document.strokes[2].rgb, 0xe83d48);
+        expect(document.strokes[3].rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -486,20 +495,20 @@ void main() {
     testWidgets(
       'a palette colour chosen while the pipette waits is the colour drawn with',
       (tester) async {
-        final studio = StudioDriver(tester);
+        final studio = StudioDriver(tester, options: grownUpOptions());
         await studio.start();
         await studio.tap('tool-rectangle');
-        await studio.tap('color-d75e56');
+        await studio.tap('color-e83d48');
         await studio.drag(studio.at(200, 200), studio.at(500, 450));
         await studio.tap('tool-stroke');
         await studio.tap('pickPaintColor');
         // The child prefers a colour of the palette after all, and draws.
-        await studio.tap('color-78a66f');
+        await studio.tap('color-4db266');
         await studio.drag(studio.at(200, 300), studio.at(600, 300));
         final document = await studio.saved();
         try {
           expect(document.strokes, hasLength(2));
-          expect(document.strokes.last.rgb, 0x78a66f);
+          expect(document.strokes.last.rgb, 0x4db266);
         } finally {
           document.dispose();
         }
@@ -511,23 +520,17 @@ void main() {
     testWidgets(
       'a click beside the sheet while the pipette waits keeps the chosen element',
       (tester) async {
-        final studio = StudioDriver(tester);
+        final studio = StudioDriver(tester, options: grownUpOptions());
         await studio.start();
         await filled(
           studio,
-          'd75e56',
+          'e83d48',
           const Offset(300, 200),
           const Offset(600, 500),
         );
         await studio.tap('tool-select');
         await studio.click(studio.at(450, 350));
-        bool chosen() =>
-            tester
-                .widget<OutlinedButton>(
-                  find.byKey(const Key('deleteSelection')),
-                )
-                .onPressed !=
-            null;
+        bool chosen() => onPressedOf(tester, 'deleteSelection') != null;
         expect(chosen(), isTrue);
         await studio.tap('pickPaintColor');
         // In the margin of the sheet's area, beside the paper.
@@ -536,9 +539,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(chosen(), isTrue);
         // The pipette still waits; Échap sends it away and keeps the rest.
-        bool waiting() => tester
-            .widget<IconButton>(find.byKey(const Key('pickPaintColor')))
-            .isSelected!;
+        bool waiting() => pipetteArmed(tester);
         expect(waiting(), isTrue);
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
@@ -547,7 +548,7 @@ void main() {
         // Nothing was edited meanwhile: the element is as it was drawn.
         final document = await studio.saved();
         try {
-          expect(document.strokes.single.rgb, 0xd75e56);
+          expect(document.strokes.single.rgb, 0xe83d48);
         } finally {
           document.dispose();
         }
@@ -637,7 +638,7 @@ void main() {
         await studio.tap('tool-select');
         await studio.click(studio.at(320, 320));
         // The text is red at once; no button waits to be pressed.
-        await studio.tap('color-d75e56');
+        await studio.tap('color-e83d48');
         expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
         await studio.tap('editSelectionText');
         await studio.write('Salut');
@@ -650,7 +651,7 @@ void main() {
         try {
           final text = document.strokes.single;
           expect(text.text, 'Salut');
-          expect(text.rgb, 0xd75e56);
+          expect(text.rgb, 0xe83d48);
           expect(text.layer, document.layers.last.id);
         } finally {
           document.dispose();
@@ -668,14 +669,14 @@ void main() {
       await studio.start();
       await filled(
         studio,
-        'd75e56',
+        'e83d48',
         const Offset(200, 200),
         const Offset(500, 500),
       );
       await studio.layers(() => studio.tap('addLayer'));
       await filled(
         studio,
-        '477fb2',
+        '3370d1',
         const Offset(400, 400),
         const Offset(700, 700),
       );
@@ -711,138 +712,101 @@ void main() {
       expect(studio.menu.onBringToFront, isNull);
       expect(studio.menu.onSendToBack, isNotNull);
       final png = await studio.png();
-      expect(await studio.pixel(png, 450, 450), [0xd7, 0x5e, 0x56, 255]);
+      expect(await studio.pixel(png, 450, 450), [0xe8, 0x3d, 0x48, 255]);
       await studio.finish();
     },
     skip: !available,
   );
 
   group('controls a child can hit, on the desktop too', () {
-    // The windows of the studio of before; the controls of the pebbles of
-    // a wider one are measured in galets_workflow_test.dart.
-    for (final size in [const Size(1120, 720), const Size(700, 620)]) {
+    // Every form of the pebbles: a line, a shorter one, two lines, two
+    // rails; then a telephone on its side.
+    for (final (size, phone) in [
+      (const Size(1440, 900), false),
+      (const Size(1024, 768), false),
+      (const Size(900, 1000), false),
+      (const Size(680, 520), false),
+      (const Size(734, 372), true),
+    ]) {
       testWidgets(
-        'every control is at least 48 pixels in a ${size.width.round()} × ${size.height.round()} window',
+        'every control is at least 48 pixels in a ${size.width.round()} × ${size.height.round()} '
+        '${phone ? 'telephone' : 'window'}',
         (tester) async {
           await loadInterfaceFont(tester);
-          final studio = StudioDriver(tester);
-          await studio.start(size: size);
+          if (phone) {
+            debugTouchFirstOverride = true;
+            addTearDown(() => debugTouchFirstOverride = null);
+          }
+          final studio = StudioDriver(tester, options: grownUpOptions());
+          await studio.start(size: size, phone: phone);
           final small = <String, String>{};
-          void measure(Iterable<String> keys) {
-            for (final key in keys) {
-              final control = find.byKey(Key(key));
-              expect(control, findsOneWidget, reason: key);
-              final measured = tester.getSize(control);
-              if (measured.width < 48 || measured.height < 48) {
-                small[key] =
-                    '${measured.width.round()} × ${measured.height.round()}';
+          var measured = 0;
+          // Every button in view, as the screen shows it: its place on the
+          // screen, whatever was done to fit it there.
+          void measure(String when) {
+            for (final element in find.byType(GaletButton).evaluate()) {
+              final button = element.widget as GaletButton;
+              final box = element.renderObject! as RenderBox;
+              final rect = Rect.fromPoints(
+                box.localToGlobal(Offset.zero),
+                box.localToGlobal(box.size.bottomRight(Offset.zero)),
+              );
+              measured++;
+              if (rect.width < 47.9 || rect.height < 47.9) {
+                small['$when · ${button.label}'] =
+                    '${rect.width.toStringAsFixed(1)} × ${rect.height.toStringAsFixed(1)}';
               }
             }
           }
 
-          measure([
-            'newProject',
-            'openProject',
-            'saveProject',
-            'exportImage',
-            'printDrawing',
-            // A narrow window folds the help and the album into a menu.
-            size.width < 750 ? 'moreFileActions' : 'showHelp',
-            'undo',
-            'redo',
-            'layersButton',
-            'zoomIn',
-            'zoomOut',
-            'fitPage',
-            'panPage',
-            'bigSheet',
+          Future<void> opened(String key) async {
+            await studio.reveal(key);
+            await tester.pumpAndSettle();
+            measure(key);
+            if (find.byKey(const Key('closePhoneMenu')).evaluate().isNotEmpty) {
+              await tester.tap(find.byKey(const Key('closePhoneMenu')));
+              await tester.pumpAndSettle();
+            }
+            await studio.closePanel();
+          }
+
+          measure('the studio');
+          for (final key in [
+            'width-2',
+            'brushTip-chalk',
+            'color-6ea4e3',
             'pickPaintColor',
-            'morePaintColors',
-            'color-d75e56',
-            for (final tool in [
-              'stroke',
-              'line',
-              'shapes',
-              'text',
-              'stamp',
-              'fill',
-              'eraser',
-              'select',
-              'magic',
-            ])
-              'tool-$tool',
-          ]);
+          ]) {
+            await opened(key);
+          }
+          if (!studio.rails) await opened('newProject');
+          await studio.tap('tool-stamp');
+          await opened('size-medium');
+          if (!studio.rails) await opened('stamp-chat');
           await studio.tap('tool-rectangle');
-          measure([
-            'fillShapeCheckbox',
-            'paint-target-stroke',
-            'paint-target-fill',
-            // The choices of « Formes ».
-            'tool-rectangle',
-            'tool-ellipse',
-            'shape-star',
-            'tool-magnet',
-          ]);
-          await studio.tap('tool-stroke');
-          measure(['brushTip-chalk']);
-          await studio.tap('tool-rectangle');
+          await opened('fillShapeCheckbox');
           await studio.drag(studio.at(200, 200), studio.at(500, 500));
-          await studio.addText('mot', x: 700, y: 300);
           await studio.tap('tool-select');
-          await studio.click(studio.at(720, 320));
-          measure([
-            'editSelectionText',
+          await studio.click(studio.at(200, 350));
+          measure('an element chosen');
+          for (final key in [
             'duplicateSelection',
             'deleteSelection',
             'selectionOrder',
             'growSelection',
             'shrinkSelection',
-          ]);
-          await studio.tap('tool-text');
-          measure(['size-small', 'size-medium', 'size-large']);
-          await studio.click();
-          measure([
-            'cancelText',
-            'confirmText',
-            'textDialogSize-small',
-            'textDialogSize-medium',
-            'textDialogSize-large',
-          ]);
-          await studio.tap('cancelText');
-          await studio.tap('layersButton');
-          measure([
-            'addLayer',
-            'closeLayers',
-            'layer-visible-0',
-            'layer-select-0',
-          ]);
-          await studio.tap('closeLayers');
-          await studio.tap('tool-stamp');
-          measure(['chooseStamp']);
-          await studio.tap('chooseStamp');
-          measure(['cancelStamp']);
-          await studio.tap('cancelStamp');
-          await tester.sendKeyEvent(LogicalKeyboardKey.f1);
-          await tester.pumpAndSettle();
-          measure(['closeHelp']);
-          await studio.tap('closeHelp');
-          await studio.tap('newProject');
-          measure([
-            'newSheet-landscape',
-            'newSheet-portrait',
-            'newSheet-square',
-            'cancelNewSheet',
-            'createNewSheet',
-          ]);
-          await studio.tap('cancelNewSheet');
-          await studio.tap('exportImage');
-          measure(['exportSvg', 'exportPng', 'pngScale2']);
+          ]) {
+            final control = tester.getSize(find.byKey(Key(key)));
+            if (control.width < 48 || control.height < 48) {
+              small[key] = '${control.width} × ${control.height}';
+            }
+          }
+          expect(measured, greaterThan(40));
           expect(small, isEmpty);
           expect(tester.takeException(), isNull);
           await studio.finish();
         },
         skip: !available,
-        variant: desktop,
       );
     }
 
@@ -886,19 +850,18 @@ void main() {
   });
 
   group('the keys of the sheet answer without a click on it', () {
-    testWidgets('a number chooses a tool after the width slider was used', (
+    testWidgets('a number chooses a tool after a size was chosen', (
       tester,
     ) async {
       final studio = StudioDriver(tester);
       await studio.start();
       await studio.tap('tool-stroke');
-      await tester.tap(find.byKey(const Key('brushWidthSemantics')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('fillShapeCheckbox')), findsNothing);
-      // The third tool: the rectangle, which shows the « Remplir » box.
+      await studio.tap('width-3');
+      expect(isChosen(tester, 'tool-shapes'), isFalse);
+      // The third tool: « Formes ».
       await tester.sendKeyEvent(LogicalKeyboardKey.digit3);
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('fillShapeCheckbox')), findsOneWidget);
+      expect(isChosen(tester, 'tool-shapes'), isTrue);
       await studio.finish();
     }, skip: !available);
 
@@ -911,10 +874,9 @@ void main() {
         await studio.drag(studio.at(200, 200), studio.at(400, 400));
         await studio.tap('tool-select');
         await studio.click(studio.at(200, 300));
-        // The slider takes the focus, and the buttons do not take it back
-        // by themselves.
-        await tester.tap(find.byKey(const Key('brushWidthSemantics')));
-        await tester.pumpAndSettle();
+        // A size is chosen in its panel, whose buttons do not keep the
+        // keys for themselves.
+        await studio.tap('width-3');
         await studio.tap('saveProject');
         await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
         await tester.pumpAndSettle();

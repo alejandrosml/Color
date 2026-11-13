@@ -40,6 +40,9 @@ const galetColours = <NamedPaintColor>[
   NamedPaintColor('Blanc', 0xffffff),
 ];
 
+/// The colour in hand when Color starts: the blue of the line.
+const galetStartColour = 0x3370d1;
+
 /// The family of each elementary colour, from the lightest to the darkest:
 /// what a long press on its swatch opens. The colours that Color already
 /// names have their place there. White has no family.
@@ -180,10 +183,28 @@ double galetTextWidth(BuildContext context, String text, TextStyle style) {
   return width.ceilToDouble();
 }
 
+/// How the pebbles are laid out in a window (Color 1.2, step G2). Color
+/// takes the form that shows the most: a line where it holds, two lines in
+/// a window taller than wide, and rails where neither leaves the sheet
+/// enough room.
+enum GaletsForm {
+  /// One line at the bottom: the tools, the two settings, the colours.
+  line,
+
+  /// Two lines at the bottom: the tools and their settings, then the
+  /// colours.
+  two,
+
+  /// Two rails beside the sheet, and the rest in a drawer: a telephone on
+  /// its side, and a window too small for a line.
+  rails,
+}
+
 /// Where the pebbles and the sheet stand in a window.
 @immutable
 class GaletsLayout {
   const GaletsLayout._({
+    required this.form,
     required this.window,
     required this.top,
     required this.lineTop,
@@ -191,16 +212,22 @@ class GaletsLayout {
     required this.sheet,
     required this.stage,
     required this.bigSheet,
+    required this.railLeft,
+    required this.railRight,
+    required this.railCells,
+    required this.railCell,
+    required this.railGap,
+    required this.lineHigh,
+    required this.padding,
   });
 
   /// The narrowest window whose line holds the nine tools, the two
-  /// settings and the ten colours; and the lowest that leaves a sheet
-  /// between the pebbles and the line.
+  /// settings and the ten colours: narrower, the line gets shorter.
   static const minWidth = 1130.0;
-  static const minHeight = 600.0;
 
-  /// The largest letters the pebbles are laid out for as they are.
-  static const maxTextScale = 1.15;
+  /// The lowest window that leaves a sheet between the pebbles of the top
+  /// and a line: lower, the rails give the sheet the whole height.
+  static const minHeight = 600.0;
 
   /// The room kept on each side of the window.
   static const side = 16.0;
@@ -208,9 +235,19 @@ class GaletsLayout {
   /// A cell of a pebble: the smallest comfortable target.
   static const cell = 48.0;
 
+  /// A cell of the simplest interface, for the smallest hands.
+  static const largeCell = 58.0;
+
   /// The height of a pebble of the top, and of the line.
   static const topHeight = cell + 12;
   static const lineHeight = cell + 16;
+
+  /// Between the two lines of a window taller than wide.
+  static const linesGap = 8.0;
+
+  /// The width of a rail, and the largest cell it holds.
+  static const railWidth = 60.0;
+  static const railCellMost = 52.0;
 
   /// With a decor, the sheet takes no more than this share of the width:
   /// the decor keeps the room to be looked at on each side.
@@ -219,22 +256,41 @@ class GaletsLayout {
   /// With a decor, how much of its ground shows under the sheet.
   static const groundUnderSheet = 42.0;
 
-  /// Whether the pebbles are the studio of this window (Color 1.2, step
-  /// G1): a wide one, that is not a telephone, with ordinary letters and
-  /// an interface that is not the simplest. The other windows keep the
-  /// studio of before until the pebbles are laid out for them.
-  static bool offered({
+  /// The form of the pebbles in a [window]. [phone]: a telephone on its
+  /// side. [lineMin]: the narrowest window whose line, as short as it
+  /// gets, holds what this interface shows. A line where it holds; else
+  /// whichever of the two lines and of the rails leaves the larger sheet
+  /// of [documentWidth] by [documentHeight].
+  static GaletsForm formFor({
     required Size window,
-    required double textScale,
     required bool phone,
-    required bool simple,
-  }) =>
-      !phone &&
-      !simple &&
-      textScale <= maxTextScale &&
-      window.width >= minWidth &&
-      window.height >= minHeight &&
-      window.width > window.height;
+    required double lineMin,
+    required double documentWidth,
+    required double documentHeight,
+    EdgeInsets safe = EdgeInsets.zero,
+  }) {
+    if (phone) return GaletsForm.rails;
+    if (window.width > window.height &&
+        window.width >= lineMin &&
+        window.height >= minHeight) {
+      return GaletsForm.line;
+    }
+    Size sheetOf(GaletsForm form) => GaletsLayout(
+      form: form,
+      window: window,
+      safe: safe,
+      documentWidth: documentWidth,
+      documentHeight: documentHeight,
+      decor: false,
+    ).sheet.size;
+    final two = sheetOf(GaletsForm.two);
+    final rails = sheetOf(GaletsForm.rails);
+    // Two lines show every tool and every colour: they are kept unless
+    // the rails leave a clearly larger sheet.
+    return rails.width * rails.height > 1.15 * two.width * two.height
+        ? GaletsForm.rails
+        : GaletsForm.two;
+  }
 
   /// The pebbles in a [window] whose edges the device hides by [safe],
   /// around a sheet of [documentWidth] by [documentHeight] units.
@@ -246,6 +302,7 @@ class GaletsLayout {
   /// [padding]: what the stage keeps around the sheet when the whole of it
   /// is shown.
   factory GaletsLayout({
+    GaletsForm form = GaletsForm.line,
     required Size window,
     EdgeInsets safe = EdgeInsets.zero,
     required double documentWidth,
@@ -254,22 +311,81 @@ class GaletsLayout {
     bool bigSheet = false,
     double corner = topHeight,
     double padding = 28,
+    double lineHigh = lineHeight,
   }) {
+    final ratio = documentWidth / documentHeight;
+    Size fitted(double width, double height) {
+      final w = math.max(1.0, math.min(width, height * ratio));
+      return Size(w, w / ratio);
+    }
+
+    if (form == GaletsForm.rails) {
+      // A rail on each side, the sheet between them on the whole height.
+      final top = safe.top + (safe.top > 0 ? 4 : 7);
+      final foot = safe.bottom > 0 ? safe.bottom + 4 : 7.0;
+      final railLeft = math.max(8.0, safe.left + 2);
+      final railRight = window.width - math.max(8.0, safe.right + 2);
+      final room = window.height - top - foot;
+      // As many cells as the height holds, a little smaller and closer
+      // where it holds fewer than six of the largest.
+      var railCell = railCellMost;
+      var railGap = 7.0;
+      var cells = ((room - 8 + railGap) / (railCell + railGap)).floor();
+      if (cells < 6) {
+        railCell = cell;
+        railGap = 4;
+        cells = ((room - 8 + railGap) / (railCell + railGap)).floor();
+      }
+      // The sheet in the middle of the window, as the stage shows it.
+      final half = math.min(
+        window.width / 2 - (railLeft + railCell + 8 + 10),
+        railRight - railCell - 8 - 10 - window.width / 2,
+      );
+      final size = fitted(
+        math.max(1.0, 2 * half),
+        math.max(1.0, window.height - top - foot - 2),
+      );
+      final sheet = Rect.fromLTWH(
+        (window.width - size.width) / 2,
+        top + 1 + (window.height - top - foot - 2 - size.height) / 2,
+        size.width,
+        size.height,
+      );
+      const around = 8.0;
+      return GaletsLayout._(
+        form: form,
+        window: window,
+        top: top,
+        lineTop: window.height,
+        band: 0,
+        sheet: sheet,
+        stage: Rect.fromLTRB(
+          0,
+          math.max(0.0, sheet.top - around),
+          window.width,
+          math.min(window.height, sheet.bottom + around),
+        ),
+        bigSheet: false,
+        railLeft: railLeft,
+        railRight: railRight,
+        railCells: math.max(3, cells),
+        railCell: railCell,
+        railGap: railGap,
+        lineHigh: 0,
+        padding: around,
+      );
+    }
+
     final top = safe.top + (safe.top > 0 ? 8 : 14);
     final foot = safe.bottom > 0 ? safe.bottom + 12 : side;
-    final lineTop = window.height - foot - lineHeight;
+    final lines = form == GaletsForm.two ? 2 * lineHigh + linesGap : lineHigh;
+    final lineTop = window.height - foot - lines;
     final band = decor ? window.height - lineTop + side : 0.0;
     final left = math.max(side, safe.left + 8);
     final right = window.width - math.max(side, safe.right + 8);
     final floor = decor
         ? window.height - band - groundUnderSheet
         : lineTop - 12;
-    final ratio = documentWidth / documentHeight;
-
-    Size fitted(double width, double height) {
-      final w = math.max(1.0, math.min(width, height * ratio));
-      return Size(w, w / ratio);
-    }
 
     final ceiling = top + topHeight + 12;
     final wide = right - left;
@@ -287,7 +403,7 @@ class GaletsLayout {
     } else {
       final size = fitted(
         decor ? math.min(wide, window.width * sheetShareWithDecor) : wide,
-        floor - ceiling,
+        math.max(1.0, floor - ceiling),
       );
       // On a ground, the sheet stands on it; without one, it floats in
       // the middle of its room.
@@ -301,6 +417,7 @@ class GaletsLayout {
       );
     }
     return GaletsLayout._(
+      form: form,
       window: window,
       top: top,
       lineTop: lineTop,
@@ -316,12 +433,21 @@ class GaletsLayout {
         sheet.bottom + padding,
       ),
       bigSheet: bigSheet,
+      railLeft: left,
+      railRight: right,
+      railCells: 0,
+      railCell: cell,
+      railGap: 0,
+      lineHigh: lineHigh,
+      padding: padding,
     );
   }
 
+  final GaletsForm form;
   final Size window;
 
-  /// The top edge of the pebbles of the top, and of the line.
+  /// The top edge of the pebbles of the top, and of the line — of the
+  /// upper one when there are two.
   final double top;
   final double lineTop;
 
@@ -336,6 +462,20 @@ class GaletsLayout {
   final Rect stage;
   final bool bigSheet;
 
+  /// With rails: the left edge of the left one and the right edge of the
+  /// right one, how many cells the height holds, how large and how far
+  /// apart.
+  final double railLeft;
+  final double railRight;
+  final int railCells;
+  final double railCell;
+  final double railGap;
+
+  /// The height of a line, and what the stage keeps around the sheet when
+  /// the whole of it is shown.
+  final double lineHigh;
+  final double padding;
+
   /// The frame of a decor: the window, less the band of the bottom.
   Size get decorFrame => Size(window.width, window.height - band);
 
@@ -349,18 +489,114 @@ class GaletsLayout {
   @override
   bool operator ==(Object other) =>
       other is GaletsLayout &&
+      other.form == form &&
       other.window == window &&
       other.top == top &&
       other.lineTop == lineTop &&
       other.band == band &&
       other.sheet == sheet &&
       other.stage == stage &&
-      other.bigSheet == bigSheet;
+      other.bigSheet == bigSheet &&
+      other.railCells == railCells &&
+      other.lineHigh == lineHigh &&
+      other.padding == padding;
 
   @override
-  int get hashCode =>
-      Object.hash(window, top, lineTop, band, sheet, stage, bigSheet);
+  int get hashCode => Object.hash(
+    form,
+    window,
+    top,
+    lineTop,
+    band,
+    sheet,
+    stage,
+    bigSheet,
+    railCells,
+    lineHigh,
+    padding,
+  );
 }
+
+/// The colours a line shows when it has room for [places] of them, and
+/// what a long press on each opens. With ten places, the ten elementary
+/// colours and their families. With nine, white goes to the top of the
+/// family of black — « du blanc au noir ». With eight, brown goes to the
+/// bottom of the family of orange as well (the owner, 12 November 2026).
+/// Where one more place is taken — by a colour that the line does not
+/// offer, or by the button of every colour — pink goes to the top of the
+/// family of red, then violet to the bottom of that of blue: no button is
+/// ever drawn smaller to make room.
+@immutable
+class GaletPalette {
+  const GaletPalette(this.places);
+
+  /// Every colour in its own place.
+  static const whole = GaletPalette(10);
+
+  /// The fewest places a line is laid out for.
+  static const fewest = 6;
+
+  final int places;
+
+  static const _red = 0;
+  static const _orange = 1;
+  static const _blue = 4;
+  static const _violet = 5;
+  static const _pink = 6;
+  static const _brown = 7;
+  static const _black = 8;
+  static const _white = 9;
+
+  bool get _whiteAway => places < 10;
+  bool get _brownAway => places < 9;
+  bool get _pinkAway => places < 8;
+  bool get _violetAway => places < 7;
+
+  bool _away(int index) =>
+      (index == _white && _whiteAway) ||
+      (index == _brown && _brownAway) ||
+      (index == _pink && _pinkAway) ||
+      (index == _violet && _violetAway);
+
+  /// The swatches of the line: places in [galetColours], in its order.
+  List<int> get shown => [
+    for (var index = 0; index < galetColours.length; index++)
+      if (!_away(index)) index,
+  ];
+
+  /// What a long press on the swatch [index] opens, from the lightest to
+  /// the darkest; empty for a colour without a family.
+  List<NamedPaintColor> family(int index) => [
+    if (index == _black && _whiteAway) galetColours[_white],
+    if (index == _red && _pinkAway) galetColours[_pink],
+    ...galetFamilies[index],
+    if (index == _orange && _brownAway) galetColours[_brown],
+    if (index == _blue && _violetAway) galetColours[_violet],
+  ];
+
+  /// The swatch of this line that holds [rgb], itself or in its family;
+  /// null for a colour that this line does not offer.
+  int? swatchOf(int rgb) {
+    for (final index in shown) {
+      if (galetColours[index].rgb == rgb) return index;
+    }
+    for (final index in shown) {
+      if (family(index).any((shade) => shade.rgb == rgb)) return index;
+    }
+    return null;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      other is GaletPalette && other.places == places;
+
+  @override
+  int get hashCode => places.hashCode;
+}
+
+/// How much larger than usual the system writes: 1 for ordinary letters.
+double galetTextScale(BuildContext context) =>
+    MediaQuery.textScalerOf(context).scale(15) / 15;
 
 const _floatShadow = [
   BoxShadow(color: Color(0x24263f43), blurRadius: 2, offset: Offset(0, 1)),
@@ -446,7 +682,7 @@ class GaletRule extends StatelessWidget {
 /// One button of a pebble or of a panel: [child] on a round surface that
 /// takes the colour of a choice when [selected]. Its name is [label], said
 /// by a screen reader and shown when a pointer stays over it.
-class GaletButton extends StatelessWidget {
+class GaletButton extends StatefulWidget {
   const GaletButton({
     super.key,
     required this.label,
@@ -509,7 +745,34 @@ class GaletButton extends StatelessWidget {
   final bool tipOnHold;
 
   @override
+  State<GaletButton> createState() => _GaletButtonState();
+}
+
+class _GaletButtonState extends State<GaletButton> {
+  // The keyboard is on this button: a screen reader is told so.
+  bool _focused = false;
+
+  @override
   Widget build(BuildContext context) {
+    final GaletButton(
+      :label,
+      :onPressed,
+      :child,
+      :onLongPress,
+      :longPressLabel,
+      :selected,
+      :marksSelection,
+      :framed,
+      :expanded,
+      :fill,
+      :width,
+      :height,
+      :padding,
+      :corners,
+      :hint,
+      :tip,
+      :tipOnHold,
+    ) = widget;
     final enabled = onPressed != null;
     final radius = galetCorners(height, most: corners ?? double.infinity);
     final long = onLongPress;
@@ -527,6 +790,11 @@ class GaletButton extends StatelessWidget {
         onLongPress: enabled ? long : null,
         onSecondaryTap: enabled ? long : null,
         excludeFromSemantics: true,
+        onFocusChange: (focused) {
+          if (mounted && focused != _focused) {
+            setState(() => _focused = focused);
+          }
+        },
         child: ConstrainedBox(
           constraints: BoxConstraints(
             minWidth: width ?? GaletsLayout.cell,
@@ -565,6 +833,8 @@ class GaletButton extends StatelessWidget {
       container: true,
       button: true,
       enabled: enabled,
+      focusable: enabled,
+      focused: enabled && _focused,
       selected: marksSelection && selected ? true : null,
       expanded: expanded,
       label: label,
@@ -572,7 +842,7 @@ class GaletButton extends StatelessWidget {
       onTap: onPressed,
       onLongPress: enabled ? long : null,
       customSemanticsActions: long != null && enabled && longPressLabel != null
-          ? {CustomSemanticsAction(label: longPressLabel!): long}
+          ? {CustomSemanticsAction(label: longPressLabel): long}
           : null,
       excludeSemantics: true,
       child: button,
@@ -590,6 +860,7 @@ class GaletPictureButton extends StatelessWidget {
     this.selected = false,
     this.marksSelection = false,
     this.size = 30,
+    this.cell = GaletsLayout.cell,
   });
 
   final EduArt art;
@@ -599,13 +870,17 @@ class GaletPictureButton extends StatelessWidget {
   final bool marksSelection;
   final double size;
 
+  /// How large the button is: a cell of a pebble, or of a rail.
+  final double cell;
+
   @override
   Widget build(BuildContext context) => GaletButton(
     label: label,
     onPressed: onPressed,
     selected: selected,
     marksSelection: marksSelection,
-    width: GaletsLayout.cell,
+    width: cell,
+    height: cell,
     child: EduIllustration(art: art, size: size),
   );
 }
@@ -767,11 +1042,16 @@ class GaletSwatch extends StatelessWidget {
     this.ticked = true,
     this.cell = GaletsLayout.cell,
     this.diameter = 32,
+    this.expanded,
   });
 
   final int rgb;
   final String name;
   final VoidCallback? onPressed;
+
+  /// For the swatch of a rail, which opens the colours: whether they are
+  /// open.
+  final bool? expanded;
 
   /// Opens the family of this colour; null for a colour without one.
   final VoidCallback? onShades;
@@ -811,6 +1091,8 @@ class GaletSwatch extends StatelessWidget {
       longPressLabel: onShades == null ? null : tr('Nuances'),
       hint: onShades == null ? null : tr('Appui long : ses nuances'),
       selected: chosen,
+      marksSelection: expanded == null,
+      expanded: expanded,
       fill: Colors.transparent,
       width: cell,
       height: cell,
@@ -850,12 +1132,16 @@ class GaletSaveButton extends StatelessWidget {
     required this.named,
     required this.savedJustNow,
     required this.unsaved,
+    this.size = GaletsLayout.cell,
   });
 
   final VoidCallback? onPressed;
   final bool named;
   final bool savedJustNow;
   final bool unsaved;
+
+  /// How large it is without its name: a cell of a pebble, or of a rail.
+  final double size;
 
   static TextStyle get style => galetText(16, bold: true, color: studioSaveInk);
 
@@ -902,7 +1188,8 @@ class GaletSaveButton extends StatelessWidget {
       onPressed: onPressed,
       fill: studioSaveFill,
       tip: !named,
-      width: named ? null : GaletsLayout.cell,
+      width: named ? null : size,
+      height: named ? GaletsLayout.cell : size,
       padding: named
           ? const EdgeInsets.only(left: 12, right: 18)
           : EdgeInsets.zero,
@@ -929,10 +1216,15 @@ class GaletBubble extends StatelessWidget {
     required this.text,
     required this.width,
     this.below = false,
+    this.tail = true,
   });
 
   final String strong;
   final String text;
+
+  /// Whether it points to the companion: not over the sheet between two
+  /// rails, where the companion is not beside it.
+  final bool tail;
 
   /// The width it takes, its tail not counted.
   final double width;
@@ -968,7 +1260,9 @@ class GaletBubble extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         // The tail, towards the companion.
-        if (below)
+        if (!tail)
+          const SizedBox.shrink()
+        else if (below)
           Positioned(
             left: 22,
             top: -5,
@@ -1117,17 +1411,21 @@ class GaletWideButton extends StatelessWidget {
     required this.name,
     required this.picture,
     required this.onPressed,
+    this.label,
     this.selected = false,
   });
 
   final String name;
   final Widget picture;
   final VoidCallback? onPressed;
+
+  /// What a screen reader says when it is more than [name].
+  final String? label;
   final bool selected;
 
   @override
   Widget build(BuildContext context) => GaletButton(
-    label: name,
+    label: label ?? name,
     onPressed: onPressed,
     selected: selected,
     height: 52,
@@ -1139,21 +1437,31 @@ class GaletWideButton extends StatelessWidget {
       children: [
         picture,
         const SizedBox(width: 10),
-        Text(name, maxLines: 1, style: galetText(15)),
+        // Where the room is short — enlarged letters in the drawer of a
+        // rail — the name is written a little smaller, never cut.
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(name, maxLines: 1, style: galetText(15)),
+          ),
+        ),
       ],
     ),
   );
 }
 
+/// On which side of its button a panel opens.
+enum GaletPanelSide { above, below, right, left }
+
 /// What a button of the pebbles opens: the same light surface, a deeper
-/// shadow, and a point towards its button. It stands above its button
-/// ([above]) or under it, in the middle of it when the window leaves the
-/// room, and never out of the window.
+/// shadow, and a point towards its button. It stands above its button or
+/// under it, in the middle of it when the window leaves the room; beside a
+/// button of a rail, at its height; and never out of the window.
 class GaletPanel extends StatelessWidget {
   const GaletPanel({
     super.key,
     required this.anchor,
-    required this.above,
+    required this.side,
     required this.child,
     this.gap = 14,
     this.padding = const EdgeInsets.all(14),
@@ -1162,7 +1470,7 @@ class GaletPanel extends StatelessWidget {
 
   /// The button it belongs to, in the frame this panel is laid in.
   final Rect anchor;
-  final bool above;
+  final GaletPanelSide side;
   final Widget child;
   final double gap;
   final EdgeInsets padding;
@@ -1174,41 +1482,64 @@ class GaletPanel extends StatelessWidget {
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, constraints) {
       final frame = constraints.biggest;
-      final room = above
-          ? anchor.top - gap - 8
-          : frame.height - anchor.bottom - gap - 8;
-      final tailTop = above ? anchor.top - gap - 8 : anchor.bottom + gap - 8;
+      final upright =
+          side == GaletPanelSide.above || side == GaletPanelSide.below;
+      final roomHigh = switch (side) {
+        GaletPanelSide.above => anchor.top - gap - 8,
+        GaletPanelSide.below => frame.height - anchor.bottom - gap - 8,
+        _ => frame.height - 16,
+      };
+      final roomWide = switch (side) {
+        GaletPanelSide.right => frame.width - anchor.right - gap - 8,
+        GaletPanelSide.left => anchor.left - gap - 8,
+        _ => frame.width - 24,
+      };
+      final tail = switch (side) {
+        GaletPanelSide.above => Offset(
+          (anchor.center.dx - 8).clamp(20.0, math.max(20.0, frame.width - 36)),
+          anchor.top - gap - 8,
+        ),
+        GaletPanelSide.below => Offset(
+          (anchor.center.dx - 8).clamp(20.0, math.max(20.0, frame.width - 36)),
+          anchor.bottom + gap - 8,
+        ),
+        GaletPanelSide.right => Offset(
+          anchor.right + gap - 8,
+          (anchor.center.dy - 8).clamp(20.0, math.max(20.0, frame.height - 36)),
+        ),
+        GaletPanelSide.left => Offset(
+          anchor.left - gap - 8,
+          (anchor.center.dy - 8).clamp(20.0, math.max(20.0, frame.height - 36)),
+        ),
+      };
       final surface = BoxDecoration(
         color: studioSurface,
         borderRadius: galetCorners(double.infinity, most: 26),
         boxShadow: _panelShadow,
       );
+      Widget point({required bool shadow}) => Transform.rotate(
+        angle: math.pi / 4,
+        child: Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: studioSurface,
+            borderRadius: BorderRadius.circular(3),
+            boxShadow: shadow ? _floatShadow : null,
+          ),
+        ),
+      );
       return Stack(
         children: [
           // The point first: the panel is laid over its inner half.
-          Positioned(
-            left: (anchor.center.dx - 8).clamp(20.0, frame.width - 36),
-            top: tailTop,
-            child: Transform.rotate(
-              angle: math.pi / 4,
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  color: studioSurface,
-                  borderRadius: BorderRadius.circular(3),
-                  boxShadow: _floatShadow,
-                ),
-              ),
-            ),
-          ),
+          Positioned(left: tail.dx, top: tail.dy, child: point(shadow: true)),
           Positioned.fill(
             child: CustomSingleChildLayout(
-              delegate: _PanelPlace(anchor: anchor, above: above, gap: gap),
+              delegate: _PanelPlace(anchor: anchor, side: side, gap: gap),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: math.max(120.0, room),
-                  maxWidth: math.max(120.0, frame.width - 24),
+                  maxHeight: math.max(upright ? 120.0 : 96.0, roomHigh),
+                  maxWidth: math.max(120.0, roomWide),
                 ),
                 child: Semantics(
                   container: true,
@@ -1232,22 +1563,12 @@ class GaletPanel extends StatelessWidget {
           // The point again, without a shadow, over the edge of the panel:
           // the two make one shape.
           Positioned(
-            left: (anchor.center.dx - 8).clamp(20.0, frame.width - 36),
-            top: tailTop,
+            left: tail.dx,
+            top: tail.dy,
             child: IgnorePointer(
               child: ClipRect(
-                clipper: _HalfClip(lower: above),
-                child: Transform.rotate(
-                  angle: math.pi / 4,
-                  child: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: studioSurface,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                  ),
-                ),
+                clipper: _HalfClip(side),
+                child: point(shadow: false),
               ),
             ),
           ),
@@ -1257,28 +1578,51 @@ class GaletPanel extends StatelessWidget {
   );
 }
 
-// The half of the point that goes beyond the panel.
+// The half of the point that goes beyond the panel, towards its button.
 class _HalfClip extends CustomClipper<Rect> {
-  const _HalfClip({required this.lower});
-  final bool lower;
+  const _HalfClip(this.side);
+  final GaletPanelSide side;
 
   @override
-  Rect getClip(Size size) => lower
-      ? Rect.fromLTRB(-8, size.height / 2 - 1, size.width + 8, size.height + 8)
-      : Rect.fromLTRB(-8, -8, size.width + 8, size.height / 2 + 1);
+  Rect getClip(Size size) => switch (side) {
+    GaletPanelSide.above => Rect.fromLTRB(
+      -8,
+      size.height / 2 - 1,
+      size.width + 8,
+      size.height + 8,
+    ),
+    GaletPanelSide.below => Rect.fromLTRB(
+      -8,
+      -8,
+      size.width + 8,
+      size.height / 2 + 1,
+    ),
+    GaletPanelSide.right => Rect.fromLTRB(
+      -8,
+      -8,
+      size.width / 2 + 1,
+      size.height + 8,
+    ),
+    GaletPanelSide.left => Rect.fromLTRB(
+      size.width / 2 - 1,
+      -8,
+      size.width + 8,
+      size.height + 8,
+    ),
+  };
 
   @override
-  bool shouldReclip(_HalfClip old) => old.lower != lower;
+  bool shouldReclip(_HalfClip old) => old.side != side;
 }
 
 class _PanelPlace extends SingleChildLayoutDelegate {
   const _PanelPlace({
     required this.anchor,
-    required this.above,
+    required this.side,
     required this.gap,
   });
   final Rect anchor;
-  final bool above;
+  final GaletPanelSide side;
   final double gap;
 
   @override
@@ -1287,18 +1631,153 @@ class _PanelPlace extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size child) {
-    final left = (anchor.center.dx - child.width / 2)
+    double across() => (anchor.center.dx - child.width / 2)
         .clamp(12.0, math.max(12.0, size.width - 12 - child.width))
         .toDouble();
-    final top = above
-        ? math.max(8.0, anchor.top - gap - child.height)
-        : anchor.bottom + gap;
-    return Offset(left, top);
+    double along() => (anchor.center.dy - child.height / 2)
+        .clamp(8.0, math.max(8.0, size.height - 8 - child.height))
+        .toDouble();
+    return switch (side) {
+      GaletPanelSide.above => Offset(
+        across(),
+        math.max(8.0, anchor.top - gap - child.height),
+      ),
+      GaletPanelSide.below => Offset(across(), anchor.bottom + gap),
+      GaletPanelSide.right => Offset(anchor.right + gap, along()),
+      GaletPanelSide.left => Offset(
+        math.max(8.0, anchor.left - gap - child.width),
+        along(),
+      ),
+    };
   }
 
   @override
   bool shouldRelayout(_PanelPlace old) =>
-      old.anchor != anchor || old.above != above || old.gap != gap;
+      old.anchor != anchor || old.side != side || old.gap != gap;
+}
+
+/// The field of colours of the older children (the setting of the adults,
+/// off by default): every hue from left to right, from the lightest at the
+/// top to the darkest at the bottom; a press or a slide takes the colour
+/// under the finger. Under it, a band from white to black.
+class GaletColourField extends StatelessWidget {
+  const GaletColourField({
+    super.key,
+    required this.onColour,
+    this.width = 336,
+    this.height = 168,
+    this.greys = 34,
+  });
+
+  /// Null while the studio is busy.
+  final ValueChanged<int>? onColour;
+  final double width;
+  final double height;
+
+  /// The height of the band of greys.
+  final double greys;
+
+  /// The colour at [at] in a field of [size]: the hue across, the
+  /// lightness down, at full strength.
+  static int colourAt(Offset at, Size size) {
+    final hue = (at.dx / size.width).clamp(0.0, 1.0) * 359.999;
+    final light = .92 - (at.dy / size.height).clamp(0.0, 1.0) * .74;
+    return HSLColor.fromAHSL(1, hue, .86, light).toColor().toARGB32() &
+        0xffffff;
+  }
+
+  /// The grey at [x] of a band [width] wide: white on the left, black on
+  /// the right.
+  static int greyAt(double x, double width) {
+    final level = (255 * (1 - (x / width).clamp(0.0, 1.0))).round();
+    return level << 16 | level << 8 | level;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onColour != null;
+    final corners = galetCorners(double.infinity, most: 14);
+    Widget field(Key key, double high, int Function(Offset at) colour) =>
+        ClipRRect(
+          borderRadius: corners,
+          child: GestureDetector(
+            key: key,
+            behavior: HitTestBehavior.opaque,
+            onTapDown: enabled
+                ? (details) => onColour!(colour(details.localPosition))
+                : null,
+            onPanUpdate: enabled
+                ? (details) => onColour!(colour(details.localPosition))
+                : null,
+            child: CustomPaint(
+              size: Size(width, high),
+              painter: _ColourFieldPainter(greys: high == greys),
+            ),
+          ),
+        );
+    return ExcludeSemantics(
+      child: Opacity(
+        opacity: enabled ? 1 : .38,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            field(
+              const Key('colourField'),
+              height,
+              (at) => colourAt(at, Size(width, height)),
+            ),
+            const SizedBox(height: 8),
+            field(const Key('greyBand'), greys, (at) => greyAt(at.dx, width)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ColourFieldPainter extends CustomPainter {
+  const _ColourFieldPainter({required this.greys});
+  final bool greys;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final frame = Offset.zero & size;
+    if (greys) {
+      canvas.drawRect(
+        frame,
+        Paint()
+          ..shader = ui.Gradient.linear(frame.centerLeft, frame.centerRight, [
+            const Color(0xffffffff),
+            const Color(0xff000000),
+          ]),
+      );
+      return;
+    }
+    // The hues across, in thin bands from the lightest to the darkest.
+    final bands = math.max(24, (size.width / 2).round());
+    final step = size.width / bands;
+    for (var band = 0; band < bands; band++) {
+      final hue = (band + .5) / bands * 359.999;
+      final strip = Rect.fromLTWH(band * step, 0, step + .6, size.height);
+      canvas.drawRect(
+        strip,
+        Paint()
+          ..shader = ui.Gradient.linear(
+            strip.topCenter,
+            strip.bottomCenter,
+            [
+              HSLColor.fromAHSL(1, hue, .86, .92).toColor(),
+              HSLColor.fromAHSL(1, hue, .86, .55).toColor(),
+              HSLColor.fromAHSL(1, hue, .86, .18).toColor(),
+            ],
+            const [0, .5, 1],
+          ),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ColourFieldPainter old) => old.greys != greys;
 }
 
 /// The ground of a decor, plain, in the band that the line covers at the
@@ -1416,4 +1895,84 @@ class GaletSheetShadow extends CustomPainter {
 
   @override
   bool shouldRepaint(GaletSheetShadow old) => old.sheet != sheet;
+}
+
+/// Nine dots, three by three: « tous les outils », the button of a rail
+/// that opens its drawer.
+class GaletDots extends StatelessWidget {
+  const GaletDots({super.key, this.size = 26, this.color});
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CustomPaint(painter: _DotsPainter(color ?? studioInk)),
+  );
+}
+
+class _DotsPainter extends CustomPainter {
+  const _DotsPainter(this.color);
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final step = size.width / 3;
+    for (var row = 0; row < 3; row++) {
+      for (var column = 0; column < 3; column++) {
+        canvas.drawCircle(
+          Offset(step * (column + .5), step * (row + .5)),
+          size.width * .095,
+          paint,
+        );
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DotsPainter old) => old.color != color;
+}
+
+/// A round of every hue: the button of « Toutes les couleurs ».
+class GaletRainbow extends StatelessWidget {
+  const GaletRainbow({super.key, this.size = 30});
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: const CustomPaint(painter: _RainbowPainter()),
+  );
+}
+
+class _RainbowPainter extends CustomPainter {
+  const _RainbowPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final frame = Offset.zero & size;
+    canvas.drawCircle(
+      frame.center,
+      size.width / 2,
+      Paint()
+        ..shader = ui.Gradient.sweep(
+          frame.center,
+          [
+            for (var index = 0; index <= 6; index++)
+              HSLColor.fromAHSL(1, index * 60 % 360, .86, .58).toColor(),
+          ],
+          [for (var index = 0; index <= 6; index++) index / 6],
+        ),
+    );
+    // A light heart: the lightest of every colour is in the field too.
+    canvas.drawCircle(
+      frame.center,
+      size.width * .2,
+      Paint()..color = const Color(0xffffffff),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_RainbowPainter old) => false;
 }

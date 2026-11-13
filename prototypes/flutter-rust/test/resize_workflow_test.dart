@@ -12,8 +12,10 @@ import 'support/studio_driver.dart';
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
+  // The actions of an element are there only while one is chosen.
   bool enabled(WidgetTester tester, String key) =>
-      tester.widget<IconButton>(find.byKey(Key(key))).onPressed != null;
+      find.byKey(Key(key)).evaluate().isNotEmpty &&
+      onPressedOf(tester, key) != null;
 
   Future<StrokeData> single(StudioDriver studio) async {
     final document = await studio.saved();
@@ -50,9 +52,8 @@ void main() {
       expect(top(shape), closeTo(287.5, .01));
       expect(right(shape), closeTo(525, .01));
       expect(bottom(shape), closeTo(412.5, .01));
-      // The outline follows: 12 becomes 15, and the slider shows it.
+      // The outline follows: 12 becomes 15.
       expect(shape.width, closeTo(15, .001));
-      expect(find.text('15'), findsOneWidget);
       // The element stays chosen: the next notch applies to it at once.
       await studio.tap('shrinkSelection');
       await studio.tap('shrinkSelection');
@@ -242,24 +243,24 @@ void main() {
       studio.menu.onGrow!();
       await tester.pumpAndSettle();
       var shape = await single(studio);
-      expect(shape.rgb, 0x477fb2);
+      expect(shape.rgb, 0x3370d1);
       expect(right(shape) - left(shape), closeTo(250, .01));
       // The colour is on the element at once, which keeps its new size.
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       shape = await single(studio);
-      expect(shape.rgb, 0xd75e56);
+      expect(shape.rgb, 0xe83d48);
       expect(right(shape) - left(shape), closeTo(250, .01));
       studio.menu.onShrink!();
       await tester.pumpAndSettle();
       shape = await single(studio);
-      expect(shape.rgb, 0xd75e56);
+      expect(shape.rgb, 0xe83d48);
       expect(right(shape) - left(shape), closeTo(200, .01));
       // Three steps: larger, colour, smaller.
       for (var step = 0; step < 3; step++) {
         await studio.tap('undo');
       }
       shape = await single(studio);
-      expect(shape.rgb, 0x477fb2);
+      expect(shape.rgb, 0x3370d1);
       expect(shape.width, 12);
       expect(left(shape), closeTo(300, .01));
       await studio.finish();

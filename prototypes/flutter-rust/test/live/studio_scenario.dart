@@ -49,7 +49,6 @@ import 'package:edupaint_flutter_study/studio_files.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:edupaint_flutter_study/studio_painters.dart';
 import 'package:edupaint_flutter_study/studio_sounds.dart';
-import 'package:edupaint_flutter_study/view_transform.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -317,14 +316,15 @@ void main() {
 
     Finder byKey(String key) => find.byKey(Key(key));
 
-    /// Whether the studio is the one of the pebbles (Color 1.2): a wide
-    /// window, at the complete level and the letters of the system as they
-    /// are. The window of the scenario is one; the smallest window, the
-    /// larger letters and the simplest interface keep the studio of before.
-    bool galets() => byKey('galetLine').evaluate().isNotEmpty;
+    bool inView(String key) => byKey(key).evaluate().isNotEmpty;
 
-    /// Among the pebbles, what is done with the whole drawing waits in
-    /// « Mon dessin », with the last thing that happened to it.
+    /// Whether the pebbles stand in two rails beside the sheet: the
+    /// smallest window. A wider one has a line.
+    bool rails() => inView('galetLeftRail');
+
+    /// What is done with the whole drawing waits in « Mon dessin », with
+    /// the last thing that happened to it: a panel above a line, a menu
+    /// between two rails.
     const inMyDrawing = {
       'newProject',
       'openProject',
@@ -335,6 +335,15 @@ void main() {
       'showHelp',
       'openOptions',
       'aboutColor',
+    };
+    const inTheMenuOfRails = {
+      'replayDrawing',
+      'layersButton',
+      'zoomOut',
+      'zoomIn',
+      'panPage',
+      'fitPage',
+      'openUniverses',
     };
     // What « lequel » opens stays open after these.
     const keepsPanelOpen = {
@@ -348,41 +357,90 @@ void main() {
     VoidCallback? onPressed(String key) => switch (tester.widget(byKey(key))) {
       GaletButton(:final onPressed) => onPressed,
       GaletPictureButton(:final onPressed) => onPressed,
-      final other => throw StateError('$key is not a pebble: $other'),
+      GaletSaveButton(:final onPressed) => onPressed,
+      ButtonStyleButton(:final onPressed) => onPressed,
+      final other => throw StateError('$key is not a button: $other'),
     };
 
     Future<void> openMyDrawing() async {
-      if (!galets() || byKey('galetPanel-drawing').evaluate().isNotEmpty) {
-        return;
-      }
+      if (inView('galetPanel-drawing') || inView('phoneMenuDialog')) return;
       await tester.tap(byKey('myDrawing'));
       await settle();
-      expect(byKey('galetPanel-drawing'), findsOneWidget);
+      expect(
+        inView('galetPanel-drawing') || inView('phoneMenuDialog'),
+        isTrue,
+        reason: '« Mon dessin » is open',
+      );
     }
 
     /// Puts an open panel of the pebbles away, as a press beside it does.
     Future<void> closePanel() async {
-      if (byKey('galetPanelBarrier').evaluate().isEmpty) return;
-      await tester.tapAt(Offset(2, windowSize().height / 2));
+      if (!inView('galetPanelBarrier')) return;
+      // In the middle of the top edge: no pebble stands there.
+      await tester.tapAt(Offset(windowSize().width / 2, 2));
       await settle();
       expect(byKey('galetPanelBarrier'), findsNothing);
     }
 
-    Future<void> tap(String key) async {
-      if (galets() && byKey(key).evaluate().isEmpty) {
-        // Opened first, as a child does: « Mon dessin », the size, or
-        // « lequel » — the shapes, the stamps, the inside of a shape.
-        if (inMyDrawing.contains(key)) {
-          await openMyDrawing();
-        } else if (key.startsWith('width-') || key.startsWith('size-')) {
-          await tester.tap(byKey('galetSize'));
-          await settle();
-        } else {
-          await tester.tap(byKey('galetWhich'));
-          await settle();
-        }
+    /// Opens what holds the control [key], as a child does, and gives the
+    /// key to press: « Mon dessin », the size, « lequel », the shades of a
+    /// colour, every colour — or, between two rails, the drawer and the
+    /// colours.
+    Future<String> reveal(String key) async {
+      if (inView(key)) return key;
+      Future<void> open(String button) async {
+        await tester.tap(byKey(button));
+        await settle();
       }
-      final control = byKey(key);
+
+      if (inMyDrawing.contains(key) ||
+          (rails() && inTheMenuOfRails.contains(key))) {
+        await openMyDrawing();
+        return key;
+      }
+      if (key.startsWith('color-')) {
+        if (rails() && !inView('galetPanel-colours')) await open('railColour');
+        if (inView(key)) return key;
+        final rgb = int.parse(key.substring(6), radix: 16);
+        var holder = galetColours[galetFamilyOf(rgb)!].rgb;
+        if (!inView('color-${holder.toRadixString(16)}')) {
+          holder = switch (holder) {
+            0xffffff => 0x1a1a1a,
+            0x79513e => 0xef9439,
+            0xf4b7cf => 0xe83d48,
+            _ => 0x3370d1,
+          };
+        }
+        await tester.longPress(byKey('color-${holder.toRadixString(16)}'));
+        await settle();
+        return 'nuance-${key.substring(6)}';
+      }
+      if (key == 'pickPaintColor' || key == 'morePaintColors') {
+        if (rails() && !inView('everyColour')) await open('railColour');
+        await open('everyColour');
+        return key;
+      }
+      final setting =
+          key.startsWith('width-') ||
+          key.startsWith('size-') ||
+          key.startsWith('brush-');
+      if (rails()) {
+        if (key.startsWith('tool-') && !inView(key)) {
+          await open('toolDrawer');
+          if (inView('drawer-$key')) return 'drawer-$key';
+          // A choice of « Formes » : its button first.
+          await open('drawer-tool-shapes');
+        }
+        if (!inView('galetPanel-drawer')) await open('toolDrawer');
+        return key;
+      }
+      await open(setting ? 'galetSize' : 'galetWhich');
+      return key;
+    }
+
+    Future<void> tap(String key) async {
+      final pressed = await reveal(key);
+      final control = byKey(pressed);
       expect(control, findsOneWidget, reason: key);
       await tester.ensureVisible(control);
       await settle();
@@ -395,18 +453,12 @@ void main() {
     var sheetWidth = 1200.0;
     var sheetHeight = 800.0;
 
-    /// Where a point of the sheet lies in the window.
+    /// Where a point of the sheet lies in the window, when the whole
+    /// sheet is shown.
     Offset at(double x, double y) {
-      final size = tester.getSize(surface);
-      final scale = ViewTransform.fit(
-        viewWidth: size.width,
-        viewHeight: size.height,
-        padding: size.height >= 160 ? 28 : 8,
-        documentWidth: sheetWidth,
-        documentHeight: sheetHeight,
-      ).scale;
-      return tester.getCenter(surface) +
-          Offset((x - sheetWidth / 2) * scale, (y - sheetHeight / 2) * scale);
+      final sheet = tester.getRect(byKey('sheetAtRest'));
+      return sheet.topLeft +
+          Offset(x * sheet.width / sheetWidth, y * sheet.height / sheetHeight);
     }
 
     Future<void> click(double x, double y) async {
@@ -432,17 +484,11 @@ void main() {
     }
 
     /// What the drawing holds and whether it is saved, as the studio says
-    /// it: under the sheet in the studio of before; among the pebbles it is
-    /// what « Mon dessin » tells whoever cannot read the screen. Null while
-    /// the studio does not say it.
+    /// it on « Mon dessin », to whoever cannot read the screen too.
     String? caption() {
-      if (galets()) {
-        final label = tester.widget<GaletButton>(byKey('myDrawing')).label;
-        return label.substring(label.indexOf(':') + 1).trim();
-      }
-      final title = find.textContaining(RegExp(r'^\d+ éléments? · '));
-      if (title.evaluate().length != 1) return null;
-      return tester.widget<Text>(title).data;
+      if (!inView('myDrawing')) return null;
+      final label = tester.widget<GaletButton>(byKey('myDrawing')).label;
+      return label.substring(label.indexOf(':') + 1).trim();
     }
 
     int shownCount() {
@@ -454,12 +500,7 @@ void main() {
     bool holds(int elements) =>
         caption()?.startsWith(RegExp('$elements éléments? · ')) ?? false;
 
-    bool dirty() => galets()
-        ? caption()!.contains('modifications non enregistrées')
-        : find
-              .textContaining('modifications non enregistrées')
-              .evaluate()
-              .isNotEmpty;
+    bool dirty() => caption()!.contains('modifications non enregistrées');
 
     /// What the sheet paints: its elements, and the first click of a shape
     /// made of two when one waits.
@@ -569,7 +610,7 @@ void main() {
         await shot('01-studio');
         return {
           'window': '${logical.width.round()} × ${logical.height.round()}',
-          'studio': galets() ? 'the pebbles' : 'the studio of before',
+          'studio': rails() ? 'the pebbles, two rails' : 'the pebbles, a line',
           'device_pixel_ratio': tester.view.devicePixelRatio,
           'drawing_area':
               '${tester.getSize(surface).width.round()} × '
@@ -589,11 +630,13 @@ void main() {
         ]);
         expect(shownCount(), 1);
         // Since 1.1 the oval and the rectangle are choices of « Formes » :
-        // in the line of help of the studio of before, in « lequel » among
-        // the pebbles. The colours are those of the line of the pebbles,
-        // which the studio of before does not offer: the scenario is the
-        // one of a wide window.
-        expect(galets(), isTrue, reason: 'a window of ${windowSize()}');
+        // what « lequel » opens. The scenario is the one of a wide
+        // window: a line.
+        expect(
+          inView('galetLine'),
+          isTrue,
+          reason: 'a window of ${windowSize()}',
+        );
         await tap('tool-shapes');
         await tap('tool-ellipse');
         await drag(const [
@@ -704,9 +747,10 @@ void main() {
       );
 
       await step('a trait of the yellow of the rectangle', () async {
-        // The pipette waits for the « réglage des grands » of the pebbles
-        // (step G2 of Color 1.2): the yellow is taken on the line.
+        // The pipette is for the older children, where an adult asked for
+        // every colour (off by default): the yellow is taken on the line.
         expect(byKey('pickPaintColor'), findsNothing);
+        expect(byKey('everyColour'), findsNothing);
         await tap('color-eebf4e');
         await tap('tool-stroke');
         await drag(const [Offset(100, 760), Offset(180, 770)]);
@@ -1015,14 +1059,13 @@ void main() {
       await step('larger text of the system', () async {
         tester.platformDispatcher.textScaleFactorTestValue = 1.3;
         await settle();
-        // Letters this large keep the studio of before, whose panels make
-        // room for them, until the pebbles do (step G2).
-        expect(galets(), isFalse);
+        // The pebbles stay: what is written follows the letters.
+        expect(inView('galetLine'), isTrue);
         expect(shownCount(), 8);
         await shot('16-text-scale-1.3');
         tester.platformDispatcher.clearTextScaleFactorTestValue();
         await settle();
-        expect(galets(), isTrue);
+        expect(inView('galetLine'), isTrue);
         return null;
       });
 
@@ -1044,15 +1087,17 @@ void main() {
         // What the window manager made of 500 × 400: the smallest content
         // that the program announces, where every tool is still in reach.
         expect(small, const Size(680, 520));
-        // The studio of before, in a window this small.
-        expect(galets(), isFalse);
+        // No line holds in a window this small: two rails beside the
+        // sheet, and every tool in the drawer of the left one.
+        expect(rails(), isTrue);
         expect(shownCount(), 8);
-        final area = tester.getSize(surface);
+        final area = tester.getSize(byKey('sheetAtRest'));
         await shot('18-smallest-window');
-        await tap('bigSheet');
-        final bigArea = tester.getSize(surface);
-        await shot('19-smallest-window-big-sheet');
-        await tap('bigSheet');
+        await tester.tap(byKey('toolDrawer'));
+        await settle();
+        expect(byKey('drawer-tool-magic'), findsOneWidget);
+        await shot('19-smallest-window-drawer');
+        await closePanel();
         await askWindowSize(
           '20-window-back',
           before.width.round(),
@@ -1065,14 +1110,13 @@ void main() {
           thenSettle: false,
         );
         expect(await windowSettled(), before);
-        expect(galets(), isTrue);
+        expect(inView('galetLine'), isTrue);
         return {
           'played': true,
           'asked': '500 × 400',
           'obtained': '${small.width.round()} × ${small.height.round()}',
-          'drawing_area': '${area.width.round()} × ${area.height.round()}',
-          'drawing_area_in_big_sheet':
-              '${bigArea.width.round()} × ${bigArea.height.round()}',
+          'form': 'two rails',
+          'sheet': '${area.width.round()} × ${area.height.round()}',
         };
       });
 
@@ -1384,7 +1428,7 @@ void main() {
           // goes on under the line: what a trait costs there, and an image
           // of the decor that moves, measured apart from the traits of the
           // budgets. The drawing is left as it was.
-          expect(galets(), isTrue);
+          expect(inView('galetLine'), isTrue);
           final before = painter().strokes.length;
           final decor = tester.getSize(find.byKey(const Key('decor')));
           List<Offset> wave(double height) => [
@@ -1475,7 +1519,9 @@ void main() {
         ]) {
           expect(byKey(hidden), findsNothing, reason: hidden);
         }
-        expect(byKey('simplePaintColors'), findsOneWidget);
+        // Three sizes in view, and the ten colours.
+        expect(byKey('brush-medium'), findsOneWidget);
+        expect(find.byType(GaletSwatch), findsNWidgets(10));
         expect(byKey('replayDrawing'), findsOneWidget);
         await until(
           'the level to be kept',

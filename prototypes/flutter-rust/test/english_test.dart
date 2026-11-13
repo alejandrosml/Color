@@ -5,7 +5,6 @@
 // the options, or by a device that prefers English.
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' show Locale;
 
 import 'package:edupaint_flutter_study/color_palette.dart';
 import 'package:edupaint_flutter_study/decor_motion.dart';
@@ -226,14 +225,17 @@ void main() {
       const StudioOptions(language: LanguageChoice.english),
     );
     final studio = StudioDriver(tester, options: store);
-    await studio.start();
+    // A wide window: the tool in hand has its name written on the line.
+    await studio.start(size: const Size(1440, 900));
     await tester.pumpAndSettle();
     expect(appLanguage.value, AppLanguage.english);
     expect(find.text('Brush'), findsWidgets);
-    expect(find.text('Eraser'), findsWidgets);
-    // The help of a tool without choices of its own is written out.
+    expect(
+      tester.widget<GaletButton>(find.byKey(const Key('tool-eraser'))).label,
+      'Eraser',
+    );
     await studio.tap('tool-eraser');
-    expect(find.textContaining('rub it out'), findsWidgets);
+    expect(find.text('Eraser'), findsWidgets);
     await studio.tap('tool-stroke');
     expect(find.text('Pinceau'), findsNothing);
     // A dialog, in English too.
@@ -244,7 +246,7 @@ void main() {
     await tester.pumpAndSettle();
     // Back to French, at once, the drawing kept.
     await studio.drag(studio.at(100, 100), studio.at(300, 200));
-    expect(find.textContaining('1 element · '), findsOneWidget);
+    expect(drawingCaption(tester), contains('1 element · '));
     store.value = store.value.copyWith(language: LanguageChoice.french);
     await tester.pumpAndSettle();
     expect(find.text('Pinceau'), findsWidgets);
@@ -258,7 +260,7 @@ void main() {
     tester,
   ) async {
     final studio = StudioDriver(tester);
-    await studio.start();
+    await studio.start(size: const Size(1440, 900));
     await tester.pumpAndSettle();
     expect(find.text('Pinceau'), findsWidgets);
     // The device now prefers English, while Color runs.
@@ -291,29 +293,29 @@ void main() {
     await studio.start();
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('Nouvelle feuille · récupération locale prête.'),
-      findsOneWidget,
+      await drawingStatus(tester),
+      contains('Nouvelle feuille · récupération locale prête.'),
     );
     // Said before the change, said again after it: in English…
     store.value = store.value.copyWith(language: LanguageChoice.english);
     await tester.pumpAndSettle();
     expect(
-      find.textContaining('New sheet · local recovery ready.'),
-      findsOneWidget,
+      await studio.status(),
+      contains('New sheet · local recovery ready.'),
     );
-    expect(find.textContaining('récupération'), findsNothing);
+    expect(await studio.status(), isNot(contains('récupération')));
     // …and, after a stroke, what the recovery says, again in French.
     await studio.drag(studio.at(100, 100), studio.at(300, 200));
     await tester.pumpAndSettle();
-    final english = RegExp(r'^(Changes not saved|Recovery copy up to date)');
+    final english = RegExp(r'(Changes not saved|Recovery copy up to date)');
     final french = RegExp(
-      r'^(Modifications non enregistrées|Copie de récupération à jour)',
+      r'(Modifications non enregistrées|Copie de récupération à jour)',
     );
-    expect(find.textContaining(english), findsOneWidget);
+    expect(await studio.status(), contains(english));
     store.value = store.value.copyWith(language: LanguageChoice.french);
     await tester.pumpAndSettle();
-    expect(find.textContaining(english), findsNothing);
-    expect(find.textContaining(french), findsOneWidget);
+    expect(await studio.status(), isNot(contains(english)));
+    expect(await studio.status(), contains(french));
     expect(tester.takeException(), isNull);
     await studio.finish();
   }, skip: !available);

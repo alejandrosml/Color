@@ -15,18 +15,10 @@ import 'support/studio_driver.dart';
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
 
-// Whether the studio is the one of the pebbles (Color 1.2): a wide window
-// with ordinary letters.
-bool _pebbles() => find.byKey(const Key('galetLine')).evaluate().isNotEmpty;
-
 Future<void> _tap(WidgetTester tester, String key) async {
-  final finder = find.byKey(Key(key));
-  // Among the pebbles, what is done with the whole drawing waits in
-  // « Mon dessin ».
-  if (finder.evaluate().isEmpty && _pebbles()) {
-    await tester.tap(find.byKey(const Key('myDrawing')));
-    await tester.pumpAndSettle();
-  }
+  // What holds the control is opened first: « Mon dessin », a panel, the
+  // drawer of a rail.
+  final finder = find.byKey(Key(await revealControl(tester, key)));
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   expect(finder.hitTestable(), findsOneWidget, reason: '$key is reachable');
@@ -141,8 +133,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         // The colour changes the chosen stroke at once: one step to undo.
-        // The pebbles offer the ten elementary colours.
-        await _tap(tester, _pebbles() ? 'color-e83d48' : 'color-d75e56');
+        await _tap(tester, 'color-e83d48');
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
         await _save(tester);
@@ -180,15 +171,6 @@ void main() {
         await _tap(tester, 'cancelNewSheet');
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('newSheetDialog')), findsNothing);
-        // « Autres couleurs » : in the studio of before only, until the
-        // pebbles have the setting of the older children.
-        if (!_pebbles()) {
-          await _tap(tester, 'morePaintColors');
-          await tester.pumpAndSettle();
-          await _tap(tester, 'cancelPaintColor');
-          await tester.pumpAndSettle();
-          expect(find.byKey(const Key('paintColorDialog')), findsNothing);
-        }
         await _tap(tester, 'exportImage');
         await tester.pumpAndSettle();
         await _tap(tester, 'exportSvg');

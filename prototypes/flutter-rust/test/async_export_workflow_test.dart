@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 class _ObservedFiles extends MemoryFiles {
   String? exportPath = '/drawings/export.svg';
@@ -105,7 +106,7 @@ Uint8List _largeProject() {
             40 + (index ~/ 1100).toDouble(),
           ),
       ],
-      rgb: 0x477fb2,
+      rgb: 0x3370d1,
       width: 2,
     );
     expect(projectExportUsesWorker(document), isTrue);
@@ -140,7 +141,7 @@ Future<void> _mountLarge(
   await tester.pumpAndSettle();
   _menu(tester).onOpen!();
   await _until(tester, () => _idle(tester), 'open large vector document');
-  expect(find.textContaining('1 élément'), findsOneWidget);
+  expect(drawingCaption(tester), contains('1 élément'));
 }
 
 Future<void> _draw(WidgetTester tester) async {
@@ -182,10 +183,7 @@ void main() {
       'worker save',
     );
     expect(_objectCount(files.projects[files.savePath]!), 2);
-    expect(
-      find.textContaining('2 éléments · projet enregistré'),
-      findsOneWidget,
-    );
+    expect(drawingCaption(tester), contains('2 éléments · projet enregistré'));
     expect(recovery.bytes, isNull);
     expect(files.projects[files.openPath], original);
     _menu(tester).onExportSvg!();
@@ -219,8 +217,8 @@ void main() {
     expect(files.svgWrites, 0);
     expect(_idle(tester), isTrue);
     expect(
-      find.textContaining('modifications non enregistrées'),
-      findsOneWidget,
+      await drawingStatus(tester),
+      contains('modifications non enregistrées'),
     );
     await tester.pumpWidget(const SizedBox.shrink());
   }, skip: !available);
@@ -257,8 +255,8 @@ void main() {
         reason: 'Only opening the initial source cleared recovery.',
       );
       expect(
-        find.textContaining('2 éléments · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('2 éléments · modifications non enregistrées'),
       );
       expect(find.textContaining('Enregistrement non terminé'), findsOneWidget);
       files.failWrite = false;
@@ -269,8 +267,8 @@ void main() {
         'retry worker save',
       );
       expect(
-        find.textContaining('2 éléments · projet enregistré'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('2 éléments · projet enregistré'),
       );
       expect(recovery.bytes, isNull);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -302,15 +300,15 @@ void main() {
       expect(files.openDialogs, 1);
       expect(files.projectWrites, 0);
       expect(files.exportDialogs, 1);
-      expect(find.textContaining('2 éléments'), findsOneWidget);
+      expect(drawingCaption(tester), contains('2 éléments'));
       if (Platform.isMacOS) {
         expect(await _nativeExit(tester), {'response': 'cancel'});
       }
       files.svgBarrier!.complete();
       await _until(tester, () => _idle(tester), 'SVG writer released');
       expect(
-        find.textContaining('modifications non enregistrées'),
-        findsOneWidget,
+        await drawingStatus(tester),
+        contains('modifications non enregistrées'),
       );
       expect(find.text('Préparation de ton image SVG…'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -381,8 +379,8 @@ void main() {
       expect(recovery.snapshots, hasLength(2));
       expect(_objectCount(recovery.bytes!), 4);
       expect(
-        find.text('Copie de récupération à jour · projet à enregistrer.'),
-        findsOneWidget,
+        await drawingStatus(tester),
+        contains('Copie de récupération à jour · projet à enregistrer.'),
       );
       expect(_idle(tester), isTrue);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -416,10 +414,7 @@ void main() {
         'new page after old worker write',
       );
       expect(recovery.bytes, isNull);
-      expect(
-        find.textContaining('0 élément · nouvelle feuille'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('0 élément · nouvelle feuille'));
       await _draw(tester);
       await tester.pump(const Duration(milliseconds: 500));
       await _until(tester, () => recovery.bytes != null, 'new page recovery');

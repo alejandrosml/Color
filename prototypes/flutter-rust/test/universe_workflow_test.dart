@@ -797,34 +797,6 @@ void main() {
       expect(await band(), greaterThan(60));
       await tester.pumpWidget(const SizedBox());
 
-      // In the simplest interface the sheet takes the band: nothing is
-      // painted there. The pencils stay, a screen reader meets them, and
-      // F2 goes round the fourteen things.
-      await start(
-        tester,
-        options: const StudioOptions(level: InterfaceLevel.toddler),
-      );
-      final simple = painting(tester);
-      expect(simple.layout.pieces, isTrue);
-      expect(simple.layout.under, isFalse);
-      expect(simple.names, hasLength(14));
-      expect(find.byKey(const Key('decorName-crayons')), findsOneWidget);
-      expect(find.byKey(const Key('decorName-chat')), findsOneWidget);
-      // What is left of the band: the ground alone, the wood of the desk.
-      expect(await band(), lessThan(8));
-      final seen = <String>{};
-      for (var step = 0; step < 15; step++) {
-        await tester.sendKeyEvent(LogicalKeyboardKey.f2);
-        await tester.pump();
-        expect(find.byKey(const Key('decorNameCard')), findsOneWidget);
-        for (final name in simple.decor.names) {
-          if (find.text(name.frenchName).evaluate().isNotEmpty) {
-            seen.add(name.key);
-          }
-        }
-      }
-      expect(seen, hasLength(14));
-      expect(seen, contains('crayons'));
       handle.dispose();
       await tester.pumpWidget(const SizedBox());
     },
@@ -921,67 +893,6 @@ void main() {
     skip: !available,
   );
 
-  testWidgets(
-    'over a decor the captions of the sheet stand along the sheet, and '
-    'cover nothing of the decor',
-    (tester) async {
-      const captions = ['MA FEUILLE', '1200 × 800 unités', 'Toute la feuille'];
-      // The window of the studio of before: the pebbles of a wider one
-      // write nothing around the sheet.
-      for (final size in const [Size(1024, 768)]) {
-        await start(tester, size: size);
-        final shown = painting(tester);
-        final origin = tester.getTopLeft(surface);
-        final sheet = tester
-            .widget<DecorView>(find.byType(DecorView))
-            .sheetAtRest!
-            .shift(origin);
-        for (final caption in captions) {
-          final pill = tester.getRect(
-            find.ancestor(
-              of: find.text(caption),
-              matching: find.byType(DecorCaption),
-            ),
-          );
-          // Within the width of the sheet, just above or just under it:
-          // the pieces of the decor stand beside the sheet, never there.
-          expect(pill.left, greaterThanOrEqualTo(sheet.left - .5));
-          expect(pill.right, lessThanOrEqualTo(sheet.right + .5));
-          expect(
-            pill.bottom <= sheet.top + .5 || pill.top >= sheet.bottom - .5,
-            isTrue,
-            reason: '$caption, $size',
-          );
-          for (final name in shown.names) {
-            expect(
-              pill.overlaps(
-                shown.layout.place(name.at, name.anchor).shift(origin),
-              ),
-              isFalse,
-              reason: '$caption sur ${name.key}, $size',
-            );
-          }
-        }
-        await tester.pumpWidget(const SizedBox());
-      }
-      // Without a decor they keep the corners of the frame, as always.
-      await start(tester, size: const Size(900, 1000));
-      expect(find.byType(DecorCaption), findsNothing);
-      final frame = tester.getRect(surface);
-      expect(
-        tester.getTopLeft(find.text('MA FEUILLE')),
-        frame.topLeft + const Offset(16, 10),
-      );
-      expect(
-        frame.bottomRight -
-            tester.getBottomRight(find.text('Toute la feuille')),
-        const Offset(16, 9),
-      );
-      await tester.pumpWidget(const SizedBox());
-    },
-    skip: !available,
-  );
-
   testWidgets('a narrow frame: the decor smaller, or no decor at all', (
     tester,
   ) async {
@@ -1032,7 +943,8 @@ void main() {
       );
       image.dispose();
     });
-    expect(corner.toARGB32(), studioSheetBackdrop.toARGB32());
+    // Among the pebbles the sheet floats on the background of the universe.
+    expect(corner.toARGB32(), studioBackground.toARGB32());
     // The studio still wears the universe: its colours and its shapes.
     expect(
       identical(

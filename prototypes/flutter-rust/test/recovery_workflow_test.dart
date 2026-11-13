@@ -9,6 +9,7 @@ import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 class _SlowRecovery extends MemoryRecovery {
   final firstWrite = Completer<void>();
@@ -69,6 +70,7 @@ void main() {
   }
 
   Future<void> tap(WidgetTester tester, String key) async {
+    key = await revealControl(tester, key);
     await tester.tap(find.byKey(Key(key)));
     await tester.pumpAndSettle();
   }
@@ -96,16 +98,13 @@ void main() {
     expect(recovery.clears, 1);
     expect(recovery.bytes, isNull);
     expect(recovery.captured, hasLength(1));
-    expect(
-      find.textContaining('21 éléments · projet enregistré'),
-      findsOneWidget,
-    );
+    expect(drawingCaption(tester), contains('21 éléments · projet enregistré'));
     await draw(tester);
     expect(recovery.captured, hasLength(2));
     expect(objects(recovery.bytes!), 22);
     expect(
-      find.textContaining('22 éléments · modifications non enregistrées'),
-      findsOneWidget,
+      drawingCaption(tester),
+      contains('22 éléments · modifications non enregistrées'),
     );
     await tester.pumpWidget(const SizedBox.shrink());
   }, skip: !available);
@@ -125,7 +124,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(recovery.clears, 1);
     expect(recovery.bytes, isNull);
-    expect(find.textContaining('0 élément · nouvelle feuille'), findsOneWidget);
+    expect(drawingCaption(tester), contains('0 élément · nouvelle feuille'));
     await draw(tester);
     expect(recovery.captured, hasLength(2));
     expect(objects(recovery.bytes!), 1);

@@ -51,7 +51,7 @@ void main() {
       expect(request.rgba, hasLength(2400 * 1600 * 4));
       // Inside the rectangle, its outline, and the paper beside it.
       expect(request.pixel(1000, 800), [0xe8, 0x3d, 0x48, 255]);
-      expect(request.pixel(600, 800), [0x47, 0x7f, 0xb2, 255]);
+      expect(request.pixel(600, 800), [0x33, 0x70, 0xd1, 255]);
       expect(request.pixel(100, 100), [255, 255, 255, 255]);
       expect(request.pixel(2399, 1599), [255, 255, 255, 255]);
       // Opaque everywhere: a printer has no transparency.
@@ -345,7 +345,7 @@ void main() {
   }, skip: !available);
 
   testWidgets(
-    'in the smallest window with large letters Imprimer waits in the « … » menu',
+    'in the smallest window with large letters Imprimer waits in « Mon dessin »',
     (tester) async {
       final printer = FakePrinter();
       final studio = StudioDriver(
@@ -354,14 +354,13 @@ void main() {
         printer: printer.call,
       );
       await studio.start(size: const Size(680, 520), textScale: 2);
-      // Not on the line of the header…
+      // Not in view beside the sheet…
       expect(find.byKey(const Key('printDrawing')), findsNothing);
-      // …but one press away, with what else waits there.
-      await tester.tap(find.byKey(const Key('moreFileActions')));
-      await tester.pumpAndSettle();
-      expect(find.text('Imprimer…'), findsOneWidget);
+      // …but one press away, with what else waits in « Mon dessin ».
+      await studio.openMyDrawing();
+      expect(find.text('Imprimer'), findsOneWidget);
       expect(find.text('Mes dessins'), findsOneWidget);
-      expect(find.text('Dessiner sur une image…'), findsOneWidget);
+      expect(find.text('Sur une image'), findsOneWidget);
       await printAndWait(tester, printer);
       expect(printer.requests.single.width, 2400);
       expect(tester.takeException(), isNull);

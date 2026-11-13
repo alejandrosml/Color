@@ -3,11 +3,9 @@
 // disk writes of drawings and the recovery store are in memory.
 import 'dart:io';
 
-import 'package:edupaint_flutter_study/color_palette.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/options_dialog.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
-import 'package:edupaint_flutter_study/studio_header.dart';
-import 'package:edupaint_flutter_study/studio_inspector.dart';
 import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:edupaint_flutter_study/studio_tool.dart';
 import 'package:flutter/gestures.dart';
@@ -241,13 +239,8 @@ void main() {
       );
       await studio.start(size: const Size(1280, 800));
       expect(shownTools(tester), ToolGroup.values);
-      // A wide window, the whole interface: the studio of the pebbles.
-      expect(studio.galets, isTrue);
 
       await choose(studio, 'level-toddler');
-      // The simplest interface keeps the studio of before, until the
-      // pebbles are laid out for it.
-      expect(studio.galets, isFalse);
       expect(store.value.level, InterfaceLevel.toddler);
       expect(shownTools(tester), [
         ToolGroup.brush,
@@ -274,7 +267,6 @@ void main() {
       ]) {
         expect(key(gone), findsNothing, reason: gone);
       }
-      expect(find.byType(StudioInspector), findsNothing);
       expect(find.text('MA FEUILLE'), findsNothing);
       expect(find.textContaining('récupération'), findsNothing);
       expect(
@@ -292,20 +284,29 @@ void main() {
         'undo',
         'redo',
         'replayDrawing',
-        'simplePaintColors',
         'brush-small',
         'brush-medium',
         'brush-large',
       ]) {
+        // What is done with the whole drawing waits in « Mon dessin ».
+        await studio.reveal(kept);
         expect(key(kept), findsOneWidget, reason: kept);
       }
+      await studio.closePanel();
       // Large targets: the tools, the colours.
       for (final tool in shownTools(tester)) {
         final size = tester.getSize(key(tool.keyName));
-        expect(size.width, greaterThanOrEqualTo(96), reason: tool.name);
-        expect(size.height, greaterThanOrEqualTo(96), reason: tool.name);
+        expect(
+          size.width,
+          greaterThanOrEqualTo(GaletsLayout.largeCell),
+          reason: tool.name,
+        );
+        expect(size.height, GaletsLayout.largeCell, reason: tool.name);
       }
-      expect(tester.getSize(key('color-e83d48')), const Size.square(60));
+      expect(
+        tester.getSize(key('color-e83d48')),
+        const Size.square(GaletsLayout.largeCell),
+      );
 
       // Drawing works as ever: the pot on the bare sheet, a colour, a size,
       // a trait, a stamp, then the eraser on the stamp.
@@ -368,7 +369,6 @@ void main() {
       final studio = StudioDriver(tester, options: store);
       await studio.start(size: const Size(1280, 800));
       expect(shownTools(tester), ToolGroup.values);
-      expect(studio.galets, isTrue);
       // On the pebbles: Enregistrer, the view, the film — and no layers.
       for (final kept in [
         'saveProject',
@@ -457,14 +457,8 @@ void main() {
               .toBoolOrNull() ??
           false;
       final colours = [
-        for (final colour in simplePaintColors)
-          // The button inside the swatch is what is announced.
-          if (chosen(
-            find.descendant(
-              of: key('color-${colour.rgb.toRadixString(16).padLeft(6, '0')}'),
-              matching: find.byType(IconButton),
-            ),
-          ))
+        for (final colour in galetColours)
+          if (isChosen(tester, 'color-${colour.rgb.toRadixString(16)}'))
             colour.rgb,
       ];
       expect(colours, hasLength(1));
@@ -615,24 +609,25 @@ void main() {
   }, skip: !available);
 
   testWidgets(
-    'the « … » menu left open while the window widens does not lock the studio',
+    '« Mon dessin » left open while the window widens does not lock the studio',
     (tester) async {
       final store = StudioOptionsStore.memory();
       addTearDown(store.dispose);
       final studio = StudioDriver(tester, options: store);
-      await studio.start(size: const Size(700, 600));
-      await tester.tap(key('moreFileActions'));
-      await tester.pumpAndSettle();
-      expect(find.text('Options…'), findsOneWidget);
-      // The window is made wider: the header no longer needs its menu, and
-      // the button that opened it leaves with it.
+      // Between two rails, « Mon dessin » is a menu over the studio.
+      await studio.start(size: const Size(680, 520));
+      await studio.openMyDrawing();
+      expect(key('phoneMenuDialog'), findsOneWidget);
+      // The window is made wider: the rails leave for a line, and the
+      // button that opened the menu with them.
       tester.view.physicalSize = const Size(1280, 800);
       await tester.pumpAndSettle();
-      expect(key('moreFileActions'), findsNothing);
+      expect(tester.takeException(), isNull);
+      expect(key('galetLine'), findsOneWidget);
       // The menu is closed by a click beside it.
       await tester.tapAt(const Offset(5, 5));
       await tester.pumpAndSettle();
-      expect(find.text('Options…'), findsNothing);
+      expect(key('phoneMenuDialog'), findsNothing);
       // The studio draws, and its dialogs open.
       await studio.drag(const Offset(-80, -40), const Offset(60, 30));
       studio.expectCount(1);
@@ -869,21 +864,15 @@ void main() {
   );
 
   testWidgets(
-    'in a narrow window the options wait in the « … » menu, and in the menu bar',
+    'in a small window the options wait in « Mon dessin », and in the menu bar',
     (tester) async {
       final store = StudioOptionsStore.memory();
       addTearDown(store.dispose);
       final studio = StudioDriver(tester, options: store);
       await studio.start(size: const Size(700, 600));
       expect(find.text('Color'), findsNothing);
-      expect(
-        find.descendant(
-          of: find.byType(StudioHeader),
-          matching: key('openOptions'),
-        ),
-        findsNothing,
-      );
-      // The driver opens the « … » menu as a person would.
+      expect(key('openOptions'), findsNothing);
+      // The driver opens « Mon dessin » as a person would.
       await studio.openOptions();
       expect(key('optionsDialog'), findsOneWidget);
       await closeOptions(tester);

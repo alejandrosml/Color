@@ -12,6 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 class _Files extends MemoryFiles {
   Object? readError;
@@ -191,8 +192,8 @@ void main() {
       );
       expect(files.projects, isEmpty);
       expect(
-        find.textContaining('1 élément · modifications non enregistrées'),
-        findsOneWidget,
+        drawingCaption(tester),
+        contains('1 élément · modifications non enregistrées'),
       );
       await _details(tester);
       expect(_detailsText(tester), contains('Simulated denied write'));
@@ -209,10 +210,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(
-        find.textContaining('1 élément · projet enregistré'),
-        findsOneWidget,
-      );
+      expect(drawingCaption(tester), contains('1 élément · projet enregistré'));
       await _details(tester);
       expect(_detailsText(tester), contains('cleanup-marker-for-details'));
       await _closeDetails(tester);
@@ -264,7 +262,7 @@ void main() {
       await waitForPreparedOpen(tester);
       expect(find.byKey(const Key('problemMessage')), findsNothing);
       expect(find.byKey(const Key('showProblemDetails')), findsNothing);
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       expect(files.writesAttempted, 0);
       await tester.pumpWidget(const SizedBox.shrink());
     },

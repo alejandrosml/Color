@@ -129,7 +129,7 @@ void main() {
       final studio = StudioDriver(tester);
       await studio.start();
       await studio.tap('tool-stroke');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       final hint = hintOf(tester);
       // No mouse yet: nothing is shown, and no pointer is hidden.
       expect(hint.mouseAt, isNull);
@@ -140,11 +140,11 @@ void main() {
       await mouse.moveTo(at);
       await tester.pump();
       expect(cursorOf(tester), SystemMouseCursors.none);
-      expect(hint.pointer, const ToolPointer(StudioTool.brush, 0xd75e56));
+      expect(hint.pointer, const ToolPointer(StudioTool.brush, 0xe83d48));
       expect(hint.mouseAt, inFrame(tester, at));
       final dot = hint.preview as DotPreview;
       expect(dot.at, inFrame(tester, at));
-      expect(dot.rgb, 0xd75e56);
+      expect(dot.rgb, 0xe83d48);
       expect(dot.width, 12);
       expect(dot.hollow, isFalse);
 
@@ -393,11 +393,11 @@ void main() {
       await rest(tester, shown: false);
       expect(hint.preview, isNull);
       // Another colour: the same place is hatched again.
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await mouse.moveTo(studio.sheetCenter + studio.at(906, 306));
       await tester.pump();
       await rest(tester);
-      expect((hint.preview as PourPreview).rgb, 0xd75e56);
+      expect((hint.preview as PourPreview).rgb, 0xe83d48);
       expect(tester.takeException(), isNull);
       await studio.finish();
     },
@@ -589,7 +589,7 @@ void main() {
     await studio.tap('page-maison');
     studio.expectCount(0);
     await studio.tap('tool-fill');
-    await studio.tap('color-d75e56');
+    await studio.tap('color-e83d48');
     // The middle of the page lies in one of its zones, or on its paper:
     // the zone is hatched, or the paper but what the page draws on it.
     final mouse = await mouseAt(tester, studio.sheetCenter);
@@ -597,7 +597,7 @@ void main() {
     await tester.pump();
     await rest(tester);
     final pour = hint.preview as PourPreview;
-    expect(pour.rgb, 0xd75e56);
+    expect(pour.rgb, 0xe83d48);
     if (pour.element != null) {
       expect(pour.inside, isTrue);
       expect(pour.element!.data.fillRgb, isNotNull);

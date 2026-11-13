@@ -47,13 +47,8 @@ import 'size_choice.dart';
 import 'layers_dialog.dart';
 import 'studio_colors.dart';
 import 'studio_tool.dart';
-import 'tool_bar.dart';
 import 'tool_variants.dart';
-import 'view_controls.dart';
-import 'studio_header.dart';
 import 'selection_toolbar.dart';
-import 'studio_inspector.dart';
-import 'studio_layout.dart';
 import 'studio_painters.dart';
 import 'studio_printer.dart';
 import 'export_dialog.dart';
@@ -62,8 +57,6 @@ import 'french.dart';
 import 'gallery_dialog.dart';
 import 'gallery_storage.dart';
 import 'gallery_thumbnail.dart';
-import 'document_toolbar.dart';
-import 'size_control.dart';
 import 'studio_questions.dart';
 import 'studio_options.dart';
 import 'options_dialog.dart';
@@ -78,7 +71,6 @@ import 'country_signs.dart';
 import 'kept_colours.dart';
 import 'paint_pot.dart';
 import 'language.dart';
-import 'companion.dart';
 import 'sheet_hint.dart';
 import 'tool_pointer.dart';
 import 'decor.dart';
@@ -290,7 +282,49 @@ enum _Latch { stroke, move, pan }
 /// What a button of the pebbles opened (Color 1.2, galets.dart): the panel
 /// of the drawing, the size, « lequel » — which trait, which stamp, which
 /// shape —, or the shades of a colour.
-enum _GaletPanel { drawing, size, which, shades }
+enum _GaletPanel {
+  drawing,
+  size,
+  which,
+  shades,
+
+  /// Beside a rail: every tool, with the size and « lequel ».
+  drawer,
+
+  /// Beside a rail: the ten colours.
+  colours,
+
+  /// The field of every colour, the pipette and the mixing, where an
+  /// adult asked for them.
+  everyColour,
+}
+
+/// What a line of the pebbles holds in the room it is given: whether the
+/// tool in hand has its name, which colours, how large its cells.
+final class _GaletLinePlan {
+  const _GaletLinePlan({
+    required this.named,
+    required this.palette,
+    required this.cell,
+    required this.inner,
+    required this.nameWidth,
+    required this.longest,
+    required this.extra,
+  });
+  final bool named;
+  final GaletPalette palette;
+  final double cell;
+
+  /// Its width between its two ends.
+  final double inner;
+
+  /// The width of the name of the tool in hand, and of the longest name.
+  final double nameWidth;
+  final double longest;
+
+  /// The colour in hand is not one of the line: it has a place of its own.
+  final bool extra;
+}
 
 /// What the paint pot does on the paper: it gives its colour to a zone it
 /// poured before, or to the sheet ([zone] null), or it pours a new zone,
@@ -346,7 +380,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   int? _trackpadPointer;
   double _trackpadScale = 1;
   PaintColorTarget _colorTarget = PaintColorTarget.stroke;
-  int _fillColor = 0x477fb2;
+  int _fillColor = galetStartColour;
   late final AppLifecycleListener _lifecycle;
   List<RenderedElement> _strokes = const [];
 
@@ -415,10 +449,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   // The drawing was saved a moment ago: « Enregistrer » shows a tick.
   bool _savedJustNow = false;
   Timer? _savedTimer;
-
-  /// The column of a telephone, on the right of the sheet: a new tool shows
-  /// it from its top, where its choices are.
-  final _phoneRail = ScrollController();
   static const _bounceTime = Duration(milliseconds: 350);
   static const _bounceReach = 24.0;
   StudioTool _tool = StudioTool.brush;
@@ -453,9 +483,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   StrokeData? _selectionBoundsObject;
   Rect? _selectionPaintBounds;
   final _selectionOffset = ValueNotifier<Offset>(Offset.zero);
-  // The width slider is being moved for the chosen element: the element
-  // takes the new width when the hand leaves the slider, in one step.
-  bool _selectionWidthMoving = false;
   VectorKind get _draftKind => _drafting.kind;
   set _draftKind(VectorKind kind) => _drafting.kind = kind;
   // The brush is heard when it touches the sheet, then again while it
@@ -528,7 +555,7 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   int? get _draftFillRgb => _drafting.fillRgb;
   set _draftFillRgb(int? rgb) => _drafting.fillRgb = rgb;
-  int _color = 0x477fb2;
+  int _color = galetStartColour;
   int get _draftColor => _drafting.rgb;
   set _draftColor(int rgb) => _drafting.rgb = rgb;
   double _width = 12;
@@ -722,9 +749,24 @@ class _DrawingStudioState extends State<DrawingStudio>
       GlobalKey(debugLabel: 'godet $index'),
   ];
 
-  /// The panel that is open, and for the shades, the swatch they belong to.
+  final _drawerButton = GlobalKey(debugLabel: 'tiroir');
+  final _coloursButton = GlobalKey(debugLabel: 'couleurs');
+  final _everyColourButton = GlobalKey(debugLabel: 'toutes les couleurs');
+  late final _railSwatchButtons = [
+    for (var index = 0; index < galetColours.length; index++)
+      GlobalKey(debugLabel: 'godet du rail $index'),
+  ];
+
+  /// The panel that is open; for the shades, the swatch they belong to and
+  /// the button they open beside.
   _GaletPanel? _galetPanel;
   int _galetFamily = 0;
+  GlobalKey? _shadesButton;
+
+  /// The form of the pebbles and the colours of their line, as the window
+  /// was last laid out.
+  GaletsForm _galetsForm = GaletsForm.line;
+  GaletPalette _galetPalette = GaletPalette.whole;
 
   /// « Univers » : the child chooses how the workshop is dressed, or looks
   /// at a decor on the whole screen. The drawing is not touched.
@@ -869,7 +911,6 @@ class _DrawingStudioState extends State<DrawingStudio>
     _pourHintSerial++;
     _forgetInk();
     _hint.dispose();
-    _phoneRail.dispose();
     _recoveryScheduler.dispose();
     clearNativeExitHandler();
     clearNativeDiagnostics();
@@ -1112,7 +1153,6 @@ class _DrawingStudioState extends State<DrawingStudio>
     _selectionDragBounds = null;
     _selectionOffset.value = Offset.zero;
     _colorTarget = PaintColorTarget.stroke;
-    _selectionWidthMoving = false;
     if (index != null) {
       final object = _document!.strokes[index];
       // The colour kept by a stamp that shows none of it is nobody's choice:
@@ -5381,13 +5421,6 @@ class _DrawingStudioState extends State<DrawingStudio>
         onDetails: () => _showProblemDetails(_startupError!),
       );
     }
-    // The studio of a wide window is made of pebbles (Color 1.2); the
-    // others keep the panels of before.
-    final galets = !_phoneLayout(context) && _galetsOffered(context);
-    if (!galets) {
-      _stageOrigin = Offset.zero;
-      _galetPanel = null;
-    }
     return EduPaintDesktopMenu(
       onAbout: _showAbout,
       onNew: _busy ? null : _newDrawing,
@@ -5533,222 +5566,24 @@ class _DrawingStudioState extends State<DrawingStudio>
           },
           autofocus: true,
           child: Scaffold(
-            body: _phoneLayout(context)
-                ? _phoneBody()
-                : galets
-                ? _galetsBody(context)
-                : Column(
-                    children: [
-                      if (!_bigSheet &&
-                          _options.captions &&
-                          MediaQuery.sizeOf(context).height >= 620)
-                        Container(
-                          width: double.infinity,
-                          color: studioBanner,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 5,
-                          ),
-                          child: Text(
-                            tr(
-                              'Color · Un petit atelier pour les grandes idées',
-                            ),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: studioHelpText,
-                            ),
-                          ),
-                        ),
-                      if (!_bigSheet)
-                        StudioHeader(
-                          onNew: _busy ? null : _newDrawing,
-                          onOpen: _busy ? null : _openProject,
-                          hasGallery: _gallery != null,
-                          onGallery: _busy ? null : _openGallery,
-                          onImportImage: _busy ? null : _importImage,
-                          onSave: _busy ? null : _saveProject,
-                          onExport: _busy ? null : _chooseExport,
-                          onPrint: _busy ? null : _printDrawing,
-                          onAbout: _busy ? null : _showAbout,
-                          onHelp: _busy ? null : _showHelp,
-                          onMenuVisibilityChanged: _colorDialogChanged,
-                          onOptions: _busy ? null : _openOptions,
-                          onUniverses: _busy ? null : _openUniverses,
-                          showUniverses: _choosesUniverse,
-                          showOpen: _options.opensFiles,
-                          showImportImage: _options.opensFiles,
-                          showExport: _options.exports,
-                          showPrint: _options.printing,
-                          showHelp: _options.headerHelp,
-                          savedJustNow: _savedJustNow,
-                        ),
-                      Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final wide =
-                                !_bigSheet &&
-                                _options.inspector &&
-                                constraints.maxWidth >= 1120;
-                            final textScale =
-                                MediaQuery.textScalerOf(context).scale(12) / 12;
-                            final tools = _options.groups;
-                            final largeTools = _options.simpleControls;
-                            final narrow = StudioLayout.toolsAbove(
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              textScale: textScale,
-                              toolCount: tools.length,
-                              largeTools: largeTools,
-                            );
-                            // The sheet comes first: the controls under it are
-                            // spacious only when the sheet stays comfortable.
-                            final short = !StudioLayout.spaciousControls(
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              narrow: narrow,
-                              inspector: wide,
-                              textScale: textScale,
-                              toolCount: tools.length,
-                              largeTools: largeTools,
-                            );
-                            final gap = short ? 6.0 : 12.0;
-                            return Padding(
-                              padding: EdgeInsets.all(
-                                narrow || short ? 12 : 20,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (!narrow) ...[
-                                    StudioToolBar(
-                                      selected: _tool.group,
-                                      onSelected: _busy ? null : _selectGroup,
-                                      tools: tools,
-                                      large: largeTools,
-                                    ),
-                                    const SizedBox(width: 18),
-                                  ],
-                                  Expanded(
-                                    // Named, so that it stays the same column when
-                                    // a window made much wider or narrower at once
-                                    // gives it neighbours on both sides: what it
-                                    // holds, an open colour dialog for one, must
-                                    // not be forgotten.
-                                    key: const ValueKey('studioColumn'),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        if (narrow) ...[
-                                          StudioToolBar(
-                                            selected: _tool.group,
-                                            onSelected: _busy
-                                                ? null
-                                                : _selectGroup,
-                                            horizontal: true,
-                                            tools: tools,
-                                          ),
-                                          const SizedBox(height: 8),
-                                        ],
-                                        KeyedSubtree(
-                                          key: const Key('documentToolbar'),
-                                          child: _documentToolbar(),
-                                        ),
-                                        SizedBox(height: gap),
-                                        Expanded(
-                                          child: LayoutBuilder(
-                                            builder: (context, room) {
-                                              // Whatever the controls need, the
-                                              // sheet keeps its floor: they scroll
-                                              // in what is left, and drawing stays
-                                              // in its own region.
-                                              final controlsRoom = math.max(
-                                                0.0,
-                                                room.maxHeight -
-                                                    gap -
-                                                    StudioLayout.sheetFloor(
-                                                      room.maxHeight,
-                                                    ),
-                                              );
-                                              return Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.stretch,
-                                                children: [
-                                                  Expanded(child: _canvas()),
-                                                  SizedBox(height: gap),
-                                                  ConstrainedBox(
-                                                    constraints: BoxConstraints(
-                                                      maxHeight: controlsRoom,
-                                                    ),
-                                                    child: Scrollbar(
-                                                      thumbVisibility: true,
-                                                      child:
-                                                          SingleChildScrollView(
-                                                            key: const Key(
-                                                              'drawingControlsScroll',
-                                                            ),
-                                                            primary: true,
-                                                            child:
-                                                                _drawingControls(
-                                                                  narrow,
-                                                                  compact:
-                                                                      short,
-                                                                ),
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (wide) ...[
-                                    const SizedBox(width: 18),
-                                    StudioInspector(
-                                      tool: _tool,
-                                      help: _toolHelp,
-                                      rgb: _color,
-                                      width: _width,
-                                      fillRgb: _filled ? _fillColor : null,
-                                      stamp: _tool == StudioTool.stamp
-                                          ? _currentStamp
-                                          : null,
-                                      shape: _newShape,
-                                      companionCue: _companionCue,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
+            // The studio is made of pebbles (Color 1.2), in every window.
+            body: _galetsBody(context),
           ),
         ),
       ),
     );
   }
 
-  // ——— « Les galets » (Color 1.2): the studio of a wide window ———
+  // ——— « Les galets » (Color 1.2): the studio of every window ———
   //
-  // The sheet first. Two pebbles at the top, one line at the bottom, and
-  // what a button opens beside it (galets.dart). The decor of the universe
-  // has the whole window behind the sheet, less the band of the line.
+  // The sheet first. In a wide window: two pebbles at the top, one line at
+  // the bottom, and what a button opens beside it (galets.dart). In a
+  // window taller than wide: two lines. On a telephone and in a window too
+  // small for a line: two rails beside the sheet, and a drawer. The decor
+  // of the universe has the whole window behind the sheet, less the band
+  // of the line.
 
-  /// Whether the studio of this window is made of pebbles.
-  bool _galetsOffered(BuildContext context) => GaletsLayout.offered(
-    window: MediaQuery.sizeOf(context),
-    textScale: MediaQuery.textScalerOf(context).scale(12) / 12,
-    phone: _phoneLayout(context),
-    simple: _options.simpleControls,
-  );
-
-  void _openGaletPanel(_GaletPanel panel, {int family = 0}) {
+  void _openGaletPanel(_GaletPanel panel, {int family = 0, GlobalKey? beside}) {
     if (_busy || _confirmationOpen) return;
     _settleLatch();
     _finishStroke();
@@ -5759,6 +5594,9 @@ class _DrawingStudioState extends State<DrawingStudio>
           (panel != _GaletPanel.shades || _galetFamily == family);
       _galetPanel = same ? null : panel;
       _galetFamily = family;
+      if (panel == _GaletPanel.shades) {
+        _shadesButton = beside ?? _swatchButtons[family];
+      }
     });
   }
 
@@ -5785,11 +5623,16 @@ class _DrawingStudioState extends State<DrawingStudio>
     return box.localToGlobal(Offset.zero, ancestor: frame) & box.size;
   }
 
+  bool get _rails => _galetsForm == GaletsForm.rails;
+
   GlobalKey get _galetPanelButton => switch (_galetPanel!) {
     _GaletPanel.drawing => _drawingButton,
     _GaletPanel.size => _sizeButton,
     _GaletPanel.which => _whichButton,
-    _GaletPanel.shades => _swatchButtons[_galetFamily],
+    _GaletPanel.shades => _shadesButton ?? _swatchButtons[_galetFamily],
+    _GaletPanel.drawer => _drawerButton,
+    _GaletPanel.colours => _coloursButton,
+    _GaletPanel.everyColour => _rails ? _coloursButton : _everyColourButton,
   };
 
   /// The colour the swatches show as chosen: the inside of shapes when
@@ -5809,6 +5652,25 @@ class _DrawingStudioState extends State<DrawingStudio>
     });
     _sound(StudioSound.colour);
     _focus.requestFocus();
+  }
+
+  /// « Mélanger » : the dialog where a colour is found or mixed, for the
+  /// older children (the setting of the adults).
+  Future<void> _mixGaletColour() async {
+    if (_busy || _confirmationOpen || !_dialogAllowed) return;
+    _settleLatch();
+    _colorDialogChanged(true);
+    int? chosen;
+    try {
+      chosen = await showPaintColorDialog(
+        context,
+        initialRgb: _galetColour,
+        recentColors: _recentColors.colors,
+      );
+    } finally {
+      _colorDialogChanged(false);
+    }
+    if (chosen != null && mounted) _pickGaletColour(chosen);
   }
 
   /// What the size button sizes: nothing (null), the width of a trait, or
@@ -5876,19 +5738,146 @@ class _DrawingStudioState extends State<DrawingStudio>
       cells.fold(0.0, (sum, cell) => sum + cell) +
       _galetGap * math.max(0, cells.length - 1);
 
+  /// What a line holds in a room [across] wide. The tool in hand loses its
+  /// name first; then white goes to the family of black, then brown to that
+  /// of orange (the owner, 12 November 2026); what still does not hold is
+  /// drawn a little smaller. [tools] and [colours]: the two halves of the
+  /// line, which a window taller than wide lays one above the other.
+  _GaletLinePlan _galetLinePlan(
+    BuildContext context,
+    double across, {
+    bool tools = true,
+    bool colours = true,
+    bool shortest = false,
+  }) {
+    final groups = _options.groups;
+    final simple = _options.simpleControls;
+    final current = _galetColour;
+    double textOf(String text, double size) => galetTextWidth(
+      context,
+      text,
+      galetText(size, bold: true, color: studioGreen),
+    );
+    _GaletLinePlan plan({
+      required bool named,
+      required int places,
+      required double cell,
+    }) {
+      final large = cell > GaletsLayout.cell;
+      final size = large ? 18.0 : 16.0;
+      final name = textOf(_tool.group.label, size);
+      final longest = groups
+          .map((group) => textOf(group.label, size))
+          .fold(0.0, math.max);
+      final palette = GaletPalette(places);
+      final extra = !shortest && palette.swatchOf(current) == null;
+      final lead = large ? 86.0 : 70.0;
+      final widths = <double>[
+        if (tools) ...[
+          for (var index = 1; index < groups.length; index++) cell,
+          if (named) ...[lead + name, longest - name] else cell,
+          GaletRule.width,
+          if (simple) ...[cell, cell, cell] else 52,
+          66,
+        ],
+        if (tools && colours) GaletRule.width,
+        if (colours) ...[
+          for (var index = 0; index < palette.shown.length; index++) cell,
+          if (extra) cell,
+          if (_options.everyColour) cell,
+        ],
+      ];
+      return _GaletLinePlan(
+        named: named,
+        palette: palette,
+        cell: cell,
+        // Its ends not counted: they give a little of their room before
+        // anything else does.
+        inner: widths.fold(0.0, (sum, each) => sum + each) + widths.length - 1,
+        nameWidth: name,
+        longest: longest,
+        extra: extra,
+      );
+    }
+
+    if (shortest) {
+      // Eight colours; seven and the button of every colour where an
+      // adult asked for it: the same width, and the same windows.
+      return plan(
+        named: false,
+        places: _options.everyColour ? 7 : 8,
+        cell: GaletsLayout.cell,
+      );
+    }
+    final candidates = [
+      if (simple) ...[
+        plan(named: true, places: 10, cell: GaletsLayout.largeCell),
+        plan(named: false, places: 10, cell: GaletsLayout.largeCell),
+      ],
+      if (tools) plan(named: true, places: 10, cell: GaletsLayout.cell),
+      plan(named: false, places: 10, cell: GaletsLayout.cell),
+      if (colours)
+        for (var places = 9; places >= GaletPalette.fewest; places--)
+          plan(named: false, places: places, cell: GaletsLayout.cell),
+    ];
+    for (final candidate in candidates) {
+      // A name is written only where the line keeps its full ends.
+      if (candidate.inner + (candidate.named ? 20 : 8) <= across) {
+        return candidate;
+      }
+    }
+    return candidates.last;
+  }
+
   Widget _galetsBody(BuildContext context) {
     final window = MediaQuery.sizeOf(context);
+    final safe = MediaQuery.paddingOf(context);
     final document = _document!;
-    // No decor around the sheet on a tablet (the owner, 12 November 2026).
-    final worn = touchFirst ? null : _universe.decor;
-    GaletsLayout laid({required bool decor, bool? big}) => GaletsLayout(
+    final across = window.width - 2 * GaletsLayout.side;
+    final form = GaletsLayout.formFor(
       window: window,
-      safe: MediaQuery.paddingOf(context),
+      safe: safe,
+      phone: _phoneLayout(context),
+      lineMin:
+          _galetLinePlan(context, across, shortest: true).inner +
+          8 +
+          2 * GaletsLayout.side,
+      documentWidth: document.width.toDouble(),
+      documentHeight: document.height.toDouble(),
+    );
+    _galetsForm = form;
+    // A panel belongs to the form that opened it: a window that changes
+    // form puts it away.
+    final ofRails =
+        _galetPanel == _GaletPanel.drawer || _galetPanel == _GaletPanel.colours;
+    final ofLines =
+        _galetPanel == _GaletPanel.drawing ||
+        _galetPanel == _GaletPanel.size ||
+        _galetPanel == _GaletPanel.which;
+    if (form == GaletsForm.rails ? ofLines : ofRails) _galetPanel = null;
+    if (form == GaletsForm.rails) return _galetsRails(context, window, safe);
+
+    final two = form == GaletsForm.two;
+    final linePlan = _galetLinePlan(context, across, colours: !two);
+    final coloursPlan = two
+        ? _galetLinePlan(context, across, tools: false)
+        : linePlan;
+    _galetPalette = coloursPlan.palette;
+    final lineHigh = linePlan.cell + 16;
+    // A decor stands around the sheet of a wide window on a computer; none
+    // on a tablet (the owner, 12 November 2026), and none around two
+    // lines, which leave it no ground to stand on.
+    final worn = touchFirst || two ? null : _universe.decor;
+    GaletsLayout laid({required bool decor, bool? big}) => GaletsLayout(
+      form: form,
+      window: window,
+      safe: safe,
       documentWidth: document.width.toDouble(),
       documentHeight: document.height.toDouble(),
       decor: decor,
       bigSheet: big ?? _bigSheet,
       padding: _options.captions ? 28 : 8,
+      lineHigh: lineHigh,
     );
     // « Dessiner en grand » is offered where it gives the sheet more room:
     // a sheet that already has the width of the window gains nothing when
@@ -5930,12 +5919,12 @@ class _DrawingStudioState extends State<DrawingStudio>
       tr('Enregistrer'),
       GaletSaveButton.style,
     );
-    final viewCells = !_options.viewControls
-        ? 0
-        // The loupes are for a mouse: two fingers do it on a tablet.
-        : (touchFirst ? 3 : 5);
-    final rightCells =
-        1 + (_options.layers ? 1 : 0) + viewCells - (bigGains ? 0 : 1) + 2;
+    // The loupes are for a mouse: two fingers do it on a tablet. A window
+    // too narrow for them keeps the wheel and the keys.
+    var loupes = _options.viewControls && !touchFirst;
+    int viewCells() => !_options.viewControls ? 0 : (loupes ? 5 : 3);
+    int rightCells() =>
+        1 + (_options.layers ? 1 : 0) + viewCells() - (bigGains ? 0 : 1) + 2;
     double leftWide({required bool named, required bool universe}) =>
         _galetWide([
           named ? 91 + drawingText : 75,
@@ -5945,15 +5934,15 @@ class _DrawingStudioState extends State<DrawingStudio>
           ],
         ]);
     double rightWide({required bool named}) => _galetWide([
-      for (var index = 0; index < rightCells; index++) GaletsLayout.cell,
+      for (var index = 0; index < rightCells(); index++) GaletsLayout.cell,
       GaletRule.width,
-      if (viewCells > 0) GaletRule.width,
+      if (viewCells() > 0) GaletRule.width,
       6,
       named ? GaletSaveButton.namedWidth(saveText) : GaletsLayout.cell,
     ], padding: 15);
-    final across = window.width - 2 * GaletsLayout.side;
-    var drawingNamed = true;
-    var universeNamed = true;
+    // The simplest interface writes almost nothing: « Enregistrer » only.
+    var drawingNamed = !_options.simpleControls;
+    var universeNamed = !_options.simpleControls;
     var saveNamed = true;
     bool fits() =>
         leftWide(named: drawingNamed, universe: universeNamed) +
@@ -5963,6 +5952,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (!fits()) universeNamed = false;
     if (!fits()) saveNamed = false;
     if (!fits()) drawingNamed = false;
+    if (!fits()) loupes = false;
     final leftWidth = leftWide(named: drawingNamed, universe: universeNamed);
     final rightWidth = rightWide(named: saveNamed);
 
@@ -5998,14 +5988,20 @@ class _DrawingStudioState extends State<DrawingStudio>
 
     final panel = _galetPanel;
     final anchor = panel == null ? null : _galetAnchor(_galetPanelButton);
-    if (panel != null) {
-      // A button may have moved since it was last laid out: the panel
-      // follows at the next image.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _galetPanel != panel) return;
-        if (_galetAnchor(_galetPanelButton) != anchor) setState(() {});
-      });
-    }
+    _followGaletPanel(panel, anchor);
+
+    Widget line(double top, Widget child) => Positioned(
+      left: GaletsLayout.side,
+      right: GaletsLayout.side,
+      top: top,
+      height: lineHigh,
+      child: Center(
+        // A line never goes beyond the window: where one more colour than
+        // its own asks for a little more room than there is, it is drawn a
+        // little smaller.
+        child: FittedBox(fit: BoxFit.scaleDown, child: child),
+      ),
+    );
 
     return Stack(
       key: _galetsFrame,
@@ -6113,14 +6109,7 @@ class _DrawingStudioState extends State<DrawingStudio>
             ),
           ),
         // A press beside an open panel puts it away, and does nothing else.
-        if (panel != null)
-          Positioned.fill(
-            child: Listener(
-              key: const Key('galetPanelBarrier'),
-              behavior: HitTestBehavior.opaque,
-              onPointerDown: (_) => _closeGaletPanel(),
-            ),
-          ),
+        if (panel != null) _galetPanelBarrier(),
         if (!_bigSheet)
           Positioned(
             left: GaletsLayout.side,
@@ -6154,7 +6143,11 @@ class _DrawingStudioState extends State<DrawingStudio>
             1,
             _bigSheet
                 ? _galetOfBigSheet(enabled)
-                : _galetOfActions(saveNamed: saveNamed, bigSheet: bigGains),
+                : _galetOfActions(
+                    saveNamed: saveNamed,
+                    bigSheet: bigGains,
+                    loupes: loupes,
+                  ),
           ),
         ),
         // What can be done with the chosen element, just above the line.
@@ -6163,23 +6156,17 @@ class _DrawingStudioState extends State<DrawingStudio>
             left: GaletsLayout.side,
             right: GaletsLayout.side,
             bottom: window.height - layout.lineTop + 10,
-            child: _readAt(3, Center(child: _galetOfSelection())),
+            child: _readAt(3, Center(child: _galetOfSelection(across))),
           ),
-        Positioned(
-          left: GaletsLayout.side,
-          right: GaletsLayout.side,
-          top: layout.lineTop,
-          height: GaletsLayout.lineHeight,
-          child: Center(
-            // The line never goes beyond the window: where one more colour
-            // than its ten asks for a little more room than there is, it
-            // is drawn a little smaller.
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: _readAt(4, _galetLine(context, across)),
-            ),
-          ),
+        line(
+          layout.lineTop,
+          _readAt(4, _galetLine(context, linePlan, colours: !two)),
         ),
+        if (two)
+          line(
+            layout.lineTop + lineHigh + GaletsLayout.linesGap,
+            _readAt(4.2, _galetLine(context, coloursPlan, tools: false)),
+          ),
         // An open panel is read just after the pebble of its button.
         if (panel != null && anchor != null)
           Positioned.fill(
@@ -6190,6 +6177,286 @@ class _DrawingStudioState extends State<DrawingStudio>
           ),
       ],
     );
+  }
+
+  // A button may have moved since it was last laid out: its panel follows
+  // at the next image.
+  void _followGaletPanel(_GaletPanel? panel, Rect? anchor) {
+    if (panel == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _galetPanel != panel) return;
+      if (_galetAnchor(_galetPanelButton) != anchor) setState(() {});
+    });
+  }
+
+  Widget _galetPanelBarrier() => Positioned.fill(
+    child: Listener(
+      key: const Key('galetPanelBarrier'),
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (_) => _closeGaletPanel(),
+    ),
+  );
+
+  /// The studio between two rails: a telephone on its side, and a window
+  /// too small for a line. On the left, « Mon dessin », the tools that the
+  /// height holds and the drawer of all of them, with the size and
+  /// « lequel ». On the right, « Enregistrer », Annuler, Rétablir and the
+  /// colours. The sheet has all the rest.
+  Widget _galetsRails(BuildContext context, Size window, EdgeInsets safe) {
+    final document = _document!;
+    _bigSheet = false;
+    _galetPalette = GaletPalette.whole;
+    final layout = GaletsLayout(
+      form: GaletsForm.rails,
+      window: window,
+      safe: safe,
+      documentWidth: document.width.toDouble(),
+      documentHeight: document.height.toDouble(),
+      decor: false,
+    );
+    _decorPainting = null;
+    _stageOrigin = layout.stage.topLeft;
+    final rail = layout.railCell + 8;
+    final between = layout.railRight - layout.railLeft - 2 * (rail + 10);
+    final tip = _galetTip;
+    final panel = _galetPanel;
+    final anchor = panel == null ? null : _galetAnchor(_galetPanelButton);
+    _followGaletPanel(panel, anchor);
+    return Stack(
+      key: _galetsFrame,
+      children: [
+        Positioned.fill(child: ColoredBox(color: studioBackground)),
+        Positioned.fromRect(
+          rect: layout.stage,
+          child: _readAt(2, _canvas(galets: layout)),
+        ),
+        Positioned.fromRect(
+          rect: layout.sheet,
+          child: const IgnorePointer(
+            child: SizedBox.expand(key: Key('sheetAtRest')),
+          ),
+        ),
+        if (panel != null) _galetPanelBarrier(),
+        Positioned(
+          left: layout.railLeft,
+          top: layout.top,
+          child: _readAt(0, _galetLeftRail(layout)),
+        ),
+        Positioned(
+          left: layout.railRight - rail,
+          top: layout.top,
+          child: _readAt(1, _galetRightRail(layout)),
+        ),
+        // What matters now — the pipette, the second click of a shape — is
+        // said over the top of the sheet; the rest waits in the help.
+        if (tip.urgent && _options.toolHelp && between >= 200)
+          Positioned(
+            left: layout.railLeft + rail + 10,
+            width: between,
+            top: layout.top + 4,
+            child: _readAt(
+              .5,
+              IgnorePointer(
+                child: Center(
+                  child: GaletBubble(
+                    strong: tip.strong,
+                    text: tip.text,
+                    width: math.min(between, GaletBubble.widest),
+                    below: true,
+                    tail: false,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        // What can be done with the chosen element, at the foot of the
+        // sheet.
+        if (_choosing && _selectedObject != null)
+          Positioned(
+            left: layout.railLeft + rail + 10,
+            width: between,
+            bottom: window.height - layout.sheet.bottom + 6,
+            child: _readAt(
+              3,
+              // Its sentence too, where it stands beside the actions and
+              // takes nothing more of the sheet.
+              Center(
+                child: _galetOfSelection(
+                  between,
+                  hint: between >= 560 * galetTextScale(context),
+                ),
+              ),
+            ),
+          ),
+        if (panel != null && anchor != null)
+          Positioned.fill(
+            child: _readAt(
+              panel == _GaletPanel.drawer ? .25 : 1.5,
+              _galetPanelLayer(panel, anchor),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// The tools a rail of [places] cells shows: those of the simplest
+  /// interface first — the brush, the pot, the stamp, the eraser —, in the
+  /// order of the line when all of them hold; and always the tool in hand.
+  List<ToolGroup> _railTools(int places) {
+    final groups = _options.groups;
+    if (places >= groups.length) return groups;
+    const first = [
+      ToolGroup.brush,
+      ToolGroup.fill,
+      ToolGroup.stamp,
+      ToolGroup.eraser,
+    ];
+    final ordered = [
+      for (final group in first)
+        if (groups.contains(group)) group,
+      for (final group in groups)
+        if (!first.contains(group)) group,
+    ];
+    final shown = ordered.take(math.max(1, places)).toList();
+    final chosen = _tool.group;
+    if (!shown.contains(chosen)) shown[shown.length - 1] = chosen;
+    return shown;
+  }
+
+  Widget _galetLeftRail(GaletsLayout layout) {
+    final enabled = !_busy && !_confirmationOpen;
+    final cell = layout.railCell;
+    final chosen = _tool.group;
+    final drawerOpen = _galetPanel == _GaletPanel.drawer;
+    final tools = _railTools(layout.railCells - 2);
+    return Galet(
+      key: const Key('galetLeftRail'),
+      vertical: true,
+      height: cell + 8,
+      padding: const EdgeInsets.all(4),
+      gap: layout.railGap,
+      children: [
+        // « Mon dessin » : the menu of everything that is done with the
+        // whole drawing. Just saved, it shows the tick for a moment.
+        KeyedSubtree(
+          key: const Key('phoneMenu'),
+          child: GaletButton(
+            key: const Key('myDrawing'),
+            label: trf('Mon dessin : {0}', [_documentCaption]),
+            hint: tr('Nouveau, ouvrir, exporter, imprimer, aide, options'),
+            onPressed: enabled ? _fromPanel(_openPhoneMenu) : null,
+            width: cell,
+            height: cell,
+            child: GaletPortrait(size: cell - 10, cue: _companionCue),
+          ),
+        ),
+        for (final group in tools)
+          GaletButton(
+            key: Key(group.keyName),
+            label: group.label,
+            selected: group == chosen,
+            onPressed: enabled ? () => _galetTool(group) : null,
+            width: cell,
+            height: cell,
+            child: EduIllustration(art: group.art, size: 32),
+          ),
+        KeyedSubtree(
+          key: _drawerButton,
+          child: GaletButton(
+            key: const Key('toolDrawer'),
+            label: _options.simpleControls
+                ? tr('Les outils et la taille')
+                : tr('Tous les outils, la taille et la sorte de trait'),
+            onPressed: enabled
+                ? () => _openGaletPanel(_GaletPanel.drawer)
+                : null,
+            selected: drawerOpen,
+            marksSelection: false,
+            expanded: drawerOpen,
+            width: cell,
+            height: cell,
+            child: GaletDots(color: drawerOpen ? studioGreen : studioInk),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _galetRightRail(GaletsLayout layout) {
+    final enabled = !_busy && !_confirmationOpen;
+    final cell = layout.railCell;
+    final current = _galetColour;
+    final coloursOpen =
+        _galetPanel == _GaletPanel.colours ||
+        (_galetPanel == _GaletPanel.everyColour) ||
+        (_galetPanel == _GaletPanel.shades && _shadesButton == _coloursButton);
+    // Beside the colour in hand: those chosen last, then those of the
+    // line, as many as the height holds.
+    final others = <int>[];
+    for (final rgb in [
+      ..._recentColors.colors.take(2),
+      for (final colour in galetColours) colour.rgb,
+    ]) {
+      if (others.length >= layout.railCells - 4) break;
+      if (rgb != current && !others.contains(rgb)) others.add(rgb);
+    }
+    return Galet(
+      key: const Key('galetRightRail'),
+      vertical: true,
+      height: cell + 8,
+      padding: const EdgeInsets.all(4),
+      gap: layout.railGap,
+      children: [
+        GaletSaveButton(
+          key: const Key('saveProject'),
+          onPressed: _busy ? null : _fromPanel(_saveProject),
+          named: false,
+          savedJustNow: _savedJustNow,
+          unsaved: _dirty,
+          size: cell,
+        ),
+        ..._galetHistory(size: cell),
+        KeyedSubtree(
+          key: _coloursButton,
+          child: GaletSwatch(
+            key: const Key('railColour'),
+            rgb: current,
+            name: trf('{0} : toutes les couleurs', [paintColorName(current)]),
+            chosen: true,
+            cell: cell,
+            diameter: cell - 14,
+            expanded: coloursOpen,
+            onPressed: enabled
+                ? () => _openGaletPanel(_GaletPanel.colours)
+                : null,
+          ),
+        ),
+        for (final (index, rgb) in others.indexed)
+          KeyedSubtree(
+            key: _railSwatchButtons[index],
+            child: GaletSwatch(
+              key: Key('rail-${rgb.toRadixString(16)}'),
+              rgb: rgb,
+              name: paintColorName(rgb),
+              cell: cell,
+              diameter: cell - 16,
+              onPressed: enabled ? () => _pickGaletColour(rgb) : null,
+              onShades: _railShades(rgb, _railSwatchButtons[index]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // What a long press on a swatch of a rail, or of its panel, opens: the
+  // family of an elementary colour, beside [button]. None in the simplest
+  // interface, which has ten colours and no more.
+  VoidCallback? _railShades(int rgb, GlobalKey button) {
+    if (_options.simpleControls) return null;
+    final index = galetColours.indexWhere((colour) => colour.rgb == rgb);
+    if (index < 0 || galetFamilies[index].isEmpty) return null;
+    return () =>
+        _openGaletPanel(_GaletPanel.shades, family: index, beside: button);
   }
 
   /// The order in which a screen reader goes through the studio of the
@@ -6304,7 +6571,11 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   /// The pebble of the right: the film and the layers; the view; Annuler
   /// and Rétablir; « Enregistrer ».
-  Widget _galetOfActions({required bool saveNamed, required bool bigSheet}) {
+  Widget _galetOfActions({
+    required bool saveNamed,
+    required bool bigSheet,
+    required bool loupes,
+  }) {
     final view = _viewEnabled;
     return Galet(
       gap: _galetGap,
@@ -6329,7 +6600,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           ),
         const GaletRule(),
         if (_options.viewControls) ...[
-          if (!touchFirst) ...[
+          if (loupes) ...[
             GaletPictureButton(
               key: const Key('zoomOut'),
               art: EduArt.zoomOut,
@@ -6387,17 +6658,19 @@ class _DrawingStudioState extends State<DrawingStudio>
     );
   }
 
-  List<Widget> _galetHistory() => [
+  List<Widget> _galetHistory({double size = GaletsLayout.cell}) => [
     GaletPictureButton(
       key: const Key('undo'),
       art: EduArt.undo,
       label: tr('Annuler le dernier geste'),
+      cell: size,
       onPressed: _canUndo ? _fromPanel(() => _history(false)) : null,
     ),
     GaletPictureButton(
       key: const Key('redo'),
       art: EduArt.redo,
       label: tr('Rétablir le geste annulé'),
+      cell: size,
       onPressed: !_busy && _document!.canRedo
           ? _fromPanel(() => _history(true))
           : null,
@@ -6430,10 +6703,10 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   /// The actions on the chosen element, in a pebble of their own, after
   /// the sentence that says how it is moved and what a colour does to it.
-  Widget _galetOfSelection() => RepaintBoundary(
+  Widget _galetOfSelection(double room, {bool hint = true}) => RepaintBoundary(
     child: Container(
       key: const Key('galetSelection'),
-      constraints: const BoxConstraints(maxWidth: 640),
+      constraints: BoxConstraints(maxWidth: math.min(640.0, room)),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: studioSurface,
@@ -6453,42 +6726,163 @@ class _DrawingStudioState extends State<DrawingStudio>
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
-        child: _selectionToolbar(compact: true),
+        child: _selectionToolbar(compact: true, showHint: hint),
       ),
     ),
   );
 
-  /// The line: the tools, the two settings — how big, and which one —,
-  /// then the ten elementary colours. Only the tool in hand has its name
-  /// written, and only where the window leaves the room.
-  Widget _galetLine(BuildContext context, double across) {
+  /// The name of a colour as the pebbles say it: one of the line or of its
+  /// families by the name a child gives it, any other by what it looks
+  /// like.
+  String _colourName(int rgb) => galetColourName(rgb) ?? paintColorName(rgb);
+
+  /// The sizes to press, side by side: five dots as large as the trait
+  /// they give; three for a text or a stamp, and three for the trait of
+  /// the simplest interface. Empty when the tool has nothing to size.
+  /// [cell]: how large each button is.
+  List<Widget> _galetSizeChoices({double cell = 60, double gap = 4}) {
+    final enabled = !_busy && !_confirmationOpen;
+    final sized = _galetSized;
+    final simple = _options.simpleControls;
+    final colour = Color(0xff000000 | _color);
+    final pale = galetPale(_color);
+    Widget dot(double diameter) => Container(
+      width: diameter,
+      height: diameter,
+      decoration: BoxDecoration(
+        color: colour,
+        shape: BoxShape.circle,
+        border: pale ? Border.all(color: studioSwatchRing, width: 1) : null,
+      ),
+    );
+    // A cell of the line holds a smaller dot than a button of a panel.
+    final most = cell - 20;
+    List<Widget> spaced(List<Widget> buttons) => [
+      for (final (index, button) in buttons.indexed) ...[
+        if (index > 0 && gap > 0) SizedBox(width: gap),
+        button,
+      ],
+    ];
+    if (sized == null || sized.placed) {
+      final forStamp = sized?.forStamp ?? false;
+      final value = sized == null ? null : (forStamp ? _stampSize : _textSize);
+      final what = forStamp ? tr('du tampon') : tr('du texte');
+      // Without anything to size, the simplest interface keeps its three
+      // dots where they are, asleep: nothing moves on its line.
+      if (sized == null && !simple) return const [];
+      return spaced([
+        for (final size in ObjectSize.values)
+          GaletButton(
+            key: Key(
+              sized == null ? 'brush-${size.name}' : 'size-${size.name}',
+            ),
+            label: sized == null
+                ? trf('Taille {0} : {1}', [tr('du trait'), size.label])
+                : trf('Taille {0} : {1}', [what, size.label]),
+            selected: size == value,
+            framed: true,
+            width: cell,
+            height: cell,
+            onPressed: !enabled || sized == null
+                ? null
+                : () {
+                    setState(() {
+                      _galetPanel = null;
+                      if (forStamp) {
+                        _stampSize = size;
+                      } else {
+                        _textSize = size;
+                      }
+                    });
+                    _sound(StudioSound.tool);
+                    _focus.requestFocus();
+                  },
+            child: dot(math.min(most, 12.0 + 8 * size.index)),
+          ),
+      ]);
+    }
+    if (simple) {
+      // Three sizes to press instead of five.
+      final value = _galetWidth <= 9
+          ? ObjectSize.small
+          : _galetWidth <= 21
+          ? ObjectSize.medium
+          : ObjectSize.large;
+      return spaced([
+        for (final size in ObjectSize.values)
+          GaletButton(
+            key: Key('brush-${size.name}'),
+            label: trf('Taille {0} : {1}', [tr('du trait'), size.label]),
+            selected: size == value,
+            framed: true,
+            width: cell,
+            height: cell,
+            onPressed: enabled
+                ? () => _pickGaletWidth(switch (size) {
+                    ObjectSize.small => 6,
+                    ObjectSize.medium => 14,
+                    ObjectSize.large => 30,
+                  })
+                : null,
+            child: dot(math.min(most, const [9.0, 20.0, 34.0][size.index])),
+          ),
+      ]);
+    }
+    final chosen = galetWidthIndex(_galetWidth);
+    const diameters = [5.0, 9.0, 14.0, 20.0, 28.0];
+    return spaced([
+      for (final (index, width) in galetWidths.indexed)
+        GaletButton(
+          key: Key('width-$index'),
+          label: trf('Taille {0} sur {1}', [index + 1, galetWidths.length]),
+          selected: index == chosen,
+          framed: true,
+          width: cell,
+          height: cell,
+          onPressed: enabled ? () => _pickGaletWidth(width) : null,
+          child: dot(math.min(most, diameters[index])),
+        ),
+    ]);
+  }
+
+  String get _galetSizeName {
+    final sized = _galetSized;
+    return sized == null
+        ? tr('Rien à régler pour cet outil')
+        : sized.placed
+        ? (sized.forStamp ? tr('Taille du tampon') : tr('Taille du texte'))
+        : tr('Taille du trait');
+  }
+
+  /// A line: the tools, the two settings — how big, and which one —, then
+  /// the colours. Only the tool in hand has its name written, and only
+  /// where the window leaves the room. In a window taller than wide the
+  /// line is two: its [tools] with their settings, and its [colours].
+  Widget _galetLine(
+    BuildContext context,
+    _GaletLinePlan plan, {
+    bool tools = true,
+    bool colours = true,
+  }) {
     final enabled = !_busy && !_confirmationOpen;
     final groups = _options.groups;
+    final simple = _options.simpleControls;
     final chosen = _tool.group;
     final current = _galetColour;
-    final family = galetFamilyOf(current);
-    final toolStyle = galetText(16, bold: true, color: studioGreen);
-    final nameWidth = galetTextWidth(context, chosen.label, toolStyle);
-    // The longest name of a tool: the line keeps room for it, so that the
-    // two settings and the colours stay where they are whatever the tool.
-    final longestName = groups
-        .map((group) => galetTextWidth(context, group.label, toolStyle))
-        .fold(0.0, math.max);
-    const cell = GaletsLayout.cell;
-    final swatches = galetColours.length + (family == null ? 1 : 0);
-    double wide({required bool named}) =>
-        20 +
-        (groups.length - 1) * cell +
-        (named ? 70 + longestName : cell) +
-        2 * GaletRule.width +
-        52 +
-        66 +
-        swatches * cell +
-        (groups.length + swatches + (named ? 4 : 3));
-    final named = wide(named: true) <= across;
-    // In the narrowest window the ends of the line give a little of their
-    // room before any button is drawn smaller.
-    final ends = (10 - math.max(0.0, wide(named: named) - across) / 2).clamp(
+    final palette = plan.palette;
+    final swatch = palette.swatchOf(current);
+    final cell = plan.cell;
+    final large = cell > GaletsLayout.cell;
+    final named = plan.named;
+    final toolStyle = galetText(
+      large ? 18 : 16,
+      bold: true,
+      color: studioGreen,
+    );
+    // The ends of the line give a little of their room before any button
+    // is drawn smaller.
+    final across = MediaQuery.sizeOf(context).width - 2 * GaletsLayout.side;
+    final ends = (10 - math.max(0.0, plan.inner + 20 - across) / 2).clamp(
       4.0,
       10.0,
     );
@@ -6496,6 +6890,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     final pale = galetPale(_color);
     final sizeOpen = _galetPanel == _GaletPanel.size;
     final whichOpen = _galetPanel == _GaletPanel.which;
+    final everyOpen = _galetPanel == _GaletPanel.everyColour;
     final whichOffered = _galetWhichOffered;
     final stamp = _tool == StudioTool.stamp ? _currentStamp : null;
     final witness = ToolVariants.witness(
@@ -6523,154 +6918,191 @@ class _DrawingStudioState extends State<DrawingStudio>
                       math.log(galetWidths.last / galetWidths.first))
               .toDouble();
     return Galet(
-      key: const Key('galetLine'),
-      height: GaletsLayout.lineHeight,
+      key: Key(tools ? 'galetLine' : 'galetColours'),
+      height: cell + 16,
       padding: EdgeInsets.symmetric(horizontal: ends, vertical: 8),
       gap: 1,
       children: [
-        for (final group in groups)
-          GaletButton(
-            key: Key(group.keyName),
-            label: group.label,
-            selected: group == chosen,
-            tip: !(named && group == chosen),
-            onPressed: enabled ? () => _galetTool(group) : null,
-            width: named && group == chosen ? 70 + nameWidth : cell,
-            padding: named && group == chosen
-                ? const EdgeInsets.only(left: 12, right: 18)
-                : EdgeInsets.zero,
-            child: named && group == chosen
-                ? Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      EduIllustration(art: group.art, size: 32),
-                      const SizedBox(width: 8),
-                      Text(group.label, maxLines: 1, style: toolStyle),
-                    ],
-                  )
-                : EduIllustration(art: group.art, size: 30),
-          ),
-        // What a shorter name leaves of the room of the longest.
-        if (named) SizedBox(width: longestName - nameWidth),
-        const GaletRule(),
-        KeyedSubtree(
-          key: _sizeButton,
-          child: GaletButton(
-            key: const Key('galetSize'),
-            label: sized == null
-                ? tr('Rien à régler pour cet outil')
-                : sized.placed
-                ? (sized.forStamp
-                      ? tr('Taille du tampon')
-                      : tr('Taille du texte'))
-                : tr('Taille du trait'),
-            onPressed: enabled && sized != null
-                ? () => _openGaletPanel(_GaletPanel.size)
-                : null,
-            selected: sizeOpen,
-            marksSelection: false,
-            expanded: sized == null ? null : sizeOpen,
-            width: 52,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox.square(
-                  dimension: 20,
-                  child: Center(
-                    child: Container(
-                      width: dot,
-                      height: dot,
-                      decoration: BoxDecoration(
-                        color: Color(0xff000000 | _color),
-                        shape: BoxShape.circle,
-                        border: pale
-                            ? Border.all(color: studioSwatchRing, width: 1)
-                            : null,
+        if (tools) ...[
+          for (final group in groups)
+            GaletButton(
+              key: Key(group.keyName),
+              label: group.label,
+              selected: group == chosen,
+              tip: !(named && group == chosen),
+              onPressed: enabled ? () => _galetTool(group) : null,
+              width: named && group == chosen
+                  ? (large ? 86 : 70) + plan.nameWidth
+                  : cell,
+              height: cell,
+              padding: named && group == chosen
+                  ? EdgeInsets.only(
+                      left: large ? 14 : 12,
+                      right: large ? 22 : 18,
+                    )
+                  : EdgeInsets.zero,
+              child: named && group == chosen
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        EduIllustration(art: group.art, size: large ? 40 : 32),
+                        SizedBox(width: large ? 10 : 8),
+                        Text(group.label, maxLines: 1, style: toolStyle),
+                      ],
+                    )
+                  : EduIllustration(art: group.art, size: large ? 40 : 30),
+            ),
+          // What a shorter name leaves of the room of the longest.
+          if (named) SizedBox(width: plan.longest - plan.nameWidth),
+          const GaletRule(),
+          if (simple)
+            // Three sizes in view: nothing to open.
+            ..._galetSizeChoices(cell: cell, gap: 1)
+          else
+            KeyedSubtree(
+              key: _sizeButton,
+              child: GaletButton(
+                key: const Key('galetSize'),
+                label: _galetSizeName,
+                onPressed: enabled && sized != null
+                    ? () => _openGaletPanel(_GaletPanel.size)
+                    : null,
+                selected: sizeOpen,
+                marksSelection: false,
+                expanded: sized == null ? null : sizeOpen,
+                width: 52,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 20,
+                      child: Center(
+                        child: Container(
+                          width: dot,
+                          height: dot,
+                          decoration: BoxDecoration(
+                            color: Color(0xff000000 | _color),
+                            shape: BoxShape.circle,
+                            border: pale
+                                ? Border.all(color: studioSwatchRing, width: 1)
+                                : null,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 3),
+                    GaletChevron(color: sizeOpen ? studioGreen : null),
+                  ],
                 ),
-                const SizedBox(width: 3),
-                GaletChevron(color: sizeOpen ? studioGreen : null),
-              ],
+              ),
             ),
-          ),
-        ),
-        KeyedSubtree(
-          key: _whichButton,
-          child: GaletButton(
-            key: const Key('galetWhich'),
-            label: whichOffered
-                ? _galetWhichName
-                : tr('Rien à choisir pour cet outil'),
-            onPressed: enabled && whichOffered
-                ? () => _openGaletPanel(_GaletPanel.which)
-                : null,
-            selected: whichOpen,
-            marksSelection: false,
-            expanded: whichOffered ? whichOpen : null,
-            width: 66,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 36,
-                  height: 32,
-                  child: Center(
-                    child: stamp != null
-                        ? StampPreview(stamp: stamp, rgb: _color, size: 32)
-                        : witness != null
-                        ? CustomPaint(
-                            size: const Size(34, 22),
-                            painter: witness,
-                          )
-                        : Container(
-                            width: 18,
-                            height: 3,
-                            decoration: BoxDecoration(
-                              color: studioQuietMark,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 3),
-                GaletChevron(color: whichOpen ? studioGreen : null),
-              ],
-            ),
-          ),
-        ),
-        const GaletRule(),
-        for (final (index, colour) in galetColours.indexed)
           KeyedSubtree(
-            key: _swatchButtons[index],
-            child: GaletSwatch(
-              key: Key('color-${colour.rgb.toRadixString(16)}'),
-              rgb: colour.rgb,
-              name: colour.name,
-              chosen: family == index,
-              ticked: colour.rgb == current,
-              onPressed: enabled ? () => _pickGaletColour(colour.rgb) : null,
-              onShades: galetFamilies[index].isEmpty
-                  ? null
-                  : () => _openGaletPanel(_GaletPanel.shades, family: index),
+            key: _whichButton,
+            child: GaletButton(
+              key: const Key('galetWhich'),
+              label: whichOffered
+                  ? _galetWhichName
+                  : tr('Rien à choisir pour cet outil'),
+              onPressed: enabled && whichOffered
+                  ? () => _openGaletPanel(_GaletPanel.which)
+                  : null,
+              selected: whichOpen,
+              marksSelection: false,
+              expanded: whichOffered ? whichOpen : null,
+              width: 66,
+              height: cell,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 36,
+                    height: 32,
+                    child: Center(
+                      child: stamp != null
+                          ? StampPreview(stamp: stamp, rgb: _color, size: 32)
+                          : witness != null
+                          ? CustomPaint(
+                              size: const Size(34, 22),
+                              painter: witness,
+                            )
+                          : Container(
+                              width: 18,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: studioQuietMark,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  GaletChevron(color: whichOpen ? studioGreen : null),
+                ],
+              ),
             ),
           ),
-        // A colour that the line does not offer — that of an element, of
-        // an older drawing — takes the last place while it is in hand.
-        if (family == null)
-          GaletSwatch(
-            key: Key('color-${current.toRadixString(16)}'),
-            rgb: current,
-            name: paintColorName(current),
-            chosen: true,
-            onPressed: enabled ? () => _pickGaletColour(current) : null,
-          ),
+        ],
+        if (tools && colours) const GaletRule(),
+        if (colours) ...[
+          for (final index in palette.shown)
+            KeyedSubtree(
+              key: _swatchButtons[index],
+              child: GaletSwatch(
+                key: Key('color-${galetColours[index].rgb.toRadixString(16)}'),
+                rgb: galetColours[index].rgb,
+                name: galetColours[index].name,
+                chosen: swatch == index,
+                ticked: galetColours[index].rgb == current,
+                cell: cell,
+                diameter: large ? 42 : 32,
+                onPressed: enabled
+                    ? () => _pickGaletColour(galetColours[index].rgb)
+                    : null,
+                // The simplest interface has ten colours and no more.
+                onShades: simple || palette.family(index).isEmpty
+                    ? null
+                    : () => _openGaletPanel(_GaletPanel.shades, family: index),
+              ),
+            ),
+          // A colour that the line does not offer — that of an element, of
+          // an older drawing, one found in the field of the older
+          // children — takes the last place while it is in hand.
+          if (swatch == null)
+            GaletSwatch(
+              key: Key('color-${current.toRadixString(16)}'),
+              rgb: current,
+              name: _colourName(current),
+              chosen: true,
+              cell: cell,
+              diameter: large ? 42 : 32,
+              onPressed: enabled ? () => _pickGaletColour(current) : null,
+            ),
+          // « Toutes les couleurs, pour les grands » : where an adult
+          // asked for it.
+          if (_options.everyColour)
+            KeyedSubtree(
+              key: _everyColourButton,
+              child: GaletButton(
+                key: const Key('everyColour'),
+                label: tr('Toutes les couleurs'),
+                onPressed: enabled
+                    ? () => _openGaletPanel(_GaletPanel.everyColour)
+                    : null,
+                selected: everyOpen,
+                marksSelection: false,
+                expanded: everyOpen,
+                width: cell,
+                height: cell,
+                child: const GaletRainbow(size: 30),
+              ),
+            ),
+        ],
       ],
     );
   }
 
-  // A tool of the line: chosen, or — already in hand — its choices opened.
+  // A tool of the line, of a rail or of the drawer: chosen, and what was
+  // open is put away.
   void _galetTool(ToolGroup group) {
     if (_galetPanel != null) setState(() => _galetPanel = null);
     _selectGroup(group);
@@ -6679,20 +7111,34 @@ class _DrawingStudioState extends State<DrawingStudio>
   Widget _galetPanelLayer(_GaletPanel panel, Rect anchor) => GaletPanel(
     key: Key('galetPanel-${panel.name}'),
     anchor: anchor,
-    above: panel != _GaletPanel.drawing,
+    side: _rails
+        ? (panel == _GaletPanel.drawer
+              ? GaletPanelSide.right
+              : GaletPanelSide.left)
+        : (panel == _GaletPanel.drawing
+              ? GaletPanelSide.below
+              : GaletPanelSide.above),
     gap: panel == _GaletPanel.shades ? 16 : 14,
-    padding: EdgeInsets.all(panel == _GaletPanel.shades ? 10 : 14),
+    padding: EdgeInsets.all(
+      panel == _GaletPanel.shades || panel == _GaletPanel.drawer ? 10 : 14,
+    ),
     label: switch (panel) {
       _GaletPanel.drawing => tr('Mon dessin'),
       _GaletPanel.size => tr('Taille'),
       _GaletPanel.which => _galetWhichTitle,
       _GaletPanel.shades => tr('Nuances'),
+      _GaletPanel.drawer => tr('Les outils'),
+      _GaletPanel.colours => tr('Les couleurs'),
+      _GaletPanel.everyColour => tr('Toutes les couleurs'),
     },
     child: switch (panel) {
       _GaletPanel.drawing => _galetDrawingPanel(),
       _GaletPanel.size => _galetSizePanel(),
       _GaletPanel.which => _galetWhichPanel(),
       _GaletPanel.shades => _galetShadesPanel(),
+      _GaletPanel.drawer => _galetDrawerPanel(),
+      _GaletPanel.colours => _galetColoursPanel(),
+      _GaletPanel.everyColour => _galetEveryColourPanel(),
     },
   );
 
@@ -6704,19 +7150,25 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   /// « Mon dessin » : what the drawing holds, then what is done with the
   /// whole of it, in large buttons; help, options and « À propos » under a
-  /// line.
+  /// line. With enlarged letters the buttons grow and stand two by two.
   Widget _galetDrawingPanel() {
     final free = !_busy;
+    final scale = galetTextScale(context).clamp(1.0, 2.0);
+    final tileWide = 116.0 + 84 * (scale - 1);
+    final tileHigh = 84.0 + 22 * (scale - 1);
+    final columns = scale > 1.3 ? 2 : 3;
     Widget tile(String key, String name, EduArt art, VoidCallback action) =>
         GaletTile(
           key: Key(key),
           name: name,
+          width: tileWide,
+          height: tileHigh,
           picture: EduIllustration(art: art, size: 36),
           onPressed: free ? _fromPanel(action) : null,
         );
     final path = _currentPath;
     return SizedBox(
-      width: 3 * 116 + 2 * 6,
+      width: columns * tileWide + (columns - 1) * 6,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -6801,93 +7253,16 @@ class _DrawingStudioState extends State<DrawingStudio>
     );
   }
 
-  /// The size: five dots as large as the trait they give; for a text or a
-  /// stamp, three sizes.
+  /// The size, in a panel: its name, then the sizes to press.
   Widget _galetSizePanel() {
-    final sized = _galetSized;
-    if (sized == null) return const SizedBox.shrink();
-    final colour = Color(0xff000000 | _color);
-    final pale = galetPale(_color);
-    Widget dot(double diameter) => Container(
-      width: diameter,
-      height: diameter,
-      decoration: BoxDecoration(
-        color: colour,
-        shape: BoxShape.circle,
-        border: pale ? Border.all(color: studioSwatchRing, width: 1) : null,
-      ),
-    );
-    if (sized.placed) {
-      final value = sized.forStamp ? _stampSize : _textSize;
-      final what = sized.forStamp ? tr('du tampon') : tr('du texte');
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GaletHeading(
-            sized.forStamp ? tr('Taille du tampon') : tr('Taille du texte'),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final size in ObjectSize.values) ...[
-                if (size != ObjectSize.values.first) const SizedBox(width: 4),
-                GaletButton(
-                  key: Key('size-${size.name}'),
-                  label: trf('Taille {0} : {1}', [what, size.label]),
-                  selected: size == value,
-                  framed: true,
-                  width: 60,
-                  height: 60,
-                  onPressed: () {
-                    setState(() {
-                      _galetPanel = null;
-                      if (sized.forStamp) {
-                        _stampSize = size;
-                      } else {
-                        _textSize = size;
-                      }
-                    });
-                    _focus.requestFocus();
-                  },
-                  child: dot(12.0 + 8 * size.index),
-                ),
-              ],
-            ],
-          ),
-        ],
-      );
-    }
-    final chosen = galetWidthIndex(_galetWidth);
-    const diameters = [5.0, 9.0, 14.0, 20.0, 28.0];
+    if (_galetSized == null) return const SizedBox.shrink();
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GaletHeading(tr('Taille du trait')),
+        GaletHeading(_galetSizeName),
         const SizedBox(height: 10),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final (index, width) in galetWidths.indexed) ...[
-              if (index > 0) const SizedBox(width: 4),
-              GaletButton(
-                key: Key('width-$index'),
-                label: trf('Taille {0} sur {1}', [
-                  index + 1,
-                  galetWidths.length,
-                ]),
-                selected: index == chosen,
-                framed: true,
-                width: 60,
-                height: 60,
-                onPressed: () => _pickGaletWidth(width),
-                child: dot(diameters[index]),
-              ),
-            ],
-          ],
-        ),
+        Row(mainAxisSize: MainAxisSize.min, children: _galetSizeChoices()),
       ],
     );
   }
@@ -6899,6 +7274,10 @@ class _DrawingStudioState extends State<DrawingStudio>
     final enabled = !_busy && !_confirmationOpen;
     final stamps = _tool == StudioTool.stamp;
     final variants = !_choosing && _hasVariants && !stamps;
+    final scale = galetTextScale(context).clamp(1.0, 2.0);
+    final room = MediaQuery.sizeOf(context).width - 24 - 28;
+    final tile = 104.0 + 60 * (scale - 1);
+    final columns = math.max(2, math.min(5, ((room + 4) / (tile + 4)).floor()));
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -6907,10 +7286,15 @@ class _DrawingStudioState extends State<DrawingStudio>
         const SizedBox(height: 10),
         if (variants)
           ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 5 * 104 + 4 * 4),
-            child: _toolVariants(tiles: true),
+            constraints: BoxConstraints(
+              maxWidth: columns * tile + (columns - 1) * 4,
+            ),
+            child: _toolVariants(
+              style: ToolVariantStyle.tiles,
+              tileWidth: tile,
+            ),
           ),
-        if (stamps) _galetStamps(enabled),
+        if (stamps) _galetStamps(enabled, room: room, scale: scale),
         if (_canFill) ...[
           if (variants) _galetPanelRule(),
           _galetInside(enabled),
@@ -6921,7 +7305,11 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   // The stamps of the catalogue, in the colour in hand, with their names;
   // then the two buttons that turn the next one.
-  Widget _galetStamps(bool enabled) {
+  Widget _galetStamps(
+    bool enabled, {
+    required double room,
+    required double scale,
+  }) {
     StampCatalog? catalog;
     try {
       catalog = StampCatalog.instance;
@@ -6929,9 +7317,10 @@ class _DrawingStudioState extends State<DrawingStudio>
       // The catalogue comes from the core; the studio stays usable
       // without it.
     }
-    final look = _stampLook;
+    final tile = 92.0 + 50 * (scale - 1);
+    final columns = math.max(2, math.min(6, ((room + 4) / (tile + 4)).floor()));
     return SizedBox(
-      width: 6 * 92 + 5 * 4,
+      width: columns * tile + (columns - 1) * 4,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -6946,8 +7335,8 @@ class _DrawingStudioState extends State<DrawingStudio>
                     name: stamp.label,
                     label: trf('Tampon {0}', [stamp.label]),
                     selected: stamp.id == _stampId,
-                    width: 92,
-                    height: 92,
+                    width: tile,
+                    height: 92 + 20 * (scale - 1),
                     fontSize: 13.5,
                     picture: StampPreview(stamp: stamp, rgb: _color, size: 54),
                     onPressed: enabled
@@ -6964,33 +7353,356 @@ class _DrawingStudioState extends State<DrawingStudio>
               ],
             ),
           _galetPanelRule(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          _galetStampTurns(enabled),
+        ],
+      ),
+    );
+  }
+
+  // « Tourner » and « Retourner » : how the next stamp is posed.
+  Widget _galetStampTurns(bool enabled) {
+    final look = _stampLook;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        GaletWideButton(
+          key: const Key('turnStamp'),
+          name: tr('Tourner'),
+          selected: look.rotation != 0,
+          picture: const EduIllustration(art: EduArt.turn, size: 32),
+          onPressed: enabled
+              ? () {
+                  setState(() => _stampEighths = (_stampEighths + 1) % 8);
+                  _sound(StudioSound.tool);
+                }
+              : null,
+        ),
+        GaletWideButton(
+          key: const Key('mirrorStamp'),
+          name: tr('Retourner'),
+          selected: look.mirrorX,
+          picture: const EduIllustration(art: EduArt.mirror, size: 32),
+          onPressed: enabled
+              ? () {
+                  setState(() => _stampMirrored = !_stampMirrored);
+                  _sound(StudioSound.tool);
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
+  // The inside of a shape: filled or not, and which of its two colours a
+  // swatch changes.
+  Widget _galetInside(bool enabled) => Wrap(
+    spacing: 4,
+    runSpacing: 4,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(right: 14),
+        child: Semantics(
+          label: tr('Remplir la forme'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox.square(
+                dimension: 48,
+                child: Checkbox(
+                  key: const Key('fillShapeCheckbox'),
+                  value: _filled,
+                  onChanged: enabled
+                      ? (value) => _setFilled(value ?? false)
+                      : null,
+                ),
+              ),
+              Text(tr('Remplir'), style: galetText(15)),
+            ],
+          ),
+        ),
+      ),
+      for (final target in PaintColorTarget.values)
+        GaletButton(
+          key: ValueKey('paint-target-${target.name}'),
+          label: target == PaintColorTarget.stroke
+              ? tr('La couleur du trait')
+              : tr('La couleur de l’intérieur'),
+          selected: _colorTarget == target,
+          framed: true,
+          tip: false,
+          height: 48,
+          corners: 18,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          onPressed: enabled
+              ? () => setState(() => _colorTarget = target)
+              : null,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: target == PaintColorTarget.fill
+                      ? Color(0xff000000 | _fillColor)
+                      : null,
+                  border: Border.all(
+                    color: target == PaintColorTarget.stroke
+                        ? Color(0xff000000 | _color)
+                        : studioSwatchRing,
+                    width: target == PaintColorTarget.stroke ? 4 : 1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                target == PaintColorTarget.stroke
+                    ? tr('Trait')
+                    : tr('Intérieur'),
+                style: galetText(15),
+              ),
+            ],
+          ),
+        ),
+    ],
+  );
+
+  /// The shades of a colour, from the lightest to the darkest: in a small
+  /// column right above its swatch of the line; side by side beside a
+  /// rail, which has the height of a telephone.
+  Widget _galetShadesPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final current = _galetColour;
+    final shades = [
+      for (final shade in _galetPalette.family(_galetFamily))
+        Padding(
+          padding: const EdgeInsets.all(1),
+          child: GaletSwatch(
+            key: Key('nuance-${shade.rgb.toRadixString(16)}'),
+            rgb: shade.rgb,
+            name: shade.name,
+            chosen: shade.rgb == current,
+            cell: 52,
+            diameter: 38,
+            onPressed: enabled ? () => _pickGaletColour(shade.rgb) : null,
+          ),
+        ),
+    ];
+    return _rails
+        ? Row(mainAxisSize: MainAxisSize.min, children: shades)
+        : Column(mainAxisSize: MainAxisSize.min, children: shades);
+  }
+
+  /// The drawer of a rail: every tool with its name, then the size and
+  /// « lequel » of the tool in hand.
+  Widget _galetDrawerPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final groups = _options.groups;
+    final chosen = _tool.group;
+    final scale = galetTextScale(context).clamp(1.0, 1.6);
+    // Five sizes side by side; wider with enlarged letters, as far as the
+    // window goes.
+    final wide = math.min(
+      (5 * 48.0 + 4 * 4) * scale,
+      math.max(5 * 48.0 + 4 * 4, MediaQuery.sizeOf(context).width - 130),
+    );
+    final columns = scale > 1.3 || groups.length == 4 ? 2 : 3;
+    final tile = (wide - (columns - 1) * 4) / columns;
+    final sizes = _galetSizeChoices(cell: 48);
+    final stamps = _tool == StudioTool.stamp;
+    final variants = !_choosing && _hasVariants && !stamps;
+    return SizedBox(
+      width: wide,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              for (final group in groups)
+                GaletTile(
+                  key: Key('drawer-${group.keyName}'),
+                  name: group.label,
+                  selected: group == chosen,
+                  width: tile,
+                  height: 64 + 14 * (scale - 1),
+                  fontSize: 13,
+                  picture: EduIllustration(art: group.art, size: 32),
+                  onPressed: enabled ? () => _galetTool(group) : null,
+                ),
+            ],
+          ),
+          if (sizes.isNotEmpty && _galetSized != null) ...[
+            _galetPanelRule(),
+            Semantics(
+              container: true,
+              label: _galetSizeName,
+              child: Row(mainAxisSize: MainAxisSize.min, children: sizes),
+            ),
+          ],
+          if (variants) ...[
+            _galetPanelRule(),
+            Semantics(
+              container: true,
+              label: _galetWhichTitle,
+              child: _toolVariants(style: ToolVariantStyle.cells),
+            ),
+          ],
+          if (stamps) ...[
+            _galetPanelRule(),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                GaletWideButton(
+                  key: const Key('chooseStamp'),
+                  name: tr('Choisir un tampon'),
+                  picture: _currentStamp == null
+                      ? EduIllustration(art: ToolGroup.stamp.art, size: 32)
+                      : StampPreview(
+                          stamp: _currentStamp!,
+                          rgb: _color,
+                          size: 34,
+                        ),
+                  onPressed: enabled ? _fromPanel(_chooseStamp) : null,
+                ),
+                _galetStampTurns(enabled),
+              ],
+            ),
+          ],
+          if (_canFill && (!_choosing || _selectedObject != null)) ...[
+            _galetPanelRule(),
+            _galetInside(enabled),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The colours of a rail: the ten elementary colours, side by side; a
+  /// long press on one opens its shades. Where an adult asked for it, the
+  /// button of every colour.
+  Widget _galetColoursPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final current = _galetColour;
+    final family = GaletPalette.whole.swatchOf(current);
+    return SizedBox(
+      width: 5 * 52.0 + 4 * 2,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Wrap(
+            spacing: 2,
+            runSpacing: 2,
+            children: [
+              for (final (index, colour) in galetColours.indexed)
+                GaletSwatch(
+                  key: Key('color-${colour.rgb.toRadixString(16)}'),
+                  rgb: colour.rgb,
+                  name: colour.name,
+                  chosen: family == index,
+                  ticked: colour.rgb == current,
+                  cell: 52,
+                  diameter: 38,
+                  onPressed: enabled
+                      ? () => _pickGaletColour(colour.rgb)
+                      : null,
+                  onShades: _railShades(colour.rgb, _coloursButton),
+                ),
+            ],
+          ),
+          if (_options.everyColour) ...[
+            _galetPanelRule(),
+            GaletWideButton(
+              key: const Key('everyColour'),
+              name: tr('Toutes les couleurs'),
+              picture: const GaletRainbow(size: 30),
+              onPressed: enabled
+                  ? () => _openGaletPanel(_GaletPanel.everyColour)
+                  : null,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// « Toutes les couleurs », for the older children: the field of every
+  /// colour and the band of greys, where a press takes the colour under
+  /// the finger; the colours chosen last; the pipette, which takes a
+  /// colour of the drawing; and « Mélanger », which opens the dialog where
+  /// a colour is found or mixed.
+  Widget _galetEveryColourPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final current = _galetColour;
+    // A telephone has little height: a lower field, and no title.
+    final low = MediaQuery.sizeOf(context).height < 460;
+    final recent = _recentColors.colors.take(low ? 6 : 7).toList();
+    return SizedBox(
+      width: 336,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!low) ...[
+            GaletHeading(tr('Toutes les couleurs')),
+            const SizedBox(height: 10),
+          ],
+          Semantics(
+            container: true,
+            label: tr(
+              'Champ de couleurs : touche une couleur pour la prendre. « Mélanger » la règle avec le clavier.',
+            ),
+            child: GaletColourField(
+              onColour: enabled ? _pickGaletColour : null,
+              height: low ? 96 : 168,
+              greys: low ? 26 : 34,
+            ),
+          ),
+          if (recent.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final rgb in recent)
+                  GaletSwatch(
+                    key: Key('recent-${rgb.toRadixString(16)}'),
+                    rgb: rgb,
+                    name: trf('Couleur récente : {0}', [_colourName(rgb)]),
+                    chosen: rgb == current,
+                    onPressed: enabled ? () => _pickGaletColour(rgb) : null,
+                  ),
+              ],
+            ),
+          ],
+          _galetPanelRule(),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
             children: [
               GaletWideButton(
-                key: const Key('turnStamp'),
-                name: tr('Tourner'),
-                selected: look.rotation != 0,
-                picture: const EduIllustration(art: EduArt.turn, size: 32),
-                onPressed: enabled
-                    ? () {
-                        setState(() => _stampEighths = (_stampEighths + 1) % 8);
-                        _sound(StudioSound.tool);
-                      }
-                    : null,
+                key: const Key('pickPaintColor'),
+                name: tr('Pipette'),
+                label: tr('Pipette : reprendre une couleur du dessin'),
+                selected: _picking,
+                picture: Icon(Icons.colorize, size: 28, color: studioInk),
+                onPressed: enabled ? _fromPanel(_togglePicking) : null,
               ),
-              const SizedBox(width: 6),
               GaletWideButton(
-                key: const Key('mirrorStamp'),
-                name: tr('Retourner'),
-                selected: look.mirrorX,
-                picture: const EduIllustration(art: EduArt.mirror, size: 32),
-                onPressed: enabled
-                    ? () {
-                        setState(() => _stampMirrored = !_stampMirrored);
-                        _sound(StudioSound.tool);
-                      }
-                    : null,
+                key: const Key('morePaintColors'),
+                name: tr('Mélanger'),
+                picture: Icon(
+                  Icons.palette_outlined,
+                  size: 28,
+                  color: studioInk,
+                ),
+                onPressed: enabled ? _fromPanel(_mixGaletColour) : null,
               ),
             ],
           ),
@@ -6999,113 +7711,13 @@ class _DrawingStudioState extends State<DrawingStudio>
     );
   }
 
-  // The inside of a shape: filled or not, and which of its two colours a
-  // swatch changes.
-  Widget _galetInside(bool enabled) => Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Semantics(
-        label: tr('Remplir la forme'),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox.square(
-              dimension: 48,
-              child: Checkbox(
-                key: const Key('fillShapeCheckbox'),
-                value: _filled,
-                onChanged: enabled
-                    ? (value) => _setFilled(value ?? false)
-                    : null,
-              ),
-            ),
-            Text(tr('Remplir'), style: galetText(15)),
-          ],
-        ),
-      ),
-      const SizedBox(width: 18),
-      for (final target in PaintColorTarget.values)
-        Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: GaletButton(
-            key: ValueKey('paint-target-${target.name}'),
-            label: target == PaintColorTarget.stroke
-                ? tr('La couleur du trait')
-                : tr('La couleur de l’intérieur'),
-            selected: _colorTarget == target,
-            framed: true,
-            tip: false,
-            height: 48,
-            corners: 18,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            onPressed: enabled
-                ? () => setState(() => _colorTarget = target)
-                : null,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: target == PaintColorTarget.fill
-                        ? Color(0xff000000 | _fillColor)
-                        : null,
-                    border: Border.all(
-                      color: target == PaintColorTarget.stroke
-                          ? Color(0xff000000 | _color)
-                          : studioSwatchRing,
-                      width: target == PaintColorTarget.stroke ? 4 : 1,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  target == PaintColorTarget.stroke
-                      ? tr('Trait')
-                      : tr('Intérieur'),
-                  style: galetText(15),
-                ),
-              ],
-            ),
-          ),
-        ),
-    ],
-  );
-
-  /// The shades of a colour of the line, from the lightest to the darkest,
-  /// in a small column right above its swatch.
-  Widget _galetShadesPanel() {
-    final enabled = !_busy && !_confirmationOpen;
-    final current = _galetColour;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final shade in galetFamilies[_galetFamily])
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 1),
-            child: GaletSwatch(
-              key: Key('nuance-${shade.rgb.toRadixString(16)}'),
-              rgb: shade.rgb,
-              name: shade.name,
-              chosen: shade.rgb == current,
-              cell: 52,
-              diameter: 38,
-              onPressed: enabled ? () => _pickGaletColour(shade.rgb) : null,
-            ),
-          ),
-      ],
-    );
-  }
-
   /// A telephone on its side, as opposed to a tablet or a computer: the
   /// studio then has a layout of its own.
   bool _phoneLayout(BuildContext context) =>
       touchFirst && phoneRoom(View.of(context), MediaQuery.sizeOf(context));
 
-  /// What the line above the sheet says of the drawing, and the menu of a
-  /// telephone: how many elements, and whether they are saved. What the
+  /// What « Mon dessin » says of the drawing, on its button and at the top
+  /// of what it opens: how many elements, and whether they are saved. What the
   /// child made: the untouched zones and the lines of a colouring page are
   /// not counted, a zone that the paint pot coloured is.
   String get _documentCaption =>
@@ -7118,89 +7730,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   String get _documentTitle => _currentPath == null
       ? tr('Mon dessin')
       : StudioFiles.fileName(_currentPath!);
-
-  // The studio of a telephone on its side. The sheet takes the whole
-  // height, in the middle. On the left, the tools under the button of the
-  // menu, all in view. On the right, a column that scrolls: Annuler and
-  // Rétablir, the colours, the size and what the tool chooses. Everything
-  // else — the actions on the drawing, its film, the layers, help and
-  // options — is in the menu.
-  Widget _phoneBody() {
-    final simple = _options.simpleControls;
-    final railSide = BorderSide(color: studioLine);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: studioSurface,
-            border: Border(right: railSide),
-          ),
-          child: StudioToolBar(
-            rail: true,
-            leading: _phoneMenuButton(),
-            selected: _tool.group,
-            onSelected: _busy ? null : _selectGroup,
-            tools: _options.groups,
-            large: simple,
-          ),
-        ),
-        Expanded(
-          child: Padding(padding: const EdgeInsets.all(6), child: _canvas()),
-        ),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: studioSurface,
-            border: Border(left: railSide),
-          ),
-          child: SizedBox(
-            width:
-                ColorPalette.railWidth(simple: simple) +
-                _phoneRailPadding.horizontal,
-            child: _phoneSideRail(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Room on the right of the column for its scrollbar.
-  static const _phoneRailPadding = EdgeInsets.fromLTRB(8, 8, 14, 8);
-
-  Widget _phoneMenuButton() => SizedBox(
-    height: 48,
-    child: OutlinedButton(
-      key: const Key('phoneMenu'),
-      onPressed: _busy || _confirmationOpen ? null : _openPhoneMenu,
-      style: OutlinedButton.styleFrom(
-        padding: EdgeInsets.zero,
-        backgroundColor: studioSurface,
-        foregroundColor: studioInk,
-      ),
-      // The drawing has just been saved: the button of the menu, where
-      // « Enregistrer » is, shows the tick for a moment.
-      child: _savedJustNow
-          ? Semantics(
-              liveRegion: true,
-              label: tr('Dessin enregistré'),
-              child: Icon(
-                Icons.check_circle,
-                key: Key('savedTick'),
-                size: 30,
-                color: studioGreen,
-              ),
-            )
-          : Tooltip(
-              message: tr('Menu'),
-              excludeFromSemantics: true,
-              child: Icon(
-                Icons.menu_rounded,
-                size: 30,
-                semanticLabel: tr('Menu'),
-              ),
-            ),
-    ),
-  );
 
   Future<void> _openPhoneMenu() async {
     if (_busy || _confirmationOpen) return;
@@ -7234,13 +7763,6 @@ class _DrawingStudioState extends State<DrawingStudio>
               Icon(Icons.add_photo_alternate_outlined, size: size),
           enabled: true,
         ),
-      PhoneMenuEntry(
-        id: 'saveProject',
-        name: tr('Enregistrer'),
-        picture: (size) => EduIllustration(art: EduArt.save, size: size),
-        enabled: true,
-        filled: true,
-      ),
       if (_options.exports)
         PhoneMenuEntry(
           id: 'exportImage',
@@ -7269,6 +7791,28 @@ class _DrawingStudioState extends State<DrawingStudio>
           picture: (size) => EduIllustration(art: EduArt.layers, size: size),
           enabled: true,
         ),
+      // The loupes and the hand are for a mouse: two fingers do it on a
+      // telephone. In a small window of a computer they wait here.
+      if (_options.viewControls && !touchFirst) ...[
+        PhoneMenuEntry(
+          id: 'zoomOut',
+          name: tr('Éloigner'),
+          picture: (size) => EduIllustration(art: EduArt.zoomOut, size: size),
+          enabled: _viewEnabled,
+        ),
+        PhoneMenuEntry(
+          id: 'zoomIn',
+          name: tr('Rapprocher'),
+          picture: (size) => EduIllustration(art: EduArt.zoomIn, size: size),
+          enabled: _viewEnabled,
+        ),
+        PhoneMenuEntry(
+          id: 'panPage',
+          name: tr('Déplacer'),
+          picture: (size) => EduIllustration(art: EduArt.moveSheet, size: size),
+          enabled: _viewEnabled,
+        ),
+      ],
       if (_options.viewControls)
         PhoneMenuEntry(
           id: 'fitPage',
@@ -7326,8 +7870,6 @@ class _DrawingStudioState extends State<DrawingStudio>
         _openGallery();
       case 'importImage':
         _importImage();
-      case 'saveProject':
-        _saveProject();
       case 'exportImage':
         _chooseExport();
       case 'printDrawing':
@@ -7336,6 +7878,12 @@ class _DrawingStudioState extends State<DrawingStudio>
         _showReplay();
       case 'layersButton':
         _openLayers();
+      case 'zoomOut':
+        _zoom(1 / 1.25);
+      case 'zoomIn':
+        _zoom(1.25);
+      case 'panPage':
+        _togglePan();
       case 'fitPage':
         _fitView();
       case 'showHelp':
@@ -7348,129 +7896,6 @@ class _DrawingStudioState extends State<DrawingStudio>
         _showAbout();
     }
   }
-
-  Widget _phoneSideRail() {
-    final enabled = !_busy && !_confirmationOpen;
-    Widget history(bool redo) => SizedBox.square(
-      dimension: 48,
-      child: IconButton.outlined(
-        key: Key(redo ? 'redo' : 'undo'),
-        style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
-        onPressed: redo
-            ? (!_busy && _document!.canRedo ? () => _history(true) : null)
-            : (_canUndo ? () => _history(false) : null),
-        icon: Semantics(
-          label: redo
-              ? tr('Rétablir le geste annulé')
-              : tr('Annuler le dernier geste'),
-          child: EduIllustration(
-            art: redo ? EduArt.redo : EduArt.undo,
-            size: 26,
-          ),
-        ),
-      ),
-    );
-    return Scrollbar(
-      controller: _phoneRail,
-      thumbVisibility: true,
-      child: SingleChildScrollView(
-        key: const Key('phoneSideRail'),
-        controller: _phoneRail,
-        padding: _phoneRailPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [history(false), history(true)],
-            ),
-            // What can be done with the chosen element comes first: Copier
-            // and Effacer must not wait under every colour.
-            if (_choosing) ...[
-              const SizedBox(height: 10),
-              _selectionToolbar(compact: true, showHint: false),
-            ],
-            if (_canFill) ...[
-              const SizedBox(height: 8),
-              Semantics(
-                label: tr('Remplir la forme'),
-                child: Row(
-                  children: [
-                    Checkbox(
-                      key: const Key('fillShapeCheckbox'),
-                      value: _filled,
-                      onChanged: enabled
-                          ? (value) => _setFilled(value ?? false)
-                          : null,
-                    ),
-                    Expanded(
-                      child: Text(
-                        tr('Remplir'),
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 10),
-            _palettePanel(true, rail: true),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _drawingControls(bool narrow, {required bool compact}) => Column(
-    key: const Key('drawingControls'),
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      // « Dessiner en grand » keeps the colours, in their tightest form.
-      _palettePanel(narrow, compact: compact || _bigSheet),
-      // The choices of a tool stay in « Dessiner en grand », as the actions
-      // of a chosen element do; the sentences of help do not.
-      if (_hasVariants || _choosing || (!_bigSheet && _options.toolHelp)) ...[
-        SizedBox(height: compact ? 6 : 10),
-        Row(
-          children: [
-            if (!_choosing && !_bigSheet) ...[
-              Companion(size: compact ? 32 : 56, cue: _companionCue),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: _choosing
-                  ? _selectionToolbar(compact: compact || _bigSheet)
-                  : _hasVariants && (_bigSheet || !_options.toolHelp)
-                  ? _toolVariants()
-                  : _hasVariants
-                  // Both are laid out, one is shown: the line keeps the
-                  // height of the taller, and the sheet its size.
-                  ? IndexedStack(
-                      index: _helpIsUrgent ? 1 : 0,
-                      children: [_toolVariants(), _helpText(compact)],
-                    )
-                  : _helpText(compact),
-            ),
-          ],
-        ),
-      ],
-      if (!_bigSheet && _options.statusLine) ...[
-        const SizedBox(height: 8),
-        // One line, whatever it says: a sentence that came and went on two
-        // lines would change the height left to the sheet at every edit.
-        ValueListenableBuilder<String>(
-          valueListenable: _statusLine,
-          builder: (context, status, _) => Text(
-            status,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 11, color: studioStatusText),
-          ),
-        ),
-      ],
-    ],
-  );
 
   Widget _selectionToolbar({required bool compact, bool showHint = true}) =>
       SelectionToolbar(
@@ -7512,15 +7937,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// Whether what the help says now matters more than the choices of the
   /// tool: the pipette, a latch, the sheet held.
   bool get _helpIsUrgent => _picking || _latch != null || _panning;
-
-  Widget _helpText(bool compact) => Text(
-    _toolHelp,
-    style: TextStyle(
-      fontSize: compact ? 11 : 13,
-      color: studioHelpText,
-      fontWeight: FontWeight.w500,
-    ),
-  );
 
   String get _toolHelp => forTouch(_mouseToolHelp);
 
@@ -7620,14 +8036,6 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (tool != StudioTool.fill) _forgetInk();
     _sound(StudioSound.tool);
     _focus.requestFocus();
-    // The colours were scrolled to: the choices of the new tool are above.
-    if (_phoneRail.hasClients && _phoneRail.offset > 0) {
-      _phoneRail.animateTo(
-        0,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-      );
-    }
   }
 
   // Native menu commands can edit the document while the order popup is
@@ -7844,39 +8252,6 @@ class _DrawingStudioState extends State<DrawingStudio>
     _changeView(view.panBy(event.panDelta.dx, event.panDelta.dy));
   }
 
-  Widget _documentToolbar() => DocumentToolbar(
-    title: _documentTitle,
-    caption: _documentCaption,
-    viewControls: !_options.viewControls
-        ? null
-        : ViewControls(
-            panning: _panning,
-            onZoomOut: _viewEnabled ? () => _zoom(1 / 1.25) : null,
-            onZoomIn: _viewEnabled ? () => _zoom(1.25) : null,
-            onFit: _viewEnabled ? _fitView : null,
-            onTogglePan: _viewEnabled
-                ? () {
-                    _finishStroke();
-                    setState(() => _panning = !_panning);
-                    _focus.requestFocus();
-                  }
-                : null,
-            bigSheet: _bigSheet,
-            onToggleBigSheet: _viewEnabled ? _toggleBigSheet : null,
-          ),
-    showFill: _canFill,
-    filled: _filled,
-    onFilledChanged: _busy ? null : _setFilled,
-    activeLayerName: layerName(_document!.activeLayer, _document!.layers),
-    onLayers: _busy || _confirmationOpen ? null : _openLayers,
-    onUndo: _canUndo ? () => _history(false) : null,
-    onRedo: !_busy && _document!.canRedo ? () => _history(true) : null,
-    showReplay: true,
-    onReplay: _canReplay ? _showReplay : null,
-    showTitle: _options.captions,
-    showLayers: _options.layers,
-  );
-
   void _setFilled(bool value) => setState(() {
     // The chosen shape gains or loses its inside at once.
     if (_selectedObject != null &&
@@ -7903,7 +8278,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       // The pebbles keep that room around the sheet, and write nothing
       // in it.
       final showCaptions = roomForCaptions && galets == null;
-      final sheetPadding = roomForCaptions ? 28.0 : 8.0;
+      final sheetPadding = galets?.padding ?? (roomForCaptions ? 28.0 : 8.0);
       // While a pointer is down the view keeps the size it had at the press.
       // A control that appears under the sheet, a sentence that wraps or a
       // window that is resized would otherwise slide the sheet under the
@@ -8352,63 +8727,6 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (mounted) setState(() => _confirmationOpen = open);
   }
 
-  /// The colours and the size of what is drawn. [rail]: in the column of a
-  /// telephone, which already gives them their surface.
-  Widget _palettePanel(bool narrow, {bool compact = false, bool rail = false}) {
-    final palette = _palette(narrow, compact: compact, rail: rail);
-    if (rail) return palette;
-    return Container(
-      padding: EdgeInsets.all(compact ? 10 : 16),
-      decoration: studioPanel(radius: 18),
-      child: palette,
-    );
-  }
-
-  Widget _palette(bool narrow, {required bool compact, required bool rail}) =>
-      ColorPalette(
-        rail: rail,
-        selectedRgb: _canFill && _colorTarget == PaintColorTarget.fill
-            ? _fillColor
-            : _color,
-        canFill: _canFill,
-        target: _colorTarget,
-        compact: compact,
-        history: _recentColors,
-        onDialogVisibilityChanged: _colorDialogChanged,
-        onTargetChanged: (target) => setState(() => _colorTarget = target),
-        onColorSelected: _busy || _confirmationOpen
-            ? null
-            : (rgb) {
-                if (!mounted) return;
-                setState(() {
-                  // A colour chosen in the palette is the choice: the pipette
-                  // that was waiting has nothing left to fetch.
-                  _picking = false;
-                  _chooseColor(rgb);
-                });
-                _sound(StudioSound.colour);
-              },
-        onPickFromDrawing: _options.simpleControls ? null : _togglePicking,
-        picking: _picking,
-        simple: _options.simpleControls,
-        trailingControl: rail ? _railControls(narrow) : _sizeOnly(narrow),
-      );
-
-  /// The rail of a telephone has no line of help: the choices of the tool
-  /// stand there above the size, in a rail that scrolls.
-  Widget? _railControls(bool narrow) {
-    final size = _sizeOnly(narrow, rail: true);
-    if (_choosing || !_hasVariants) return size;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _toolVariants(),
-        if (size != null) ...[const SizedBox(height: 8), size],
-      ],
-    );
-  }
-
   StampArt? get _currentStamp {
     try {
       return StampCatalog.instance[_stampId];
@@ -8421,11 +8739,15 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// The choices of a tool of 1.1, where the sentence of help stands: the
   /// tip of the brush, the magic, the shape. They take its place as the
   /// actions of a chosen element take it, so that the sheet keeps its size.
-  Widget _toolVariants({bool tiles = false}) {
+  Widget _toolVariants({
+    required ToolVariantStyle style,
+    double tileWidth = 104,
+  }) {
     final enabled = !_busy && !_confirmationOpen;
     return ToolVariants(
       key: const Key('toolVariants'),
-      tiles: tiles,
+      style: style,
+      tileWidth: tileWidth,
       tool: _tool,
       brush: _brushTool,
       magic: _magic,
@@ -8436,7 +8758,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           ? (tip) {
               setState(() {
                 _brushTool = tip;
-                if (tiles) _galetPanel = null;
+                _galetPanel = null;
               });
               _sound(StudioSound.tool);
             }
@@ -8445,7 +8767,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           ? (magic) {
               setState(() {
                 _magic = magic;
-                if (tiles) _galetPanel = null;
+                _galetPanel = null;
               });
               _sound(StudioSound.tool);
             }
@@ -8454,7 +8776,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           ? (shape) {
               setState(() {
                 _newShape = shape;
-                if (tiles) _galetPanel = null;
+                _galetPanel = null;
               });
               if (_tool == StudioTool.shapes) {
                 _sound(StudioSound.tool);
@@ -8465,124 +8787,21 @@ class _DrawingStudioState extends State<DrawingStudio>
           : null,
       onTool: !enabled
           ? null
-          : tiles
-          ? (tool) {
+          : (tool) {
               setState(() => _galetPanel = null);
               _selectTool(tool);
-            }
-          : _selectTool,
+            },
       pour: _pourKind,
       secondRgb: _previousColor,
-      stamp: _tool == StudioTool.stamp ? _currentStamp : null,
-      stampLook: _stampLook,
-      onTurnStamp: enabled
-          ? () {
-              setState(() => _stampEighths = (_stampEighths + 1) % 8);
-              _sound(StudioSound.tool);
-            }
-          : null,
-      onMirrorStamp: enabled
-          ? () {
-              setState(() => _stampMirrored = !_stampMirrored);
-              _sound(StudioSound.tool);
-            }
-          : null,
       onPour: enabled
           ? (kind) {
               setState(() {
                 _pourKind = kind;
-                if (tiles) _galetPanel = null;
+                _galetPanel = null;
               });
               _sound(StudioSound.tool);
             }
           : null,
-    );
-  }
-
-  /// One place answers « how big? »: the outline of a trait or shape, the
-  /// letters of a text, or a stamp placed with a click.
-  Widget? _sizeOnly(bool narrow, {bool rail = false}) {
-    // The paint pot and the eraser have nothing to size.
-    if (_tool == StudioTool.fill || _tool == StudioTool.eraser) return null;
-    final enabled = !_busy && !_confirmationOpen;
-    final kind = _styledKind;
-    if (kind == VectorKind.text || kind == VectorKind.stamp) {
-      // A chosen text changes size with its words (Modifier); a chosen stamp
-      // keeps the size it was given.
-      if (_choosing) return null;
-      final forStamp = kind == VectorKind.stamp;
-      return PlacedSizeControl(
-        size: forStamp ? _stampSize : _textSize,
-        what: forStamp ? tr('du tampon') : tr('du texte'),
-        onSizeChanged: enabled
-            ? (size) => setState(() {
-                if (forStamp) {
-                  _stampSize = size;
-                } else {
-                  _textSize = size;
-                }
-              })
-            : null,
-        forStamp: forStamp,
-        stamp: forStamp ? _currentStamp : null,
-        stampRgb: _color,
-        onChooseStamp: enabled ? _chooseStamp : null,
-        rail: rail,
-      );
-    }
-    if (_options.simpleControls) {
-      // Three sizes to click instead of a slider to move.
-      return SizeChoiceControl(
-        keyPrefix: 'brush',
-        wrap: rail,
-        value: _width <= 9
-            ? ObjectSize.small
-            : _width <= 21
-            ? ObjectSize.medium
-            : ObjectSize.large,
-        what: tr('du trait'),
-        onChanged: enabled
-            ? (size) => setState(
-                () => _width = switch (size) {
-                  ObjectSize.small => 6,
-                  ObjectSize.medium => 14,
-                  ObjectSize.large => 30,
-                },
-              )
-            : null,
-      );
-    }
-    return OutlineWidthControl(
-      rail: rail,
-      value: _width,
-      shown: _selectedObject != null && !_selectionWidthMoving
-          ? _selectedObject!.width
-          : _width,
-      narrow: narrow,
-      onChanged: !enabled
-          ? null
-          : (value) => setState(() {
-              _width = value;
-              if (_selectedIndex != null) _selectionWidthMoving = true;
-            }),
-      // A slide of the slider is one change of the chosen element, made
-      // when the hand leaves it: one step for Annuler, not one per notch.
-      onChangeEnd: !enabled
-          ? null
-          : () {
-              if (!_selectionWidthMoving) return;
-              setState(() {
-                _selectionWidthMoving = false;
-                final chosen = _selectedObject;
-                if (chosen != null &&
-                    !chosen.kind.isBoxObject &&
-                    !_styleSelection(width: _width)) {
-                  // The element could not take it — a dialog opened during
-                  // the slide: the slider goes back to what the element has.
-                  _width = chosen.width.clamp(2.0, 48.0).toDouble();
-                }
-              });
-            },
     );
   }
 }

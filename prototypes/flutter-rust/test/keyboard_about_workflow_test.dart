@@ -11,6 +11,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 bool _focused(WidgetTester tester, Finder finder) =>
     tester.getSemantics(finder).getSemanticsData().flagsCollection.isFocused ==
@@ -30,15 +31,8 @@ Future<void> _tabTo(
 }
 
 Future<void> _openAbout(WidgetTester tester) async {
-  final more = find.byKey(const Key('moreFileActions'));
-  await tester.tap(more);
-  await tester.pumpAndSettle();
-  final about = find.byWidgetPredicate(
-    (widget) => widget is PopupMenuItem && widget.value == 'about',
-  );
-  expect(about, findsOneWidget);
-  await tester.tap(about);
-  await tester.pumpAndSettle();
+  // « À propos » waits in « Mon dessin ».
+  await pressAction(tester, 'aboutColor');
   expect(find.text('Un dessin que tu peux retrouver.'), findsOneWidget);
 }
 

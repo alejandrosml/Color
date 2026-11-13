@@ -25,29 +25,155 @@ void main() {
     bigSheet: bigSheet,
   );
 
-  test('the pebbles are offered to a wide window, with ordinary letters', () {
-    bool offered(
-      Size window, {
-      double textScale = 1,
-      bool phone = false,
-      bool simple = false,
-    }) => GaletsLayout.offered(
+  test(
+    'a line where it holds, two lines in a tall window, rails elsewhere',
+    () {
+      GaletsForm form(
+        Size window, {
+        bool phone = false,
+        double lineMin = 1021,
+      }) => GaletsLayout.formFor(
+        window: window,
+        phone: phone,
+        lineMin: lineMin,
+        documentWidth: 1200,
+        documentHeight: 800,
+      );
+      expect(form(const Size(1440, 900)), GaletsForm.line);
+      expect(form(const Size(1366, 1024)), GaletsForm.line);
+      expect(form(const Size(1130, 600)), GaletsForm.line);
+      expect(form(const Size(1024, 768)), GaletsForm.line);
+      // Too low for a sheet between the top and a line, or too narrow for
+      // the shortest line: the rails leave the sheet the whole height.
+      expect(form(const Size(1440, 599)), GaletsForm.rails);
+      expect(form(const Size(1020, 768)), GaletsForm.rails);
+      expect(form(const Size(680, 520)), GaletsForm.rails);
+      // Taller than wide: two lines show every tool and every colour.
+      expect(form(const Size(1024, 1366)), GaletsForm.two);
+      expect(form(const Size(744, 1133)), GaletsForm.two);
+      expect(form(const Size(900, 1000)), GaletsForm.two);
+      // A telephone on its side, whatever its size.
+      expect(form(const Size(1440, 900), phone: true), GaletsForm.rails);
+      expect(form(const Size(734, 372), phone: true), GaletsForm.rails);
+      // The simplest interface has four tools: its line holds in less.
+      expect(form(const Size(900, 700), lineMin: 805), GaletsForm.line);
+    },
+  );
+
+  test('between two rails the sheet has the height of the window', () {
+    GaletsLayout rails(Size window) => GaletsLayout(
+      form: GaletsForm.rails,
       window: window,
-      textScale: textScale,
-      phone: phone,
-      simple: simple,
+      documentWidth: 1200,
+      documentHeight: 800,
+      decor: false,
     );
-    expect(offered(const Size(1440, 900)), isTrue);
-    expect(offered(const Size(1366, 1024)), isTrue);
-    expect(offered(const Size(1130, 600)), isTrue);
-    // Narrower, lower, taller than wide: the studio of before, until the
-    // pebbles are laid out for these windows.
-    expect(offered(const Size(1129, 900)), isFalse);
-    expect(offered(const Size(1440, 599)), isFalse);
-    expect(offered(const Size(1200, 1300)), isFalse);
-    expect(offered(const Size(1440, 900), textScale: 1.3), isFalse);
-    expect(offered(const Size(1440, 900), phone: true), isFalse);
-    expect(offered(const Size(1440, 900), simple: true), isFalse);
+    // An iPhone on its side, inside its safe area: six cells, as drawn.
+    final iphone = rails(const Size(734, 372));
+    expect(iphone.railCells, 6);
+    expect(iphone.railCell, GaletsLayout.railCellMost);
+    expect(iphone.sheet.width, closeTo(534, .5));
+    expect(iphone.sheet.height, closeTo(356, .5));
+    expect(iphone.sheet.center.dx, closeTo(367, .01));
+    // The smallest telephone: five cells, of the smallest comfortable size.
+    final small = rails(const Size(560, 320));
+    expect(small.railCells, 5);
+    expect(small.railCell, GaletsLayout.cell);
+    // The smallest window of a computer: eight.
+    final window = rails(const Size(680, 520));
+    expect(window.railCells, 8);
+    for (final layout in [iphone, small, window]) {
+      // The rails stand beside the sheet, never on it, and in the window.
+      final rail = layout.railCell + 8;
+      expect(layout.sheet.left, greaterThanOrEqualTo(layout.railLeft + rail));
+      expect(layout.sheet.right, lessThanOrEqualTo(layout.railRight - rail));
+      expect(layout.railLeft, greaterThanOrEqualTo(0));
+      expect(layout.railRight, lessThanOrEqualTo(layout.window.width));
+      expect(
+        layout.top +
+            8 +
+            layout.railCells * layout.railCell +
+            (layout.railCells - 1) * layout.railGap,
+        lessThanOrEqualTo(layout.window.height),
+      );
+      expect(layout.stage.contains(layout.sheet.center), isTrue);
+    }
+  });
+
+  test('two lines leave the sheet the room between the top and the upper '
+      'one', () {
+    final layout = GaletsLayout(
+      form: GaletsForm.two,
+      window: const Size(1024, 1366),
+      documentWidth: 1200,
+      documentHeight: 800,
+      decor: false,
+    );
+    expect(
+      layout.lineTop,
+      1366 -
+          GaletsLayout.side -
+          2 * GaletsLayout.lineHeight -
+          GaletsLayout.linesGap,
+    );
+    expect(layout.sheet.bottom, lessThanOrEqualTo(layout.lineTop - 12));
+    expect(layout.sheet.top, greaterThanOrEqualTo(layout.top + 60));
+    expect(layout.sheet.width, closeTo(1024 - 2 * GaletsLayout.side, .01));
+  });
+
+  test('a shorter line puts white with black, then brown with orange', () {
+    const white = 0xffffff, black = 0x1a1a1a, brown = 0x79513e;
+    const orange = 0xef9439;
+    int rgbOf(int index) => galetColours[index].rgb;
+    // Ten places: every colour in its own, with its own family.
+    expect(GaletPalette.whole.shown, hasLength(10));
+    for (var index = 0; index < 10; index++) {
+      expect(GaletPalette.whole.family(index), galetFamilies[index]);
+    }
+    // Nine: « du blanc au noir ».
+    const nine = GaletPalette(9);
+    expect(nine.shown.map(rgbOf), isNot(contains(white)));
+    expect(nine.shown, hasLength(9));
+    final greys = nine.family(nine.swatchOf(black)!);
+    expect(greys.first.rgb, white);
+    expect(greys.last.rgb, black);
+    expect(nine.swatchOf(white), nine.swatchOf(black));
+    expect(nine.swatchOf(brown), isNot(nine.swatchOf(orange)));
+    // Eight: brown at the bottom of the oranges, too.
+    const eight = GaletPalette(8);
+    expect(eight.shown, hasLength(8));
+    expect(eight.shown.map(rgbOf), isNot(contains(brown)));
+    expect(eight.shown.map(rgbOf), contains(0xf4b7cf), reason: 'pink stays');
+    expect(eight.family(eight.swatchOf(orange)!).last.rgb, brown);
+    expect(eight.swatchOf(brown), eight.swatchOf(orange));
+    expect(eight.swatchOf(white), eight.swatchOf(black));
+    // One place less — a colour of elsewhere in hand, or the button of
+    // every colour: pink with the reds, then violet with the blues.
+    const pink = 0xf4b7cf, red = 0xe83d48, violet = 0x9385bc, blue = 0x3370d1;
+    const seven = GaletPalette(7);
+    expect(seven.shown, hasLength(7));
+    expect(seven.shown.map(rgbOf), isNot(contains(pink)));
+    expect(seven.family(seven.swatchOf(red)!).first.rgb, pink);
+    expect(seven.swatchOf(pink), seven.swatchOf(red));
+    const six = GaletPalette(GaletPalette.fewest);
+    expect(six.shown, hasLength(6));
+    expect(six.family(six.swatchOf(blue)!).last.rgb, violet);
+    expect(six.swatchOf(violet), six.swatchOf(blue));
+    // Every elementary colour stays one long press away, whatever the
+    // line.
+    for (var places = GaletPalette.fewest; places <= 10; places++) {
+      for (final colour in galetColours) {
+        expect(
+          GaletPalette(places).swatchOf(colour.rgb),
+          isNotNull,
+          reason: '${colour.name} with $places places',
+        );
+      }
+    }
+    // A colour that no swatch of the line holds.
+    expect(eight.swatchOf(0x123456), isNull);
+    expect(eight.swatchOf(0xe69976), isNull, reason: 'a shade of brown');
+    expect(GaletPalette.whole.swatchOf(0xe69976), isNotNull);
   });
 
   test('on a Mac with a decor, the sheet is the one of the mock-up', () {

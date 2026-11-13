@@ -200,6 +200,8 @@ void main() {
         'decorMotion': 'faible',
         'decorNames': true,
         'decorWatch': true,
+        // Every colour, for the grown-ups (Color 1.2): not asked for.
+        'grownUpColours': false,
       });
       // Nothing is left beside the file. By their names: Windows lists a
       // folder with its own separator.

@@ -5,17 +5,21 @@
 //   - iPhone with Dynamic Island, medium display: 2556 × 1179, on its side;
 //   - iPad 13 inches: 2752 × 2064, on its side;
 //   - Mac: 2880 × 1800 (16:10).
-// Each device lays the studio out as it does: the telephone's two columns,
-// the tablet's studio for a finger, the computer's window. The letters of
-// the system are Roboto's here, as in the review pictures; the iPhone's
-// island and the bar at the foot of its screen are left empty.
+// Each device lays the pebbles out as it does: the telephone's two rails
+// and its drawer, the line under the sheet of the tablet and of the
+// computer. The letters of the system are Roboto's here, as in the review
+// pictures; the iPhone's island and the bar at the foot of its screen are
+// left empty.
 //
 // The first picture is « Mon jardin » (Color 1.2): the gestures of
 // support/my_garden.dart, each made through the controls of the studio — a
-// finger on the telephone and the tablet, the mouse on the computer. The
-// colours that the palette does not show are made in « Autres couleurs »;
-// what is too small for the screen is drawn from closer, two fingers moved
-// apart or ⌘ and the wheel.
+// finger on the telephone and the tablet, the mouse on the computer. A
+// colour of the line or of one of its families is pressed there; the
+// others are made in « Mélanger », which « Toutes les couleurs, pour les
+// grands » offers: the adult's setting is on while the garden is drawn, and
+// off again for the picture, which shows the studio as it starts. A trait
+// takes the nearest of the five sizes. What is too small for the screen is
+// drawn from closer, two fingers moved apart or ⌘ and the wheel.
 //
 //   COLOR_STORE_DIR=/absolute/output flutter test test/store_pictures_test.dart
 //
@@ -26,6 +30,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/country_signs.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/language.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/platform_words.dart';
@@ -45,6 +50,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'support/memory_files.dart';
 import 'support/my_garden.dart';
 import 'support/review_fonts.dart';
+import 'support/studio_driver.dart';
 
 class _Device {
   const _Device(
@@ -102,42 +108,42 @@ const _boundaryKey = ValueKey('store-boundary');
 // The colouring page of the third picture, and where the pot is poured on
 // it, in the units of the page: in every zone of the page of Color 1.1.1,
 // the point farthest from its lines (core/tools/page_zones.py), with the
-// colours of the row that the tablet and the computer show at once, the way
-// a child would colour it. The eggs and the eye stay white.
+// colours of the line and of their families, the way a child would colour
+// it. The eggs and the eye stay white.
 const _page = 'dinosaure';
 const _pours = [
   (Offset(31, 30), 0xa8d8f0), // the sky: Ciel
-  (Offset(557, 438), 0x78a66f), // the dinosaur: Prairie
-  (Offset(918, 548), 0x78a66f), // its tail
-  (Offset(571, 616), 0x78a66f), // its four legs
-  (Offset(771, 627), 0x78a66f),
-  (Offset(633, 613), 0x78a66f),
-  (Offset(817, 604), 0x78a66f),
-  (Offset(679, 469), 0x388778), // its spots: Sapin
-  (Offset(787, 485), 0x388778),
-  (Offset(599, 519), 0x388778),
+  (Offset(557, 438), 0x4db266), // the dinosaur: Vert
+  (Offset(918, 548), 0x4db266), // its tail
+  (Offset(571, 616), 0x4db266), // its four legs
+  (Offset(771, 627), 0x4db266),
+  (Offset(633, 613), 0x4db266),
+  (Offset(817, 604), 0x4db266),
+  (Offset(679, 469), 0x2f854a), // its spots: Vert foncé
+  (Offset(787, 485), 0x2f854a),
+  (Offset(599, 519), 0x2f854a),
   (Offset(635, 374), 0xef9439), // the plates of its back: Orange
   (Offset(717, 362), 0xef9439),
   (Offset(799, 378), 0xef9439),
   (Offset(597, 89), 0xef9439), // the rays of the sun
-  (Offset(650, 109), 0xeebf4e), // the sun: Soleil
-  (Offset(109, 262), 0x388778), // the five palm leaves: Sapin
-  (Offset(130, 212), 0x388778),
-  (Offset(187, 181), 0x388778),
-  (Offset(279, 195), 0x388778),
-  (Offset(278, 255), 0x388778),
-  (Offset(176, 263), 0x79513e), // the coconuts: Chocolat
+  (Offset(650, 109), 0xeebf4e), // the sun: Jaune
+  (Offset(109, 262), 0x2f854a), // the five palm leaves: Vert foncé
+  (Offset(130, 212), 0x2f854a),
+  (Offset(187, 181), 0x2f854a),
+  (Offset(279, 195), 0x2f854a),
+  (Offset(278, 255), 0x2f854a),
+  (Offset(176, 263), 0x79513e), // the coconuts: Marron
   (Offset(227, 267), 0x79513e),
-  (Offset(995, 485), 0x79513e), // the volcano: Chocolat
-  (Offset(949, 308), 0xd75e56), // its lava: Coquelicot
+  (Offset(995, 485), 0x79513e), // the volcano: Marron
+  (Offset(949, 308), 0xe83d48), // its lava: Rouge
   (Offset(939, 202), 0x9aa3a5), // its smoke: Gris
   (Offset(984, 153), 0x9aa3a5),
   (Offset(1051, 102), 0x9aa3a5),
-  (Offset(899, 696), 0xd75e56), // the stones: Coquelicot, Bleu denim
-  (Offset(1064, 695), 0x477fb2),
+  (Offset(899, 696), 0xe83d48), // the stones: Rouge, Bleu
+  (Offset(1064, 695), 0x3370d1),
   (Offset(155, 642), 0xe69976), // the trunk of the palm: Pêche
   (Offset(313, 649), 0xef9439), // the nest: Orange
-  (Offset(488, 688), 0xeebf4e), // the sand, last: Soleil
+  (Offset(488, 688), 0xeebf4e), // the sand, last: Jaune
 ];
 
 class _Pictures {
@@ -225,13 +231,18 @@ class _Pictures {
 
   bool _shown(String key) => find.byKey(Key(key)).evaluate().isNotEmpty;
 
+  /// A press on a control of the studio, as a person finds it: what holds
+  /// it is opened first — « Mon dessin », the size, « lequel », the shades
+  /// of a colour, the drawer of a rail (support/studio_driver.dart).
   Future<void> tap(String key) async {
+    // A panel that holds something else is put away first.
+    if (!_shown(key)) await closePebblePanel(tester);
+    await pressControl(tester, key);
+  }
+
+  /// A press on a control that is shown.
+  Future<void> _press(String key) async {
     final control = find.byKey(Key(key));
-    // The rectangle and the oval are chosen in « Formes ».
-    if (control.evaluate().isEmpty &&
-        (key == 'tool-rectangle' || key == 'tool-ellipse')) {
-      await tap('tool-shapes');
-    }
     await tester.ensureVisible(control);
     await tester.pumpAndSettle();
     await tester.tap(control);
@@ -248,24 +259,28 @@ class _Pictures {
     _toInside = false;
   }
 
-  /// A colour: in the palette when it is there, or else found in « Autres
-  /// couleurs » — among the recent ones, among the shades, or made with the
-  /// three slides, each clicked where the colour lies.
+  /// A colour: on the line or in one of its families when it is there, or
+  /// else found in « Toutes les couleurs » — among those chosen last, or
+  /// made in « Mélanger », among its shades or with its three slides, each
+  /// clicked where the colour lies.
   Future<void> colour(int rgb) async {
     final hex = rgb.toRadixString(16);
-    if (_shown('color-$hex')) return tap('color-$hex');
-    await tap('morePaintColors');
+    if (galetFamilyOf(rgb) != null) return tap('color-$hex');
+    await closePebblePanel(tester);
+    await revealControl(tester, 'morePaintColors');
+    if (_shown('recent-$hex')) return _press('recent-$hex');
+    await _press('morePaintColors');
     for (final known in ['dialog-recent-color-$hex', 'shade-$hex']) {
       if (_shown(known)) {
-        await tap(known);
-        return tap('confirmPaintColor');
+        await _press(known);
+        return _press('confirmPaintColor');
       }
     }
     final wanted = HSVColor.fromColor(Color(0xff000000 | rgb));
     await _slide(_axis('paintHue'), wanted.hue / 360);
     await _slide(_axis('paintIntensity'), wanted.saturation);
     await _slide(_axis('paintLightness'), wanted.value);
-    await tap('confirmPaintColor');
+    await _press('confirmPaintColor');
   }
 
   /// The slide of one of the three axes of a colour, under its name.
@@ -314,19 +329,19 @@ class _Pictures {
     _inside = inside;
   }
 
-  /// The width of the trait, from 2 to 48 units, clicked on its slide.
-  Future<void> width(int units) async {
-    if (_width == units) return;
-    await _slide(
-      find.byKey(const Key('brushWidthSemantics')),
-      (units - 2) / 46,
-    );
-    _width = units;
+  /// The width of the trait: of the five sizes of the pebbles, the nearest
+  /// to the [units] of the mock-up. Gives the width taken.
+  Future<double> width(int units) async {
+    final index = galetWidthIndex(units.toDouble());
+    if (_width != index) {
+      await tap('width-$index');
+      _width = index;
+    }
+    return galetWidths[index];
   }
 
-  /// The view of the sheet, as the studio paints it: where the sheet is
-  /// on the screen, and how large.
-  ViewTransform get _view {
+  /// The painter of the sheet, as the studio set it.
+  DocumentPainter get _painter {
     final picture = tester.widget<CustomPaint>(
       find
           .descendant(
@@ -335,8 +350,15 @@ class _Pictures {
           )
           .first,
     );
-    return (picture.painter! as DocumentPainter).viewport.transform;
+    return picture.painter! as DocumentPainter;
   }
+
+  /// The view of the sheet, as the studio paints it: where the sheet is
+  /// on the screen, and how large.
+  ViewTransform get _view => _painter.viewport.transform;
+
+  /// How many elements the drawing holds.
+  int get _elements => _painter.strokes.length;
 
   /// Where a point of the sheet lies on the screen, the view as it is.
   Offset at(double x, double y) {
@@ -345,31 +367,51 @@ class _Pictures {
         Offset(view.left + x * view.scale, view.top + y * view.scale);
   }
 
-  /// The whole sheet in view again.
+  /// The whole sheet in view again: between two rails « Toute la feuille »
+  /// is in the menu.
   Future<void> wholeSheet() async {
+    await closePebblePanel(tester);
     if (_view.isFit) return;
-    // On the telephone « Toute la feuille » is in the menu.
-    if (device.phone) await tap('phoneMenu');
     await tap('fitPage');
     expect(_view.isFit, isTrue);
+  }
+
+  /// Where the sheet shows under nothing: between the two rails, or
+  /// between the pebbles of the top and the line — the height of the sheet
+  /// at rest, across the window.
+  Rect get _clear {
+    final scene = tester.getRect(find.byKey(const Key('sheetPicture')));
+    if (pebbleRails()) {
+      return Rect.fromLTRB(
+        tester.getRect(find.byKey(const Key('galetLeftRail'))).right,
+        scene.top,
+        tester.getRect(find.byKey(const Key('galetRightRail'))).left,
+        scene.bottom,
+      ).intersect(scene);
+    }
+    final rest = tester.getRect(find.byKey(const Key('sheetAtRest')));
+    return Rect.fromLTRB(scene.left, rest.top, scene.right, rest.bottom);
   }
 
   /// Before a gesture on [box] of the sheet, which must travel [pixels] on
   /// the screen along its longer side to be a drag and not a click: on a
   /// small screen a child looks closer to draw something small, with two
   /// fingers moved apart, or the wheel of the mouse and ⌘; the whole sheet
-  /// comes back for what is large.
+  /// comes back for what is large. The fingers part around the place, or a
+  /// little beside it when the place is near an edge of the sheet: what is
+  /// drawn must not end under a pebble.
   Future<void> see(Rect box, {double pixels = 0}) async {
     final wanted = pixels == 0 ? 0.0 : pixels / box.longestSide;
+    await closePebblePanel(tester);
     var view = _view;
-    final surface = tester.getRect(find.byKey(const Key('sheetPicture')));
+    final clear = _clear.deflate(4);
     bool visible() {
       final onScreen = Rect.fromPoints(
         at(box.left, box.top),
         at(box.right, box.bottom),
       );
-      return surface.deflate(4).contains(onScreen.topLeft) &&
-          surface.deflate(4).contains(onScreen.bottomRight);
+      return clear.contains(onScreen.topLeft) &&
+          clear.contains(onScreen.bottomRight);
     }
 
     if (view.scale >= wanted && (view.isFit || visible())) return;
@@ -377,7 +419,17 @@ class _Pictures {
     view = _view;
     if (view.scale >= wanted) return;
     final factor = wanted / view.scale * 1.15;
-    final focus = at(box.center.dx, box.center.dy);
+    // Where the middle of the box is, and where it must be once the sheet
+    // is seen from closer: the box whole in the clear.
+    final centre = at(box.center.dx, box.center.dy);
+    final across = box.width * view.scale * factor / 2 + 6;
+    final up = box.height * view.scale * factor / 2 + 6;
+    final target = Offset(
+      centre.dx.clamp(clear.left + across, clear.right - across),
+      centre.dy.clamp(clear.top + up, clear.bottom - up),
+    );
+    // The point that stays under the fingers.
+    final focus = (centre * factor - target) / (factor - 1);
     if (device.touch) {
       // Two fingers, one on each side, moved apart.
       const apart = Offset(24, 0);
@@ -398,15 +450,17 @@ class _Pictures {
     }
     await tester.pumpAndSettle();
     expect(_view.scale, greaterThanOrEqualTo(wanted));
-    expect(visible(), isTrue);
+    expect(visible(), isTrue, reason: 'the box $box is under a pebble');
   }
 
   Future<void> click(double x, double y) async {
+    await closePebblePanel(tester);
     await tester.tapAt(at(x, y), kind: _hand);
     await tester.pumpAndSettle();
   }
 
   Future<void> drag(List<Offset> points) async {
+    await closePebblePanel(tester);
     final gesture = await tester.startGesture(
       at(points.first.dx, points.first.dy),
       kind: _hand,
@@ -422,6 +476,7 @@ class _Pictures {
   /// pot reads the drawing as an image, which the engine makes outside the
   /// clock of the test.
   Future<void> pour(double x, double y) async {
+    await closePebblePanel(tester);
     await tester.tapAt(at(x, y), kind: _hand);
     await tester.pump();
     final pouring = find.byKey(const Key('pouring'));
@@ -479,8 +534,8 @@ class _Pictures {
     await paints(line ?? inside, inside);
     // Without a line, the thinnest outline, in the colour of the inside,
     // and a box that much smaller.
-    await width(line == null ? 2 : outline);
-    if (line == null) box = box.deflate(1);
+    final wide = await width(line == null ? 2 : outline);
+    if (line == null) box = box.deflate(wide / 2);
     // Twice what tells a drag from a click.
     await see(box, pixels: device.touch ? 24 : 12);
     await drag([box.topLeft, box.center, box.bottomRight]);
@@ -600,26 +655,32 @@ class _Pictures {
   /// « Mon jardin »: every gesture of test/support/my_garden.dart, then the
   /// whole sheet in view and the brush in the hand.
   Future<void> garden() async {
-    for (final gesture in myGarden) {
+    for (final (index, gesture) in myGarden.indexed) {
+      final before = _elements;
       await make(gesture);
+      // Every gesture leaves its element, but the first, which colours
+      // the paper, and those that send an element behind.
+      expect(
+        _elements - before,
+        index == 0 || gesture is Behind ? 0 : 1,
+        reason: 'gesture $index of « Mon jardin », ${gesture.runtimeType}',
+      );
     }
     await wholeSheet();
     await hold('tool-stroke');
-    // Every gesture left its element, but the first, which coloured the
-    // paper, and those that sent an element behind. The telephone keeps
-    // this count in its menu.
+    // « Mon dessin » tells how many: in its panel, or in the menu between
+    // two rails.
     final made = myGarden.where((gesture) => gesture is! Behind).length - 1;
-    if (!device.phone) {
-      expect(find.textContaining(RegExp('^$made ')), findsOneWidget);
-    }
+    expect(await drawingStatus(tester), contains('$made '));
   }
 
   /// Opens « Revoir ton dessin », lets the film run once to learn its
   /// length, then shows it again up to eight tenths of it.
   Future<void> film() async {
-    if (device.phone) await tap('phoneMenu');
-    // Not settled: settling would play the whole film.
-    final open = find.byKey(const Key('replayDrawing'));
+    await closePebblePanel(tester);
+    // Between two rails the film is in the menu. Not settled: settling
+    // would play the whole film.
+    final open = find.byKey(Key(await revealControl(tester, 'replayDrawing')));
     await tester.ensureVisible(open);
     await tester.pumpAndSettle();
     await tester.tap(open);
@@ -643,10 +704,9 @@ class _Pictures {
 
   /// A colouring page, coloured.
   Future<void> colouring() async {
-    if (device.phone) await tap('phoneMenu');
     await tap('newProject');
     await tap('page-$_page');
-    await tap('tool-fill');
+    await hold('tool-fill');
     for (final (point, rgb) in _pours) {
       await colour(rgb);
       await click(point.dx, point.dy);
@@ -656,15 +716,15 @@ class _Pictures {
   /// A rainbow with the brush, grass, stars and a heart: the very simple
   /// interface of the youngest.
   Future<void> rainbow() async {
-    await tap('tool-stroke');
+    await hold('tool-stroke');
     const centre = Offset(600, 640);
     for (final (radius, rgb) in const [
-      (430.0, 0xe83d48), // Rouge vif
+      (430.0, 0xe83d48), // Rouge
       (395.0, 0xef9439), // Orange
-      (360.0, 0xeebf4e), // Soleil
-      (325.0, 0x4db266), // Vert vif
-      (290.0, 0x3370d1), // Bleu vif
-      (255.0, 0x9385bc), // Lavande
+      (360.0, 0xeebf4e), // Jaune
+      (325.0, 0x4db266), // Vert
+      (290.0, 0x3370d1), // Bleu
+      (255.0, 0x9385bc), // Violet
     ]) {
       await colour(rgb);
       await drag([
@@ -681,7 +741,7 @@ class _Pictures {
       for (var step = 0; step <= 24; step++)
         Offset(40 + step * 46.0, 730 + 18 * math.sin(step * 1.3)),
     ]);
-    await tap('tool-stamp');
+    await hold('tool-stamp');
     await colour(0xeebf4e);
     await click(150, 150);
     await click(1060, 200);
@@ -709,9 +769,14 @@ void main() {
         await tester.runAsync(loadReviewFonts);
         final pictures = _Pictures(tester, device, output!);
 
-        // 1. A drawing of the child's own.
-        await pictures.start();
+        // 1. A drawing of the child's own. Its colours are mixed in
+        // « Toutes les couleurs », which an adult turned on; the picture
+        // shows the studio as it starts, the setting off again.
+        final grownUp = grownUpOptions();
+        await pictures.start(options: grownUp);
         await pictures.garden();
+        await grownUp.change(grownUp.value.copyWith(grownUpColours: false));
+        await tester.pumpAndSettle();
         await pictures.shot('dessin');
 
         // 2. Its film.
