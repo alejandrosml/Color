@@ -87,6 +87,10 @@ void main() {
   }
 
   testWidgets('review pictures of the universes', (tester) async {
+    // The shadows of the pebbles and of a card as a screen shows them: a
+    // test draws them as plain shapes otherwise.
+    debugDisableShadows = false;
+    addTearDown(() => debugDisableShadows = true);
     await tester.runAsync(loadReviewFonts);
     const mac = Size(1440, 900);
     // The desk by the window, at the four moments of its day.
@@ -103,6 +107,11 @@ void main() {
     await start(tester, mac, universe: 'papier');
     await shot(tester, 'univers-papier');
     await tester.pumpWidget(const SizedBox());
+    for (final universe in ['mer', 'espace']) {
+      await start(tester, mac, universe: universe);
+      await shot(tester, 'univers-$universe');
+      await tester.pumpWidget(const SizedBox());
+    }
     // Windows of other sizes: the decor keeps to the edges, or is made
     // smaller, or is not shown at all.
     for (final (name, size) in [
@@ -111,7 +120,7 @@ void main() {
       ('etroit-1024x768', const Size(1024, 768)),
       ('haut-900x1000', const Size(900, 1000)),
     ]) {
-      for (final universe in ['bureau', 'papier']) {
+      for (final universe in ['bureau', 'papier', 'mer', 'espace']) {
         await start(tester, size, universe: universe);
         await shot(tester, 'fenetre-$universe-$name');
         await tester.pumpWidget(const SizedBox());
@@ -168,6 +177,7 @@ void main() {
     await tester.pumpAndSettle();
     await shot(tester, 'tablette-13-regarder-depuis-l-atelier');
     await tester.pumpWidget(const SizedBox());
+    debugDisableShadows = true;
   }, skip: !available);
 
   // A decor that is looked at without a sheet, on the whole screen (« les
@@ -176,6 +186,10 @@ void main() {
   testWidgets('review pictures of the decors that are looked at', (
     tester,
   ) async {
+    // The shadows of the pebbles and of a card as a screen shows them: a
+    // test draws them as plain shapes otherwise.
+    debugDisableShadows = false;
+    addTearDown(() => debugDisableShadows = true);
     await tester.runAsync(loadReviewFonts);
     final catalog = UniverseCatalog.instance;
     Future<void> gaze(
@@ -214,7 +228,7 @@ void main() {
 
     const notchSide = FakeViewPadding(left: 47, right: 47, bottom: 21);
     const notchTop = FakeViewPadding(top: 47, bottom: 34);
-    for (final universe in ['bureau', 'papier']) {
+    for (final universe in ['bureau', 'papier', 'mer', 'espace']) {
       await gaze(
         '$universe-tablette-13-largeur',
         const Size(1366, 1024),
@@ -275,5 +289,6 @@ void main() {
     await tester.pump(const Duration(seconds: 10));
     await tester.pump(const Duration(seconds: 1));
     await shot(tester, 'regarder-bureau-tablette-11-sans-bouton');
+    debugDisableShadows = true;
   }, skip: !available);
 }

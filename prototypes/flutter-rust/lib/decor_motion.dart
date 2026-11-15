@@ -208,6 +208,25 @@ final Map<String, List<_Key>> _movements = {
     (.5, (reach, _) => DecorPose(dy: -6 * reach)),
     (1, (_, _) => DecorPose.rest),
   ],
+  // A fish that swims away and comes back; and one that swims the other
+  // way.
+  'nage': [
+    (0, (_, _) => DecorPose.rest),
+    (.5, (_, travel) => DecorPose(dx: 24 * travel)),
+    (1, (_, _) => DecorPose.rest),
+  ],
+  'nage2': [
+    (0, (_, _) => DecorPose.rest),
+    (.5, (_, travel) => DecorPose(dx: -22 * travel)),
+    (1, (_, _) => DecorPose.rest),
+  ],
+  // A rocket that leans 48 degrees to the right (its drawing does): eight
+  // units forward along its own axis, and back.
+  'fusee': [
+    (0, (_, _) => DecorPose.rest),
+    (.5, (reach, _) => DecorPose(dx: 5.95 * reach, dy: -5.35 * reach)),
+    (1, (_, _) => DecorPose.rest),
+  ],
 };
 
 /// The names of the movements this version knows.

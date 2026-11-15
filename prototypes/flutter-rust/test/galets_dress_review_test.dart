@@ -161,6 +161,8 @@ void main() {
     ('classique', 'classique'),
     ('bureau', 'bureau'),
     ('papier', 'papier'),
+    ('mer', 'mer'),
+    ('espace', 'espace'),
     ('nuit', nightTrialKey),
   ];
 

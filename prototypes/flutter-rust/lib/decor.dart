@@ -345,6 +345,7 @@ class Decor {
     required this.size,
     required this.sheet,
     required this.top,
+    required this.groundAbove,
     required this.front,
     required this.pieces,
     required this.veils,
@@ -361,6 +362,11 @@ class Decor {
 
   /// What fills the frame above the ground, where the frame is taller.
   final Color top;
+
+  /// Whether the ground itself goes on above, mirrored, where the frame is
+  /// taller (`"above": "ground"`): a sky of stars has no wall of one colour
+  /// to rise above it.
+  final bool groundAbove;
 
   /// The front of the ground, where it goes on, plain, under the line of
   /// the pebbles: its colour at the top, at the bottom, and the line of
@@ -552,6 +558,7 @@ class Decor {
               frame.height * .93,
             ),
       top: top,
+      groundAbove: json['above'] == 'ground',
       front: frontColours.length == 3
           ? (frontColours[0], frontColours[1], frontColours[2])
           : (top, top, top),
@@ -940,22 +947,41 @@ class DecorPainting {
         canvas.clipRect(band.rect);
         final first = band.groundLeft;
         final top = band.rect.bottom - decor.size.height * layout.scale;
-        var tile = ((band.rect.left - first) / width).floor();
-        while (first + tile * width < band.rect.right) {
-          canvas.save();
-          // Each one a hair wider than its place, over its neighbours:
-          // two edges that only meet let the colour behind them show
-          // through as a thin line, where they fall between two pixels.
-          canvas.translate(first + tile * width - _groundOverlap, top);
-          canvas.scale((width + 2 * _groundOverlap) / width, 1);
-          canvas.scale(layout.scale);
-          if (tile.isOdd) {
-            canvas.translate(decor.size.width, 0);
-            canvas.scale(-1, 1);
+        final height = decor.size.height * layout.scale;
+        // One row on the bottom edge; and, for a ground that goes on above
+        // (a sky of stars), as many rows as the band is tall, each one the
+        // mirror of the one under it.
+        final rows = decor.groundAbove && height > 0
+            ? math.max(1, ((top - band.rect.top) / height).ceil() + 1)
+            : 1;
+        for (var row = 0; row < rows; row++) {
+          var tile = ((band.rect.left - first) / width).floor();
+          while (first + tile * width < band.rect.right) {
+            canvas.save();
+            // Each one a hair wider than its place, over its neighbours:
+            // two edges that only meet let the colour behind them show
+            // through as a thin line, where they fall between two pixels.
+            canvas.translate(
+              first + tile * width - _groundOverlap,
+              top - row * height - (row == 0 ? 0 : _groundOverlap),
+            );
+            canvas.scale(
+              (width + 2 * _groundOverlap) / width,
+              row == 0 ? 1 : (height + 2 * _groundOverlap) / height,
+            );
+            canvas.scale(layout.scale);
+            if (tile.isOdd) {
+              canvas.translate(decor.size.width, 0);
+              canvas.scale(-1, 1);
+            }
+            if (row.isOdd) {
+              canvas.translate(0, decor.size.height);
+              canvas.scale(1, -1);
+            }
+            ground.paint(canvas, box);
+            canvas.restore();
+            tile++;
           }
-          ground.paint(canvas, box);
-          canvas.restore();
-          tile++;
         }
         canvas.restore();
       }

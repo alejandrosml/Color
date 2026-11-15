@@ -292,7 +292,8 @@
      202
     ],
     "name": "La fenêtre",
-    "text": "Elle laisse entrer la lumière du jour. Regarde bien : le ciel change avec l’heure !"
+    "text": "Elle laisse entrer la lumière du jour. Regarde bien : le ciel change avec l’heure !",
+    "source": "CNRTL, Trésor de la langue française informatisé (TLFi) — « fenêtre » — https://www.cnrtl.fr/definition/fenêtre"
    },
    {
     "key": "rideau",
@@ -304,7 +305,8 @@
      274
     ],
     "name": "Le rideau",
-    "text": "On le tire le soir pour être tranquille, et on l’ouvre le matin pour laisser entrer le soleil."
+    "text": "On le tire le soir pour être tranquille, et on l’ouvre le matin pour laisser entrer le soleil.",
+    "source": "CNRTL, Trésor de la langue française informatisé (TLFi) — « rideau » — https://www.cnrtl.fr/definition/rideau"
    },
    {
     "key": "livres",
@@ -328,7 +330,8 @@
      90
     ],
     "name": "Le pot à pinceaux",
-    "text": "Les pinceaux s’y reposent la tête en l’air, pour ne pas abîmer leurs poils."
+    "text": "Les pinceaux s’y reposent la tête en l’air, pour ne pas abîmer leurs poils.",
+    "source": "U.S. Navy, manuel Illustrator Draftsman 3 & 2, vol. 3 — Brushes, Continued (p. 1-30) — https://draftingmanuals.tpub.com/14262/css/Brushes-Cont-40.htm"
    },
    {
     "key": "plante",
@@ -340,7 +343,8 @@
      102
     ],
     "name": "La plante verte",
-    "text": "Elle a besoin d’eau et de lumière pour grandir. Ses feuilles se tournent vers la fenêtre."
+    "text": "Elle a besoin d’eau et de lumière pour grandir. Ses feuilles se tournent vers la fenêtre.",
+    "source": "Encyclopædia Britannica — Tropism — https://www.britannica.com/science/tropism"
    },
    {
     "key": "horloge",
@@ -352,7 +356,8 @@
      72
     ],
     "name": "L’horloge",
-    "text": "Elle donne l’heure : la petite aiguille montre les heures, la grande montre les minutes."
+    "text": "Elle donne l’heure : la petite aiguille montre les heures, la grande montre les minutes.",
+    "source": "Académie française, Dictionnaire, 9e édition — « aiguille » — https://dictionnaire-academie.fr/article/A9A0986"
    },
    {
     "key": "dessin",
@@ -400,7 +405,8 @@
      68
     ],
     "name": "Le globe terrestre",
-    "text": "Une petite Terre penchée sur son axe, comme la vraie. On la fait tourner pour voir tous les pays et tous les océans."
+    "text": "Une petite Terre penchée sur son axe, comme la vraie. On la fait tourner pour voir tous les pays et tous les océans.",
+    "source": "Encyclopædia Britannica (Britannica Kids, niveau Students) — globe — https://kids.britannica.com/students/article/globe/37046"
    },
    {
     "key": "cubes",
@@ -424,7 +430,8 @@
      132
     ],
     "name": "La lampe de bureau",
-    "text": "Quand le jour baisse, son ampoule s’allume et éclaire le bureau pour continuer à dessiner."
+    "text": "Quand le jour baisse, son ampoule s’allume et éclaire le bureau pour continuer à dessiner.",
+    "source": "Larousse, dictionnaire de français — « lampe » — https://www.larousse.fr/dictionnaires/francais/lampe/46085"
    },
    {
     "key": "chat",
@@ -436,7 +443,8 @@
      62
     ],
     "name": "Le chat",
-    "text": "Roulé en boule sur son coussin, il dort : un chat peut dormir plus de douze heures par jour."
+    "text": "Roulé en boule sur son coussin, il dort : un chat peut dormir plus de douze heures par jour.",
+    "source": "Encyclopædia Britannica — Why Do Cats Sleep So Much? — https://www.britannica.com/story/why-do-cats-sleep-so-much"
    },
    {
     "key": "crayons",
@@ -448,7 +456,8 @@
      22
     ],
     "name": "Les crayons de couleur",
-    "text": "Une mine de couleur dans un habit de bois à six côtés, pour ne pas rouler. On les taille quand la pointe s’arrondit."
+    "text": "Une mine de couleur dans un habit de bois à six côtés, pour ne pas rouler. On les taille quand la pointe s’arrondit.",
+    "source": "Larousse, dictionnaire de français — « crayon » — https://www.larousse.fr/dictionnaires/francais/crayon/20275"
    }
   ]
  }

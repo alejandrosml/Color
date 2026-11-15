@@ -35,28 +35,27 @@ void main() {
       if (universe.decor != null) universe,
   ];
 
-  test(
-    'the core has « Classique », the desk by the window, paper and pencils',
-    () {
-      final catalog = UniverseCatalog.instance;
-      expect(
-        [for (final u in catalog.universes) u.key],
-        ['classique', 'bureau', 'papier'],
-      );
-      expect(catalog.first.frenchName, 'Classique');
-      expect(catalog.universes[1].frenchName, 'Le bureau près de la fenêtre');
-      expect(catalog.universes[2].frenchName, 'Papier et crayons');
-      expect(RustDocument.universeCount(), 3);
-      expect(RustDocument.readUniverse(3), isNull);
-      expect(RustDocument.readUniverse(-1), isNull);
-      expect(catalog.named('papier').key, 'papier');
-      expect(catalog.named('classique').key, 'classique');
-      // « Classique » is the workshop of always, and has no decor.
-      expect(catalog.first.decor, isNull);
-      expect(catalog.first.look, same(StudioLook.classic));
-    },
-    skip: !available,
-  );
+  test('the core has « Classique », the desk by the window, paper and pencils, '
+      'the sea and space', () {
+    final catalog = UniverseCatalog.instance;
+    expect(
+      [for (final u in catalog.universes) u.key],
+      ['classique', 'bureau', 'papier', 'mer', 'espace'],
+    );
+    expect(catalog.first.frenchName, 'Classique');
+    expect(catalog.universes[1].frenchName, 'Le bureau près de la fenêtre');
+    expect(catalog.universes[2].frenchName, 'Papier et crayons');
+    expect(catalog.universes[3].frenchName, 'Sous la mer');
+    expect(catalog.universes[4].frenchName, 'L’espace');
+    expect(RustDocument.universeCount(), 5);
+    expect(RustDocument.readUniverse(5), isNull);
+    expect(RustDocument.readUniverse(-1), isNull);
+    expect(catalog.named('papier').key, 'papier');
+    expect(catalog.named('classique').key, 'classique');
+    // « Classique » is the workshop of always, and has no decor.
+    expect(catalog.first.decor, isNull);
+    expect(catalog.first.look, same(StudioLook.classic));
+  }, skip: !available);
 
   test('whoever names no universe gets that of the device', () {
     final catalog = UniverseCatalog.instance;
@@ -232,6 +231,8 @@ void main() {
     final catalog = UniverseCatalog.instance;
     expect(catalog.named('bureau').decor!.names, hasLength(14));
     expect(catalog.named('papier').decor!.names, hasLength(8));
+    expect(catalog.named('mer').decor!.names, hasLength(16));
+    expect(catalog.named('espace').decor!.names, hasLength(14));
     for (final universe in decorated()) {
       final decor = universe.decor!;
       final frame = Offset.zero & decor.size;
@@ -459,6 +460,36 @@ void main() {
     expect(paper.night, isFalse);
     expect(paper.galetDisc, isNull);
     expect(paper, isNot(classic));
+  }, skip: !available);
+
+  test('the sea has light pebbles on its water; space, pebbles of the night '
+      'and a sky that goes on above', () {
+    final catalog = UniverseCatalog.instance;
+    final sea = catalog.named('mer');
+    expect(sea.look.night, isFalse);
+    expect(sea.decor!.groundAbove, isFalse);
+    // The sand goes on under the line of the pebbles.
+    expect(sea.decor!.front.$1, const Color(0xfff6e2b3));
+    final space = catalog.named('espace');
+    expect(space.look.night, isTrue);
+    expect(space.look.galetDisc, const Color(0xffeceeff));
+    // No wall of one colour: the sky of stars is laid again above the
+    // decor, mirrored, and the band under the pebbles has its colour.
+    expect(space.decor!.groundAbove, isTrue);
+    expect(space.decor!.front.$1, space.decor!.top);
+    for (final key in ['bureau', 'papier']) {
+      expect(catalog.named(key).decor!.groundAbove, isFalse, reason: key);
+    }
+    // What moves in each: fish that swim, a rocket on its way.
+    final moves = {
+      for (final universe in [sea, space])
+        universe.key: {
+          for (final piece in universe.decor!.pieces)
+            if (piece.move != null) piece.move!.name,
+        },
+    };
+    expect(moves['mer'], {'ondule', 'flotte', 'nage', 'nage2'});
+    expect(moves['espace'], {'craie', 'nage', 'flotte', 'fusee'});
   }, skip: !available);
 
   test('every text of every universe can be read on its surface', () {
