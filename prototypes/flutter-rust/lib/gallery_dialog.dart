@@ -9,6 +9,7 @@ import 'gallery_storage.dart';
 import 'slideshow.dart';
 import 'studio_colors.dart';
 import 'language.dart';
+import 'studio_theme.dart';
 
 /// « Mes dessins » : the cards of the album. Returns the card to reopen, or
 /// null when the dialog is closed. Removing a card happens here; opening is
@@ -200,11 +201,11 @@ class _GalleryDialogState extends State<GalleryDialog> {
             onPressed: () => Navigator.pop(context, entry),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.all(8),
-              backgroundColor: Colors.white,
+              backgroundColor: studioTile().color,
               foregroundColor: studioInk,
-              side: BorderSide(color: studioSwatchRing),
+              side: BorderSide.none,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: studioPanelCorners(18),
               ),
             ),
             // One name for the whole card; the picture only illustrates it.

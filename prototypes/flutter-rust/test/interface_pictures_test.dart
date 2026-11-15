@@ -72,6 +72,9 @@ void main() {
       EduArt.onPicture,
       EduArt.turn,
       EduArt.mirror,
+      EduArt.allTools,
+      EduArt.pipette,
+      EduArt.palette,
     };
     for (final art in EduArt.values) {
       expect(catalogue!.keys, contains(art.svgKey), reason: art.name);

@@ -32,7 +32,9 @@ import 'package:flutter/scheduler.dart';
 
 import 'decor.dart';
 import 'decor_motion.dart';
+import 'galets.dart';
 import 'language.dart';
+import 'studio_colors.dart';
 
 /// The time of the device, for the decor that follows it; a test gives its
 /// own, and flutter_test_config.dart a fixed one for every test: a picture
@@ -687,9 +689,14 @@ class DecorNameLayer extends StatelessWidget {
     required this.onClose,
     this.avoid,
     this.safe = EdgeInsets.zero,
+    this.look,
   });
 
   final DecorPainting painting;
+
+  /// The look a card wears: that of the universe whose decor this is. The
+  /// look of the studio when none is given.
+  final StudioLook? look;
 
   /// Where the sheet lies when the whole of it is shown: a card stands on
   /// its edge. Null for a decor that is looked at without a sheet: a card
@@ -708,7 +715,7 @@ class DecorNameLayer extends StatelessWidget {
 
   /// How long a card stays when nobody closes it.
   static const shownFor = Duration(seconds: 9);
-  static const cardWidth = 238.0;
+  static const cardWidth = 276.0;
 
   /// About how tall a card is: the longest text, on five lines. For
   /// keeping a card off the button that leaves a decor.
@@ -736,6 +743,9 @@ class DecorNameLayer extends StatelessWidget {
         double left;
         double? top;
         double? bottom;
+        // On which side of the card its thing is: its little point goes
+        // there.
+        var towards = _CardPoint.none;
         double within(double x) =>
             x.clamp(room.left, math.max(room.left, room.right - width));
         if (sheet == null) {
@@ -754,11 +764,9 @@ class DecorNameLayer extends StatelessWidget {
           double? above;
           double? below;
           if (fitsAfter || fitsBefore) {
-            left = within(
-              inwards
-                  ? (fitsAfter ? after : before)
-                  : (fitsBefore ? before : after),
-            );
+            final onAfter = inwards ? fitsAfter : !fitsBefore;
+            left = within(onAfter ? after : before);
+            towards = onAfter ? _CardPoint.left : _CardPoint.right;
             if (low) {
               below = math.min(room.bottom, box.bottom);
             } else {
@@ -786,22 +794,51 @@ class DecorNameLayer extends StatelessWidget {
         } else if (shown.anchor == DecorAnchor.middle) {
           // Under the sheet: the card stands just above the thing.
           left = within(box.center.dx - width / 2);
-          bottom = math.max(8.0, frame.height - box.top + 8);
+          bottom = math.max(8.0, frame.height - box.top + 10);
+          towards = _CardPoint.down;
         } else {
           // Beside the sheet: on its edge, at the height of the thing.
           left = within(
             shown.anchor == DecorAnchor.left
-                ? math.max(box.right + 8, sheet.left + 6)
-                : math.min(box.left - 8 - width, sheet.right - 6 - width),
+                ? math.max(box.right + 10, sheet.left + 6)
+                : math.min(box.left - 10 - width, sheet.right - 6 - width),
           );
           top = box.top.clamp(8.0, math.max(8.0, frame.height - 130));
+          towards = shown.anchor == DecorAnchor.left
+              ? _CardPoint.left
+              : _CardPoint.right;
+        }
+        // The point stands at the height of the thing, or over its middle:
+        // it says on which side the thing is, even from the edge of the
+        // sheet.
+        final double along;
+        switch (towards) {
+          case _CardPoint.left || _CardPoint.right:
+            final edge = top ?? (frame.height - bottom! - cardHeight);
+            along = bottom == null
+                ? (box.center.dy - edge).clamp(22.0, 64.0)
+                : -(frame.height - bottom - box.center.dy).clamp(22.0, 64.0);
+            final beside = towards == _CardPoint.left
+                ? left - box.right
+                : box.left - (left + width);
+            if (beside < 0) towards = _CardPoint.none;
+          case _CardPoint.down:
+            along = (box.center.dx - left).clamp(24.0, width - 24);
+          case _CardPoint.none:
+            along = 0;
         }
         card = Positioned(
           left: left,
           top: top,
           bottom: bottom,
           width: width,
-          child: _NameCard(name: shown, onClose: onClose),
+          child: _NameCard(
+            name: shown,
+            onClose: onClose,
+            look: look ?? studioLook.value,
+            point: towards,
+            along: along,
+          ),
         );
       }
       return Stack(
@@ -882,65 +919,108 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter old) => false;
 }
 
+// Where the little point of a card is: on the side of its thing.
+enum _CardPoint { none, left, right, down }
+
 // The card of one named thing: its name and one or two lines. It is read
-// aloud when it appears, and a press anywhere on it closes it. Its colours
-// are its own, the same in every universe: a light card, dark letters.
+// aloud when it appears, and a press anywhere on it closes it. It is made
+// of the matter of the pebbles (Color 1.2, step G3) — the surface of the
+// universe, its round corners, its soft shadow, the letters of the
+// pebbles — with a little point towards its thing, as a bubble has one.
 class _NameCard extends StatelessWidget {
-  const _NameCard({required this.name, required this.onClose});
+  const _NameCard({
+    required this.name,
+    required this.onClose,
+    required this.look,
+    required this.point,
+    required this.along,
+  });
   final DecorName name;
   final VoidCallback onClose;
+  final StudioLook look;
+  final _CardPoint point;
 
-  static const paper = Color(0xfffffdf6);
-  static const ink = Color(0xff22303f);
-  static const text = Color(0xff37454f);
+  /// Where the point is along its edge: from the top of the card — from
+  /// its bottom when negative — or from its left.
+  final double along;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    key: const Key('decorNameCard'),
-    container: true,
-    liveRegion: true,
-    button: true,
-    hint: tr('Fermer'),
-    child: Material(
-      color: paper,
-      elevation: 6,
-      shadowColor: const Color(0x99141e32),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xff293d4b), width: 2.5),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onClose,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(15, 12, 15, 13),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tr(name.frenchName),
-                style: const TextStyle(
-                  fontSize: 16.5,
-                  fontWeight: FontWeight.w700,
-                  color: ink,
-                ),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                tr(name.frenchText),
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  height: 1.42,
-                  color: text,
-                ),
-              ),
-            ],
-          ),
+  Widget build(BuildContext context) {
+    final corners = galetCorners(double.infinity, most: 18, look: look);
+    Widget tip() => Transform.rotate(
+      angle: math.pi / 4,
+      child: Container(
+        width: 14,
+        height: 14,
+        decoration: BoxDecoration(
+          color: look.surface,
+          borderRadius: BorderRadius.circular(3),
         ),
       ),
-    ),
-  );
+    );
+    return Semantics(
+      key: const Key('decorNameCard'),
+      container: true,
+      liveRegion: true,
+      button: true,
+      hint: tr('Fermer'),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: look.surface,
+              borderRadius: corners,
+              boxShadow: galetPanelShadow(look),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                borderRadius: corners,
+                onTap: onClose,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 13, 18, 15),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tr(name.frenchName),
+                          style: galetText(17, bold: true, color: look.ink),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          tr(name.frenchText),
+                          style: galetText(14.5, color: look.ink, height: 1.38),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // The point, over the edge of the card: the two make one shape.
+          if (point == _CardPoint.left || point == _CardPoint.right)
+            Positioned(
+              left: point == _CardPoint.left ? -6 : null,
+              right: point == _CardPoint.right ? -6 : null,
+              top: along >= 0 ? along - 7 : null,
+              bottom: along < 0 ? -along - 7 : null,
+              child: IgnorePointer(child: tip()),
+            ),
+          if (point == _CardPoint.down)
+            Positioned(
+              left: along - 7,
+              bottom: -6,
+              child: IgnorePointer(child: tip()),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 /// A pill of the look's surface under a caption written on a decor: the

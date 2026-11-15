@@ -5,6 +5,7 @@ import 'french.dart';
 import 'rust_document.dart' show LayerData, maxLayers;
 import 'studio_colors.dart';
 import 'language.dart';
+import 'studio_theme.dart';
 
 /// The interface offers eight layers to draw on; a project may hold up to
 /// sixteen layers, the locked ones of a colouring page included.
@@ -188,14 +189,7 @@ class _LayersDialogState extends State<LayersDialog> {
       key: Key('layer-row-${layer.id}'),
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive ? studioSelected : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: isActive ? studioGreen : studioLine,
-          width: isActive ? 2 : 1,
-        ),
-      ),
+      decoration: studioTile(chosen: isActive, most: 16),
       child: Row(
         children: [
           Expanded(

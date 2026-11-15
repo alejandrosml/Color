@@ -131,11 +131,8 @@ void main() {
     }
     // The whole sheet is already in view, and nothing is drawn to see
     // again.
-    expect(tester.widget<OutlinedButton>(_key('fitPage')).onPressed, isNull);
-    expect(
-      tester.widget<OutlinedButton>(_key('replayDrawing')).onPressed,
-      isNull,
-    );
+    expect(tester.widget<GaletButton>(_key('fitPage')).onPressed, isNull);
+    expect(tester.widget<GaletButton>(_key('replayDrawing')).onPressed, isNull);
     await tester.tap(_key('closePhoneMenu'));
     await tester.pumpAndSettle();
     expect(_key('phoneMenuDialog'), findsNothing);
@@ -150,7 +147,7 @@ void main() {
     await studio.openPhoneMenu();
     expect(await drawingStatus(tester), contains('projet enregistré'));
     expect(
-      tester.widget<OutlinedButton>(_key('replayDrawing')).onPressed,
+      tester.widget<GaletButton>(_key('replayDrawing')).onPressed,
       isNotNull,
     );
     await tester.tap(_key('closePhoneMenu'));

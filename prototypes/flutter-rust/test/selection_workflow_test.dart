@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 import 'dart:io';
 
-
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/desktop_menu.dart';
 import 'package:edupaint_flutter_study/galets.dart';
@@ -490,7 +489,7 @@ void main() {
       await tester.pumpAndSettle();
       final moved = await saved(tester, files);
       await tap(tester, 'duplicateSelection');
-      expect(find.byType(SnackBar), findsNothing);
+      expect(find.byKey(const Key('galetNotice')), findsNothing);
       final copied = await saved(tester, files);
       final data = objects(copied);
       expect(data, hasLength(2));

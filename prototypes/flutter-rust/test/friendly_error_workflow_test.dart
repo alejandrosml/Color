@@ -321,10 +321,18 @@ void main() {
       expect(find.byKey(const Key('showProblemDetails')), findsOneWidget);
       expect(find.byKey(const Key('problemMessage')), findsOneWidget);
       expect(tester.takeException(), isNull);
-      final close = find.descendant(
-        of: find.byType(SnackBar),
-        matching: find.byTooltip('Fermer'),
+      // The notice is a pebble over the top of the sheet (step G3), and
+      // covers neither the line nor the pebbles of the top.
+      final notice = tester.getRect(find.byKey(const Key('galetNotice')));
+      expect(
+        notice.bottom,
+        lessThan(tester.getRect(find.byKey(const Key('tool-stroke'))).top),
       );
+      expect(
+        notice.top,
+        greaterThan(tester.getRect(find.byKey(const Key('myDrawing'))).bottom),
+      );
+      final close = find.byKey(const Key('closeProblem'));
       expect(close, findsOneWidget);
       await tester.tap(close);
       await tester.pumpAndSettle();

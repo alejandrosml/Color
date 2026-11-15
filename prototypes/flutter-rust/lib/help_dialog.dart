@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'child_art.dart';
 import 'fit_to_screen.dart';
+import 'galets.dart';
 import 'studio_colors.dart';
 import 'studio_options.dart';
 import 'studio_tool.dart';
@@ -62,14 +63,14 @@ class HelpDialog extends StatelessWidget {
             ])
               _HelpRow(
                 key: Key('help-${tool.name}'),
-                picture: EduIllustration(art: tool.art, size: 40),
+                picture: GaletPicture(art: tool.art, size: 40),
                 title: tool.label,
                 text: tool.help,
               ),
             if (!options.simpleControls)
               _HelpRow(
                 key: Key('help-picker'),
-                picture: Icon(Icons.colorize, size: 30),
+                picture: const GaletPicture(art: EduArt.pipette, size: 40),
                 title: tr('Pipette'),
                 text: tr(
                   'À côté des couleurs. Appuie dessus, puis clique sur une couleur de ton dessin pour la reprendre.',
@@ -78,7 +79,7 @@ class HelpDialog extends StatelessWidget {
             if (options.layers)
               _HelpRow(
                 key: Key('help-layers'),
-                picture: EduIllustration(art: EduArt.layers, size: 40),
+                picture: GaletPicture(art: EduArt.layers, size: 40),
                 title: tr('Calques'),
                 text: tr(
                   'Des feuilles transparentes posées l’une sur l’autre. Tu peux en cacher une, ou la passer devant.',
@@ -87,7 +88,7 @@ class HelpDialog extends StatelessWidget {
             if (options.viewControls)
               _HelpRow(
                 key: Key('help-big-sheet'),
-                picture: Icon(Icons.open_in_full, size: 28),
+                picture: const GaletPicture(art: EduArt.bigSheet, size: 40),
                 title: tr('Dessiner en grand'),
                 text: tr(
                   'Range les panneaux pour laisser toute la place à ta feuille. Le même bouton les fait revenir.',
@@ -96,7 +97,7 @@ class HelpDialog extends StatelessWidget {
             if (hasGallery)
               _HelpRow(
                 key: Key('help-gallery'),
-                picture: EduIllustration(art: EduArt.gallery, size: 40),
+                picture: GaletPicture(art: EduArt.gallery, size: 40),
                 title: tr('Mes dessins'),
                 text: tr(
                   'Chaque dessin que tu enregistres y laisse une carte : Color en garde une copie. Clique sur une carte pour reprendre le dessin, ou sur Diaporama pour les voir l’un après l’autre.',
@@ -104,7 +105,7 @@ class HelpDialog extends StatelessWidget {
               ),
             _HelpRow(
               key: Key('help-film'),
-              picture: EduIllustration(art: EduArt.film, size: 40),
+              picture: GaletPicture(art: EduArt.film, size: 40),
               title: tr('Revoir ton dessin'),
               text: tr(
                 'Ton dessin se refait tout seul sous tes yeux, élément par élément, de celui du dessous à celui du dessus. Il ne change pas.',
@@ -113,7 +114,7 @@ class HelpDialog extends StatelessWidget {
             if (options.printing)
               _HelpRow(
                 key: Key('help-print'),
-                picture: EduIllustration(art: EduArt.printer, size: 40),
+                picture: GaletPicture(art: EduArt.printer, size: 40),
                 title: tr('Imprimer'),
                 text: tr(
                   'Ouvre la fenêtre d’impression de ton ordinateur, avec ton dessin sur une page. Rien ne s’imprime avant que tu le confirmes là.',
@@ -121,7 +122,7 @@ class HelpDialog extends StatelessWidget {
               ),
             _HelpRow(
               key: Key('help-options'),
-              picture: EduIllustration(art: EduArt.options, size: 40),
+              picture: GaletPicture(art: EduArt.options, size: 40),
               title: tr('Options'),
               text: tr(
                 'Pour les adultes : choisir la langue et ce que Color montre, couper les sons ou l’impression, régler l’accessibilité. Un calcul peut en garder l’entrée : c’est l’une des options.',

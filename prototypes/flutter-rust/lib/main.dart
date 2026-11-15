@@ -77,10 +77,10 @@ import 'decor.dart';
 import 'decor_gaze.dart';
 import 'decor_motion.dart';
 import 'decor_view.dart';
-import 'studio_shapes.dart';
 import 'universe.dart';
 import 'universe_dialog.dart';
 import 'galets.dart';
+import 'studio_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -189,45 +189,9 @@ class EduPaintApp extends StatelessWidget {
     builder: touchFirst
         ? (context, child) => FitToScreen(child: child ?? const SizedBox())
         : null,
-    theme: ThemeData(
-      useMaterial3: true,
-      // The same generous controls on every platform. Left to itself the
-      // framework makes them compact on desktop systems, eight pixels less
-      // in each direction: too small for a child's hand, and not what the
-      // layout of the studio is measured with.
-      visualDensity: VisualDensity.standard,
-      materialTapTargetSize: MaterialTapTargetSize.padded,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: studioGreen,
-        surface: studioSurface,
-      ),
-      scaffoldBackgroundColor: studioBackground,
-      textTheme: ThemeData.light().textTheme.apply(
-        bodyColor: studioInk,
-        displayColor: studioInk,
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: studioGreen,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(48, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          // The corners of the universe, never its dashes: a full button
-          // has no line around it.
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(studioLook.value.buttonRadius),
-          ),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: studioInk,
-          minimumSize: const Size(48, 48),
-          side: studioButtonSide(),
-          shape: studioButtonShape(),
-        ),
-      ),
-    ),
+    // The dialogs and their controls wear the matter of the pebbles, in
+    // the look of the moment (studio_theme.dart).
+    theme: studioTheme(),
     home: DrawingStudio(
       files: files,
       recoveryStorage: recoveryStorage,
@@ -902,6 +866,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (widget.options == null) _optionsStore.dispose();
     _bounceTimer?.cancel();
     _savedTimer?.cancel();
+    _noticeTimer?.cancel();
     _nameTimer?.cancel();
     _asking.dispose();
     _shownName.dispose();
@@ -1034,37 +999,68 @@ class _DrawingStudioState extends State<DrawingStudio>
     );
   }
 
+  // The notice that is shown, in a pebble over the top of the sheet; and
+  // what puts it away by itself.
+  StudioProblem? _notice;
+  Timer? _noticeTimer;
+
+  /// How long a notice stays when nobody closes it. One that has details
+  /// for a grown-up stays until it is closed.
+  static const _noticeFor = Duration(seconds: 12);
+
   void _showProblem(StudioProblem problem) {
     if (!mounted) return;
     _sound(StudioSound.notice);
-    final messenger = ScaffoldMessenger.of(context);
-    // Keep only the latest notification, never a queue of exception objects.
-    messenger.clearSnackBars();
-    messenger.removeCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: studioInk,
-        persist: problem.details != null,
-        showCloseIcon: problem.details != null,
-        closeIconColor: Colors.white,
-        duration: const Duration(seconds: 12),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(problem.message, key: const Key('problemMessage')),
-            if (problem.details != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  key: const Key('showProblemDetails'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.white),
-                  // A blocked press must not dismiss the notification.
-                  onPressed: () => _showProblemDetails(problem),
-                  child: Text(tr('Détails')),
-                ),
-              ),
-          ],
+    // Only the latest notice, never a queue of them.
+    _noticeTimer?.cancel();
+    _noticeTimer = problem.details != null
+        ? null
+        : Timer(_noticeFor, _closeNotice);
+    setState(() => _notice = problem);
+  }
+
+  void _closeNotice() {
+    _noticeTimer?.cancel();
+    _noticeTimer = null;
+    if (_notice == null) return;
+    if (mounted) {
+      setState(() => _notice = null);
+    } else {
+      _notice = null;
+    }
+  }
+
+  // Over the top of the sheet: under the pebbles of the top where there
+  // are some, between the rails otherwise. It never covers the line.
+  Widget _noticeLayer(BuildContext context, StudioProblem problem) {
+    final window = MediaQuery.sizeOf(context);
+    final safe = MediaQuery.paddingOf(context);
+    final rails = _galetsForm == GaletsForm.rails;
+    final pebbles = !rails && !_bigSheet && _startupError == null;
+    final side = rails
+        ? math.max(safe.left, safe.right) + GaletsLayout.railWidth + 26
+        : GaletsLayout.side + (_bigSheet ? GaletsLayout.topHeight + 12 : 0);
+    return Positioned(
+      left: side,
+      right: side,
+      top:
+          safe.top +
+          (pebbles
+              ? (safe.top > 0 ? 8 : 14) + GaletsLayout.topHeight + 10
+              : 10),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: math.min(620.0, math.max(160.0, window.width - 2 * side)),
+          ),
+          child: GaletNotice(
+            message: problem.message,
+            onClose: _closeNotice,
+            onDetails: problem.details == null
+                ? null
+                // A blocked press must not dismiss the notice.
+                : () => _showProblemDetails(problem),
+          ),
         ),
       ),
     );
@@ -1080,7 +1076,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         _trackpadPointer != null) {
       return;
     }
-    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    _closeNotice();
     // No drawing mutation, finishing gesture, IO or retry belongs to this view.
     setState(() => _confirmationOpen = true);
     try {
@@ -5566,8 +5562,14 @@ class _DrawingStudioState extends State<DrawingStudio>
           },
           autofocus: true,
           child: Scaffold(
-            // The studio is made of pebbles (Color 1.2), in every window.
-            body: _galetsBody(context),
+            // The studio is made of pebbles (Color 1.2), in every window;
+            // a notice stands over them.
+            body: Stack(
+              children: [
+                Positioned.fill(child: _galetsBody(context)),
+                if (_notice case final notice?) _noticeLayer(context, notice),
+              ],
+            ),
           ),
         ),
       ),
@@ -6150,14 +6152,34 @@ class _DrawingStudioState extends State<DrawingStudio>
                   ),
           ),
         ),
-        // What can be done with the chosen element, just above the line.
+        // What can be done with the chosen element, just above the line;
+        // at the top of the sheet when the element itself lies down there:
+        // its actions never cover it.
         if (_choosing && _selectedObject != null)
-          Positioned(
-            left: GaletsLayout.side,
-            right: GaletsLayout.side,
-            bottom: window.height - layout.lineTop + 10,
-            child: _readAt(3, Center(child: _galetOfSelection(across))),
-          ),
+          if (_selectionUnder(
+            Rect.fromLTRB(0, layout.lineTop - 76, window.width, layout.lineTop),
+            instead: Rect.fromLTWH(
+              0,
+              _bigSheet ? layout.top : layout.top + GaletsLayout.topHeight + 10,
+              window.width,
+              66,
+            ),
+          ))
+            Positioned(
+              left: GaletsLayout.side,
+              right: GaletsLayout.side,
+              top: _bigSheet
+                  ? layout.top
+                  : layout.top + GaletsLayout.topHeight + 10,
+              child: _readAt(3, Center(child: _galetOfSelection(across))),
+            )
+          else
+            Positioned(
+              left: GaletsLayout.side,
+              right: GaletsLayout.side,
+              bottom: window.height - layout.lineTop + 10,
+              child: _readAt(3, Center(child: _galetOfSelection(across))),
+            ),
         line(
           layout.lineTop,
           _readAt(4, _galetLine(context, linePlan, colours: !two)),
@@ -6222,6 +6244,15 @@ class _DrawingStudioState extends State<DrawingStudio>
     final panel = _galetPanel;
     final anchor = panel == null ? null : _galetAnchor(_galetPanelButton);
     _followGaletPanel(panel, anchor);
+    final selectionAtFoot = _selectionUnder(
+      Rect.fromLTRB(
+        0,
+        layout.sheet.bottom - 72,
+        window.width,
+        layout.sheet.bottom,
+      ),
+      instead: Rect.fromLTWH(0, layout.sheet.top, window.width, 72),
+    );
     return Stack(
       key: _galetsFrame,
       children: [
@@ -6270,12 +6301,15 @@ class _DrawingStudioState extends State<DrawingStudio>
             ),
           ),
         // What can be done with the chosen element, at the foot of the
-        // sheet.
+        // sheet; at its top when the element itself lies at its foot.
         if (_choosing && _selectedObject != null)
           Positioned(
             left: layout.railLeft + rail + 10,
             width: between,
-            bottom: window.height - layout.sheet.bottom + 6,
+            top: selectionAtFoot ? layout.sheet.top + 6 : null,
+            bottom: selectionAtFoot
+                ? null
+                : window.height - layout.sheet.bottom + 6,
             child: _readAt(
               3,
               // Its sentence too, where it stands beside the actions and
@@ -6358,7 +6392,7 @@ class _DrawingStudioState extends State<DrawingStudio>
             onPressed: enabled ? () => _galetTool(group) : null,
             width: cell,
             height: cell,
-            child: EduIllustration(art: group.art, size: 32),
+            child: GaletPicture(art: group.art, size: 32),
           ),
         KeyedSubtree(
           key: _drawerButton,
@@ -6375,7 +6409,7 @@ class _DrawingStudioState extends State<DrawingStudio>
             expanded: drawerOpen,
             width: cell,
             height: cell,
-            child: GaletDots(color: drawerOpen ? studioGreen : studioInk),
+            child: const GaletPicture(art: EduArt.allTools, size: 30),
           ),
         ),
       ],
@@ -6556,7 +6590,7 @@ class _DrawingStudioState extends State<DrawingStudio>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const EduIllustration(art: EduArt.universes, size: 30),
+                const GaletPicture(art: EduArt.universes, size: 30),
                 if (universeNamed) ...[
                   const SizedBox(width: 8),
                   Text(tr('Univers'), maxLines: 1, style: galetText(16)),
@@ -6711,18 +6745,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       decoration: BoxDecoration(
         color: studioSurface,
         borderRadius: galetCorners(60),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x24263f43),
-            blurRadius: 2,
-            offset: Offset(0, 1),
-          ),
-          BoxShadow(
-            color: Color(0x29263f43),
-            blurRadius: 28,
-            offset: Offset(0, 10),
-          ),
-        ],
+        boxShadow: galetFloatShadow(),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -6730,6 +6753,25 @@ class _DrawingStudioState extends State<DrawingStudio>
       ),
     ),
   );
+
+  /// Whether the chosen element, as the view shows it, lies in [band] of
+  /// the window — where the pebble of its actions would cover it — and
+  /// leaves [instead] free, where the pebble then goes. False while the
+  /// view is not known yet.
+  bool _selectionUnder(Rect band, {required Rect instead}) {
+    final bounds = _selectedPaintBounds;
+    final view = _view;
+    if (bounds == null || view == null || !_choosing) return false;
+    final shown = Rect.fromLTRB(
+      view.left + bounds.left * view.scale,
+      view.top + bounds.top * view.scale,
+      view.left + bounds.right * view.scale,
+      view.top + bounds.bottom * view.scale,
+    ).shift(_stageOrigin);
+    // An element as tall as the sheet is covered wherever the pebble
+    // stands: it stays where a child expects it.
+    return shown.overlaps(band) && !shown.overlaps(instead);
+  }
 
   /// The name of a colour as the pebbles say it: one of the line or of its
   /// families by the name a child gives it, any other by what it looks
@@ -6945,12 +6987,12 @@ class _DrawingStudioState extends State<DrawingStudio>
                   ? Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        EduIllustration(art: group.art, size: large ? 40 : 32),
+                        GaletPicture(art: group.art, size: large ? 40 : 32),
                         SizedBox(width: large ? 10 : 8),
                         Text(group.label, maxLines: 1, style: toolStyle),
                       ],
                     )
-                  : EduIllustration(art: group.art, size: large ? 40 : 30),
+                  : GaletPicture(art: group.art, size: large ? 40 : 30),
             ),
           // What a shorter name leaves of the room of the longest.
           if (named) SizedBox(width: plan.longest - plan.nameWidth),
@@ -7019,7 +7061,11 @@ class _DrawingStudioState extends State<DrawingStudio>
                     height: 32,
                     child: Center(
                       child: stamp != null
-                          ? StampPreview(stamp: stamp, rgb: _color, size: 32)
+                          // On its light round in pebbles of the night.
+                          ? galetOnDisc(
+                              StampPreview(stamp: stamp, rgb: _color, size: 32),
+                              spread: 3,
+                            )
                           : witness != null
                           ? CustomPaint(
                               size: const Size(34, 22),
@@ -7163,7 +7209,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           name: name,
           width: tileWide,
           height: tileHigh,
-          picture: EduIllustration(art: art, size: 36),
+          picture: GaletPicture(art: art, size: 36),
           onPressed: free ? _fromPanel(action) : null,
         );
     final path = _currentPath;
@@ -7338,7 +7384,10 @@ class _DrawingStudioState extends State<DrawingStudio>
                     width: tile,
                     height: 92 + 20 * (scale - 1),
                     fontSize: 13.5,
-                    picture: StampPreview(stamp: stamp, rgb: _color, size: 54),
+                    picture: galetOnDisc(
+                      StampPreview(stamp: stamp, rgb: _color, size: 54),
+                      spread: 4,
+                    ),
                     onPressed: enabled
                         ? () {
                             setState(() {
@@ -7371,7 +7420,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           key: const Key('turnStamp'),
           name: tr('Tourner'),
           selected: look.rotation != 0,
-          picture: const EduIllustration(art: EduArt.turn, size: 32),
+          picture: const GaletPicture(art: EduArt.turn, size: 32),
           onPressed: enabled
               ? () {
                   setState(() => _stampEighths = (_stampEighths + 1) % 8);
@@ -7383,7 +7432,7 @@ class _DrawingStudioState extends State<DrawingStudio>
           key: const Key('mirrorStamp'),
           name: tr('Retourner'),
           selected: look.mirrorX,
-          picture: const EduIllustration(art: EduArt.mirror, size: 32),
+          picture: const GaletPicture(art: EduArt.mirror, size: 32),
           onPressed: enabled
               ? () {
                   setState(() => _stampMirrored = !_stampMirrored);
@@ -7533,7 +7582,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                   width: tile,
                   height: 64 + 14 * (scale - 1),
                   fontSize: 13,
-                  picture: EduIllustration(art: group.art, size: 32),
+                  picture: GaletPicture(art: group.art, size: 32),
                   onPressed: enabled ? () => _galetTool(group) : null,
                 ),
             ],
@@ -7564,11 +7613,14 @@ class _DrawingStudioState extends State<DrawingStudio>
                   key: const Key('chooseStamp'),
                   name: tr('Choisir un tampon'),
                   picture: _currentStamp == null
-                      ? EduIllustration(art: ToolGroup.stamp.art, size: 32)
-                      : StampPreview(
-                          stamp: _currentStamp!,
-                          rgb: _color,
-                          size: 34,
+                      ? GaletPicture(art: ToolGroup.stamp.art, size: 32)
+                      : galetOnDisc(
+                          StampPreview(
+                            stamp: _currentStamp!,
+                            rgb: _color,
+                            size: 34,
+                          ),
+                          spread: 3,
                         ),
                   onPressed: enabled ? _fromPanel(_chooseStamp) : null,
                 ),
@@ -7691,17 +7743,13 @@ class _DrawingStudioState extends State<DrawingStudio>
                 name: tr('Pipette'),
                 label: tr('Pipette : reprendre une couleur du dessin'),
                 selected: _picking,
-                picture: Icon(Icons.colorize, size: 28, color: studioInk),
+                picture: const GaletPicture(art: EduArt.pipette, size: 30),
                 onPressed: enabled ? _fromPanel(_togglePicking) : null,
               ),
               GaletWideButton(
                 key: const Key('morePaintColors'),
                 name: tr('Mélanger'),
-                picture: Icon(
-                  Icons.palette_outlined,
-                  size: 28,
-                  color: studioInk,
-                ),
+                picture: const GaletPicture(art: EduArt.palette, size: 30),
                 onPressed: enabled ? _fromPanel(_mixGaletColour) : null,
               ),
             ],
@@ -7738,57 +7786,55 @@ class _DrawingStudioState extends State<DrawingStudio>
       PhoneMenuEntry(
         id: 'newProject',
         name: tr('Nouveau'),
-        picture: (size) => EduIllustration(art: EduArt.newPage, size: size),
+        picture: (size) => GaletPicture(art: EduArt.newPage, size: size),
         enabled: true,
       ),
       if (_options.opensFiles)
         PhoneMenuEntry(
           id: 'openProject',
           name: tr('Ouvrir'),
-          picture: (size) => EduIllustration(art: EduArt.folder, size: size),
+          picture: (size) => GaletPicture(art: EduArt.folder, size: size),
           enabled: true,
         ),
       if (_gallery != null)
         PhoneMenuEntry(
           id: 'openGallery',
           name: tr('Mes dessins'),
-          picture: (size) => EduIllustration(art: EduArt.gallery, size: size),
+          picture: (size) => GaletPicture(art: EduArt.gallery, size: size),
           enabled: true,
         ),
       if (_options.opensFiles)
         PhoneMenuEntry(
           id: 'importImage',
           name: tr('Sur une image'),
-          picture: (size) =>
-              Icon(Icons.add_photo_alternate_outlined, size: size),
+          picture: (size) => GaletPicture(art: EduArt.onPicture, size: size),
           enabled: true,
         ),
       if (_options.exports)
         PhoneMenuEntry(
           id: 'exportImage',
           name: tr('Exporter'),
-          picture: (size) =>
-              EduIllustration(art: EduArt.exportImage, size: size),
+          picture: (size) => GaletPicture(art: EduArt.exportImage, size: size),
           enabled: true,
         ),
       if (_options.printing)
         PhoneMenuEntry(
           id: 'printDrawing',
           name: tr('Imprimer'),
-          picture: (size) => EduIllustration(art: EduArt.printer, size: size),
+          picture: (size) => GaletPicture(art: EduArt.printer, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
         id: 'replayDrawing',
         name: tr('Revoir'),
-        picture: (size) => EduIllustration(art: EduArt.film, size: size),
+        picture: (size) => GaletPicture(art: EduArt.film, size: size),
         enabled: _canReplay,
       ),
       if (_options.layers)
         PhoneMenuEntry(
           id: 'layersButton',
           name: tr('Calques'),
-          picture: (size) => EduIllustration(art: EduArt.layers, size: size),
+          picture: (size) => GaletPicture(art: EduArt.layers, size: size),
           enabled: true,
         ),
       // The loupes and the hand are for a mouse: two fingers do it on a
@@ -7797,19 +7843,19 @@ class _DrawingStudioState extends State<DrawingStudio>
         PhoneMenuEntry(
           id: 'zoomOut',
           name: tr('Éloigner'),
-          picture: (size) => EduIllustration(art: EduArt.zoomOut, size: size),
+          picture: (size) => GaletPicture(art: EduArt.zoomOut, size: size),
           enabled: _viewEnabled,
         ),
         PhoneMenuEntry(
           id: 'zoomIn',
           name: tr('Rapprocher'),
-          picture: (size) => EduIllustration(art: EduArt.zoomIn, size: size),
+          picture: (size) => GaletPicture(art: EduArt.zoomIn, size: size),
           enabled: _viewEnabled,
         ),
         PhoneMenuEntry(
           id: 'panPage',
           name: tr('Déplacer'),
-          picture: (size) => EduIllustration(art: EduArt.moveSheet, size: size),
+          picture: (size) => GaletPicture(art: EduArt.moveSheet, size: size),
           enabled: _viewEnabled,
         ),
       ],
@@ -7817,34 +7863,34 @@ class _DrawingStudioState extends State<DrawingStudio>
         PhoneMenuEntry(
           id: 'fitPage',
           name: tr('Toute la feuille'),
-          picture: (size) => Icon(Icons.fit_screen_outlined, size: size),
+          picture: (size) => GaletPicture(art: EduArt.wholeSheet, size: size),
           enabled: _viewEnabled && _view != null && !_view!.isFit,
         ),
       if (_options.headerHelp)
         PhoneMenuEntry(
           id: 'showHelp',
           name: tr('Aide'),
-          picture: (size) => Icon(Icons.help_outline, size: size),
+          picture: (size) => GaletPicture(art: EduArt.help, size: size),
           enabled: true,
         ),
       if (_choosesUniverse)
         PhoneMenuEntry(
           id: 'openUniverses',
           name: tr('Univers'),
-          picture: (size) => EduIllustration(art: EduArt.universes, size: size),
+          picture: (size) => GaletPicture(art: EduArt.universes, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
         id: 'openOptions',
         name: tr('Options'),
-        picture: (size) => EduIllustration(art: EduArt.options, size: size),
+        picture: (size) => GaletPicture(art: EduArt.options, size: size),
         enabled: true,
       ),
       // Always there: the privacy policy is reached through it.
       PhoneMenuEntry(
         id: 'aboutColor',
         name: tr('À propos'),
-        picture: (size) => Icon(Icons.info_outline, size: size),
+        picture: (size) => GaletPicture(art: EduArt.about, size: size),
         enabled: true,
       ),
     ];
@@ -8411,6 +8457,7 @@ class _DrawingStudioState extends State<DrawingStudio>
                             viewport.width,
                             viewport.height,
                           ),
+                          look: studioLook.value,
                         ),
                       ),
                     ),

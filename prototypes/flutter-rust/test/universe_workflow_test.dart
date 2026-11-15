@@ -1012,7 +1012,7 @@ void main() {
         );
         await tester.pumpWidget(const SizedBox());
       }
-      expect(studioLook.value.buttonDashed, isFalse);
+      expect(studioLook.value.galetRadius, StudioLook.classic.galetRadius);
       expect(testDecorTime.hour, 14);
     },
     skip: !available,

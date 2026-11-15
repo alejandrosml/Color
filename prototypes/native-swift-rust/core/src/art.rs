@@ -82,7 +82,9 @@ static INTERFACE: &[(&str, &str)] = &[
     ("options", include_str!("../art/interface/options.svg")),
     ("ouvrir", include_str!("../art/interface/ouvrir.svg")),
     ("ovale", include_str!("../art/interface/ovale.svg")),
+    ("palette", include_str!("../art/interface/palette.svg")),
     ("pinceau", include_str!("../art/interface/pinceau.svg")),
+    ("pipette", include_str!("../art/interface/pipette.svg")),
     (
         "pointeur-choisir",
         include_str!("../art/interface/pointeur-choisir.svg"),
@@ -110,6 +112,10 @@ static INTERFACE: &[(&str, &str)] = &[
     ("tampon", include_str!("../art/interface/tampon.svg")),
     ("texte", include_str!("../art/interface/texte.svg")),
     ("tourner", include_str!("../art/interface/tourner.svg")),
+    (
+        "tous-les-outils",
+        include_str!("../art/interface/tous-les-outils.svg"),
+    ),
     (
         "toute-la-feuille",
         include_str!("../art/interface/toute-la-feuille.svg"),

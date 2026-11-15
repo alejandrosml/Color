@@ -41,7 +41,12 @@ enum EduArt {
   bigSheet,
   onPicture,
   turn,
-  mirror;
+  mirror,
+  // The last ones the interface drew itself (step G3): the drawer of a
+  // rail, the pipette and the palette of the older children.
+  allTools,
+  pipette,
+  palette;
 
   /// The SVG file of the core that draws it, `art/interface/<key>.svg` (Color
   /// 1.1: every picture of the interface is a file; see vector_art.dart).
@@ -81,6 +86,9 @@ enum EduArt {
     onPicture => 'sur-une-image',
     turn => 'tourner',
     mirror => 'retourner',
+    allTools => 'tous-les-outils',
+    pipette => 'pipette',
+    palette => 'palette',
   };
 }
 
@@ -308,7 +316,10 @@ class _EduArtPainter extends CustomPainter {
           EduArt.bigSheet ||
           EduArt.onPicture ||
           EduArt.turn ||
-          EduArt.mirror:
+          EduArt.mirror ||
+          EduArt.allTools ||
+          EduArt.pipette ||
+          EduArt.palette:
         _picture(canvas, art.svgKey);
       case EduArt.select:
         _shape(

@@ -284,7 +284,7 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
                   decoration: BoxDecoration(
                     color: _color(_rgb),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xff9baea3)),
+                    border: Border.all(color: studioSwatchRing),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -449,7 +449,7 @@ class _PaintColorDialogState extends State<PaintColorDialog> {
             decoration: BoxDecoration(
               color: _color(mixed),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xff9baea3)),
+              border: Border.all(color: studioSwatchRing),
             ),
           ),
           FilledButton.tonal(

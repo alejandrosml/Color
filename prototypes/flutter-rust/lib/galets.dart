@@ -160,15 +160,19 @@ int galetWidthIndex(double width) {
 
 /// The letters of the pebbles: Atkinson Hyperlegible, made to be told
 /// apart by eyes that read with difficulty.
-TextStyle galetText(double size, {bool bold = false, Color? color}) =>
-    TextStyle(
-      fontFamily: 'ColorAtkinson',
-      fontSize: size,
-      height: 1.2,
-      fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-      color: color ?? studioInk,
-      letterSpacing: 0,
-    );
+TextStyle galetText(
+  double size, {
+  bool bold = false,
+  Color? color,
+  double height = 1.2,
+}) => TextStyle(
+  fontFamily: 'ColorAtkinson',
+  fontSize: size,
+  height: height,
+  fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+  color: color ?? studioInk,
+  letterSpacing: 0,
+);
 
 /// The width of [text] on one line in [style], as the screen writes it.
 double galetTextWidth(BuildContext context, String text, TextStyle style) {
@@ -598,21 +602,107 @@ class GaletPalette {
 double galetTextScale(BuildContext context) =>
     MediaQuery.textScalerOf(context).scale(15) / 15;
 
-const _floatShadow = [
-  BoxShadow(color: Color(0x24263f43), blurRadius: 2, offset: Offset(0, 1)),
-  BoxShadow(color: Color(0x29263f43), blurRadius: 28, offset: Offset(0, 10)),
+// A shadow of [look]: its tint, [strength] times its depth.
+Color _shade(StudioLook look, double strength) =>
+    look.shadow.withValues(alpha: math.min(.72, strength * look.shadowDepth));
+
+// The thin line of [look] around what floats on a dark sky, drawn as a
+// shadow that does not spread: it takes no room in the pebble.
+List<BoxShadow> _edge(StudioLook look, double width) => [
+  if (look.galetEdge case final edge?)
+    BoxShadow(color: edge, spreadRadius: width),
 ];
-const _panelShadow = [
-  BoxShadow(color: Color(0x29263f43), blurRadius: 2, offset: Offset(0, 1)),
-  BoxShadow(color: Color(0x47263f43), blurRadius: 40, offset: Offset(0, 16)),
-];
+
+/// The shadow of a pebble that floats over the frame of the sheet, in
+/// [look] — that of the moment when none is given: soft and hardly seen on
+/// a light wall, deeper on a dark sky, where a thin line goes around the
+/// pebble as well.
+List<BoxShadow> galetFloatShadow([StudioLook? look]) {
+  final worn = look ?? studioLook.value;
+  return [
+    ..._edge(worn, 1.5),
+    BoxShadow(
+      color: _shade(worn, .14),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: _shade(worn, .16),
+      blurRadius: 28,
+      offset: const Offset(0, 10),
+    ),
+  ];
+}
+
+/// The shadow of what a pebble opens — a panel —, deeper than that of a
+/// pebble: it stands above everything.
+List<BoxShadow> galetPanelShadow([StudioLook? look]) {
+  final worn = look ?? studioLook.value;
+  return [
+    ..._edge(worn, 1.5),
+    BoxShadow(
+      color: _shade(worn, .16),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+    BoxShadow(
+      color: _shade(worn, .28),
+      blurRadius: 40,
+      offset: const Offset(0, 16),
+    ),
+  ];
+}
+
+/// [picture], [size] wide, as a pebble shows it: as it is on a light
+/// pebble; on a pebble of the night, over a light round a little larger
+/// than itself — the pictures of Color are drawn with a dark line. The
+/// round takes no room: what holds the picture is laid out the same in
+/// every look.
+Widget galetOnDisc(Widget picture, {double spread = 5}) {
+  final disc = studioLook.value.galetDisc;
+  if (disc == null) return picture;
+  return Stack(
+    clipBehavior: Clip.none,
+    alignment: Alignment.center,
+    children: [
+      Positioned(
+        left: -spread,
+        top: -spread,
+        right: -spread,
+        bottom: -spread,
+        child: IgnorePointer(
+          child: DecoratedBox(
+            key: const Key('galetDisc'),
+            decoration: BoxDecoration(color: disc, shape: BoxShape.circle),
+          ),
+        ),
+      ),
+      picture,
+    ],
+  );
+}
+
+/// A picture of the interface in a pebble, a panel or a dialog: on its
+/// light round in pebbles of the night ([galetOnDisc]).
+class GaletPicture extends StatelessWidget {
+  const GaletPicture({super.key, required this.art, this.size = 30});
+  final EduArt art;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) =>
+      galetOnDisc(EduIllustration(art: art, size: size));
+}
 
 /// The corners of something [height] tall in the look of the moment: all
 /// round in most universes, hardly round in the universe of paper.
-BorderRadius galetCorners(double height, {double most = double.infinity}) =>
-    BorderRadius.circular(
-      math.min(math.min(height / 2, most), studioLook.value.galetRadius),
-    );
+BorderRadius galetCorners(
+  double height, {
+  double most = double.infinity,
+  StudioLook? look,
+}) => BorderRadius.circular(
+  math.min(math.min(height / 2, most), (look ?? studioLook.value).galetRadius),
+);
 
 /// A pebble: a light surface that floats over the frame of the sheet, its
 /// buttons side by side.
@@ -643,7 +733,7 @@ class Galet extends StatelessWidget {
       decoration: BoxDecoration(
         color: studioSurface,
         borderRadius: galetCorners(height),
-        boxShadow: _floatShadow,
+        boxShadow: galetFloatShadow(),
       ),
       child: Flex(
         direction: vertical ? Axis.vertical : Axis.horizontal,
@@ -881,7 +971,7 @@ class GaletPictureButton extends StatelessWidget {
     marksSelection: marksSelection,
     width: cell,
     height: cell,
-    child: EduIllustration(art: art, size: size),
+    child: GaletPicture(art: art, size: size),
   );
 }
 
@@ -1304,7 +1394,7 @@ class GaletBubble extends StatelessWidget {
           decoration: BoxDecoration(
             color: studioSurface,
             borderRadius: galetCorners(double.infinity, most: 18),
-            boxShadow: _floatShadow,
+            boxShadow: galetFloatShadow(),
           ),
           // A sentence alone is one text, which a reader of the screen and
           // a test find whole.
@@ -1333,6 +1423,78 @@ class GaletBubble extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// The notice of a problem, or of something the child should know — a
+/// pebble of ink over the top of the sheet, where it covers no button
+/// (Color 1.2, step G3; a band over the line before). Dark on the light
+/// pebbles, light on those of the night: it is not one of them. It is read
+/// aloud when it appears.
+class GaletNotice extends StatelessWidget {
+  const GaletNotice({
+    super.key,
+    required this.message,
+    required this.onClose,
+    this.onDetails,
+  });
+
+  final String message;
+  final VoidCallback onClose;
+
+  /// Opens what a grown-up may want to read of the problem; null when
+  /// there is nothing more to say.
+  final VoidCallback? onDetails;
+
+  @override
+  Widget build(BuildContext context) {
+    final ink = studioSurface;
+    final corners = galetCorners(double.infinity, most: 22);
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      child: Container(
+        key: const Key('galetNotice'),
+        padding: const EdgeInsets.fromLTRB(18, 6, 6, 6),
+        decoration: BoxDecoration(
+          color: studioInk,
+          borderRadius: corners,
+          boxShadow: galetPanelShadow(),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  message,
+                  key: const Key('problemMessage'),
+                  style: galetText(15, color: ink, height: 1.3),
+                ),
+              ),
+            ),
+            if (onDetails != null) ...[
+              const SizedBox(width: 6),
+              TextButton(
+                key: const Key('showProblemDetails'),
+                style: TextButton.styleFrom(foregroundColor: ink),
+                onPressed: onDetails,
+                child: Text(tr('Détails')),
+              ),
+            ],
+            const SizedBox(width: 2),
+            IconButton(
+              key: const Key('closeProblem'),
+              tooltip: tr('Fermer'),
+              color: ink,
+              onPressed: onClose,
+              icon: const Icon(Icons.close_rounded),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 /// The title of a panel, or of a part of one.
@@ -1515,7 +1677,7 @@ class GaletPanel extends StatelessWidget {
       final surface = BoxDecoration(
         color: studioSurface,
         borderRadius: galetCorners(double.infinity, most: 26),
-        boxShadow: _panelShadow,
+        boxShadow: galetPanelShadow(),
       );
       Widget point({required bool shadow}) => Transform.rotate(
         angle: math.pi / 4,
@@ -1525,7 +1687,7 @@ class GaletPanel extends StatelessWidget {
           decoration: BoxDecoration(
             color: studioSurface,
             borderRadius: BorderRadius.circular(3),
-            boxShadow: shadow ? _floatShadow : null,
+            boxShadow: shadow ? galetFloatShadow() : null,
           ),
         ),
       );
@@ -1871,67 +2033,45 @@ class _GroundPainter extends CustomPainter {
 }
 
 /// The shadow of the sheet on the frame, under the sheet wherever the view
-/// shows it.
+/// shows it, in the tint of [look] and as deep as it says; on a dark sky,
+/// its thin line goes around the sheet too.
 class GaletSheetShadow extends CustomPainter {
-  const GaletSheetShadow(this.sheet);
+  const GaletSheetShadow(this.sheet, {this.look = StudioLook.classic});
   final Rect sheet;
+  final StudioLook look;
 
   @override
   void paint(Canvas canvas, Size size) {
+    Color shade(double strength) => look.shadow.withValues(
+      alpha: math.min(.72, strength * look.shadowDepth),
+    );
     canvas.save();
     canvas.clipRect(Offset.zero & size);
     canvas.drawRect(
       sheet.shift(const Offset(0, 2)),
-      Paint()..color = const Color(0x1a263f43),
+      Paint()..color = shade(.1),
     );
     canvas.drawRect(
       sheet.shift(const Offset(0, 8)),
       Paint()
-        ..color = const Color(0x33263f43)
+        ..color = shade(.2)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 9),
     );
+    if (look.galetEdge case final edge?) {
+      canvas.drawRect(
+        sheet.inflate(.5),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1
+          ..color = edge.withValues(alpha: edge.a * .65),
+      );
+    }
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(GaletSheetShadow old) => old.sheet != sheet;
-}
-
-/// Nine dots, three by three: « tous les outils », the button of a rail
-/// that opens its drawer.
-class GaletDots extends StatelessWidget {
-  const GaletDots({super.key, this.size = 26, this.color});
-  final double size;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) => SizedBox.square(
-    dimension: size,
-    child: CustomPaint(painter: _DotsPainter(color ?? studioInk)),
-  );
-}
-
-class _DotsPainter extends CustomPainter {
-  const _DotsPainter(this.color);
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color;
-    final step = size.width / 3;
-    for (var row = 0; row < 3; row++) {
-      for (var column = 0; column < 3; column++) {
-        canvas.drawCircle(
-          Offset(step * (column + .5), step * (row + .5)),
-          size.width * .095,
-          paint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DotsPainter old) => old.color != color;
+  bool shouldRepaint(GaletSheetShadow old) =>
+      old.sheet != sheet || !identical(old.look, look);
 }
 
 /// A round of every hue: the button of « Toutes les couleurs ».

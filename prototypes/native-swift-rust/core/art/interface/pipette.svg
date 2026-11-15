@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Pipette », qui reprend une couleur du dessin (Color 1.2, « Les galets »). Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Pipette</title>
+  <path d="M12 52 L14 43 L33 24 L40 31 L21 50 Z" fill="#a8d8f0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M31 20 L44 33" fill="none" stroke="#293d4b" stroke-width="9" stroke-linecap="round"/>
+  <path d="M31 20 L44 33" fill="none" stroke="#ffcd62" stroke-width="4" stroke-linecap="round"/>
+  <path d="M39 25 L46 12 C50 6 58 14 52 18 Z" fill="#9a82c9" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="11" cy="55" r="3" fill="#ed8c88"/>
+</svg>

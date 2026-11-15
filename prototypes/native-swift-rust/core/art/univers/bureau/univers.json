@@ -4,9 +4,7 @@
  "about": "La lumière change avec l’heure, et le chat dort.",
  "look": {
   "colours": {},
-  "shapes": {
-   "panelShadow": "soft"
-  }
+  "shapes": {}
  },
  "decor": {
   "size": [

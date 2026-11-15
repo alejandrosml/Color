@@ -447,17 +447,17 @@ void main() {
     expect(desk.ink, classic.ink);
     expect(desk.accent, classic.accent);
     expect(desk.background, classic.background);
-    expect(desk.buttonRadius, classic.buttonRadius);
-    expect(desk.buttonDashed, isFalse);
-    expect(desk.tool, ToolShape.tile);
-    // Softer shadows under its cards, and nothing else.
-    expect(desk.panelShadow, PanelShadow.soft);
+    // The very look of « Classique » : round pebbles, light ones.
+    expect(identical(desk, classic), isTrue);
+    expect(desk.galetRadius, 999);
+    expect(desk.night, isFalse);
+    expect(desk.galetDisc, isNull);
     final paper = catalog.named('papier').look;
     expect(paper.background, const Color(0xffd9bd92));
-    expect(paper.buttonDashed, isTrue);
-    expect(paper.buttonRadius, 5);
-    expect(paper.panelShadow, PanelShadow.paper);
-    expect(paper.tool, ToolShape.sticker);
+    // Pebbles cut out of paper: hardly round, and light.
+    expect(paper.galetRadius, 12);
+    expect(paper.night, isFalse);
+    expect(paper.galetDisc, isNull);
     expect(paper, isNot(classic));
   }, skip: !available);
 
@@ -471,7 +471,7 @@ void main() {
       for (final (name, text, surface) in look.textOnSurface) {
         expect(
           contrast(text, surface),
-          greaterThanOrEqualTo(name == 'nom Color' ? 3 : 4.5),
+          greaterThanOrEqualTo(4.5),
           reason:
               '$universe, $name : ${contrast(text, surface).toStringAsFixed(2)}',
         );
@@ -495,14 +495,18 @@ void main() {
         'ink': '#102030',
         'accent': 'rouge',
         'line': '#11223344',
-        'title': 7,
+        'caption': 7,
+        // What only the studio of before read is no longer known, and
+        // stops nothing: an older description still dresses the studio.
+        'banner': '#f7c9d9',
       },
       'shapes': {
-        'buttonRadius': 5,
-        'panelRadius': -3,
+        'galetRadius': 5,
+        'stageRadius': -3,
         'stageBorder': 99,
-        'tool': 'rond',
-        'panelShadow': 'paper',
+        'shadowDepth': 9,
+        'tool': 'sticker',
+        'buttonDashed': true,
       },
     });
     expect(look.ink, const Color(0xff102030));
@@ -510,12 +514,17 @@ void main() {
     expect(look.line, const Color(0x44112233));
     // What is not a colour, or out of bounds, keeps its default.
     expect(look.accent, StudioLook.classic.accent);
-    expect(look.title, StudioLook.classic.title);
-    expect(look.buttonRadius, 5);
-    expect(look.panelRadius, StudioLook.classic.panelRadius);
+    expect(look.caption, StudioLook.classic.caption);
+    expect(look.galetRadius, 5);
+    expect(look.stageRadius, StudioLook.classic.stageRadius);
     expect(look.stageBorder, StudioLook.classic.stageBorder);
-    expect(look.tool, ToolShape.tile);
-    expect(look.panelShadow, PanelShadow.paper);
+    expect(look.shadowDepth, 1);
+    // Light pebbles unless it says « nuit » : no round under a picture,
+    // no line around a pebble, the shadow of always.
+    expect(look.night, isFalse);
+    expect(look.galetDisc, isNull);
+    expect(look.galetEdge, isNull);
+    expect(look.shadow, StudioLook.classic.shadow);
     expect(StudioLook.parseColour('#fff'), isNull);
     expect(StudioLook.parseColour('ffffff'), isNull);
   });

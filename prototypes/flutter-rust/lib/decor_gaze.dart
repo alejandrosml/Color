@@ -32,7 +32,9 @@ import 'package:flutter/services.dart';
 import 'decor.dart';
 import 'decor_motion.dart';
 import 'decor_view.dart';
+import 'galets.dart';
 import 'language.dart';
+import 'studio_colors.dart';
 import 'universe.dart';
 
 /// Shows the decor of [universe] on the whole screen, and completes when
@@ -327,6 +329,9 @@ class _DecorGazeState extends State<DecorGaze> {
                             safe: safe.copyWith(
                               bottom: media.viewPadding.bottom,
                             ),
+                            // The card of a thing wears the universe that
+                            // is looked at, not that of the studio.
+                            look: widget.universe.look,
                           ),
                         ),
                       ),
@@ -336,6 +341,7 @@ class _DecorGazeState extends State<DecorGaze> {
                         shown: _button,
                         fade: calm ? Duration.zero : DecorGaze.fade,
                         onLeave: _leave,
+                        look: widget.universe.look,
                       ),
                     ),
                   ],
@@ -349,22 +355,22 @@ class _DecorGazeState extends State<DecorGaze> {
   }
 }
 
-// « ← Mon dessin » : the way back. Its colours are its own, the same on
-// every decor, as those of a card: a light button, dark letters. Faded, a
-// press goes through it to the decor — and brings it back — but a screen
-// reader and switch control still find it and can press it.
+// « ← Mon dessin » : the way back, a pebble in the look of the universe
+// that is looked at (Color 1.2, step G3) — its surface, its ink, its
+// shadow, the letters of the pebbles. Faded, a press goes through it to
+// the decor — and brings it back — but a screen reader and switch control
+// still find it and can press it.
 class _LeaveButton extends StatelessWidget {
   const _LeaveButton({
     required this.shown,
     required this.fade,
     required this.onLeave,
+    required this.look,
   });
   final bool shown;
   final Duration fade;
   final VoidCallback onLeave;
-
-  static const paper = Color(0xfffffdf6);
-  static const ink = Color(0xff22303f);
+  final StudioLook look;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -381,39 +387,46 @@ class _LeaveButton extends StatelessWidget {
           key: const Key('leaveDecorGazeFade'),
           opacity: shown ? 1 : 0,
           duration: fade,
-          child: Material(
-            color: paper,
-            elevation: 6,
-            shadowColor: const Color(0x99141e32),
-            shape: const StadiumBorder(
-              side: BorderSide(color: Color(0xff293d4b), width: 2.5),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              canRequestFocus: false,
-              onTap: onLeave,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.arrow_back_rounded, size: 30, color: ink),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        tr('Mon dessin'),
-                        maxLines: 1,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: ink,
+          child: LayoutBuilder(
+            builder: (context, room) {
+              final corners = galetCorners(room.maxHeight, look: look);
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  color: look.surface,
+                  borderRadius: corners,
+                  boxShadow: galetPanelShadow(look),
+                ),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    canRequestFocus: false,
+                    borderRadius: corners,
+                    onTap: onLeave,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.arrow_back_rounded,
+                          size: 30,
+                          color: look.ink,
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              tr('Mon dessin'),
+                              maxLines: 1,
+                              style: galetText(20, bold: true, color: look.ink),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
         ),
       ),

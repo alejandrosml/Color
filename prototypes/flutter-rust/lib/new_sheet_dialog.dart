@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import 'vector_art.dart';
 import 'language.dart';
+import 'studio_colors.dart';
+import 'studio_theme.dart';
 
 /// What « Nouveau » starts: an empty sheet of one shape, or a colouring page
 /// on the sheet it was drawn for.
@@ -166,18 +168,16 @@ class _NewSheetDialogState extends State<NewSheetDialog> {
                           horizontal: 12,
                           vertical: 8,
                         ),
+                        // A tile of the pebbles: the chosen one in the
+                        // colour of a choice, a line of the accent around.
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: _selected == shape
-                                ? const Color(0xff846bae)
-                                : const Color(0xffd9e6e3),
-                            width: _selected == shape ? 2 : 1,
-                          ),
+                          borderRadius: studioPanelCorners(18),
+                          side: _selected == shape
+                              ? BorderSide(color: studioGreen, width: 2.5)
+                              : BorderSide.none,
                         ),
-                        tileColor: _selected == shape
-                            ? const Color(0xfff1ebfa)
-                            : Colors.white,
+                        tileColor: studioTile().color,
+                        selectedTileColor: studioSelected,
                         controlAffinity: ListTileControlAffinity.trailing,
                         title: Text(
                           shape.label,
@@ -196,7 +196,7 @@ class _NewSheetDialogState extends State<NewSheetDialog> {
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(4),
                                     border: Border.all(
-                                      color: const Color(0xff526f70),
+                                      color: StudioLook.pictureInk,
                                       width: 2,
                                     ),
                                   ),
@@ -311,18 +311,17 @@ class _PageButton extends StatelessWidget {
           minimumSize: const Size(48, 48),
           padding: const EdgeInsets.all(6),
           alignment: Alignment.topCenter,
-          backgroundColor: Colors.white,
+          backgroundColor: studioTile().color,
+          foregroundColor: studioInk,
           visualDensity: VisualDensity.standard,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: studioPanelCorners(18)),
         ).copyWith(
           // The page that the keyboard reached is framed like a chosen
           // shape.
           side: WidgetStateProperty.resolveWith(
             (states) => states.contains(WidgetState.focused)
-                ? const BorderSide(color: Color(0xff846bae), width: 2)
-                : const BorderSide(color: Color(0xffd9e6e3)),
+                ? BorderSide(color: studioGreen, width: 2.5)
+                : BorderSide.none,
           ),
         ),
     // One name on the button itself, which keeps its own action: the
@@ -339,7 +338,7 @@ class _PageButton extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: const Color(0xffb9c9c6)),
+                border: Border.all(color: studioSwatchRing),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(2),

@@ -41,9 +41,14 @@ flutter:
     # Fonts 1 to 4 of texts (Color 1.1): Latin subsets made by
     # scripts/preparer-les-polices.py from the whole fonts in fonts/source/,
     # which are not carried. SIL Open Font License, no reserved name.
+    # Its bold is the one of the interface (Color 1.2: « Les galets » and
+    # the dialogs are written in Atkinson Hyperlegible); a text of a sheet
+    # is never bold, and keeps the regular one.
     - family: ColorAtkinson
       fonts:
         - asset: fonts/AtkinsonHyperlegible.ttf
+        - asset: fonts/AtkinsonHyperlegible-Bold.ttf
+          weight: 700
     - family: ColorComic
       fonts:
         - asset: fonts/ComicNeue.ttf

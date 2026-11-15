@@ -215,7 +215,7 @@ void main() {
       await tester.runAsync(loadReviewFonts);
       // The pipette is one of the colours « pour les grands ».
       await start(tester, const Size(1280, 900), options: grownUpOptions());
-      await shot(tester, '30-outils-une-colonne');
+      await shot(tester, '30-atelier-1280');
       await tap(tester, 'tool-rectangle');
       await drag(tester, const Offset(-200, -80), const Offset(-60, 40));
       await tap(tester, 'tool-ellipse');
@@ -254,10 +254,10 @@ void main() {
 
       tester.view.physicalSize = const Size(1100, 760);
       await tester.pumpAndSettle();
-      await shot(tester, '41-outils-deux-colonnes');
+      await shot(tester, '41-atelier-1100');
       tester.view.physicalSize = const Size(700, 620);
       await tester.pumpAndSettle();
-      await shot(tester, '42-fenetre-etroite-outils');
+      await shot(tester, '42-fenetre-etroite-700');
       // « Dessiner en grand » is offered only where the sheet gains by it.
       if (find.byKey(const Key('bigSheet')).evaluate().isNotEmpty) {
         await tap(tester, 'bigSheet');
@@ -362,11 +362,11 @@ void main() {
       await tap(tester, 'cancelGalleryForget');
       await tap(tester, 'closeGallery');
 
-      // The top bar at other widths: one line when everything fits.
+      // The pebbles of the top at other widths.
       for (final width in const [1180.0, 1100.0, 1000.0, 860.0]) {
         tester.view.physicalSize = Size(width, 760);
         await tester.pumpAndSettle();
-        await shot(tester, '54-barre-du-haut-${width.round()}');
+        await shot(tester, '54-galets-du-haut-${width.round()}');
       }
       tester.view.physicalSize = const Size(700, 620);
       await tester.pumpAndSettle();
