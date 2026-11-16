@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 // The trial of the published Windows version (scripts/windows-desktop/
 // essai-publie.py) prints with the real pointer of Windows: it clicks
-// « Mon dessin », then its tile « Imprimer », at two points written in the
-// script. Those points are read here and pressed in the same window — 1264 x
-// 681 inside, in English, the language of the machines of GitHub, with the
-// letters of the application —: when the header or the panel moves, this test
-// fails before a published version is tried with the old points.
+// « Mon dessin », then its tile « Imprimer », at the two points of
+// windows_trial_points.json, beside this test. They are pressed here in a
+// window of the same size — in English, the language of the machines of
+// GitHub, with the letters of the application —: when the header or the
+// panel moves, this test fails before a published version is tried with the
+// old points.
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:edupaint_flutter_study/language.dart';
@@ -18,28 +20,23 @@ import 'support/interface_font.dart';
 import 'support/memory_gallery.dart';
 import 'support/studio_driver.dart';
 
-/// The point named [name] in the trial: `NAME = (x, y)`.
-Offset pointOfTheTrial(String script, String name) {
-  final found = RegExp(
-    '^$name = \\((\\d+), (\\d+)\\)\$',
-    multiLine: true,
-  ).firstMatch(script);
-  if (found == null) {
-    throw StateError('essai-publie.py names no point $name');
-  }
-  return Offset(double.parse(found[1]!), double.parse(found[2]!));
-}
-
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
   testWidgets(
     'the points of the Windows trial press « Mon dessin », then « Imprimer »',
     (tester) async {
-      final script = File('../../scripts/windows-desktop/essai-publie.py')
-          .readAsStringSync();
-      final myDrawing = pointOfTheTrial(script, 'MY_DRAWING');
-      final printTile = pointOfTheTrial(script, 'PRINT_TILE');
+      final points = jsonDecode(
+        File('test/windows_trial_points.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
+      Offset point(String name) {
+        final [x, y] = (points[name] as List).cast<num>();
+        return Offset(x.toDouble(), y.toDouble());
+      }
+
+      final window = point('window');
+      final myDrawing = point('my_drawing');
+      final printTile = point('print_tile');
       await loadInterfaceFont(tester);
       appLanguage.value = AppLanguage.english;
       // The album is there, as in the published version: « Mes dessins »
@@ -50,7 +47,7 @@ void main() {
         gallery: MemoryGallery(),
         printer: printer.call,
       );
-      await studio.start(size: const Size(1264, 681));
+      await studio.start(size: Size(window.dx, window.dy));
 
       // Well inside, not on an edge: a few pixels of difference between two
       // machines still press the same thing.

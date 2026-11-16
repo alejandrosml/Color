@@ -57,11 +57,13 @@ record = {'scope': 'The published Color, downloaded from its release and used wi
 IDOK = 1
 # Since Color 1.2, « Imprimer » waits in « Mon dessin », the first pebble at
 # the top left: the last tile of its second row. Where both stand in the
-# window of this trial (1264 x 681 inside), written in the letters of the
-# application: test/windows_trial_positions_test.dart measures them, and fails
-# when they move.
-MY_DRAWING = (113, 44)
-PRINT_TILE = (328, 275)
+# window of this trial is written beside the tests of the application, whose
+# test/windows_trial_positions_test.dart presses them in the same window and
+# fails when they move.
+POINTS = json.loads((here.parents[1] / 'prototypes' / 'flutter-rust' / 'test' / 'windows_trial_points.json')
+                    .read_text(encoding='utf-8'))
+MY_DRAWING = tuple(POINTS['my_drawing'])
+PRINT_TILE = tuple(POINTS['print_tile'])
 # The title of the print dialog of Windows, in English and in French.
 PRINT_DIALOG_TITLES = {'Print', 'Imprimer'}
 
@@ -231,7 +233,9 @@ try:
                               str(here / 'imprimante-d-essai.ps1'), str(port)], capture_output=True, text=True,
                              errors='replace')
     (report / 'imprimante.log').write_text(printer.stdout + printer.stderr, encoding='utf-8')
-    record['printing'] = {'trial_printer_made': printer.returncode == 0}
+    # The points to press were measured in a window of this size.
+    record['printing'] = {'trial_printer_made': printer.returncode == 0,
+                          'window_as_measured': [wide, high] == POINTS['window']}
     if printer.returncode == 0:
         ask_to_print(window, '04-mon-dessin')
         dialog = await_dialog(process.pid)
