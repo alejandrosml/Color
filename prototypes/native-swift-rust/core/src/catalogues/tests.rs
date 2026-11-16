@@ -52,7 +52,7 @@ fn every_core_serves_the_pictures_and_the_pages() {
 #[test]
 fn every_core_serves_the_universes() {
     let count = ep_universe_count();
-    assert_eq!(count, 7);
+    assert_eq!(count, 8);
     let mut keys = Vec::new();
     for index in 0..count {
         let universe = text(ep_universe(index));
@@ -113,7 +113,8 @@ fn every_core_serves_the_universes() {
             "mer",
             "espace",
             "foret",
-            "campagne"
+            "campagne",
+            "montagne"
         ]
     );
     assert!(ep_universe(count).is_null());

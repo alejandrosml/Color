@@ -36,11 +36,20 @@ void main() {
   ];
 
   test('the core has « Classique », the desk by the window, paper and pencils, '
-      'the sea, space, the forest and the countryside', () {
+      'the sea, space, the forest, the countryside and the mountain', () {
     final catalog = UniverseCatalog.instance;
     expect(
       [for (final u in catalog.universes) u.key],
-      ['classique', 'bureau', 'papier', 'mer', 'espace', 'foret', 'campagne'],
+      [
+        'classique',
+        'bureau',
+        'papier',
+        'mer',
+        'espace',
+        'foret',
+        'campagne',
+        'montagne',
+      ],
     );
     expect(catalog.first.frenchName, 'Classique');
     expect(catalog.universes[1].frenchName, 'Le bureau près de la fenêtre');
@@ -49,8 +58,9 @@ void main() {
     expect(catalog.universes[4].frenchName, 'L’espace');
     expect(catalog.universes[5].frenchName, 'La forêt');
     expect(catalog.universes[6].frenchName, 'La campagne');
-    expect(RustDocument.universeCount(), 7);
-    expect(RustDocument.readUniverse(7), isNull);
+    expect(catalog.universes[7].frenchName, 'La montagne');
+    expect(RustDocument.universeCount(), 8);
+    expect(RustDocument.readUniverse(8), isNull);
     expect(RustDocument.readUniverse(-1), isNull);
     expect(catalog.named('papier').key, 'papier');
     expect(catalog.named('classique').key, 'classique');
@@ -237,6 +247,7 @@ void main() {
     expect(catalog.named('espace').decor!.names, hasLength(14));
     expect(catalog.named('foret').decor!.names, hasLength(14));
     expect(catalog.named('campagne').decor!.names, hasLength(13));
+    expect(catalog.named('montagne').decor!.names, hasLength(10));
     for (final universe in decorated()) {
       final decor = universe.decor!;
       final frame = Offset.zero & decor.size;
@@ -565,6 +576,32 @@ void main() {
     for (final decor in [forest, country]) {
       expect(decor.middleBox, isNull);
     }
+  }, skip: !available);
+
+  test('the mountain: light pebbles, a cabin that climbs its cable, an eagle '
+      'that soars, nothing named under the sheet', () {
+    final universe = UniverseCatalog.instance.named('montagne');
+    expect(universe.look.night, isFalse);
+    final decor = universe.decor!;
+    expect(decor.groundAbove, isFalse);
+    expect(decor.followsTheHour, isFalse);
+    expect(decor.front.$1.g, greaterThan(decor.front.$1.r));
+    expect(
+      [for (final piece in decor.still) piece.picture],
+      ['fond', 'gauche', 'droite'],
+    );
+    expect(
+      [for (final piece in decor.live) piece.move!.name],
+      ['nuage', 'nuage', 'cabine', 'plane'],
+    );
+    // The cabin hangs on the cable by the top of its arm, and climbs it
+    // from its station on the meadow: its origin is where it hangs.
+    final cabin = decor.pieces.singleWhere(
+      (piece) => piece.picture == 'cabine',
+    );
+    expect(cabin.move!.originX, closeTo(cabin.at!.center.dx, .01));
+    expect(cabin.move!.originY, lessThan(cabin.at!.top + 2));
+    expect(decor.middleBox, isNull);
   }, skip: !available);
 
   test('every text of every universe can be read on its surface', () {

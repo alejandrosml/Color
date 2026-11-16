@@ -1,0 +1,257 @@
+{
+ "key": "montagne",
+ "name": "La montagne",
+ "about": "Des sommets, un chalet et une marmotte.",
+ "look": {
+  "colours": {
+   "ink": "#1f3340",
+   "accent": "#b8322b",
+   "background": "#e6f0f7",
+   "line": "#b7cfe0",
+   "surface": "#fbfdff",
+   "selected": "#ffe8e3",
+   "sheetBackdrop": "#dbeaf4",
+   "previewBox": "#eaf2f8",
+   "caption": "#45606f",
+   "statusText": "#1f3340",
+   "sheetTitle": "#1f3340",
+   "sheetCaption": "#1f3340",
+   "quietMark": "#6f8899",
+   "swatchRing": "#5f7a8c",
+   "shadow": "#1f3340"
+  },
+  "shapes": {
+   "stageRadius": 20,
+   "stageBorder": 2
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#bfe0f6",
+  "front": [
+   "#8fca72",
+   "#84bf67",
+   "#6fa856"
+  ],
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "nuage",
+    "anchor": "left",
+    "at": [
+     100,
+     75,
+     115,
+     115
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 34
+    }
+   },
+   {
+    "picture": "nuage",
+    "anchor": "right",
+    "at": [
+     830,
+     60,
+     112,
+     112
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 40,
+     "delay": -9
+    }
+   },
+   {
+    "picture": "cabine",
+    "anchor": "right",
+    "at": [
+     1003,
+     273.2,
+     30,
+     30
+    ],
+    "move": {
+     "name": "cabine",
+     "seconds": 22,
+     "origin": [
+      1018,
+      274.1
+     ]
+    }
+   },
+   {
+    "picture": "aigle",
+    "anchor": "left",
+    "at": [
+     82,
+     62,
+     22,
+     22
+    ],
+    "move": {
+     "name": "plane",
+     "seconds": 16,
+     "origin": [
+      93,
+      73
+     ]
+    }
+   }
+  ],
+  "names": [
+   {
+    "key": "sommet",
+    "anchor": "left",
+    "at": [
+     90,
+     50,
+     84,
+     104
+    ],
+    "name": "Le sommet enneigé",
+    "text": "Tout là-haut, il fait si froid que la neige reste toute l’année, même en été.",
+    "source": "CNRTL (TLFi) — Définition de NEIGE — https://www.cnrtl.fr/definition/neige ; Encyclopaedia Britannica — snow line — https://www.britannica.com/science/snow-line-topography"
+   },
+   {
+    "key": "chalet",
+    "anchor": "left",
+    "at": [
+     18,
+     242,
+     112,
+     81
+    ],
+    "name": "Le chalet",
+    "text": "Une maison de montagne en bois et en pierre, avec un grand toit pour porter la neige.",
+    "source": "Encyclopaedia Britannica — Chalet — https://www.britannica.com/technology/chalet ; Saint-Gervais Mont-Blanc (site officiel) — Fiche technique « La toiture » (chalets d’alpage) — https://www.saintgervais.com/app/uploads/saint-gervais/2023/09/06_toiture.pdf"
+   },
+   {
+    "key": "sapin",
+    "anchor": "left",
+    "at": [
+     136,
+     258,
+     126,
+     59
+    ],
+    "name": "Les sapins",
+    "text": "Leurs aiguilles restent vertes toute l’année, même sous la neige.",
+    "source": "Encyclopaedia Britannica — fir — https://www.britannica.com/plant/fir ; Institut fédéral de recherches WSL (waldwissen.net) — Le sapin pectiné ou sapin blanc (Abies alba) — https://www.waldwissen.net/fr/habitat-forestier/arbres-et-arbustes/resineux/le-sapin-pectine-ou-sapin-blanc"
+   },
+   {
+    "key": "lac",
+    "anchor": "left",
+    "at": [
+     133,
+     317,
+     130,
+     14
+    ],
+    "name": "Le lac de montagne",
+    "text": "Son eau vient surtout de la neige fondue : elle est souvent très claire et très froide.",
+    "source": "Parc national de la Vanoise — Les lacs d’altitude et le changement climatique — https://www.vanoise-parcnational.fr/sites/vanoise-parcnational.fr/files/2024-03/Les%20lacs%20d%27altitude%20et%20le%20changement%20climatique.pdf"
+   },
+   {
+    "key": "marmotte",
+    "anchor": "left",
+    "at": [
+     229,
+     358,
+     23,
+     33
+    ],
+    "name": "La marmotte",
+    "text": "Elle siffle pour prévenir ses amies du danger, et dort tout l’hiver dans son terrier.",
+    "source": "Encyclopaedia Britannica — marmot — https://www.britannica.com/animal/marmot ; Parc national des Écrins — Le mémo scientifique du parc : des nouvelles de la marmotte des Alpes — https://www.ecrins-parcnational.fr/sites/ecrins-parcnational.com/files/fiche_doc/25639/livretmarmotte-versionnumerique.pdf"
+   },
+   {
+    "key": "edelweiss",
+    "anchor": "left",
+    "at": [
+     167,
+     391,
+     23,
+     16
+    ],
+    "name": "L’edelweiss",
+    "text": "Une fleur blanche toute douce, comme couverte de laine. On la regarde, mais on ne la cueille pas.",
+    "source": "Parc national de la Vanoise — Sur les traces de… l’edelweiss des Alpes (fiche espèce) — https://www3.vanoise-parcnational.fr/sites/vanoise-parcnational.fr/files/2025-05/Fiche%20esp%C3%A8ce%20edelweiss%20version%20fran%C3%A7ais.pdf ; AIDA (INERIS) — Arrêté du 13/10/89 relatif à la liste des espèces végétales sauvages pouvant faire l’objet d’une réglementation préfectorale permanente ou temporaire — https://aida.ineris.fr/reglementation/arrete-131089-relatif-a-liste-especes-vegetales-sauvages-pouvant-faire-lobjet-dune"
+   },
+   {
+    "key": "gentiane",
+    "anchor": "left",
+    "at": [
+     198.5,
+     395,
+     14.5,
+     10
+    ],
+    "name": "La gentiane",
+    "text": "Une fleur, souvent d’un bleu très profond, qui pousse dans l’herbe des alpages.",
+    "source": "Parc national des Pyrénées — À la découverte de la flore : quelques plantes emblématiques du Parc national des Pyrénées — https://www2.pyrenees-parcnational.fr/sites/pyrenees-parcnational.fr/files/documents/downloads/pnp_dep5v_decouverte_flore_bat.pdf ; Encyclopaedia Britannica — gentian — https://www.britannica.com/plant/gentian"
+   },
+   {
+    "key": "bouquetin",
+    "anchor": "right",
+    "at": [
+     835,
+     264,
+     63,
+     75
+    ],
+    "name": "Le bouquetin",
+    "text": "Avec ses grandes cornes, il grimpe sur les rochers les plus raides, là où presque personne ne va.",
+    "source": "Parc national de la Vanoise — Sur les traces de… Le bouquetin des Alpes — https://www.vanoise-parcnational.fr/sites/vanoise-parcnational.fr/files/2024-06/Bouquetin.pdf ; Encyclopaedia Britannica — ibex — https://www.britannica.com/animal/ibex"
+   },
+   {
+    "key": "telepherique",
+    "anchor": "right",
+    "at": [
+     1008,
+     273,
+     53,
+     43
+    ],
+    "name": "Le téléphérique",
+    "text": "Une cabine suspendue à des câbles, qui monte et descend la montagne.",
+    "source": "CNRTL (TLFi) — Définition de TÉLÉPHÉRIQUE — https://www.cnrtl.fr/definition/t%C3%A9l%C3%A9ph%C3%A9rique ; Oxford Learner’s Dictionaries — cable car — https://www.oxfordlearnersdictionaries.com/definition/english/cable-car"
+   },
+   {
+    "key": "aigle",
+    "anchor": "left",
+    "at": [
+     80,
+     64,
+     26,
+     19
+    ],
+    "name": "L’aigle royal",
+    "text": "Il plane très haut sans battre des ailes, et voit une marmotte de très loin.",
+    "source": "Larousse (encyclopédie, vie sauvage) — aigle royal — https://www.larousse.fr/encyclopedie/vie-sauvage/aigle_royal/178161 ; Parc national des Écrins — À la rencontre des animaux en montagne : l’aigle royal — https://geonature.ecrins-parcnational.fr/api/media/taxhub/2645_1665_Livre_ANIMAUX_EN_MONTAGNE_-_Laigle_royal.pdf"
+   }
+  ]
+ }
+}

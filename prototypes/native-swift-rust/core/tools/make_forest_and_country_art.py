@@ -37,6 +37,7 @@ And for what the owner saw on the mock-up of the countryside (16 November
 her four legs stand on one line, each with its hoof; the tractor is larger
 than the sheep, and the windmill a little larger.
 """
+import math
 import sys
 from pathlib import Path
 
@@ -58,6 +59,44 @@ def scaled(elements, x, y, factor, dx=0.0, dy=0.0):
         x + dx, y + dy, factor, -x, -y, text_of(elements))
 
 
+# The sizes of the forest (16 November 2026), seen as a child crouching in
+# a clearing sees it: the small things of the forest floor, close, at
+# FOREST_FRONT units per metre; the trees, some thirty metres away, whole,
+# at about FOREST_TREES (an oak of 30 m; a birch of 25 m, made smaller).
+# Each small thing is made its real size about its feet.
+FOREST_FRONT, FOREST_TREES = 75, 7.7
+BIRCH = .8  # 262 units high, made 210: 27 m beside the oak's 30
+FOREST_SMALL = (  # item, its feet x and y, factor, then a move
+    (125, 196, 393.5, .25, 0, 0),  # a small fly agaric, 8 cm
+    (126, 214, 389, .28, 0, 0),  # the large fly agaric, 18 cm
+    (127, 236, 394, .28, 0, 0),  # another, 12 cm
+    (130, 166, 401, .77, 0, 0),  # an ox-eye daisy, 45 cm
+    (131, 180, 405, .77, 0, 0),  # another, 35 cm
+    (133, 250, 399, .7, -8, 0),  # a poppy, 45 cm
+    (134, 262, 405, .7, -8, 0),  # another, 35 cm
+    # The squirrel (22 cm sitting) leaves the foot of the oak, too far
+    # for so small an animal, for the front; the hedgehog (25 cm long)
+    # stays in front too.
+    (137, 142, 362.5, .49, -6, 40.5),
+    (138, 291.75, 404.5, .52, -184, 0),
+)
+FOREST_FLOWERS = (  # the small flowers of the clearing, each about its foot
+    (139, 350, 402), (140, 470, 404), (141, 612, 402), (142, 722, 404),
+    (143, 410, 404), (144, 566, 405), (145, 680, 404),
+)
+FOREST_SMALL_RIGHT = (
+    (128, 928, 401, .33, 0, 0),  # a cep, 15 cm
+    (129, 944, 404, .28, 0, 0),  # a small one, 8 cm
+    (132, 1012, 373, .6, -34, 0),  # a daisy by the fern, 50 cm
+    (135, 806, 401, .58, 10, 0),  # bluebells, 30 cm
+    (136, 856, 403, .58, 10, 0),
+)
+
+
+def _small(kids, things):
+    return ''.join(scaled(pick(kids, i), x, y, f, dx, dy) for i, x, y, f, dx, dy in things)
+
+
 def foret(mockups):
     source = mockups / 'serie-3' / 'decors'
     out = HERE / 'foret'
@@ -71,35 +110,35 @@ def foret(mockups):
     # grass: the ground, under the sheet too.
     ground = (
         text_of(pick(kids, (1, 68))) + rays
-        + text_of(pick(kids, (112, 115), 119, 124, (139, 333)))
+        + text_of(pick(kids, (112, 115), 119, 124))
+        + ''.join(scaled(pick(kids, i), x, y, .7) for i, x, y in FOREST_FLOWERS)
+        + text_of(pick(kids, (146, 333)))
     )
     write(out, 'fond', ground, sky + FADE)
     # The trunk of the oak is still; its crown sways (`chene`).
     assert kids[115].get('transform', '').startswith('translate(100.0 358.0)')
+    assert kids[136].get('transform', '').startswith('translate(142.0 360.0)')  # the squirrel
     assert kids[137].get('transform', '').startswith('translate(292.0 402.0)')  # the hedgehog
     left = (
         moved(pick(kids, (71, 89)), -6, 0)  # the spruce, clear of the sheet
         + text_of(pick(kids, 116))
         + moved(pick(kids, 120), 24, 0)  # the fern, inside the left edge
-        + text_of(pick(kids, (125, 127), (130, 131)))
-        + moved(pick(kids, (133, 134)), -8, 0)  # the poppies
-        + text_of(pick(kids, 137))
-        + moved(pick(kids, 138), -184, 0)  # the hedgehog, at the foot of the oak
+        + _small(kids, FOREST_SMALL)
     )
     write(out, 'gauche', left)
     assert kids[117].get('transform', '').startswith('translate(1000.0 354.0)')  # the beech
     right = (
-        text_of(pick(kids, (90, 111), 117))
+        text_of(pick(kids, (90, 111)))
+        + scaled(pick(kids, 117), 880, 362, BIRCH)  # the trunk of the birch
         + moved(pick(kids, 118), -18, 0)  # the beech, its crown inside the frame
         + moved(pick(kids, 121), -24, 0)  # the fern
         + moved(pick(kids, 122), 10, 0)  # the bush, clear of the sheet
-        + text_of(pick(kids, 123, (128, 129)))
-        + moved(pick(kids, 132), -34, 0)  # the daisy, out of the fern
-        + moved(pick(kids, (135, 136)), 10, 0)  # the bluebells, with the bush
+        + text_of(pick(kids, 123))  # the stump
+        + _small(kids, FOREST_SMALL_RIGHT)
     )
     write(out, 'droite', right)
     write(out, 'chene', text_of(layer(source, 'c-foret-chene')))
-    write(out, 'bouleau', text_of(layer(source, 'c-foret-bouleau')))
+    write(out, 'bouleau', scaled(layer(source, 'c-foret-bouleau'), 880, 362, BIRCH))
     write(out, 'hetre', moved(layer(source, 'c-foret-hetre'), -18, 0))
     for name in ('nuage', 'feuille', 'papillon', 'rougegorge'):
         copy(mockups / 'decors' / ('d-%s.svg' % name), out, name)
@@ -168,7 +207,205 @@ def cow(element):
         COW_TAIL + COW_FAR_LEGS + COW_UDDER + COW_NEAR_LEGS + text_of(body) + text_of(head))
 
 
+# The tractor, drawn again (16 November 2026) after drawings of tractors
+# seen from the side, and at the size of a real one beside the cow: a
+# tractor of 100 hp with a cab, as Terre-net measured one (3.93 m long,
+# 2.73 m high, 2.25 m between its axles, rear tyres 480/70 R34 of 1.54 m,
+# front tyres 380/70 R24 of 1.14 m), while a Prim'Holstein cow stands
+# 1.45 m at the withers (54 units of her drawing, outline included). Its
+# numbers are decimetres, y up, the rear axle at x = 0 and the ground at
+# y = 0; its group turns them into units: 3.72 units to the decimetre.
+TRACTOR_SCALE = 3.72
+RED, DARK_RED, METAL, GLASS = '#d9433b', '#b9382f', '#5b6168', '#bfe3f2'
+
+
+def _xy(x, y):
+    return '%s %s' % (_number(x), _number(-y))
+
+
+def _poly(points):
+    return 'M' + ' L'.join(_xy(x, y) for x, y in points) + ' Z'
+
+
+def _path(d, fill, width, extra=''):
+    return '<path d="%s" fill="%s" stroke-width="%s" %s%s />' % (d, fill, width, INK, extra)
+
+
+def _line(points, colour, width):
+    return '<path d="M%s" fill="none" stroke="%s" stroke-width="%s" stroke-linecap="round" />' % (
+        ' L'.join(_xy(x, y) for x, y in points), colour, width)
+
+
+def _circle(x, y, r, fill, width=None):
+    outline = '' if width is None else ' stroke-width="%s" %s' % (width, INK)
+    return '<circle cx="%s" cy="%s" r="%s" fill="%s"%s />' % (
+        _number(x), _number(-y), _number(r), fill, outline)
+
+
+def _band(cx, cy, inner, outer, start, end, fill, width=None):
+    """The band between two circles about (cx, cy), from the angle `start`
+    over the top to the angle `end` (degrees, from the right, y up): a
+    mudguard, or the shadow under one."""
+    def at(r, a):
+        return cx + r * math.cos(math.radians(a)), cy + r * math.sin(math.radians(a))
+    d = 'M%s A%s %s 0 0 1 %s L%s A%s %s 0 0 0 %s Z' % (
+        _xy(*at(outer, start)), _number(outer), _number(outer), _xy(*at(outer, end)),
+        _xy(*at(inner, end)), _number(inner), _number(inner), _xy(*at(inner, start)))
+    if width is None:
+        return '<path d="%s" fill="%s" />' % (d, fill)
+    return _path(d, fill, width)
+
+
+def _wheel(cx, cy, r, lug, lugs, rim, hub, bolts):
+    """A wheel seen from the side: the tyre and its bars, its yellow rim, the
+    dish of the rim, the hub and its bolts."""
+    step = 2 * math.pi / lugs
+    outline = []
+    for i in range(lugs):
+        for f, radius in ((0, r - lug), (.12, r), (.5, r), (.62, r - lug)):
+            a = (i + f) * step
+            outline.append((cx + radius * math.cos(a), cy + radius * math.sin(a)))
+    parts = [
+        _path(_poly(outline), '#3a3a3a', .5),
+        '<circle cx="%s" cy="%s" r="%s" fill="none" stroke="#545454" stroke-width=".3" />' % (
+            _number(cx), _number(-cy), _number(r - lug - .8)),
+        _circle(cx, cy, rim, '#f4c430', .45),
+        '<circle cx="%s" cy="%s" r="%s" fill="none" stroke="#d9a520" stroke-width=".5" />' % (
+            _number(cx), _number(-cy), _number(rim * .72)),
+        _circle(cx, cy, hub, '#c9ced3', .35),
+    ]
+    for i in range(bolts):
+        a = 2 * math.pi * i / bolts
+        parts.append(_circle(cx + hub * .62 * math.cos(a), cy + hub * .62 * math.sin(a), hub * .12, '#293d4b'))
+    parts.append(_circle(cx, cy, hub * .32, '#293d4b'))
+    return ''.join(parts)
+
+
+def tractor(x):
+    """The tractor, its rear axle at x, on the ground at y = 400, going to
+    the right."""
+    rear, front = (0, 7.7), (22.5, 5.7)
+    parts = [
+        # The hitch behind the rear wheel: its lower link and its top link.
+        _line([(-2.5, 4.8), (-9, 4.2)], '#293d4b', 1.1), _line([(-2.5, 4.8), (-9, 4.2)], METAL, .55),
+        _line([(-3, 9.6), (-8.6, 8.8)], '#293d4b', .9), _line([(-3, 9.6), (-8.6, 8.8)], '#8d97a1', .4),
+        # The engine and the gearbox, low between the wheels; the weights
+        # at the front.
+        _path(_poly([(-1, 4.6), (26.6, 4.6), (28.4, 6.2), (28.4, 10.6), (-1, 10.6)]), METAL, .4),
+        _path('M28.2 -5 H30.1 V-10 H28.2 Z', METAL, .45),
+        _line([(28.85, 5.5), (28.85, 9.5)], '#3a3a3a', .25), _line([(29.5, 5.5), (29.5, 9.5)], '#3a3a3a', .25),
+        # The cab: its glass on thick pillars, the seat and the steering
+        # wheel inside, the door with its handle, the roof and its lights.
+        _path(_poly([(-5.7, 12), (-6, 25), (10, 25), (10.4, 11), (6, 11)]), GLASS, .85),
+        _path('M-2.2 -17 L-1.5 -21.2 Q-1.2 -21.8 -.5 -21.5 L-.1 -17 Z', METAL, .3),
+        _line([(6.4, 16.9), (8.4, 18.5)], '#293d4b', .5), _line([(7.6, 17.6), (9.3, 14.4)], '#293d4b', .4),
+        _line([(3, 11), (2.7, 25)], '#293d4b', .8),
+        _line([(4.2, 15.6), (5.3, 15.6)], '#293d4b', .35),
+        _path('M-6.9 -24.6 H11.1 V-25.9 Q11.1 -26.6 10.4 -26.6 H-6.2 Q-6.9 -26.6 -6.9 -25.9 Z', RED, .5),
+        _path('M9.3 -24.9 H10.7 V-25.8 H9.3 Z', '#fff3c4', .25),
+        _path('M-6.5 -24.9 H-5.1 V-25.8 H-6.5 Z', '#fff3c4', .25),
+        # The bonnet, a little lower at the front, its grille, its lamp.
+        _path('M10.4 -10.4 V-17.6 L25 -16.9 Q28.4 -16.8 28.9 -14.8 V-10.4 Z', RED, .5),
+        _path('M25.9 -11.2 H28.3 V-14.2 H26.4 Z', '#3a3a3a', .3),
+        _line([(26.5, 12.2), (27.9, 12.2)], '#6a6a6a', .25), _line([(26.6, 13.2), (27.9, 13.2)], '#6a6a6a', .25),
+        _path('M26.9 -14.9 H28.5 V-15.9 H26.9 Z', '#fff3c4', .25),
+        _line([(13, 15.9), (24.5, 15.3)], DARK_RED, .45),
+        # The exhaust, up the front corner of the cab, as high as the roof.
+        _path(_poly([(11.1, 17), (11.1, 26.8), (12, 27.3), (12, 17)]), '#8d97a1', .4),
+        _path('M10.9 -18.2 H12.2 V-22.4 H10.9 Z', '#a9b0b7', .35),
+        # The step up to the door.
+        _path('M8 -4 H10.3 V-10.8 H8 Z', METAL, .4),
+        _line([(8.4, 6), (9.9, 6)], '#8d97a1', .45), _line([(8.4, 8.4), (9.9, 8.4)], '#8d97a1', .45),
+        # The rear wheel, the dark of its arch, its mudguard; the same at
+        # the front.
+        _band(*rear, 7.4, 8.4, 170, 35, '#2c3036'),
+        _wheel(*rear, 7.7, .45, 22, 4.3, 1.5, 8),
+        _band(*rear, 8.3, 9.6, 165, 40, DARK_RED, .5),
+        _band(*front, 5.5, 6.25, 155, 25, '#2c3036'),
+        _wheel(*front, 5.7, .38, 18, 3.05, 1.1, 6),
+        _band(*front, 6.2, 6.9, 150, 25, DARK_RED, .4),
+    ]
+    return '<g transform="translate(%s 400) scale(%s)">%s</g>' % (_number(x), TRACTOR_SCALE, ''.join(parts))
+
+
+SAILS = 82  # the half side of the place of the sails, in units
+SAIL = 80  # the length of a sail from the hub, in units: 8.5 m
+
+
+def sails():
+    """The four sails of the windmill, as long as a real mill's: nearly as
+    long as the tower is high (17 m from tip to tip, on a tower of 11 m),
+    their tips passing three metres above the ground;
+    a lattice along most of each whip, on the side that follows as they
+    turn (to the right, `tourne`). In units: the picture is the place of
+    the sails, the hub in its middle."""
+    c = SAILS
+    parts = []
+    for angle in (20, 110, 200, 290):
+        rungs = ' '.join('M-2 %s H-16' % _number(-r) for r in range(20, 78, 6))
+        parts.append(
+            '<g transform="translate(%d %d) rotate(%d)">'
+            '<path d="M0 0 V-%d" fill="none" stroke-width="3.4" %s />'
+            '<path d="M-2 -14 H-16 V-78 H-2 Z" fill="#fbf4e2" stroke-width="1.7" %s />'
+            '<path d="%s M-9 -14 V-78" fill="none" stroke="#c9b68a" stroke-width="1" '
+            'stroke-linecap="round" />'
+            '</g>' % (c, c, angle, SAIL, INK, INK, rungs))
+    parts.append('<circle cx="%d" cy="%d" r="6" fill="#7a5a3c" stroke-width="2.2" %s />' % (c, c, INK))
+    return ''.join(parts)
+
+
+def sun():
+    """The sun as large as it looks in the sky: half a degree, a small
+    disc of a few units, in its glow."""
+    glow = (
+        '<radialGradient id="eclat" cx="1016" cy="56" r="34" gradientUnits="userSpaceOnUse">'
+        '<stop offset="0" stop-color="#fffbe8" stop-opacity="1" />'
+        '<stop offset=".2" stop-color="#ffeea0" stop-opacity=".85" />'
+        '<stop offset=".5" stop-color="#ffeea0" stop-opacity=".3" />'
+        '<stop offset="1" stop-color="#ffeea0" stop-opacity="0" />'
+        '</radialGradient>'
+    )
+    return glow, (
+        '<circle cx="1016" cy="56" r="34" fill="url(#eclat)" />'
+        '<circle cx="1016" cy="56" r="4" fill="#fffdf4" />'
+    )
+
+
+# The sizes of the countryside, in units of the decor per metre, by how far
+# a thing stands (16 November 2026). The cow, 1.45 m at the withers, gives
+# FRONT; a fence of 1.15 m gives FENCE; the house of 7 m, chimney
+# included, gives FAR, and the tower of the windmill, its hub at 11 m,
+# about as much.
+FRONT, FENCE, FIELD, FAR = 37.2, 21, 20, 12
+TRACTOR_AT = 836  # its rear axle; its hitch 8 units clear of the sheet
+DUCK = .8  # 27 units long, made 21.6: a mallard of 58 cm
+ROOSTER = .56  # 33 units high, made 18.5: a rooster of 50 cm
+ROOSTER_TO = (6, 63)  # from the fence down to the meadow, left of the hen
+HEN = .35  # 38.6 units high, made 13.5: a hen of 36 cm (the piece `poule`)
+CHICKS = (  # each about its feet, made 4 units high (11 cm), near the hen
+    (59, 206, 403.5, .255, 3, -2.5),
+    (57, 222, 398, .22, -7, 1.5),
+    (58, 238, 401.5, .255, -16, .5),
+)
+HOUSE_UP = -30  # the house at the foot of the hill
+# The poppies, daisies and buttercups of the meadow, each about its foot:
+# their flowers were three times too large (a poppy is 7 to 10 cm across).
+COUNTRY_FLOWERS = ((67, 300), (68, 370), (69, 640), (70, 700), (71, 420), (72, 600), (73, 760))
+SUNFLOWERS = .75  # 1.17 m high, their heads 30 cm across
+MILL_UP = -10  # the windmill on top of its mound
+SCARECROW = .65  # 58.5 units high, made 38: 1.9 m on its pole (FIELD)
+EWE = .61  # 46 units long, made 28: a ewe of 1.4 m, head included (FIELD)
+LAMB, LAMB_TO = .45, -10  # 35.5 units long, made 16: a lamb of two months
+BALE, BALE_TO = 1.32, 18  # 28.5 units across, made 37.6: a round bale of 1.25 m
+
+
 def campagne(mockups):
+    """The countryside, every thing at its real size beside the others
+    (16 November 2026). What stands on the meadow in front is at the size
+    of the cow (FRONT); the fence and what is just behind it, smaller
+    (FENCE); the sheep, the scarecrow and the field on the right, a little
+    further (FIELD); the house and the windmill, at the foot of the hills,
+    far (FAR)."""
     source = mockups / 'serie-3' / 'decors'
     out = HERE / 'campagne'
     _, defs, kids = children(source / 'decor-campagne.svg')
@@ -176,45 +413,67 @@ def campagne(mockups):
     sky = text_of([g for d in defs for g in d])
     # The sky, the hills and their fields, the far trees, the meadows, the
     # small flowers and the blades of grass.
-    ground = text_of(pick(kids, 1, (3, 28), 54, (67, 227)))
+    ground = (text_of(pick(kids, 1, (3, 28), 54))
+              + ''.join(scaled(pick(kids, i), x, 404, .65) for i, x in COUNTRY_FLOWERS)
+              + text_of(pick(kids, (74, 227))))
     write(out, 'fond', ground, sky)
+    assert kids[39].get('transform') == 'translate(86.0 322.0) scale(0.900)'  # the house
     assert kids[40].get('transform') == 'translate(208.0 326.0)'  # the trunk of the apple tree
+    assert kids[54].get('transform') == 'translate(160.0 334.0) scale(0.620)'  # the rooster
     assert kids[55].get('transform', '').startswith('translate(84.0 372.0)')  # the cow
-    # The pond, its duck and its ripples, in the corner.
-    pond = (moved(pick(kids, 64), -468, 0) + moved(pick(kids, 65), -488, -1)
+    assert kids[64].get('transform') == 'translate(516.0 399.0) scale(0.800)'  # the duck
+    # The pond, its duck (a mallard, 58 cm long) and its ripples, in the
+    # corner.
+    pond = (moved(pick(kids, 64), -468, 0) + scaled(pick(kids, 65), 516, 398, DUCK, -488, -1)
             + moved(pick(kids, 66), -446, -1))
+    # The chicks, a fortnight old (11 cm), each about its feet.
+    chicks = ''.join(
+        scaled(pick(kids, i), x, y, f, dx, dy) for i, x, y, f, dx, dy in CHICKS)
     left = (
-        text_of(pick(kids, 40))
+        # The house, at the foot of the hill, far behind the fence: as
+        # large as it is, it stands higher on the picture.
+        moved(pick(kids, 40), 0, HOUSE_UP)
         # The apple tree: a little smaller and to the left, so that its
         # crown, swaying, stays clear of the sheet (`pommier`).
         + scaled(pick(kids, 41), 208, 328, .92, -12)
         + text_of(pick(kids, (42, 49)))
         + moved(pick(kids, (50, 53)), 6, 0)  # the fence begins with a post
-        + text_of(pick(kids, 55))
+        # The rooster comes down from the fence: on the meadow, beside the
+        # hen, at the size of the cow and of the hen.
+        + scaled(pick(kids, 55), 160, 335, ROOSTER, *ROOSTER_TO)
         + cow(kids[55])
-        + text_of(pick(kids, (57, 59)))
+        + chicks
         + pond
     )
     write(out, 'gauche', left)
     field = text_of(pick(kids, 29)).replace(
         'M980 322 L1061 300 L1061 356 L1000 356 Z', 'M980 322 L1046 302 L1057 356 L1000 356 Z')
     assert 'L1046 302' in field
-    assert kids[59].get('transform') == 'translate(860.0 374.0) scale(0.780)'  # the tractor
+    assert kids[37].get('transform') == 'translate(1034.0 334.0) scale(0.820)'  # the scarecrow
     assert kids[38].get('transform') == 'translate(900.0 302.0) scale(1.120)'  # the windmill
-    tractor = text_of(pick(kids, 60)).replace(
-        'translate(860.0 374.0) scale(0.780)', 'translate(852.0 400.0) scale(1.120)')
+    assert kids[59].get('transform') == 'translate(860.0 374.0) scale(0.780)'  # the tractor
+    assert kids[60].get('transform') == 'translate(972.0 330.0) scale(0.900)'  # the ewe
+    assert kids[61].get('transform') == 'translate(1012.0 318.0) scale(-0.700 0.700)'  # the lamb
+    assert kids[62].get('transform') == 'translate(958.0 372.0) scale(0.800)'  # the bale
+    # The windmill on top of its mound; its sails are a piece of their own.
     mill = text_of(pick(kids, 39)).replace(
-        'translate(900.0 302.0) scale(1.120)', 'translate(900.0 302.0) scale(1.288)')
+        'translate(900.0 302.0) scale(1.120)', 'translate(900.0 %s) scale(1.288)' % (302 + MILL_UP))
+    glow, the_sun = sun()
     right = (
-        text_of(pick(kids, 2))  # the sun
-        + field + text_of(pick(kids, (30, 36), 38))  # its last stubble left out
-        + mill + tractor + text_of(pick(kids, (61, 63)))
+        the_sun
+        + field + text_of(pick(kids, (30, 36)))  # its last stubble left out
+        + scaled(pick(kids, 38), 1034, 336, SCARECROW)
+        + mill
+        + scaled(pick(kids, 61), 972, 333, EWE)
+        + scaled(pick(kids, 62), 1012, 320, LAMB, LAMB_TO, 0)
+        + scaled(pick(kids, 63), 961, 377, BALE, BALE_TO, 0)
+        + tractor(TRACTOR_AT)
     )
-    write(out, 'droite', right)
+    write(out, 'droite', right, glow)
     write(out, 'pommier', scaled(layer(source, 'c-campagne-pommier'), 208, 328, .92, -12))
-    write(out, 'tournesols', moved(layer(source, 'c-campagne-fleurs'), -10, 0))
+    write(out, 'tournesols', scaled(layer(source, 'c-campagne-fleurs'), 244, 390.7, SUNFLOWERS, -10))
     copy(mockups / 'decors' / 'd-nuage.svg', out, 'nuage')
-    copy(source / 'd-ailes.svg', out, 'ailes')
+    write(out, 'ailes', sails(), width=2 * SAILS, height=2 * SAILS)
     copy(source / 'd-poule.svg', out, 'poule')
     # The swallow of the mock-ups looks to the left: the one of the left
     # side, which flies to the right, is turned round.

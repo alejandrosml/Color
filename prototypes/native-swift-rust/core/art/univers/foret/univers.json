@@ -59,10 +59,10 @@
     "picture": "nuage",
     "anchor": "left",
     "at": [
-     110,
-     26,
-     84,
-     84
+     60,
+     0,
+     151,
+     151
     ],
     "move": {
      "name": "nuage",
@@ -73,10 +73,10 @@
     "picture": "nuage",
     "anchor": "right",
     "at": [
-     930,
-     22,
-     66,
-     66
+     880,
+     0,
+     119,
+     119
     ],
     "move": {
      "name": "nuage",
@@ -104,8 +104,8 @@
      "seconds": 11,
      "delay": -4,
      "origin": [
-      880.6,
-      187.2
+      880.48,
+      222.16
      ]
     }
    },
@@ -126,10 +126,10 @@
     "picture": "feuille",
     "anchor": "left",
     "at": [
-     118,
-     238,
-     20,
-     20
+     123.3,
+     243.3,
+     9.4,
+     9.4
     ],
     "move": {
      "name": "tombe",
@@ -144,10 +144,10 @@
     "picture": "papillon",
     "anchor": "left",
     "at": [
-     170,
-     250,
-     44,
-     44
+     189.14,
+     269.14,
+     5.72,
+     5.72
     ],
     "move": {
      "name": "papillon",
@@ -162,10 +162,10 @@
     "picture": "rougegorge",
     "anchor": "right",
     "at": [
-     878,
-     339,
-     40,
-     40
+     892.4,
+     365.6,
+     11.2,
+     11.2
     ],
     "move": {
      "name": "sautille",
@@ -204,10 +204,10 @@
     "key": "bouleau",
     "anchor": "right",
     "at": [
-     822,
-     100,
-     110,
-     262
+     833.6,
+     152.4,
+     88,
+     209.6
     ],
     "name": "Le bouleau",
     "text": "On le reconnaît à son tronc blanc, taché de noir. Ses branches fines se balancent au moindre vent.",
@@ -230,10 +230,10 @@
     "key": "ecureuil",
     "anchor": "left",
     "at": [
-     126,
-     328,
-     38,
-     36
+     128.8,
+     385.5,
+     17.7,
+     18.5
     ],
     "name": "L’écureuil",
     "text": "Il grimpe aux arbres à toute vitesse et cache des provisions pour l’hiver.",
@@ -243,10 +243,10 @@
     "key": "amanite",
     "anchor": "left",
     "at": [
-     182,
-     340,
-     48,
-     56
+     191.5,
+     374,
+     50.3,
+     21
     ],
     "name": "L’amanite tue-mouches",
     "text": "Très jolie avec son chapeau rouge à pois blancs, mais on n’y goûte pas : elle rend malade.",
@@ -256,10 +256,10 @@
     "key": "coquelicot",
     "anchor": "left",
     "at": [
-     232,
-     350,
-     30,
-     54
+     233.5,
+     364,
+     27,
+     41.8
     ],
     "name": "Le coquelicot",
     "text": "Une fleur rouge aux pétales fins comme du papier de soie.",
@@ -269,10 +269,10 @@
     "key": "marguerite",
     "anchor": "left",
     "at": [
-     154,
-     358,
-     35,
-     47
+     156.8,
+     366.2,
+     30.7,
+     39.8
     ],
     "name": "La marguerite",
     "text": "Des pétales blancs autour d’un cœur jaune. Elle fleurit dans les prés, du printemps à l’été.",
@@ -282,10 +282,10 @@
     "key": "herisson",
     "anchor": "left",
     "at": [
-     88,
-     383,
-     40,
-     23
+     97.2,
+     393,
+     21,
+     12.5
     ],
     "name": "Le hérisson",
     "text": "Quand il a peur, il se roule en boule sous ses piquants. Il sort surtout la nuit.",
@@ -295,10 +295,10 @@
     "key": "jacinthe",
     "anchor": "right",
     "at": [
-     804,
-     358,
-     30,
-     44
+     809,
+     377.5,
+     17,
+     24.5
     ],
     "name": "La jacinthe des bois",
     "text": "Au printemps, ses clochettes bleues couvrent le sol de certaines forêts.",
@@ -308,10 +308,10 @@
     "key": "rougegorge",
     "anchor": "right",
     "at": [
-     878,
-     338,
-     40,
-     40
+     891.5,
+     365,
+     13,
+     12
     ],
     "name": "Le rouge-gorge",
     "text": "Un petit oiseau curieux à la poitrine orange, qui chante même en hiver.",
@@ -321,10 +321,10 @@
     "key": "cepe",
     "anchor": "right",
     "at": [
-     912,
-     366,
-     44,
-     38
+     921.8,
+     388.5,
+     26.4,
+     16.5
     ],
     "name": "Le cèpe",
     "text": "Un champignon au gros pied et au chapeau brun, que l’on cherche en automne.",
@@ -334,10 +334,10 @@
     "key": "papillon",
     "anchor": "left",
     "at": [
-     170,
-     250,
-     44,
-     44
+     185,
+     265,
+     14,
+     12
     ],
     "name": "Le papillon",
     "text": "Avant d’avoir des ailes, il était une chenille.",

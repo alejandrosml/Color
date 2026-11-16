@@ -201,6 +201,31 @@ void main() {
     expect(robin.poseAt(.88 * 7, DecorMotion.medium).dy, closeTo(-12, 1e-9));
   });
 
+  test('the mountain: an eagle that soars, a cabin that climbs its cable and '
+      'is smaller up there', () {
+    // The eagle goes round and comes back, further at each level.
+    const eagle = DecorMove(name: 'plane', seconds: 16);
+    expect(eagle.poseAt(0, DecorMotion.low).turn, closeTo(-4, 1e-9));
+    expect(eagle.poseAt(8, DecorMotion.low).dx, closeTo(26, 1e-9));
+    expect(eagle.poseAt(8, DecorMotion.high).dx, closeTo(57.2, 1e-9));
+    expect(eagle.poseAt(16, DecorMotion.high).turn, closeTo(-4, 1e-9));
+    // The cabin climbs the same cable at every level: up and to the left,
+    // half as large at the top, and back to its station.
+    const cabin = DecorMove(name: 'cabine', seconds: 22);
+    for (final motion in DecorMotion.values.skip(1)) {
+      final top = cabin.poseAt(11, motion);
+      expect(top.dx, closeTo(-140, 1e-9));
+      expect(top.dy, closeTo(-109.3, 1e-9));
+      expect(top.scaleX, closeTo(.5, 1e-9));
+      expect(top.scaleY, closeTo(.5, 1e-9));
+      expect(cabin.poseAt(22, motion).isRest, isTrue);
+      // Along the cable all the way: down 0.781 for each unit to the right.
+      final half = cabin.poseAt(.22 * 22, motion);
+      expect(half.dy / half.dx, closeTo(109.3 / 140, 1e-9));
+    }
+    expect(cabin.poseAt(11, DecorMotion.none), DecorPose.rest);
+  });
+
   test('a pose turns its piece about its origin', () {
     const pose = DecorPose(turn: 90);
     final matrix = pose.matrixAbout(10, 20)!;

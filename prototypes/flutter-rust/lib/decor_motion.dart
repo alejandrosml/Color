@@ -289,6 +289,31 @@ final Map<String, List<_Key>> _movements = {
     (0, (_, _) => DecorPose.rest),
     (1, (_, _) => const DecorPose(turn: 360)),
   ],
+  // An eagle that soars in a wide loop, leaning into its turns, and comes
+  // back (« La montagne »).
+  'plane': [
+    (0, (_, _) => const DecorPose(turn: -4)),
+    (.25, (_, travel) => DecorPose(dx: 14 * travel, dy: -6 * travel, turn: 6)),
+    (.5, (_, travel) => DecorPose(dx: 26 * travel, dy: 2 * travel, turn: -2)),
+    (.75, (_, travel) => DecorPose(dx: 12 * travel, dy: 8 * travel, turn: -8)),
+    (1, (_, _) => const DecorPose(turn: -4)),
+  ],
+  // The cabin of a cable car, from its station on the meadow up the cable
+  // to the station on the mountain, half as large there as it is further
+  // away, a moment at the top, and down again: the same at every level,
+  // as the cable does not change (« La montagne »).
+  'cabine': [
+    (0, (_, _) => DecorPose.rest),
+    (
+      .44,
+      (_, _) => const DecorPose(dx: -140, dy: -109.3, scaleX: .5, scaleY: .5),
+    ),
+    (
+      .56,
+      (_, _) => const DecorPose(dx: -140, dy: -109.3, scaleX: .5, scaleY: .5),
+    ),
+    (1, (_, _) => DecorPose.rest),
+  ],
 };
 
 /// The movements that keep an even pace, instead of being slow at both

@@ -59,10 +59,10 @@
     "picture": "nuage",
     "anchor": "left",
     "at": [
-     110,
-     30,
-     80,
-     80
+     60,
+     6,
+     144,
+     144
     ],
     "move": {
      "name": "nuage",
@@ -73,10 +73,10 @@
     "picture": "nuage",
     "anchor": "right",
     "at": [
-     868,
-     22,
-     64,
-     64
+     872,
+     0,
+     115,
+     115
     ],
     "move": {
      "name": "nuage",
@@ -113,17 +113,17 @@
     "picture": "ailes",
     "anchor": "right",
     "at": [
-     836.75,
-     131.85,
-     126.5,
-     126.5
+     818,
+     103.1,
+     164,
+     164
     ],
     "move": {
      "name": "tourne",
      "seconds": 28,
      "origin": [
       900,
-      195.1
+      185.1
      ]
     }
    },
@@ -131,10 +131,10 @@
     "picture": "poule",
     "anchor": "left",
     "at": [
-     172,
-     360,
-     44,
-     44
+     187.6,
+     385.22,
+     15.4,
+     15.4
     ],
     "move": {
      "name": "picore",
@@ -149,10 +149,10 @@
     "picture": "hirondelle-gauche",
     "anchor": "left",
     "at": [
-     40,
-     60,
-     44,
-     44
+     54.6,
+     74.6,
+     14.8,
+     14.8
     ],
     "move": {
      "name": "vol",
@@ -168,9 +168,9 @@
     "anchor": "right",
     "at": [
      962,
-     100,
-     32,
-     32
+     44,
+     12,
+     12
     ],
     "level": 2,
     "move": {
@@ -178,8 +178,8 @@
      "seconds": 11,
      "delay": -4,
      "origin": [
-      978,
-      116
+      968,
+      50
      ]
     }
    }
@@ -190,9 +190,9 @@
     "anchor": "left",
     "at": [
      30,
-     241,
+     211,
      112,
-     85
+     86
     ],
     "name": "La ferme",
     "text": "La maison des fermiers. Ils travaillent du matin au soir pour s’occuper des animaux et des champs.",
@@ -215,10 +215,10 @@
     "key": "coq",
     "anchor": "left",
     "at": [
-     142,
-     302,
-     33,
-     34
+     154.2,
+     379,
+     21,
+     20
     ],
     "name": "Le coq",
     "text": "C’est lui qui chante « cocorico » au lever du jour.",
@@ -241,10 +241,10 @@
     "key": "poule",
     "anchor": "left",
     "at": [
-     172,
-     358,
-     77,
-     47
+     186.5,
+     384.5,
+     39,
+     18.5
     ],
     "name": "La poule et ses poussins",
     "text": "La poule pond des œufs. Ses poussins la suivent partout.",
@@ -254,10 +254,10 @@
     "key": "tournesol",
     "anchor": "left",
     "at": [
-     214,
-     326,
-     40,
-     58
+     219,
+     342,
+     30,
+     44
     ],
     "name": "Le tournesol",
     "text": "Quand il est jeune, il suit le soleil. Une fois en fleur, il reste tourné vers le soleil du matin.",
@@ -267,10 +267,10 @@
     "key": "moulin",
     "anchor": "right",
     "at": [
-     841,
-     136,
-     118,
-     168
+     818,
+     103,
+     164,
+     191
     ],
     "name": "Le moulin à vent",
     "text": "Le vent fait tourner ses ailes, et les ailes font tourner une meule qui écrase le blé en farine.",
@@ -280,10 +280,10 @@
     "key": "tracteur",
     "anchor": "right",
     "at": [
-     810,
-     336,
-     90,
-     66
+     800,
+     297,
+     149,
+     104
     ],
     "name": "Le tracteur",
     "text": "Très fort, avec ses grosses roues : il tire les outils qui travaillent la terre.",
@@ -293,10 +293,10 @@
     "key": "mouton",
     "anchor": "right",
     "at": [
-     953,
-     292,
-     74,
-     42
+     960,
+     307,
+     49,
+     27
     ],
     "name": "Le mouton",
     "text": "Sa laine le tient au chaud. Une fois tondue, elle sert à faire des pulls.",
@@ -306,10 +306,10 @@
     "key": "botte",
     "anchor": "right",
     "at": [
-     945,
-     348,
-     32,
-     30
+     958.5,
+     339,
+     41,
+     38
     ],
     "name": "La botte de paille",
     "text": "Après la moisson, les tiges du blé sont souvent roulées en grosses bottes.",
@@ -319,10 +319,10 @@
     "key": "epouvantail",
     "anchor": "right",
     "at": [
-     1010,
-     278,
-     48,
-     58
+     1017,
+     298,
+     34,
+     39
     ],
     "name": "L’épouvantail",
     "text": "Un bonhomme de paille planté dans le champ pour faire peur aux oiseaux gourmands.",
@@ -332,10 +332,10 @@
     "key": "canard",
     "anchor": "left",
     "at": [
-     16,
-     380,
-     32,
-     22
+     19,
+     384,
+     23,
+     15
     ],
     "name": "Le canard",
     "text": "Ses pattes palmées lui servent de rames pour nager sur la mare.",
@@ -345,10 +345,10 @@
     "key": "hirondelle",
     "anchor": "left",
     "at": [
-     40,
-     60,
-     46,
-     40
+     51,
+     73,
+     22,
+     17
     ],
     "name": "L’hirondelle",
     "text": "Elle arrive au printemps et repart en automne vers les pays chauds.",

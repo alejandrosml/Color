@@ -3934,8 +3934,9 @@ D f #ffd23fff,n #293d4bff,1,bm,4 M 63.7 46.965 C 63.7 47.548477 63.468216 48.108
 D f #ffd23fff,n #293d4bff,1,bm,4 M 75.2 45.93 C 75.2 47.145027 74.21503 48.13 73 48.13 C 71.78497 48.13 70.8 47.145027 70.8 45.93 C 70.8 44.714973 71.78497 43.73 73 43.73 C 74.21503 43.73 75.2 44.714973 75.2 45.93 Z
 X
 U foret
-M {"key":"foret","name":"La for\u00eat","about":"De grands arbres, un \u00e9cureuil et un h\u00e9risson.","look":{"colours":{"ink":"#2a3d22","accent":"#8a5a00","background":"#cfe6b3","line":"#a7cc86","surface":"#fffbee","selected":"#e4f4d3","sheetBackdrop":"#d7ebc2","previewBox":"#eef6e2","caption":"#48603c","statusText":"#2a3d22","sheetTitle":"#2a3d22","sheetCaption":"#2a3d22","quietMark":"#6b8a58","swatchRing":"#5f8a4a","shadow":"#1f3a1a"},"shapes":{"stageRadius":18,"stageBorder":2}},"decor":{"size":[1061,407],"sheet":[266,26,526,351],"top":"#d6eef7","front":["#84c56c","#79b962","#5f9e4f"],"pieces":[{"picture":"fond","role":"ground"},{"picture":"gauche","anchor":"left"},{"picture":"droite","anchor":"right"},{"picture":"nuage","anchor":"left","at":[110,26,84,84],"move":{"name":"nuage","seconds":30}},{"picture":"nuage","anchor":"right","at":[930,22,66,66],"move":{"name":"nuage","seconds":38,"delay":-9}},{"picture":"chene","anchor":"left","move":{"name":"balance","seconds":9,"origin":[99.7,240.1]}},{"picture":"bouleau","anchor":"right","move":{"name":"balance","seconds":11,"delay":-4,"origin":[880.6,187.2]}},{"picture":"hetre","anchor":"right","move":{"name":"balance","seconds":10,"delay":-2,"origin":[982.5,284.9]}},{"picture":"feuille","anchor":"left","at":[118,238,20,20],"move":{"name":"tombe","seconds":15,"origin":[128,248]}},{"picture":"papillon","anchor":"left","at":[170,250,44,44],"move":{"name":"papillon","seconds":14,"origin":[192,272]}},{"picture":"rougegorge","anchor":"right","at":[878,339,40,40],"move":{"name":"sautille","seconds":7}}],"names":[{"key":"chene","anchor":"left","at":[30,128,176,232],"name":"Le ch\u00eane","text":"Un grand arbre tr\u00e8s solide, qui peut vivre des centaines d\u2019ann\u00e9es. Ses fruits sont les glands.","source":"Forestry England \u2014 Oak | Tree species (English oak) \u2014 https://www.forestryengland.uk/article/english-oak ; Royal Botanic Gardens, Kew \u2014 Common oak \u2014 https://www.kew.org/plants/common-oak"},{"key":"epicea","anchor":"left","at":[194,198,64,152],"name":"L\u2019\u00e9pic\u00e9a","text":"Il garde ses aiguilles vertes tout l\u2019hiver. C\u2019est parfois lui, le sapin de No\u00ebl.","source":"Woodland Trust \u2014 Norway Spruce (Picea abies) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/norway-spruce ; VALHOR \u2014 Dossier de presse, d\u00e9cembre 2025 (chiffres Kantar pour FranceAgriMer et VALHOR, ventes 2024) \u2014 https://bo.valhor.fr/wp-content/uploads/2025/12/valhor-dp-elysee-sapin-2025-.pdf"},{"key":"bouleau","anchor":"right","at":[822,100,110,262],"name":"Le bouleau","text":"On le reconna\u00eet \u00e0 son tronc blanc, tach\u00e9 de noir. Ses branches fines se balancent au moindre vent.","source":"Forestry England \u2014 Silver birch \u2014 https://forestryengland.uk/article/silver-birch ; Royal Horticultural Society \u2014 Betula pendula | silver birch \u2014 https://www.rhs.org.uk/plants/2261/betula-pendula/details"},{"key":"hetre","anchor":"right","at":[932,166,118,192],"name":"Le h\u00eatre","text":"Son \u00e9corce grise est toute lisse. Ses petits fruits s\u2019appellent les fa\u00eenes.","source":"Woodland Trust \u2014 Beech, common (Fagus sylvatica) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/common-beech ; Office qu\u00e9b\u00e9cois de la langue fran\u00e7aise, Grand dictionnaire terminologique \u2014 fa\u00eene \u2014 https://vitrinelinguistique.oqlf.gouv.qc.ca/fiche-gdt/fiche/8433613/faine"},{"key":"ecureuil","anchor":"left","at":[126,328,38,36],"name":"L\u2019\u00e9cureuil","text":"Il grimpe aux arbres \u00e0 toute vitesse et cache des provisions pour l\u2019hiver.","source":"Larousse, encyclop\u00e9die \u2014 \u00e9cureuil roux \u2014 https://www.larousse.fr/encyclopedie/vie-sauvage/\u00e9cureuil_roux/178167 ; Mus\u00e9e d\u2019histoire naturelle Fribourg \u2014 Le clin d\u2019\u0153il nature - Le petit cachottier \u2014 https://www.fr.ch/mhnf/le-clin-doeil-nature-le-petit-cachottier"},{"key":"amanite","anchor":"left","at":[182,340,48,56],"name":"L\u2019amanite tue-mouches","text":"Tr\u00e8s jolie avec son chapeau rouge \u00e0 pois blancs, mais on n\u2019y go\u00fbte pas : elle rend malade.","source":"Woodland Trust \u2014 Fly Agaric (Amanita muscaria) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/fungi-and-lichens/fly-agaric/ ; Encyclopaedia Britannica \u2014 fly agaric \u2014 https://www.britannica.com/science/fly-agaric"},{"key":"coquelicot","anchor":"left","at":[232,350,30,54],"name":"Le coquelicot","text":"Une fleur rouge aux p\u00e9tales fins comme du papier de soie.","source":"Royal Horticultural Society \u2014 Plants for kids - poppy \u2014 https://rhs.org.uk/education-learning/children-young-people/family-activities/grow-it/poppy ; Royal Horticultural Society \u2014 Papaver rhoeas | common poppy \u2014 https://www.rhs.org.uk/Plants/56687/i-Papaver-rhoeas-i/Details"},{"key":"marguerite","anchor":"left","at":[154,358,35,47],"name":"La marguerite","text":"Des p\u00e9tales blancs autour d\u2019un c\u0153ur jaune. Elle fleurit dans les pr\u00e9s, du printemps \u00e0 l\u2019\u00e9t\u00e9.","source":"Woodland Trust \u2014 Oxeye daisy (Leucanthemum vulgare) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/plants/wild-flowers/oxeye-daisy/ ; Universit\u00e9 de Lorraine, e-FloraSys \u2014 Leucanthemum vulgare \u2014 https://eflorasys.univ-lorraine.fr/index.php/en/species/view/105817"},{"key":"herisson","anchor":"left","at":[88,383,40,23],"name":"Le h\u00e9risson","text":"Quand il a peur, il se roule en boule sous ses piquants. Il sort surtout la nuit.","source":"Encyclop\u00e6dia Universalis \u2014 H\u00e9risson \u2014 https://www.universalis.fr/encyclopedie/herisson/ ; RSPCA \u2014 Hedgehogs in the UK | Wildlife Advice \u2014 https://www.rspca.org.uk/adviceandwelfare/wildlife/animals/hedgehogs"},{"key":"jacinthe","anchor":"right","at":[804,358,30,44],"name":"La jacinthe des bois","text":"Au printemps, ses clochettes bleues couvrent le sol de certaines for\u00eats.","source":"Woodland Trust \u2014 Bluebell (Hyacinthoides non-scripta) \u2014 https://woodlandtrust.org.uk/trees-woods-and-wildlife/plants/wild-flowers/bluebell/ ; Forestry Commission \u2014 Plants of the forest floor \u2014 https://forestrycommission.blog.gov.uk/2025/04/23/plants-of-the-forest-floor/"},{"key":"rougegorge","anchor":"right","at":[878,338,40,40],"name":"Le rouge-gorge","text":"Un petit oiseau curieux \u00e0 la poitrine orange, qui chante m\u00eame en hiver.","source":"RSPB \u2014 Robin Red Breast Bird Facts | Erithacus rubecula \u2014 https://rspb.org.uk/birds-and-wildlife/robin ; Mus\u00e9e du Louvre \u2014 Le Rougegorge familier \u2014 https://www.louvre.fr/decouvrir/les-parcours-de-visite/l-avifaune-du-jardin-des-tuileries/le-rougegorge-familier"},{"key":"cepe","anchor":"right","at":[912,366,44,38],"name":"Le c\u00e8pe","text":"Un champignon au gros pied et au chapeau brun, que l\u2019on cherche en automne.","source":"Woodland Trust \u2014 Penny Bun (Boletus edulis) \u2013 British Fungi \u2014 https://woodlandtrust.org.uk/trees-woods-and-wildlife/fungi-and-lichens/penny-bun/ ; VIDAL \u2014 C\u00e8pes et bolets : gastronomiques mais parfois toxiques \u2014 https://www.vidal.fr/actualites/38418-cepes-et-bolets-gastronomiques-mais-parfois-toxiques.html"},{"key":"papillon","anchor":"left","at":[170,250,44,44],"name":"Le papillon","text":"Avant d\u2019avoir des ailes, il \u00e9tait une chenille.","source":"American Museum of Natural History \u2014 The Butterfly Life Cycle Explained \u2014 https://www.amnh.org/explore/news-blogs/life-cycle-butterfly ; Encyclop\u00e6dia Universalis \u2014 M\u00c9TAMORPHOSE, biologie \u2014 https://www.universalis.fr/encyclopedie/metamorphose-biologie/"},{"key":"fougere","anchor":"right","at":[986,336,70,38],"name":"La foug\u00e8re","text":"Une plante tr\u00e8s ancienne : il y en avait d\u00e9j\u00e0 au temps des dinosaures.","source":"Science Learning Hub, The University of Waikato \u2014 What is a fern? \u2014 https://www.sciencelearn.org.nz/resources/1103-what-is-a-fern ; University of Waterloo, Earth Sciences Museum \u2014 Fern fossils \u2014 https://uwaterloo.ca/earth-sciences-museum/resources/history-life/carboniferous-period/pennsylvanian-sub-period/fern-fossils"}]}}
+M {"key":"foret","name":"La for\u00eat","about":"De grands arbres, un \u00e9cureuil et un h\u00e9risson.","look":{"colours":{"ink":"#2a3d22","accent":"#8a5a00","background":"#cfe6b3","line":"#a7cc86","surface":"#fffbee","selected":"#e4f4d3","sheetBackdrop":"#d7ebc2","previewBox":"#eef6e2","caption":"#48603c","statusText":"#2a3d22","sheetTitle":"#2a3d22","sheetCaption":"#2a3d22","quietMark":"#6b8a58","swatchRing":"#5f8a4a","shadow":"#1f3a1a"},"shapes":{"stageRadius":18,"stageBorder":2}},"decor":{"size":[1061,407],"sheet":[266,26,526,351],"top":"#d6eef7","front":["#84c56c","#79b962","#5f9e4f"],"pieces":[{"picture":"fond","role":"ground"},{"picture":"gauche","anchor":"left"},{"picture":"droite","anchor":"right"},{"picture":"nuage","anchor":"left","at":[60,0,151,151],"move":{"name":"nuage","seconds":30}},{"picture":"nuage","anchor":"right","at":[880,0,119,119],"move":{"name":"nuage","seconds":38,"delay":-9}},{"picture":"chene","anchor":"left","move":{"name":"balance","seconds":9,"origin":[99.7,240.1]}},{"picture":"bouleau","anchor":"right","move":{"name":"balance","seconds":11,"delay":-4,"origin":[880.48,222.16]}},{"picture":"hetre","anchor":"right","move":{"name":"balance","seconds":10,"delay":-2,"origin":[982.5,284.9]}},{"picture":"feuille","anchor":"left","at":[123.3,243.3,9.4,9.4],"move":{"name":"tombe","seconds":15,"origin":[128,248]}},{"picture":"papillon","anchor":"left","at":[189.14,269.14,5.72,5.72],"move":{"name":"papillon","seconds":14,"origin":[192,272]}},{"picture":"rougegorge","anchor":"right","at":[892.4,365.6,11.2,11.2],"move":{"name":"sautille","seconds":7}}],"names":[{"key":"chene","anchor":"left","at":[30,128,176,232],"name":"Le ch\u00eane","text":"Un grand arbre tr\u00e8s solide, qui peut vivre des centaines d\u2019ann\u00e9es. Ses fruits sont les glands.","source":"Forestry England \u2014 Oak | Tree species (English oak) \u2014 https://www.forestryengland.uk/article/english-oak ; Royal Botanic Gardens, Kew \u2014 Common oak \u2014 https://www.kew.org/plants/common-oak"},{"key":"epicea","anchor":"left","at":[194,198,64,152],"name":"L\u2019\u00e9pic\u00e9a","text":"Il garde ses aiguilles vertes tout l\u2019hiver. C\u2019est parfois lui, le sapin de No\u00ebl.","source":"Woodland Trust \u2014 Norway Spruce (Picea abies) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/norway-spruce ; VALHOR \u2014 Dossier de presse, d\u00e9cembre 2025 (chiffres Kantar pour FranceAgriMer et VALHOR, ventes 2024) \u2014 https://bo.valhor.fr/wp-content/uploads/2025/12/valhor-dp-elysee-sapin-2025-.pdf"},{"key":"bouleau","anchor":"right","at":[833.6,152.4,88,209.6],"name":"Le bouleau","text":"On le reconna\u00eet \u00e0 son tronc blanc, tach\u00e9 de noir. Ses branches fines se balancent au moindre vent.","source":"Forestry England \u2014 Silver birch \u2014 https://forestryengland.uk/article/silver-birch ; Royal Horticultural Society \u2014 Betula pendula | silver birch \u2014 https://www.rhs.org.uk/plants/2261/betula-pendula/details"},{"key":"hetre","anchor":"right","at":[932,166,118,192],"name":"Le h\u00eatre","text":"Son \u00e9corce grise est toute lisse. Ses petits fruits s\u2019appellent les fa\u00eenes.","source":"Woodland Trust \u2014 Beech, common (Fagus sylvatica) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/common-beech ; Office qu\u00e9b\u00e9cois de la langue fran\u00e7aise, Grand dictionnaire terminologique \u2014 fa\u00eene \u2014 https://vitrinelinguistique.oqlf.gouv.qc.ca/fiche-gdt/fiche/8433613/faine"},{"key":"ecureuil","anchor":"left","at":[128.8,385.5,17.7,18.5],"name":"L\u2019\u00e9cureuil","text":"Il grimpe aux arbres \u00e0 toute vitesse et cache des provisions pour l\u2019hiver.","source":"Larousse, encyclop\u00e9die \u2014 \u00e9cureuil roux \u2014 https://www.larousse.fr/encyclopedie/vie-sauvage/\u00e9cureuil_roux/178167 ; Mus\u00e9e d\u2019histoire naturelle Fribourg \u2014 Le clin d\u2019\u0153il nature - Le petit cachottier \u2014 https://www.fr.ch/mhnf/le-clin-doeil-nature-le-petit-cachottier"},{"key":"amanite","anchor":"left","at":[191.5,374,50.3,21],"name":"L\u2019amanite tue-mouches","text":"Tr\u00e8s jolie avec son chapeau rouge \u00e0 pois blancs, mais on n\u2019y go\u00fbte pas : elle rend malade.","source":"Woodland Trust \u2014 Fly Agaric (Amanita muscaria) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/fungi-and-lichens/fly-agaric/ ; Encyclopaedia Britannica \u2014 fly agaric \u2014 https://www.britannica.com/science/fly-agaric"},{"key":"coquelicot","anchor":"left","at":[233.5,364,27,41.8],"name":"Le coquelicot","text":"Une fleur rouge aux p\u00e9tales fins comme du papier de soie.","source":"Royal Horticultural Society \u2014 Plants for kids - poppy \u2014 https://rhs.org.uk/education-learning/children-young-people/family-activities/grow-it/poppy ; Royal Horticultural Society \u2014 Papaver rhoeas | common poppy \u2014 https://www.rhs.org.uk/Plants/56687/i-Papaver-rhoeas-i/Details"},{"key":"marguerite","anchor":"left","at":[156.8,366.2,30.7,39.8],"name":"La marguerite","text":"Des p\u00e9tales blancs autour d\u2019un c\u0153ur jaune. Elle fleurit dans les pr\u00e9s, du printemps \u00e0 l\u2019\u00e9t\u00e9.","source":"Woodland Trust \u2014 Oxeye daisy (Leucanthemum vulgare) \u2014 https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/plants/wild-flowers/oxeye-daisy/ ; Universit\u00e9 de Lorraine, e-FloraSys \u2014 Leucanthemum vulgare \u2014 https://eflorasys.univ-lorraine.fr/index.php/en/species/view/105817"},{"key":"herisson","anchor":"left","at":[97.2,393,21,12.5],"name":"Le h\u00e9risson","text":"Quand il a peur, il se roule en boule sous ses piquants. Il sort surtout la nuit.","source":"Encyclop\u00e6dia Universalis \u2014 H\u00e9risson \u2014 https://www.universalis.fr/encyclopedie/herisson/ ; RSPCA \u2014 Hedgehogs in the UK | Wildlife Advice \u2014 https://www.rspca.org.uk/adviceandwelfare/wildlife/animals/hedgehogs"},{"key":"jacinthe","anchor":"right","at":[809,377.5,17,24.5],"name":"La jacinthe des bois","text":"Au printemps, ses clochettes bleues couvrent le sol de certaines for\u00eats.","source":"Woodland Trust \u2014 Bluebell (Hyacinthoides non-scripta) \u2014 https://woodlandtrust.org.uk/trees-woods-and-wildlife/plants/wild-flowers/bluebell/ ; Forestry Commission \u2014 Plants of the forest floor \u2014 https://forestrycommission.blog.gov.uk/2025/04/23/plants-of-the-forest-floor/"},{"key":"rougegorge","anchor":"right","at":[891.5,365,13,12],"name":"Le rouge-gorge","text":"Un petit oiseau curieux \u00e0 la poitrine orange, qui chante m\u00eame en hiver.","source":"RSPB \u2014 Robin Red Breast Bird Facts | Erithacus rubecula \u2014 https://rspb.org.uk/birds-and-wildlife/robin ; Mus\u00e9e du Louvre \u2014 Le Rougegorge familier \u2014 https://www.louvre.fr/decouvrir/les-parcours-de-visite/l-avifaune-du-jardin-des-tuileries/le-rougegorge-familier"},{"key":"cepe","anchor":"right","at":[921.8,388.5,26.4,16.5],"name":"Le c\u00e8pe","text":"Un champignon au gros pied et au chapeau brun, que l\u2019on cherche en automne.","source":"Woodland Trust \u2014 Penny Bun (Boletus edulis) \u2013 British Fungi \u2014 https://woodlandtrust.org.uk/trees-woods-and-wildlife/fungi-and-lichens/penny-bun/ ; VIDAL \u2014 C\u00e8pes et bolets : gastronomiques mais parfois toxiques \u2014 https://www.vidal.fr/actualites/38418-cepes-et-bolets-gastronomiques-mais-parfois-toxiques.html"},{"key":"papillon","anchor":"left","at":[185,265,14,12],"name":"Le papillon","text":"Avant d\u2019avoir des ailes, il \u00e9tait une chenille.","source":"American Museum of Natural History \u2014 The Butterfly Life Cycle Explained \u2014 https://www.amnh.org/explore/news-blogs/life-cycle-butterfly ; Encyclop\u00e6dia Universalis \u2014 M\u00c9TAMORPHOSE, biologie \u2014 https://www.universalis.fr/encyclopedie/metamorphose-biologie/"},{"key":"fougere","anchor":"right","at":[986,336,70,38],"name":"La foug\u00e8re","text":"Une plante tr\u00e8s ancienne : il y en avait d\u00e9j\u00e0 au temps des dinosaures.","source":"Science Learning Hub, The University of Waikato \u2014 What is a fern? \u2014 https://www.sciencelearn.org.nz/resources/1103-what-is-a-fern ; University of Waterloo, Earth Sciences Museum \u2014 Fern fossils \u2014 https://uwaterloo.ca/earth-sciences-museum/resources/history-life/carboniferous-period/pennsylvanian-sub-period/fern-fossils"}]}}
 P bouleau 1061 407
+G 1 0.8;0;0;0.8;176;72.4
 G 1 0.42735785;0.90408254;-0.90408254;0.42735785;868;179.3
 D f #8fc25aff,n #293d4bff,1.3,rr,4 M 0 0 C 2.1 -3.4 5.4 -2.7 7.2 0 C 5.4 2.7 2.1 3.4 0 0 Z
 E
@@ -4442,6 +4443,7 @@ D f #b1d873ff,n - M 0 0 C 2.2 -4.1 5.5 -3.3 7.4 0 C 5.5 3.3 2.2 4.1 0 0 Z
 E
 G 1 -0.45864955;0.8886172;-0.8886172;-0.45864955;903.9;181.7
 D f #b1d873ff,n - M 0 0 C 2.2 -4.3 5.5 -3.5 7.4 0 C 5.5 3.5 2.2 4.3 0 0 Z
+E
 E
 X
 P chene 1061 407
@@ -5008,6 +5010,7 @@ E
 G 0.85 -
 D f #4f957aff,n - M 942 316.8 L 915.9 332 L 936.8 329 Z
 E
+G 1 0.8;0;0;0.8;176;72.4
 G 1 0.72;0;0;0.72;880;360
 D f #293d4bff,n #293d4bff,4.4,rr,4 M -13 0 C -9 -78 -10 -178 -4 -322 L 4 -322 C 9 -178 8 -78 13 0 Z
 D f - #293d4bff,5.4,rr,4 M -6 -182 C -22 -198 -40 -218 -52 -240
@@ -5026,6 +5029,7 @@ D f - #8a7f72ff,2,rr,4 M 46 -254 C 56 -252 52 -240 46 -234
 D f - #dedacbff,4,rr,4 M 7 -6 C 4 -78 3 -178 1 -316
 D f #3d3a37ff,n - M -1.8 -28 C 1.5 -30.6 4.9 -30.6 8.2 -28 C 4.9 -25.8 1.5 -25.8 -1.8 -28 Z M -7.9 -56 C -4.7 -58.6 -1.5 -58.6 1.7 -56 C -1.5 -53.8 -4.7 -53.8 -7.9 -56 Z M -1.6 -82 C 1.4 -84.6 4.5 -84.6 7.5 -82 C 4.5 -79.8 1.4 -79.8 -1.6 -82 Z M -7.2 -110 C -4.3 -112.6 -1.4 -112.6 1.5 -110 C -1.4 -107.8 -4.3 -107.8 -7.2 -110 Z M -1.4 -134 C 1.4 -136.6 4.1 -136.6 6.8 -134 C 4.1 -131.8 1.4 -131.8 -1.4 -134 Z M -6.5 -162 C -3.9 -164.6 -1.3 -164.6 1.3 -162 C -1.3 -159.8 -3.9 -159.8 -6.5 -162 Z M -1.2 -188 C 1.3 -190.6 3.7 -190.6 6.1 -188 C 3.7 -185.8 1.3 -185.8 -1.2 -188 Z M -5.8 -218 C -3.5 -220.6 -1.2 -220.6 1.1 -218 C -1.2 -215.8 -3.5 -215.8 -5.8 -218 Z M -1 -246 C 1.2 -248.6 3.3 -248.6 5.4 -246 C 3.3 -243.8 1.2 -243.8 -1 -246 Z M -5.1 -274 C -3.1 -276.6 -1.1 -276.6 0.9 -274 C -1.1 -271.8 -3.1 -271.8 -5.1 -274 Z M -0.8 -298 C 1.1 -300.6 2.9 -300.6 4.8 -298 C 2.9 -295.8 1.1 -295.8 -0.8 -298 Z
 D f #6cb35cff,n - M -16 0 C -6 -6 8 -6 16 2 Z
+E
 E
 G 1 1;0;0;1;-18;0
 G 1 0.8;0;0;0.8;1000;354
@@ -5370,6 +5374,7 @@ D f - #cfb07cff,1,bm,4 M 8.6 -21 C 8.600001 -19.232689 4.3019347 -17.8 -1 -17.8 
 D f - #cfb07cff,1,bm,4 M 2.6 -21 C 2.6 -20.171574 0.5405098 -19.5 -2 -19.5 C -4.5405097 -19.5 -6.6 -20.171574 -6.6 -21 C -6.6 -21.828426 -4.5405097 -22.5 -2 -22.5 C 0.5405098 -22.5 2.6 -21.828426 2.6 -21 Z
 D f #6cb35cff,n - M -16 -18 C -12 -22 -6 -23 -2 -21 C -6 -18 -12 -17 -16 -18 Z
 E
+G 1 0.33;0;0;0.33;621.76;268.67
 G 1 0.8;0;0;0.8;928;398
 D f #f6ecd4ff,n #293d4bff,2,rr,4 M -8 0 C -11 -8 -7 -16 -5 -20 L 5 -20 C 7 -16 11 -8 8 0 C 4 3 -4 3 -8 0 Z
 D f - #e2d3aeff,1.6,rr,4 M -5 -3 C -6 -8 -4 -13 -3 -18
@@ -5377,6 +5382,8 @@ D f #9c6b43ff,n #293d4bff,2.2,rr,4 M -18 -20 C -19 -34 -8 -38 0 -38 C 8 -38 19 -
 D f - #c08f63ff,2.6,rr,4 M -13 -26 C -11 -32 -5 -35 1 -35
 D f - #e9dcbbff,1.6,rr,4 M -16 -20.4 C -8 -18 8 -18 16 -20.4
 E
+E
+G 1 0.28;0;0;0.28;679.68;290.88
 G 1 0.49240386;0.08682409;-0.08682409;0.49240386;944;402
 D f #f6ecd4ff,n #293d4bff,2,rr,4 M -8 0 C -11 -8 -7 -16 -5 -20 L 5 -20 C 7 -16 11 -8 8 0 C 4 3 -4 3 -8 0 Z
 D f - #e2d3aeff,1.6,rr,4 M -5 -3 C -6 -8 -4 -13 -3 -18
@@ -5384,7 +5391,8 @@ D f #9c6b43ff,n #293d4bff,2.2,rr,4 M -18 -20 C -19 -34 -8 -38 0 -38 C 8 -38 19 -
 D f - #c08f63ff,2.6,rr,4 M -13 -26 C -11 -32 -5 -35 1 -35
 D f - #e9dcbbff,1.6,rr,4 M -16 -20.4 C -8 -18 8 -18 16 -20.4
 E
-G 1 1;0;0;1;-34;0
+E
+G 1 0.6;0;0;0.6;370.8;149.2
 G 1 0.6;0;0;0.6;1012;372
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 3 -26 1 -38
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-9
@@ -5440,7 +5448,7 @@ D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0
 E
 E
 E
-G 1 1;0;0;1;10;0
+G 1 0.58;0;0;0.58;348.52;168.42
 G 1 0.8;0;0;0.8;806;400
 G 1 -0.40673664;-0.9135454;0.9135454;-0.40673664;0;0
 D f #5aa860ff,n - M 0 0 C 9 -3 22.5 -2.4 30 0 C 22.5 2.4 9 3 0 0 Z
@@ -5465,6 +5473,8 @@ D f #7d8fdcff,n #293d4bff,1,rr,4 M -4.4 0 C -5.6 7 -5.4 10 -8 13.6 L -3.2 11.4 L
 D f - #aab6eeff,1,rr,4 M -2 2 C -2.4 5 -2.6 7 -3 8.4
 E
 E
+E
+G 1 0.58;0;0;0.58;369.52;169.26
 G 1 0.7;0;0;0.7;856;402
 G 1 0.06975647;-0.9975641;0.9975641;0.06975647;0;0
 D f #5aa860ff,n - M 0 0 C 9 -3 22.5 -2.4 30 0 C 22.5 2.4 9 3 0 0 Z
@@ -5589,6 +5599,7 @@ D f #b7bfc4ff,n #293d4bff,2,rr,4 M -16 0 C -20 -8 -12 -16 -2 -16 C 10 -17 19 -10
 D f - #dfe5e8ff,2.2,rr,4 M -11 -8 C -7 -12 0 -13 6 -12
 D f - #8f9aa1ff,1.6,rr,4 M -12 -1 C -4 1.4 6 1.4 13 -1
 E
+G 1 0.7;0;0;0.7;105;120.6
 G 1 0.9;0;0;0.9;350;402
 D f - #4f9a4aff,2,rr,4 M 0 0 C 2 -8 -2 -14 1 -20
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-5
@@ -5611,6 +5622,8 @@ E
 D f #e09b1cff,n - M 2.2 0 C 2.2 1.2150265 1.2150265 2.2 0.00000000000000013471115 2.2 C -1.2150265 2.2 -2.2 1.2150265 -2.2 0.0000000000000002694223 C -2.2 -1.2150265 -1.2150265 -2.2 -0.00000000000000040413345 -2.2 C 1.2150265 -2.2 2.2 -1.2150265 2.2 0 Z
 E
 E
+E
+G 1 0.7;0;0;0.7;141;121.2
 G 1 0.8;0;0;0.8;470;404
 D f - #4f9a4aff,2,rr,4 M 0 0 C -2 -8 2 -14 -1 -20
 G 1 0.8660254;-0.5;0.5;0.8660254;0;-5
@@ -5633,6 +5646,8 @@ E
 D f #e09b1cff,n - M 2.2 0 C 2.2 1.2150265 1.2150265 2.2 0.00000000000000013471115 2.2 C -1.2150265 2.2 -2.2 1.2150265 -2.2 0.0000000000000002694223 C -2.2 -1.2150265 -1.2150265 -2.2 -0.00000000000000040413345 -2.2 C 1.2150265 -2.2 2.2 -1.2150265 2.2 0 Z
 E
 E
+E
+G 1 0.7;0;0;0.7;183.6;120.6
 G 1 0.9;0;0;0.9;612;402
 D f - #4f9a4aff,2,rr,4 M 0 0 C 2 -8 -2 -14 1 -20
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-5
@@ -5655,6 +5670,8 @@ E
 D f #e09b1cff,n - M 2.2 0 C 2.2 1.2150265 1.2150265 2.2 0.00000000000000013471115 2.2 C -1.2150265 2.2 -2.2 1.2150265 -2.2 0.0000000000000002694223 C -2.2 -1.2150265 -1.2150265 -2.2 -0.00000000000000040413345 -2.2 C 1.2150265 -2.2 2.2 -1.2150265 2.2 0 Z
 E
 E
+E
+G 1 0.7;0;0;0.7;216.6;121.2
 G 1 0.8;0;0;0.8;722;404
 D f - #4f9a4aff,2,rr,4 M 0 0 C -2 -8 2 -14 -1 -20
 G 1 0.8660254;-0.5;0.5;0.8660254;0;-5
@@ -5677,6 +5694,8 @@ E
 D f #e09b1cff,n - M 2.2 0 C 2.2 1.2150265 1.2150265 2.2 0.00000000000000013471115 2.2 C -1.2150265 2.2 -2.2 1.2150265 -2.2 0.0000000000000002694223 C -2.2 -1.2150265 -1.2150265 -2.2 -0.00000000000000040413345 -2.2 C 1.2150265 -2.2 2.2 -1.2150265 2.2 0 Z
 E
 E
+E
+G 1 0.7;0;0;0.7;123;121.2
 G 1 0.5;0;0;0.5;410;404
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 3 -26 1 -38
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-9
@@ -5731,6 +5750,8 @@ D f #d6921cff,n - M 2.5 0.6 C 2.5 1.0970563 2.0970564 1.5 1.6 1.5 C 1.1029438 1.
 D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0.8418278 2.6 -1.2 2.2418277 -1.2 1.8 C -1.2 1.3581722 -0.8418278 0.99999994 -0.4 0.99999994 C 0.0418278 0.99999994 0.4 1.3581722 0.4 1.8 Z
 E
 E
+E
+G 1 0.7;0;0;0.7;169.8;121.5
 G 1 0.46;0;0;0.46;566;405
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 -3 -26 -1 -38
 G 1 0.8660254;-0.5;0.5;0.8660254;0;-9
@@ -5785,6 +5806,8 @@ D f #d6921cff,n - M 2.5 0.6 C 2.5 1.0970563 2.0970564 1.5 1.6 1.5 C 1.1029438 1.
 D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0.8418278 2.6 -1.2 2.2418277 -1.2 1.8 C -1.2 1.3581722 -0.8418278 0.99999994 -0.4 0.99999994 C 0.0418278 0.99999994 0.4 1.3581722 0.4 1.8 Z
 E
 E
+E
+G 1 0.7;0;0;0.7;204;121.2
 G 1 0.5;0;0;0.5;680;404
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 3 -26 1 -38
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-9
@@ -5837,6 +5860,7 @@ D f #f2b632ff,n #293d4bff,1,bm,4 M 4.6 0 C 4.6 2.5405097 2.5405097 4.6 0.0000000
 D f #d6921cff,n - M -0.39999998 -1.2 C -0.39999998 -0.6477153 -0.8477152 -0.20000005 -1.4 -0.20000005 C -1.9522848 -0.19999999 -2.4 -0.6477153 -2.4 -1.2 C -2.4 -1.7522849 -1.9522848 -2.2 -1.4 -2.2 C -0.8477152 -2.2 -0.39999998 -1.7522848 -0.39999998 -1.2 Z
 D f #d6921cff,n - M 2.5 0.6 C 2.5 1.0970563 2.0970564 1.5 1.6 1.5 C 1.1029438 1.5 0.70000005 1.0970563 0.70000005 0.6 C 0.70000005 0.10294376 1.1029438 -0.29999995 1.6 -0.29999995 C 2.0970564 -0.29999995 2.5 0.10294376 2.5 0.6 Z
 D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0.8418278 2.6 -1.2 2.2418277 -1.2 1.8 C -1.2 1.3581722 -0.8418278 0.99999994 -0.4 0.99999994 C 0.0418278 0.99999994 0.4 1.3581722 0.4 1.8 Z
+E
 E
 E
 D f #6cb35cff,n - M 4.9 407 Q 6 399.8 10 395 Q 9.9 401 8.1 407 Z
@@ -6327,6 +6351,7 @@ D f #4f9a4aff,n - M 0 0 C 1.1 -1.1 2.7 -0.9 3.6 0 C 2.7 0.9 1.1 1.1 0 0 Z
 E
 E
 E
+G 1 0.25;0;0;0.25;147;295.125
 G 1 0.43331543;-0.0764052;0.0764052;0.43331543;196;392
 D f #fbf4e2ff,n #293d4bff,2,rr,4 M -7 0 C -9 -6 -6 -12 -5 -24 L 5 -24 C 6 -12 9 -6 7 0 C 3 3 -3 3 -7 0 Z
 D f - #e9dcbbff,1.6,rr,4 M -4 -4 C -4.6 -10 -3.6 -16 -3.2 -22
@@ -6361,6 +6386,8 @@ G 1 0.9961947;-0.087155744;0.087155744;0.9961947;4.1246767;-0.52937484
 D f #fff8eaff,n #e9c9b8ff,0.6,bm,4 M -2 -47.5 C -1.9999994 -47.128696 -2.210713 -46.772602 -2.5857856 -46.510048 C -2.9608586 -46.247498 -3.4695666 -46.1 -4 -46.1 C -4.530433 -46.1 -5.0391417 -46.247498 -5.414214 -46.510048 C -5.789287 -46.772602 -6.0000005 -47.128696 -6 -47.5 C -6.0000005 -47.871304 -5.789287 -48.227398 -5.414214 -48.489952 C -5.0391417 -48.752502 -4.530433 -48.9 -4 -48.9 C -3.4695666 -48.9 -2.9608586 -48.752502 -2.5857856 -48.489952 C -2.210713 -48.227398 -1.9999994 -47.871304 -2 -47.5 Z
 E
 E
+E
+G 1 0.28;0;0;0.28;154.08;280.08
 G 1 0.9;0;0;0.9;214;386
 D f #fbf4e2ff,n #293d4bff,2,rr,4 M -7 0 C -9 -6 -6 -12 -5 -24 L 5 -24 C 6 -12 9 -6 7 0 C 3 3 -3 3 -7 0 Z
 D f - #e9dcbbff,1.6,rr,4 M -4 -4 C -4.6 -10 -3.6 -16 -3.2 -22
@@ -6395,6 +6422,8 @@ G 1 0.9961947;-0.087155744;0.087155744;0.9961947;4.1246767;-0.52937484
 D f #fff8eaff,n #e9c9b8ff,0.6,bm,4 M -2 -47.5 C -1.9999994 -47.128696 -2.210713 -46.772602 -2.5857856 -46.510048 C -2.9608586 -46.247498 -3.4695666 -46.1 -4 -46.1 C -4.530433 -46.1 -5.0391417 -46.247498 -5.414214 -46.510048 C -5.789287 -46.772602 -6.0000005 -47.128696 -6 -47.5 C -6.0000005 -47.871304 -5.789287 -48.227398 -5.414214 -48.489952 C -5.0391417 -48.752502 -4.530433 -48.9 -4 -48.9 C -3.4695666 -48.9 -2.9608586 -48.752502 -2.5857856 -48.489952 C -2.210713 -48.227398 -1.9999994 -47.871304 -2 -47.5 Z
 E
 E
+E
+G 1 0.28;0;0;0.28;169.92;283.68
 G 1 0.5728592;0.09073199;-0.09073199;0.5728592;236;392
 D f #fbf4e2ff,n #293d4bff,2,rr,4 M -7 0 C -9 -6 -6 -12 -5 -24 L 5 -24 C 6 -12 9 -6 7 0 C 3 3 -3 3 -7 0 Z
 D f - #e9dcbbff,1.6,rr,4 M -4 -4 C -4.6 -10 -3.6 -16 -3.2 -22
@@ -6429,6 +6458,8 @@ G 1 0.9961947;-0.087155744;0.087155744;0.9961947;4.1246767;-0.52937484
 D f #fff8eaff,n #e9c9b8ff,0.6,bm,4 M -2 -47.5 C -1.9999994 -47.128696 -2.210713 -46.772602 -2.5857856 -46.510048 C -2.9608586 -46.247498 -3.4695666 -46.1 -4 -46.1 C -4.530433 -46.1 -5.0391417 -46.247498 -5.414214 -46.510048 C -5.789287 -46.772602 -6.0000005 -47.128696 -6 -47.5 C -6.0000005 -47.871304 -5.789287 -48.227398 -5.414214 -48.489952 C -5.0391417 -48.752502 -4.530433 -48.9 -4 -48.9 C -3.4695666 -48.9 -2.9608586 -48.752502 -2.5857856 -48.489952 C -2.210713 -48.227398 -1.9999994 -47.871304 -2 -47.5 Z
 E
 E
+E
+G 1 0.77;0;0;0.77;38.18;92.23
 G 1 0.78;0;0;0.78;166;400
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 3 -26 1 -38
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-9
@@ -6483,6 +6514,8 @@ D f #d6921cff,n - M 2.5 0.6 C 2.5 1.0970563 2.0970564 1.5 1.6 1.5 C 1.1029438 1.
 D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0.8418278 2.6 -1.2 2.2418277 -1.2 1.8 C -1.2 1.3581722 -0.8418278 0.99999994 -0.4 0.99999994 C 0.0418278 0.99999994 0.4 1.3581722 0.4 1.8 Z
 E
 E
+E
+G 1 0.77;0;0;0.77;41.4;93.15
 G 1 0.6;0;0;0.6;180;404
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 -3 -26 -1 -38
 G 1 0.8660254;-0.5;0.5;0.8660254;0;-9
@@ -6537,7 +6570,8 @@ D f #d6921cff,n - M 2.5 0.6 C 2.5 1.0970563 2.0970564 1.5 1.6 1.5 C 1.1029438 1.
 D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0.8418278 2.6 -1.2 2.2418277 -1.2 1.8 C -1.2 1.3581722 -0.8418278 0.99999994 -0.4 0.99999994 C 0.0418278 0.99999994 0.4 1.3581722 0.4 1.8 Z
 E
 E
-G 1 1;0;0;1;-8;0
+E
+G 1 0.7;0;0;0.7;67;119.7
 G 1 0.74;0;0;0.74;250;398
 D f - #4f8f48ff,2.4,rr,4 M 0 0 C 4 -18 -4 -34 2 -48
 D f - #4f8f48ff,1.8,rr,4 M 1 -22 C 9 -32 14 -33 15 -26
@@ -6577,6 +6611,8 @@ D f #f1d77aff,n - M 0.8 -4.2 C 0.79999995 -3.758172 0.44182777 -3.3999999 -0.000
 D f #f1d77aff,n - M 3.8 -3 C 3.8 -2.5581722 3.4418278 -2.2 3 -2.2 C 2.5581722 -2.2 2.2 -2.5581722 2.2 -3 C 2.2 -3.4418278 2.5581722 -3.8 3 -3.8 C 3.4418278 -3.8 3.8 -3.4418278 3.8 -3 Z
 E
 E
+E
+G 1 0.7;0;0;0.7;70.6;121.5
 G 1 0.56;0;0;0.56;262;404
 D f - #4f8f48ff,2.4,rr,4 M 0 0 C -4 -18 4 -34 -2 -48
 D f - #4f8f48ff,1.8,rr,4 M -1 -22 C -9 -32 -14 -33 -15 -26
@@ -6617,6 +6653,7 @@ D f #f1d77aff,n - M 3.8 -3 C 3.8 -2.5581722 3.4418278 -2.2 3 -2.2 C 2.5581722 -2
 E
 E
 E
+G 1 0.49;0;0;0.49;66.42;225.375
 G 1 0.66;0;0;0.66;142;360
 D f #e07b3cff,n #293d4bff,2.2,rr,4 M 6 -1 C 30 -2 34 -28 21 -39 C 13 -45 5 -40 9 -33 C 15 -26 12 -14 3 -9 Z
 D f - #f2a56aff,3,rr,4 M 12 -6 C 24 -10 26 -26 19 -34
@@ -6639,7 +6676,8 @@ D f - #e07b3cff,2.2,rr,4 M -4 -18 C -8 -18 -12 -16 -13 -13
 D f #b98146ff,n #293d4bff,1.3,bm,4 M -10.6 -11.4 C -10.6 -9.190861 -12.122232 -7.4 -14 -7.3999996 C -15.877768 -7.4 -17.4 -9.190861 -17.4 -11.4 C -17.4 -13.6091385 -15.877768 -15.4 -14 -15.4 C -12.122232 -15.4 -10.6 -13.6091385 -10.6 -11.4 Z
 D f #7a4a22ff,n #293d4bff,1.1,rr,4 M -17.4 -13.4 Q -14 -16.4 -10.6 -13.4 Z
 E
-G 1 1;0;0;1;-184;0
+E
+G 1 0.52;0;0;0.52;-43.96;194.16
 G 1 0.62;0;0;0.62;292;402
 D f #8a5a3cff,n #293d4bff,2,rr,4 M -14 -1 L -17 -8 L -15 -15 L -10 -18 L -6 -24 L -1 -22 L 5 -27 L 9 -23 L 15 -25 L 18 -19 L 24 -19 L 24 -13 L 28 -9 L 25 -5 L 27 -1 L 22 1 L -8 1 Z
 D f - #5e3b26ff,1.5,rr,4 M -6 -14 L -4 -19 M 2 -17 L 4 -22 M 10 -16 L 12 -21 M 17 -12 L 20 -16 M -1 -8 L 1 -13 M 8 -8 L 10 -13 M 16 -5 L 19 -9
@@ -7044,50 +7082,33 @@ D f - #293d4bff,2,rr,4 M 50 78 L 50 91 M 58 77 L 58 91 M 45 92 L 55 91 M 53 92 L
 E
 X
 U campagne
-M {"key":"campagne","name":"La campagne","about":"Une ferme, un moulin et des animaux.","look":{"colours":{"ink":"#3a2c22","accent":"#a8402f","background":"#dcecc0","line":"#d9c48e","surface":"#fffbee","selected":"#ffe0d6","sheetBackdrop":"#e6f0d0","previewBox":"#f6efd9","caption":"#5f4c3a","statusText":"#3a2c22","sheetTitle":"#3a2c22","sheetCaption":"#3a2c22","quietMark":"#8a7455","swatchRing":"#7a6548","shadow":"#3b2a1e"},"shapes":{"stageRadius":18,"stageBorder":2}},"decor":{"size":[1061,407],"sheet":[266,26,526,351],"top":"#c6e6f8","front":["#8fca72","#84bf67","#6fa856"],"pieces":[{"picture":"fond","role":"ground"},{"picture":"gauche","anchor":"left"},{"picture":"droite","anchor":"right"},{"picture":"nuage","anchor":"left","at":[110,30,80,80],"move":{"name":"nuage","seconds":30}},{"picture":"nuage","anchor":"right","at":[868,22,64,64],"move":{"name":"nuage","seconds":38,"delay":-9}},{"picture":"pommier","anchor":"left","move":{"name":"balance","seconds":10,"origin":[196,273.4]}},{"picture":"tournesols","anchor":"left","move":{"name":"balance","seconds":7,"delay":-2,"origin":[234,390.7]}},{"picture":"ailes","anchor":"right","at":[836.75,131.85,126.5,126.5],"move":{"name":"tourne","seconds":28,"origin":[900,195.1]}},{"picture":"poule","anchor":"left","at":[172,360,44,44],"move":{"name":"picore","seconds":5,"origin":[196,398.8]}},{"picture":"hirondelle-gauche","anchor":"left","at":[40,60,44,44],"move":{"name":"vol","seconds":9,"origin":[62,82]}},{"picture":"hirondelle-droite","anchor":"right","at":[962,100,32,32],"level":2,"move":{"name":"vol2","seconds":11,"delay":-4,"origin":[978,116]}}],"names":[{"key":"ferme","anchor":"left","at":[30,241,112,85],"name":"La ferme","text":"La maison des fermiers. Ils travaillent du matin au soir pour s\u2019occuper des animaux et des champs.","source":"Acad\u00e9mie fran\u00e7aise \u2014 ferme | Dictionnaire de l\u2019Acad\u00e9mie fran\u00e7aise, 9e \u00e9dition \u2014 https://dictionnaire-academie.fr/article/A9F0490 ; Onisep \u2014 Agriculteur / Agricultrice - Fiche m\u00e9tier \u2014 https://www.onisep.fr/ressources/univers-metier/metiers/agriculteur-agricultrice"},{"key":"pommier","anchor":"left","at":[156,196,83,132],"name":"Le pommier","text":"Au printemps il est couvert de fleurs ; en automne, on cueille ses pommes.","source":"Royal Horticultural Society \u2014 How to grow apples | RHS Guide \u2014 https://www.rhs.org.uk/fruit/apples/grow-your-own"},{"key":"coq","anchor":"left","at":[142,302,33,34],"name":"Le coq","text":"C\u2019est lui qui chante \u00ab cocorico \u00bb au lever du jour.","source":"Larousse \u2014 cocorico \u2014 https://www.larousse.fr/dictionnaires/francais/cocorico ; Nagoya University, ITbM \u2014 How a Rooster Knows to Crow at Dawn ? \u2014 https://www.itbm.nagoya-u.ac.jp/en_backup/research/2013/06/how-a-rooster-knows-to-crow-at-dawn.php"},{"key":"vache","anchor":"left","at":[46,308,94,76],"name":"La vache","text":"Elle mange de l\u2019herbe pendant des heures. Apr\u00e8s la naissance de son veau, elle donne du lait.","source":"VetAgro Sup, Chaire bien-\u00eatre animal \u2014 Les vaches laiti\u00e8res produisent spontan\u00e9ment du lait toute l\u2019ann\u00e9e, VRAI ou FAUX ? \u2014 https://chaire-bea.vetagro-sup.fr/wp-content/uploads/2024/07/21-06-Les-vaches-laitieres-produisent-spontanement-du-lait-toute-lannee-VRAI-ou-FAUX.pdf ; VetAgro Sup, Chaire bien-\u00eatre animal \u2014 Est-ce une bonne id\u00e9e de mettre des chevaux et des vaches dans une m\u00eame p\u00e2ture ? \u2014 https://chaire-bea.vetagro-sup.fr/wp-content/uploads/2025/04/25-04-Est-ce-une-bonne-idee-de-mettre-des-chevaux-et-des-vaches-dans-une-meme-pature.pdf"},{"key":"poule","anchor":"left","at":[172,358,77,47],"name":"La poule et ses poussins","text":"La poule pond des \u0153ufs. Ses poussins la suivent partout.","source":"Larousse \u2014 poule \u2014 https://www.larousse.fr/dictionnaires/francais/poule ; Encyclopaedia Britannica \u2014 Animal learning : Imprinting \u2014 https://www.britannica.com/topic/animal-learning/Imprinting"},{"key":"tournesol","anchor":"left","at":[214,326,40,58],"name":"Le tournesol","text":"Quand il est jeune, il suit le soleil. Une fois en fleur, il reste tourn\u00e9 vers le soleil du matin.","source":"UC Davis \u2014 Sunflowers Move by the Clock \u2014 https://www.ucdavis.edu/news/sunflowers-move-clock ; PubMed (National Library of Medicine) \u2014 Circadian regulation of sunflower heliotropism, floral orientation, and pollinator visits (Science, 2016) \u2014 https://pubmed.ncbi.nlm.nih.gov/27493185/"},{"key":"moulin","anchor":"right","at":[841,136,118,168],"name":"Le moulin \u00e0 vent","text":"Le vent fait tourner ses ailes, et les ailes font tourner une meule qui \u00e9crase le bl\u00e9 en farine.","source":"Encyclop\u00e6dia Universalis \u2014 MOULIN \u00c0 VENT \u2014 https://www.universalis.fr/encyclopedie/moulin-a-vent/ ; Cambridge Dictionary \u2014 MILLSTONE | English meaning \u2014 https://dictionary.cambridge.org/dictionary/english/millstone"},{"key":"tracteur","anchor":"right","at":[810,336,90,66],"name":"Le tracteur","text":"Tr\u00e8s fort, avec ses grosses roues : il tire les outils qui travaillent la terre.","source":"Larousse \u2014 tracteur \u2014 https://www.larousse.fr/dictionnaires/francais/tracteur ; Cambridge Dictionary \u2014 TRACTOR | English meaning \u2014 https://dictionary.cambridge.org/dictionary/english/tractor"},{"key":"mouton","anchor":"right","at":[953,292,74,42],"name":"Le mouton","text":"Sa laine le tient au chaud. Une fois tondue, elle sert \u00e0 faire des pulls.","source":"British Wool \u2014 How wool keeps us warm \u2014 https://shop.britishwool.org.uk/how-wool-keeps-us-warm/ ; Larousse \u2014 laine \u2014 https://www.larousse.fr/dictionnaires/francais/laine"},{"key":"botte","anchor":"right","at":[945,348,32,30],"name":"La botte de paille","text":"Apr\u00e8s la moisson, les tiges du bl\u00e9 sont souvent roul\u00e9es en grosses bottes.","source":"Cemagref, sur le site du minist\u00e8re de l\u2019Agriculture \u2014 H2 - Ramasseuse-presse \u00e0 balles cylindriques \u2014 https://agriculture.gouv.fr/sites/minagri/files/h2_ramasseuse_presse_cylindrique.pdf ; Larousse \u2014 paille \u2014 https://www.larousse.fr/dictionnaires/francais/paille/57264"},{"key":"epouvantail","anchor":"right","at":[1010,278,48,58],"name":"L\u2019\u00e9pouvantail","text":"Un bonhomme de paille plant\u00e9 dans le champ pour faire peur aux oiseaux gourmands.","source":"Encyclopaedia Britannica \u2014 Scarecrow \u2014 https://www.britannica.com/topic/scarecrow-agriculture ; Larousse \u2014 \u00e9pouvantail \u2014 https://www.larousse.fr/dictionnaires/francais/%C3%A9pouvantail"},{"key":"canard","anchor":"left","at":[16,380,32,22],"name":"Le canard","text":"Ses pattes palm\u00e9es lui servent de rames pour nager sur la mare.","source":"San Diego Zoo Wildlife Alliance \u2014 Webbed feet \u2014 https://animals.sandiegozoo.org/animal-glossary/webbed-feet ; Ducks Unlimited \u2014 Understanding Waterfowl: Masters of the Air and Water \u2014 https://ducks.org/conservation/waterfowl-research-science/understanding-waterfowl-masters-of-the-air-and-water"},{"key":"hirondelle","anchor":"left","at":[40,60,46,40],"name":"L\u2019hirondelle","text":"Elle arrive au printemps et repart en automne vers les pays chauds.","source":"British Trust for Ornithology \u2014 Swallow | BTO \u2014 https://bto.org/understanding-birds/birdfacts/swallow ; LPO PACA (faune-paca.org) \u2014 Hirondelle rustique \u2014 https://paca.lpo.fr/images/mediatheque/fichiers/section_etudes/connaissance/abc/abc_briancon/enq_hiron_fiche_hirondelle_rustique.pdf"}]}}
-P ailes 100 100
-G 1 0.9396926;0.34202015;-0.34202015;0.9396926;20.116377;-14.085638
-D f - #293d4bff,3.2,rr,4 M 50 50 L 50 5
-D f #fbf4e2ff,n #293d4bff,1.6,rr,4 M 52 13 L 65 13 L 65 43 L 52 43 Z
-D f - #c9b68aff,1,rr,4 M 52 20.5 L 65 20.5 M 52 28 L 65 28 M 52 35.5 L 65 35.5 M 58.5 13 L 58.5 43
+M {"key":"campagne","name":"La campagne","about":"Une ferme, un moulin et des animaux.","look":{"colours":{"ink":"#3a2c22","accent":"#a8402f","background":"#dcecc0","line":"#d9c48e","surface":"#fffbee","selected":"#ffe0d6","sheetBackdrop":"#e6f0d0","previewBox":"#f6efd9","caption":"#5f4c3a","statusText":"#3a2c22","sheetTitle":"#3a2c22","sheetCaption":"#3a2c22","quietMark":"#8a7455","swatchRing":"#7a6548","shadow":"#3b2a1e"},"shapes":{"stageRadius":18,"stageBorder":2}},"decor":{"size":[1061,407],"sheet":[266,26,526,351],"top":"#c6e6f8","front":["#8fca72","#84bf67","#6fa856"],"pieces":[{"picture":"fond","role":"ground"},{"picture":"gauche","anchor":"left"},{"picture":"droite","anchor":"right"},{"picture":"nuage","anchor":"left","at":[60,6,144,144],"move":{"name":"nuage","seconds":30}},{"picture":"nuage","anchor":"right","at":[872,0,115,115],"move":{"name":"nuage","seconds":38,"delay":-9}},{"picture":"pommier","anchor":"left","move":{"name":"balance","seconds":10,"origin":[196,273.4]}},{"picture":"tournesols","anchor":"left","move":{"name":"balance","seconds":7,"delay":-2,"origin":[234,390.7]}},{"picture":"ailes","anchor":"right","at":[818,103.1,164,164],"move":{"name":"tourne","seconds":28,"origin":[900,185.1]}},{"picture":"poule","anchor":"left","at":[187.6,385.22,15.4,15.4],"move":{"name":"picore","seconds":5,"origin":[196,398.8]}},{"picture":"hirondelle-gauche","anchor":"left","at":[54.6,74.6,14.8,14.8],"move":{"name":"vol","seconds":9,"origin":[62,82]}},{"picture":"hirondelle-droite","anchor":"right","at":[962,44,12,12],"level":2,"move":{"name":"vol2","seconds":11,"delay":-4,"origin":[968,50]}}],"names":[{"key":"ferme","anchor":"left","at":[30,211,112,86],"name":"La ferme","text":"La maison des fermiers. Ils travaillent du matin au soir pour s\u2019occuper des animaux et des champs.","source":"Acad\u00e9mie fran\u00e7aise \u2014 ferme | Dictionnaire de l\u2019Acad\u00e9mie fran\u00e7aise, 9e \u00e9dition \u2014 https://dictionnaire-academie.fr/article/A9F0490 ; Onisep \u2014 Agriculteur / Agricultrice - Fiche m\u00e9tier \u2014 https://www.onisep.fr/ressources/univers-metier/metiers/agriculteur-agricultrice"},{"key":"pommier","anchor":"left","at":[156,196,83,132],"name":"Le pommier","text":"Au printemps il est couvert de fleurs ; en automne, on cueille ses pommes.","source":"Royal Horticultural Society \u2014 How to grow apples | RHS Guide \u2014 https://www.rhs.org.uk/fruit/apples/grow-your-own"},{"key":"coq","anchor":"left","at":[154.2,379,21,20],"name":"Le coq","text":"C\u2019est lui qui chante \u00ab cocorico \u00bb au lever du jour.","source":"Larousse \u2014 cocorico \u2014 https://www.larousse.fr/dictionnaires/francais/cocorico ; Nagoya University, ITbM \u2014 How a Rooster Knows to Crow at Dawn ? \u2014 https://www.itbm.nagoya-u.ac.jp/en_backup/research/2013/06/how-a-rooster-knows-to-crow-at-dawn.php"},{"key":"vache","anchor":"left","at":[46,308,94,76],"name":"La vache","text":"Elle mange de l\u2019herbe pendant des heures. Apr\u00e8s la naissance de son veau, elle donne du lait.","source":"VetAgro Sup, Chaire bien-\u00eatre animal \u2014 Les vaches laiti\u00e8res produisent spontan\u00e9ment du lait toute l\u2019ann\u00e9e, VRAI ou FAUX ? \u2014 https://chaire-bea.vetagro-sup.fr/wp-content/uploads/2024/07/21-06-Les-vaches-laitieres-produisent-spontanement-du-lait-toute-lannee-VRAI-ou-FAUX.pdf ; VetAgro Sup, Chaire bien-\u00eatre animal \u2014 Est-ce une bonne id\u00e9e de mettre des chevaux et des vaches dans une m\u00eame p\u00e2ture ? \u2014 https://chaire-bea.vetagro-sup.fr/wp-content/uploads/2025/04/25-04-Est-ce-une-bonne-idee-de-mettre-des-chevaux-et-des-vaches-dans-une-meme-pature.pdf"},{"key":"poule","anchor":"left","at":[186.5,384.5,39,18.5],"name":"La poule et ses poussins","text":"La poule pond des \u0153ufs. Ses poussins la suivent partout.","source":"Larousse \u2014 poule \u2014 https://www.larousse.fr/dictionnaires/francais/poule ; Encyclopaedia Britannica \u2014 Animal learning : Imprinting \u2014 https://www.britannica.com/topic/animal-learning/Imprinting"},{"key":"tournesol","anchor":"left","at":[219,342,30,44],"name":"Le tournesol","text":"Quand il est jeune, il suit le soleil. Une fois en fleur, il reste tourn\u00e9 vers le soleil du matin.","source":"UC Davis \u2014 Sunflowers Move by the Clock \u2014 https://www.ucdavis.edu/news/sunflowers-move-clock ; PubMed (National Library of Medicine) \u2014 Circadian regulation of sunflower heliotropism, floral orientation, and pollinator visits (Science, 2016) \u2014 https://pubmed.ncbi.nlm.nih.gov/27493185/"},{"key":"moulin","anchor":"right","at":[818,103,164,191],"name":"Le moulin \u00e0 vent","text":"Le vent fait tourner ses ailes, et les ailes font tourner une meule qui \u00e9crase le bl\u00e9 en farine.","source":"Encyclop\u00e6dia Universalis \u2014 MOULIN \u00c0 VENT \u2014 https://www.universalis.fr/encyclopedie/moulin-a-vent/ ; Cambridge Dictionary \u2014 MILLSTONE | English meaning \u2014 https://dictionary.cambridge.org/dictionary/english/millstone"},{"key":"tracteur","anchor":"right","at":[800,297,149,104],"name":"Le tracteur","text":"Tr\u00e8s fort, avec ses grosses roues : il tire les outils qui travaillent la terre.","source":"Larousse \u2014 tracteur \u2014 https://www.larousse.fr/dictionnaires/francais/tracteur ; Cambridge Dictionary \u2014 TRACTOR | English meaning \u2014 https://dictionary.cambridge.org/dictionary/english/tractor"},{"key":"mouton","anchor":"right","at":[960,307,49,27],"name":"Le mouton","text":"Sa laine le tient au chaud. Une fois tondue, elle sert \u00e0 faire des pulls.","source":"British Wool \u2014 How wool keeps us warm \u2014 https://shop.britishwool.org.uk/how-wool-keeps-us-warm/ ; Larousse \u2014 laine \u2014 https://www.larousse.fr/dictionnaires/francais/laine"},{"key":"botte","anchor":"right","at":[958.5,339,41,38],"name":"La botte de paille","text":"Apr\u00e8s la moisson, les tiges du bl\u00e9 sont souvent roul\u00e9es en grosses bottes.","source":"Cemagref, sur le site du minist\u00e8re de l\u2019Agriculture \u2014 H2 - Ramasseuse-presse \u00e0 balles cylindriques \u2014 https://agriculture.gouv.fr/sites/minagri/files/h2_ramasseuse_presse_cylindrique.pdf ; Larousse \u2014 paille \u2014 https://www.larousse.fr/dictionnaires/francais/paille/57264"},{"key":"epouvantail","anchor":"right","at":[1017,298,34,39],"name":"L\u2019\u00e9pouvantail","text":"Un bonhomme de paille plant\u00e9 dans le champ pour faire peur aux oiseaux gourmands.","source":"Encyclopaedia Britannica \u2014 Scarecrow \u2014 https://www.britannica.com/topic/scarecrow-agriculture ; Larousse \u2014 \u00e9pouvantail \u2014 https://www.larousse.fr/dictionnaires/francais/%C3%A9pouvantail"},{"key":"canard","anchor":"left","at":[19,384,23,15],"name":"Le canard","text":"Ses pattes palm\u00e9es lui servent de rames pour nager sur la mare.","source":"San Diego Zoo Wildlife Alliance \u2014 Webbed feet \u2014 https://animals.sandiegozoo.org/animal-glossary/webbed-feet ; Ducks Unlimited \u2014 Understanding Waterfowl: Masters of the Air and Water \u2014 https://ducks.org/conservation/waterfowl-research-science/understanding-waterfowl-masters-of-the-air-and-water"},{"key":"hirondelle","anchor":"left","at":[51,73,22,17],"name":"L\u2019hirondelle","text":"Elle arrive au printemps et repart en automne vers les pays chauds.","source":"British Trust for Ornithology \u2014 Swallow | BTO \u2014 https://bto.org/understanding-birds/birdfacts/swallow ; LPO PACA (faune-paca.org) \u2014 Hirondelle rustique \u2014 https://paca.lpo.fr/images/mediatheque/fichiers/section_etudes/connaissance/abc/abc_briancon/enq_hiron_fiche_hirondelle_rustique.pdf"}]}}
+P ailes 164 164
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;82;82
+D f - #293d4bff,3.4,rr,4 M 0 0 L 0 -80
+D f #fbf4e2ff,n #293d4bff,1.7,rr,4 M -2 -14 L -16 -14 L -16 -78 L -2 -78 Z
+D f - #c9b68aff,1,rm,4 M -2 -20 L -16 -20 M -2 -26 L -16 -26 M -2 -32 L -16 -32 M -2 -38 L -16 -38 M -2 -44 L -16 -44 M -2 -50 L -16 -50 M -2 -56 L -16 -56 M -2 -62 L -16 -62 M -2 -68 L -16 -68 M -2 -74 L -16 -74 M -9 -14 L -9 -78
 E
-G 1 -0.34202015;0.9396926;-0.9396926;-0.34202015;114.08564;20.116377
-D f - #293d4bff,3.2,rr,4 M 50 50 L 50 5
-D f #fbf4e2ff,n #293d4bff,1.6,rr,4 M 52 13 L 65 13 L 65 43 L 52 43 Z
-D f - #c9b68aff,1,rr,4 M 52 20.5 L 65 20.5 M 52 28 L 65 28 M 52 35.5 L 65 35.5 M 58.5 13 L 58.5 43
+G 1 -0.34202015;0.9396926;-0.9396926;-0.34202015;82;82
+D f - #293d4bff,3.4,rr,4 M 0 0 L 0 -80
+D f #fbf4e2ff,n #293d4bff,1.7,rr,4 M -2 -14 L -16 -14 L -16 -78 L -2 -78 Z
+D f - #c9b68aff,1,rm,4 M -2 -20 L -16 -20 M -2 -26 L -16 -26 M -2 -32 L -16 -32 M -2 -38 L -16 -38 M -2 -44 L -16 -44 M -2 -50 L -16 -50 M -2 -56 L -16 -56 M -2 -62 L -16 -62 M -2 -68 L -16 -68 M -2 -74 L -16 -74 M -9 -14 L -9 -78
 E
-G 1 -0.9396926;-0.34202015;0.34202015;-0.9396926;79.88362;114.08564
-D f - #293d4bff,3.2,rr,4 M 50 50 L 50 5
-D f #fbf4e2ff,n #293d4bff,1.6,rr,4 M 52 13 L 65 13 L 65 43 L 52 43 Z
-D f - #c9b68aff,1,rr,4 M 52 20.5 L 65 20.5 M 52 28 L 65 28 M 52 35.5 L 65 35.5 M 58.5 13 L 58.5 43
+G 1 -0.9396926;-0.34202015;0.34202015;-0.9396926;82;82
+D f - #293d4bff,3.4,rr,4 M 0 0 L 0 -80
+D f #fbf4e2ff,n #293d4bff,1.7,rr,4 M -2 -14 L -16 -14 L -16 -78 L -2 -78 Z
+D f - #c9b68aff,1,rm,4 M -2 -20 L -16 -20 M -2 -26 L -16 -26 M -2 -32 L -16 -32 M -2 -38 L -16 -38 M -2 -44 L -16 -44 M -2 -50 L -16 -50 M -2 -56 L -16 -56 M -2 -62 L -16 -62 M -2 -68 L -16 -68 M -2 -74 L -16 -74 M -9 -14 L -9 -78
 E
-G 1 0.34202015;-0.9396926;0.9396926;0.34202015;-14.085638;79.88362
-D f - #293d4bff,3.2,rr,4 M 50 50 L 50 5
-D f #fbf4e2ff,n #293d4bff,1.6,rr,4 M 52 13 L 65 13 L 65 43 L 52 43 Z
-D f - #c9b68aff,1,rr,4 M 52 20.5 L 65 20.5 M 52 28 L 65 28 M 52 35.5 L 65 35.5 M 58.5 13 L 58.5 43
+G 1 0.34202015;-0.9396926;0.9396926;0.34202015;82;82
+D f - #293d4bff,3.4,rr,4 M 0 0 L 0 -80
+D f #fbf4e2ff,n #293d4bff,1.7,rr,4 M -2 -14 L -16 -14 L -16 -78 L -2 -78 Z
+D f - #c9b68aff,1,rm,4 M -2 -20 L -16 -20 M -2 -26 L -16 -26 M -2 -32 L -16 -32 M -2 -38 L -16 -38 M -2 -44 L -16 -44 M -2 -50 L -16 -50 M -2 -56 L -16 -56 M -2 -62 L -16 -62 M -2 -68 L -16 -68 M -2 -74 L -16 -74 M -9 -14 L -9 -78
 E
-D f #7a5a3cff,n #293d4bff,2,bm,4 M 54.8 50 C 54.8 52.650967 52.650967 54.8 50 54.8 C 47.349033 54.8 45.2 52.650967 45.2 50 C 45.2 47.349033 47.349033 45.2 50 45.2 C 52.650967 45.2 54.8 47.349033 54.8 50 Z
+D f #7a5a3cff,n #293d4bff,2.2,rr,4 M 88 82 C 88 85.313705 85.313705 88 82 88 C 78.686295 88 76 85.313705 76 82 C 76 78.686295 78.686295 76 82 76 C 85.313705 76 88 78.686295 88 82 Z
 X
 P droite 1061 407
-G 1 1;0;0;1;1016;56
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M 20.8 -3.1 L 35 0 L 20.8 3.1 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M 20.1 6.2 L 26.1 12.6 L 17.3 11.8 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M 15.4 14.3 L 21.8 27.4 L 10.5 18.2 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M 7.7 19.5 L 6.5 28.3 L 1.6 20.9 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M -1.6 20.9 L -7.8 34.1 L -7.7 19.5 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M -10.5 18.2 L -18.1 22.7 L -15.4 14.3 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M -17.3 11.8 L -31.5 15.2 L -20.1 6.2 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M -20.8 3.1 L -29 0 L -20.8 -3.1 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M -20.1 -6.2 L -31.5 -15.2 L -17.3 -11.8 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M -15.4 -14.3 L -18.1 -22.7 L -10.5 -18.2 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M -7.7 -19.5 L -7.8 -34.1 L -1.6 -20.9 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M 1.6 -20.9 L 6.5 -28.3 L 7.7 -19.5 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M 10.5 -18.2 L 21.8 -27.4 L 15.4 -14.3 Z
-D f #ffab2eff,n #293d4bff,1.6,rr,4 M 17.3 -11.8 L 26.1 -12.6 L 20.1 -6.2 Z
-D f #ffd23fff,n #293d4bff,2.4,bm,4 M 20 0 C 20 11.045695 11.045695 20 0.0000000000000012246468 20 C -11.045695 20 -20 11.045695 -20 0.0000000000000024492936 C -20 -11.045695 -11.045695 -20 -0.000000000000005450297 -20 C 11.045695 -20 20 -11.045695 20 -0.0000000000000017763568 Z
-D f #ffe680ff,n - M 7.2000003 -4.8 C 7.2000003 1.6065031 2.006503 6.8 -4.4 6.8 C -10.806503 6.7999997 -16 1.6065029 -16 -4.8 C -16 -11.206504 -10.806503 -16.400002 -4.4 -16.400002 C 2.0065036 -16.400002 7.200001 -11.206504 7.2000003 -4.8 Z
-D f - #fff8d6ff,2.6,rr,4 M -12.4 -4 C -10.4 -10 -5.6 -13.2 -0.4 -14
-E
+D f R:1016:56:34:1016:56:0:p:-:0=#fffbe8ff/0.2=#ffeea0d9/0.5=#ffeea04d/1=#ffeea000,n - M 1050 56 C 1050 74.77768 1034.7777 90 1016 90 C 997.2223 90 982 74.77768 982 56 C 982 37.222317 997.2223 22 1016 22 C 1034.7777 22 1050 37.222317 1050 56 Z
+D f #fffdf4ff,n - M 1020 56 C 1020 58.20914 1018.20917 60 1016 60 C 1013.79083 60 1012 58.20914 1012 56 C 1012 53.79086 1013.79083 52 1016 52 C 1018.20917 52 1020 53.79086 1020 56 Z
 D f #f1d98aff,n #d9b24aff,1.6,rr,4 M 980 322 L 1046 302 L 1057 356 L 1000 356 Z
 D f - #d9b24aff,1.6,rr,4 M 990 354 L 992 332
 D f - #d9b24aff,1.6,rr,4 M 999 354 L 1001 329
@@ -7096,6 +7117,7 @@ D f - #d9b24aff,1.6,rr,4 M 1017 354 L 1019 335
 D f - #d9b24aff,1.6,rr,4 M 1026 354 L 1028 332
 D f - #d9b24aff,1.6,rr,4 M 1035 354 L 1037 329
 D f - #d9b24aff,1.6,rr,4 M 1044 354 L 1046 338
+G 1 0.65;0;0;0.65;361.9;117.6
 G 1 0.82;0;0;0.82;1034;334
 D f - #293d4bff,5.8,rr,4 M 0 0 L 0 -50
 D f - #293d4bff,5.8,rr,4 M -21 -38 L 21 -38
@@ -7111,7 +7133,8 @@ D f - #293d4bff,5,rr,4 M -13 -56 L 13 -56
 D f - #c9a14aff,2.6,rr,4 M -13 -56 L 13 -56
 D f #c9a14aff,n #293d4bff,1.8,rr,4 M -7 -56 L -5 -67 L 5 -67 L 7 -56 Z
 E
-G 1 1.288;0;0;1.288;900;302
+E
+G 1 1.288;0;0;1.288;900;292
 D f #f6ecd6ff,n #293d4bff,2.4,rr,4 M -20 0 L -13 -74 L 13 -74 L 20 0 Z
 D f - #d9cbaaff,1.6,rr,4 M -15 -14 L -7 -14 M 4 -22 L 12 -22 M -11 -40 L -4 -40 M 2 -52 L 9 -52 M -7 -63 L -1 -63 M 5 -8 L 13 -8
 D f #7a5a3cff,n #293d4bff,1.8,rr,4 M -6 0 L -6 -14 C -6 -21 6 -21 6 -14 L 6 0 Z
@@ -7120,49 +7143,7 @@ D f - #293d4bff,2.2,rr,4 M -17 -30 L 17 -30
 D f #b5463aff,n #293d4bff,2.4,rr,4 M -17 -74 L 0 -99 L 17 -74 Z
 D f - #d97a6cff,2,rr,4 M -10 -77 L -1 -92
 E
-G 1 1.12;0;0;1.12;852;400
-G 0.9 -
-D f #d9dde2ff,n - M 27 -42 C 27 -40.343147 25.656855 -39 24 -39 C 22.343145 -39 21 -40.343147 21 -42 C 21 -43.656853 22.343145 -45 24 -45 C 25.656855 -45 27 -43.656853 27 -42 Z
-E
-G 0.7 -
-D f #d9dde2ff,n - M 32 -49 C 32 -46.79086 30.209139 -45 28 -45 C 25.790861 -45 24 -46.79086 24 -49 C 24 -51.20914 25.790861 -53 28 -53 C 30.209139 -53 32 -51.20914 32 -49 Z
-E
-D f - #293d4bff,4.4,rr,4 M 22 -22 L 22 -38
-D f - #8d97a1ff,2,rr,4 M 22 -22 L 22 -38
-D f #b9382fff,n #293d4bff,2.2,rr,4 M -36 -20 C -36 -38 2 -38 2 -20 Z
-D f #d9433bff,n #293d4bff,2.2,rr,4 M -6 -24 L 34 -24 C 39 -24 41 -19 41 -15 L 41 -10 L -6 -10 Z
-D f - #96302aff,1.4,rr,4 M 36 -21 L 36 -13 M 31 -21 L 31 -13
-D f #bfe3f2ff,n #293d4bff,2.2,rr,4 M -30 -24 L -30 -50 L -5 -50 L -3 -24 Z
-D f - #293d4bff,1.6,rr,4 M -17 -50 L -17 -24
-D f #d9433bff,n #293d4bff,2,rr,4 M -34 -50 L -2 -50 L -2 -55 L -34 -55 Z
-D f - #293d4bff,1.8,rr,4 M 0 -24 C 2 -30 6 -30 8 -24
-D f #3a3a3aff,n #293d4bff,2.4,bm,4 M -2 -16 C -2 -7.163444 -9.163444 -0.0000000000000017763568 -18 0 C -26.836555 0 -34 -7.163444 -34 -16 C -34 -24.836555 -26.836555 -32 -18 -32 C -9.163444 -32 -2 -24.836555 -2 -16 Z
-D f - #6a6a6aff,1.8,rr,4 M -6.4 -16 L -3 -16
-D f - #6a6a6aff,1.8,rr,4 M -8.6 -9.2 L -5.9 -7.2
-D f - #6a6a6aff,1.8,rr,4 M -14.4 -5 L -13.4 -1.7
-D f - #6a6a6aff,1.8,rr,4 M -21.6 -5 L -22.6 -1.7
-D f - #6a6a6aff,1.8,rr,4 M -27.4 -9.2 L -30.1 -7.2
-D f - #6a6a6aff,1.8,rr,4 M -29.6 -16 L -33 -16
-D f - #6a6a6aff,1.8,rr,4 M -27.4 -22.8 L -30.1 -24.8
-D f - #6a6a6aff,1.8,rr,4 M -21.6 -27 L -22.6 -30.3
-D f - #6a6a6aff,1.8,rr,4 M -14.4 -27 L -13.4 -30.3
-D f - #6a6a6aff,1.8,rr,4 M -8.6 -22.8 L -5.9 -24.8
-D f #f4c430ff,n #293d4bff,1.6,bm,4 M -11 -16 C -11 -12.1340065 -14.1340065 -9 -18 -9 C -21.865993 -9 -25 -12.1340065 -25 -16 C -25 -19.865993 -21.865993 -23 -18 -23 C -14.1340065 -23 -11 -19.865993 -11 -16 Z
-D f #293d4bff,n - M -15.76 -16 C -15.76 -14.762882 -16.762882 -13.76 -18 -13.76 C -19.237118 -13.76 -20.24 -14.762882 -20.24 -16 C -20.24 -17.237118 -19.237118 -18.24 -18 -18.24 C -16.762882 -18.24 -15.76 -17.237118 -15.76 -16 Z
-D f #3a3a3aff,n #293d4bff,2.4,bm,4 M 36 -9 C 36 -4.029437 31.970562 0 27 0 C 22.029438 0 18 -4.029437 18 -9 C 18 -13.970563 22.029438 -18 27 -18 C 31.970562 -18 36 -13.970563 36 -9 Z
-D f - #6a6a6aff,1.8,rr,4 M 31.6 -9 L 35 -9
-D f - #6a6a6aff,1.8,rr,4 M 30.7 -6.3 L 33.5 -4.3
-D f - #6a6a6aff,1.8,rr,4 M 28.4 -4.6 L 29.5 -1.4
-D f - #6a6a6aff,1.8,rr,4 M 25.6 -4.6 L 24.5 -1.4
-D f - #6a6a6aff,1.8,rr,4 M 23.3 -6.3 L 20.5 -4.3
-D f - #6a6a6aff,1.8,rr,4 M 22.4 -9 L 19 -9
-D f - #6a6a6aff,1.8,rr,4 M 23.3 -11.7 L 20.5 -13.7
-D f - #6a6a6aff,1.8,rr,4 M 25.6 -13.4 L 24.5 -16.6
-D f - #6a6a6aff,1.8,rr,4 M 28.4 -13.4 L 29.5 -16.6
-D f - #6a6a6aff,1.8,rr,4 M 30.7 -11.7 L 33.5 -13.7
-D f #f4c430ff,n #293d4bff,1.6,bm,4 M 31 -9 C 31 -6.790861 29.209139 -5 27 -5 C 24.790861 -5 23 -6.790861 23 -9 C 23 -11.209139 24.790861 -13 27 -13 C 29.209139 -13 31 -11.209139 31 -9 Z
-D f #293d4bff,n - M 28.28 -9 C 28.28 -8.293076 27.706924 -7.72 27 -7.7200003 C 26.293076 -7.72 25.72 -8.293076 25.72 -9 C 25.72 -9.706924 26.293076 -10.28 27 -10.28 C 27.706924 -10.28 28.28 -9.706924 28.28 -9 Z
-E
+G 1 0.61;0;0;0.61;379.08;129.87
 G 1 0.9;0;0;0.9;972;330
 D f - #293d4bff,5,rr,4 M -10 -6 L -10 1 M -4 -6 L -4 1 M 8 -6 L 8 1 M 14 -6 L 14 1
 D f - #4f4656ff,2.4,rr,4 M -10 -6 L -10 0 M -4 -6 L -4 0 M 8 -6 L 8 0 M 14 -6 L 14 0
@@ -7195,6 +7176,8 @@ D f #293d4bff,n - M 16.3 -23.2 C 16.3 -22.647717 15.852284 -22.2 15.3 -22.2 C 14
 D f #293d4bff,n - M 22.3 -23.2 C 22.3 -22.647717 21.852283 -22.2 21.3 -22.2 C 20.747715 -22.2 20.3 -22.647717 20.3 -23.2 C 20.3 -23.752285 20.747715 -24.2 21.3 -24.2 C 21.852283 -24.2 22.3 -23.752285 22.3 -23.2 Z
 D f - #f4d9d2ff,1.2,rr,4 M 16 -17.6 Q 18 -16 20 -17.6
 E
+E
+G 1 0.45;0;0;0.45;546.6;176
 G 1 -0.7;0;0;0.7;1012;318
 D f - #293d4bff,5,rr,4 M -10 -6 L -10 1 M -4 -6 L -4 1 M 8 -6 L 8 1 M 14 -6 L 14 1
 D f - #4f4656ff,2.4,rr,4 M -10 -6 L -10 0 M -4 -6 L -4 0 M 8 -6 L 8 0 M 14 -6 L 14 0
@@ -7227,12 +7210,75 @@ D f #293d4bff,n - M 16.3 -23.2 C 16.3 -22.647717 15.852284 -22.2 15.3 -22.2 C 14
 D f #293d4bff,n - M 22.3 -23.2 C 22.3 -22.647717 21.852283 -22.2 21.3 -22.2 C 20.747715 -22.2 20.3 -22.647717 20.3 -23.2 C 20.3 -23.752285 20.747715 -24.2 21.3 -24.2 C 21.852283 -24.2 22.3 -23.752285 22.3 -23.2 Z
 D f - #f4d9d2ff,1.2,rr,4 M 16 -17.6 Q 18 -16 20 -17.6
 E
+E
+G 1 1.32;0;0;1.32;-289.52;-120.64
 G 1 0.8;0;0;0.8;958;372
 D f #e6c463ff,n #293d4bff,2.2,rr,4 M 0 -28 L 15 -28 C 24 -28 24 0 15 0 L 0 0 Z
 D f - #cfa93fff,1.3,rr,4 M 8 -27 C 13 -20 13 -8 8 -1 M 14 -26 C 18 -20 18 -8 14 -2
 D f #f1d27aff,n #293d4bff,2.2,bm,4 M 14 -14 C 14 -6.2680135 7.7319865 -0.0000000000000017763568 0.00000000000000085725277 0 C -7.7319865 0.0000000000000017763568 -14 -6.2680135 -14 -14 C -14 -21.731987 -7.7319865 -28 -0.0000000000000025717583 -28 C 7.7319865 -28 14 -21.731987 14 -14 Z
 D f - #cfa93fff,1.6,rr,4 M -9 -14 C -9 -18.970562 -4.970563 -23 -0.0000000000000016532732 -23 C 4.970563 -23 9 -18.970562 9 -14 C 9 -9.029437 4.970563 -5 0.0000000000000027554554 -5 C 0.0000000000000026645353 -1.6862915 -2.6862915 1 -6 1 C -9.313708 1 -12 -1.6862915 -12 -5 C -12 -8.313708 -9.313708 -11 -6 -11 C -6 -12.656855 -4.656854 -14 -3 -14 C -1.3431457 -14 0.0000000000000013322676 -12.656855 0.0000000000000017763568 -11 C 0.000000000000002220446 -9.343145 -1.3431457 -8 -3 -8
 D f - #e6c463ff,1.6,rr,4 M -10 0 L -14 3 M -2 1 L -4 5 M 8 1 L 11 4
+E
+E
+G 1 3.72;0;0;3.72;836;400
+D f - #293d4bff,1.1,rm,4 M -2.5 -4.8 L -9 -4.2
+D f - #5b6168ff,0.55,rm,4 M -2.5 -4.8 L -9 -4.2
+D f - #293d4bff,0.9,rm,4 M -3 -9.6 L -8.6 -8.8
+D f - #8d97a1ff,0.4,rm,4 M -3 -9.6 L -8.6 -8.8
+D f #5b6168ff,n #293d4bff,0.4,rr,4 M -1 -4.6 L 26.6 -4.6 L 28.4 -6.2 L 28.4 -10.6 L -1 -10.6 Z
+D f #5b6168ff,n #293d4bff,0.45,rr,4 M 28.2 -5 L 30.1 -5 L 30.1 -10 L 28.2 -10 Z
+D f - #3a3a3aff,0.25,rm,4 M 28.85 -5.5 L 28.85 -9.5
+D f - #3a3a3aff,0.25,rm,4 M 29.5 -5.5 L 29.5 -9.5
+D f #bfe3f2ff,n #293d4bff,0.85,rr,4 M -5.7 -12 L -6 -25 L 10 -25 L 10.4 -11 L 6 -11 Z
+D f #5b6168ff,n #293d4bff,0.3,rr,4 M -2.2 -17 L -1.5 -21.2 Q -1.2 -21.8 -0.5 -21.5 L -0.1 -17 Z
+D f - #293d4bff,0.5,rm,4 M 6.4 -16.9 L 8.4 -18.5
+D f - #293d4bff,0.4,rm,4 M 7.6 -17.6 L 9.3 -14.4
+D f - #293d4bff,0.8,rm,4 M 3 -11 L 2.7 -25
+D f - #293d4bff,0.35,rm,4 M 4.2 -15.6 L 5.3 -15.6
+D f #d9433bff,n #293d4bff,0.5,rr,4 M -6.9 -24.6 L 11.1 -24.6 L 11.1 -25.9 Q 11.1 -26.6 10.4 -26.6 L -6.2 -26.6 Q -6.9 -26.6 -6.9 -25.9 Z
+D f #fff3c4ff,n #293d4bff,0.25,rr,4 M 9.3 -24.9 L 10.7 -24.9 L 10.7 -25.8 L 9.3 -25.8 Z
+D f #fff3c4ff,n #293d4bff,0.25,rr,4 M -6.5 -24.9 L -5.1 -24.9 L -5.1 -25.8 L -6.5 -25.8 Z
+D f #d9433bff,n #293d4bff,0.5,rr,4 M 10.4 -10.4 L 10.4 -17.6 L 25 -16.9 Q 28.4 -16.8 28.9 -14.8 L 28.9 -10.4 Z
+D f #3a3a3aff,n #293d4bff,0.3,rr,4 M 25.9 -11.2 L 28.3 -11.2 L 28.3 -14.2 L 26.4 -14.2 Z
+D f - #6a6a6aff,0.25,rm,4 M 26.5 -12.2 L 27.9 -12.2
+D f - #6a6a6aff,0.25,rm,4 M 26.6 -13.2 L 27.9 -13.2
+D f #fff3c4ff,n #293d4bff,0.25,rr,4 M 26.9 -14.9 L 28.5 -14.9 L 28.5 -15.9 L 26.9 -15.9 Z
+D f - #b9382fff,0.45,rm,4 M 13 -15.9 L 24.5 -15.3
+D f #8d97a1ff,n #293d4bff,0.4,rr,4 M 11.1 -17 L 11.1 -26.8 L 12 -27.3 L 12 -17 Z
+D f #a9b0b7ff,n #293d4bff,0.35,rr,4 M 10.9 -18.2 L 12.2 -18.2 L 12.2 -22.4 L 10.9 -22.4 Z
+D f #5b6168ff,n #293d4bff,0.4,rr,4 M 8 -4 L 10.3 -4 L 10.3 -10.8 L 8 -10.8 Z
+D f - #8d97a1ff,0.45,rm,4 M 8.4 -6 L 9.9 -6
+D f - #8d97a1ff,0.45,rm,4 M 8.4 -8.4 L 9.9 -8.4
+D f #2c3036ff,n - M -8.27 -9.16 C -7.6789765 -12.504207 -5.1324334 -15.16354 -1.8169633 -15.898852 C 1.4985069 -16.634165 4.930564 -15.300778 6.88 -12.52 L 6.06 -11.94 C 4.3433356 -14.392244 1.3183714 -15.56874 -1.6040548 -14.920771 C -4.526481 -14.272802 -6.770695 -11.92801 -7.29 -8.98 Z
+D f #3a3a3aff,n #293d4bff,0.5,rr,4 M 7.25 -7.7 L 7.7 -7.96 L 7.62 -8.8 L 7.14 -8.98 L 6.96 -9.74 L 7.31 -10.12 L 7 -10.9 L 6.49 -10.94 L 6.1 -11.62 L 6.33 -12.08 L 5.82 -12.74 L 5.31 -12.63 L 4.75 -13.18 L 4.84 -13.69 L 4.16 -14.18 L 3.71 -13.93 L 3.01 -14.29 L 2.96 -14.81 L 2.17 -15.09 L 1.8 -14.72 L 1.03 -14.88 L 0.83 -15.35 L 0 -15.4 L -0.25 -14.95 L -1.03 -14.88 L -1.36 -15.28 L -2.17 -15.09 L -2.28 -14.58 L -3.01 -14.29 L -3.44 -14.59 L -4.16 -14.18 L -4.13 -13.66 L -4.75 -13.18 L -5.24 -13.34 L -5.82 -12.74 L -5.64 -12.26 L -6.1 -11.62 L -6.62 -11.64 L -7 -10.9 L -6.69 -10.48 L -6.96 -9.74 L -7.46 -9.61 L -7.62 -8.8 L -7.21 -8.49 L -7.25 -7.7 L -7.7 -7.44 L -7.62 -6.6 L -7.14 -6.42 L -6.96 -5.66 L -7.31 -5.28 L -7 -4.5 L -6.49 -4.46 L -6.1 -3.78 L -6.33 -3.32 L -5.82 -2.66 L -5.31 -2.77 L -4.75 -2.22 L -4.84 -1.71 L -4.16 -1.22 L -3.71 -1.47 L -3.01 -1.11 L -2.96 -0.59 L -2.17 -0.31 L -1.8 -0.68 L -1.03 -0.52 L -0.83 -0.05 L 0 0 L 0.25 -0.45 L 1.03 -0.52 L 1.36 -0.12 L 2.17 -0.31 L 2.28 -0.82 L 3.01 -1.11 L 3.44 -0.81 L 4.16 -1.22 L 4.13 -1.74 L 4.75 -2.22 L 5.24 -2.06 L 5.82 -2.66 L 5.64 -3.14 L 6.1 -3.78 L 6.62 -3.76 L 7 -4.5 L 6.69 -4.92 L 6.96 -5.66 L 7.46 -5.79 L 7.62 -6.6 L 7.21 -6.91 Z
+D f - #545454ff,0.3,bm,4 M 6.45 -7.7 C 6.45 -4.1377635 3.5622365 -1.25 0.0000000000000003949486 -1.25 C -3.5622365 -1.25 -6.45 -4.1377635 -6.45 -7.7 C -6.45 -11.262237 -3.5622365 -14.15 -0.0000000000000011848458 -14.15 C 3.5622365 -14.15 6.45 -11.262237 6.45 -7.7 Z
+D f #f4c430ff,n #293d4bff,0.45,rr,4 M 4.3 -7.7 C 4.3 -5.3251753 2.3748245 -3.3999996 0.00000000000000026329908 -3.3999996 C -2.3748245 -3.3999996 -4.3 -5.3251753 -4.3 -7.7 C -4.3 -10.074824 -2.3748245 -12 -0.00000000000000078989724 -12 C 2.3748245 -12 4.3 -10.074824 4.3 -7.7 Z
+D f - #d9a520ff,0.5,bm,4 M 3.1 -7.7 C 3.1 -5.987917 1.7120826 -4.6 0.00000000000000018982024 -4.6 C -1.7120826 -4.6 -3.1 -5.987917 -3.1 -7.7 C -3.0999997 -9.412083 -1.7120825 -10.799999 0.000000000000000034387903 -10.799999 C 1.7120825 -10.799999 3.0999997 -9.412083 3.1 -7.7 Z
+D f #c9ced3ff,n #293d4bff,0.35,rr,4 M 1.5 -7.7 C 1.5 -6.8715725 0.82842714 -6.2 0.00000000000000009184851 -6.2 C -0.82842714 -6.2 -1.5 -6.8715725 -1.5 -7.7 C -1.5 -8.528427 -0.82842714 -9.2 -0.00000000000000027554554 -9.2 C 0.82842714 -9.2 1.5 -8.528427 1.5 -7.7 Z
+D f #293d4bff,n - M 1.11 -7.7 C 1.1099999 -7.600589 1.0294112 -7.52 0.93 -7.52 C 0.8305888 -7.52 0.7500001 -7.600589 0.75 -7.7 C 0.7500001 -7.799411 0.8305888 -7.8799996 0.93 -7.8799996 C 1.0294112 -7.8799996 1.1099999 -7.799411 1.11 -7.7 Z
+D f #293d4bff,n - M 0.84000003 -8.36 C 0.8400001 -8.312261 0.8210359 -8.266477 0.78727937 -8.23272 C 0.7535228 -8.198963 0.70773906 -8.179999 0.66 -8.179999 C 0.612261 -8.179999 0.56647724 -8.198963 0.5327207 -8.23272 C 0.49896413 -8.266477 0.47999993 -8.312261 0.48000002 -8.36 C 0.47999993 -8.407739 0.49896413 -8.453523 0.5327207 -8.487279 C 0.56647724 -8.521036 0.612261 -8.54 0.66 -8.54 C 0.70773906 -8.54 0.7535228 -8.521036 0.78727937 -8.487279 C 0.8210359 -8.453523 0.8400001 -8.407739 0.84000003 -8.36 Z
+D f #293d4bff,n - M 0.18 -8.63 C 0.18000008 -8.582261 0.1610359 -8.536477 0.12727933 -8.502721 C 0.09352277 -8.468964 0.04773902 -8.45 0.000000000000000007681349 -8.45 C -0.04773902 -8.45 -0.09352277 -8.468964 -0.12727933 -8.502721 C -0.1610359 -8.536477 -0.18000008 -8.582261 -0.18 -8.63 C -0.18000008 -8.677739 -0.1610359 -8.723523 -0.12727933 -8.757279 C -0.09352277 -8.791037 -0.04773902 -8.81 -0.000000000000000069693024 -8.81 C 0.04773902 -8.81 0.09352277 -8.791037 0.12727933 -8.757279 C 0.1610359 -8.723523 0.18000008 -8.677739 0.18 -8.63 Z
+D f #293d4bff,n - M -0.48000002 -8.36 C -0.47999993 -8.312261 -0.49896413 -8.266477 -0.5327207 -8.23272 C -0.56647724 -8.198963 -0.612261 -8.179999 -0.66 -8.179999 C -0.70773906 -8.179999 -0.7535228 -8.198963 -0.78727937 -8.23272 C -0.8210359 -8.266477 -0.8400001 -8.312261 -0.84000003 -8.36 C -0.8400001 -8.407739 -0.8210359 -8.453523 -0.78727937 -8.487279 C -0.7535228 -8.521036 -0.70773906 -8.54 -0.66 -8.54 C -0.612261 -8.54 -0.56647724 -8.521036 -0.5327207 -8.487279 C -0.49896413 -8.453523 -0.47999993 -8.407739 -0.48000002 -8.36 Z
+D f #293d4bff,n - M -0.75 -7.7 C -0.7500001 -7.600589 -0.8305888 -7.52 -0.93 -7.52 C -1.0294112 -7.52 -1.1099999 -7.600589 -1.11 -7.7 C -1.1099999 -7.799411 -1.0294112 -7.8799996 -0.93 -7.8799996 C -0.8305888 -7.8799996 -0.7500001 -7.799411 -0.75 -7.7 Z
+D f #293d4bff,n - M -0.48000002 -7.04 C -0.4800001 -6.940589 -0.56058884 -6.86 -0.66 -6.86 C -0.7594112 -6.86 -0.8399999 -6.940589 -0.84000003 -7.04 C -0.8399999 -7.139411 -0.7594112 -7.22 -0.66 -7.22 C -0.56058884 -7.22 -0.4800001 -7.139411 -0.48000002 -7.04 Z
+D f #293d4bff,n - M 0.18 -6.77 C 0.1799999 -6.670589 0.09941119 -6.59 -0.000000000000000006190166 -6.59 C -0.09941119 -6.59 -0.1799999 -6.670589 -0.18 -6.77 C -0.1799999 -6.869411 -0.09941119 -6.95 -0.000000000000000011734221 -6.95 C 0.09941119 -6.95 0.1799999 -6.869411 0.18 -6.77 Z
+D f #293d4bff,n - M 0.84000003 -7.04 C 0.8399999 -6.940589 0.7594112 -6.86 0.66 -6.86 C 0.56058884 -6.86 0.4800001 -6.940589 0.48000002 -7.04 C 0.4800001 -7.139411 0.56058884 -7.22 0.66 -7.22 C 0.7594112 -7.22 0.8399999 -7.139411 0.84000003 -7.04 Z
+D f #293d4bff,n - M 0.48 -7.7 C 0.48000002 -7.434903 0.2650967 -7.22 -0.000000000000000013907154 -7.22 C -0.2650967 -7.22 -0.48000002 -7.434903 -0.48 -7.7 C -0.47999975 -7.9650965 -0.2650965 -8.179999 0.000000000000000016064193 -8.179999 C 0.2650965 -8.179999 0.47999975 -7.9650965 0.48 -7.7 Z
+D f #b9382fff,n #293d4bff,0.5,rr,4 M -9.27 -10.18 C -8.342839 -13.635319 -5.5712385 -16.288437 -2.0787334 -17.063848 C 1.4137716 -17.83926 5.0477185 -16.608313 7.35 -13.87 L 6.36 -13.04 C 4.370514 -15.413599 1.2249851 -16.48208 -1.7986106 -15.811338 C -4.822206 -15.140596 -7.220845 -12.842219 -8.02 -9.85 Z
+D f #2c3036ff,n - M 16.84 -8.34 C 17.868593 -10.536231 20.074833 -11.93917 22.5 -11.93917 C 24.925167 -11.93917 27.131407 -10.536231 28.16 -8.34 L 27.48 -8.02 C 26.574465 -9.951756 24.633465 -11.185562 22.5 -11.185562 C 20.366535 -11.185562 18.425535 -9.951756 17.52 -8.02 Z
+D f #3a3a3aff,n #293d4bff,0.5,rr,4 M 27.82 -5.7 L 28.2 -5.94 L 28.11 -6.69 L 27.7 -6.84 L 27.5 -7.52 L 27.77 -7.87 L 27.44 -8.55 L 26.99 -8.55 L 26.58 -9.12 L 26.71 -9.54 L 26.16 -10.07 L 25.75 -9.91 L 25.16 -10.31 L 25.14 -10.75 L 24.45 -11.06 L 24.11 -10.77 L 23.42 -10.94 L 23.25 -11.35 L 22.5 -11.4 L 22.28 -11.02 L 21.58 -10.94 L 21.28 -11.27 L 20.55 -11.06 L 20.47 -10.62 L 19.84 -10.31 L 19.45 -10.51 L 18.84 -10.07 L 18.91 -9.63 L 18.42 -9.12 L 17.98 -9.18 L 17.56 -8.55 L 17.79 -8.16 L 17.5 -7.52 L 17.07 -7.42 L 16.89 -6.69 L 17.23 -6.4 L 17.18 -5.7 L 16.8 -5.46 L 16.89 -4.71 L 17.3 -4.56 L 17.5 -3.88 L 17.23 -3.53 L 17.56 -2.85 L 18.01 -2.85 L 18.42 -2.28 L 18.29 -1.86 L 18.84 -1.33 L 19.25 -1.49 L 19.84 -1.09 L 19.86 -0.65 L 20.55 -0.34 L 20.89 -0.63 L 21.58 -0.46 L 21.75 -0.05 L 22.5 0 L 22.72 -0.38 L 23.42 -0.46 L 23.72 -0.13 L 24.45 -0.34 L 24.53 -0.78 L 25.16 -1.09 L 25.55 -0.89 L 26.16 -1.33 L 26.09 -1.77 L 26.58 -2.28 L 27.02 -2.22 L 27.44 -2.85 L 27.21 -3.24 L 27.5 -3.88 L 27.93 -3.98 L 28.11 -4.71 L 27.77 -5 Z
+D f - #545454ff,0.3,bm,4 M 27.02 -5.7 C 27.02 -3.2036726 24.996326 -1.1799996 22.5 -1.1799998 C 20.003674 -1.1799996 17.98 -3.2036726 17.98 -5.7 C 17.98 -8.196327 20.003674 -10.219999 22.5 -10.219999 C 24.996326 -10.219999 27.02 -8.196327 27.02 -5.7 Z
+D f #f4c430ff,n #293d4bff,0.45,rr,4 M 25.55 -5.7 C 25.55 -4.0155315 24.184467 -2.6500003 22.5 -2.6499999 C 20.815533 -2.6500003 19.45 -4.0155315 19.45 -5.7 C 19.45 -7.384468 20.81553 -8.75 22.5 -8.75 C 24.18447 -8.75 25.55 -7.384468 25.55 -5.7 Z
+D f - #d9a520ff,0.5,bm,4 M 24.7 -5.7 C 24.7 -4.484973 23.715027 -3.4999993 22.5 -3.4999998 C 21.284973 -3.4999993 20.3 -4.484973 20.3 -5.7 C 20.3 -6.9150267 21.284973 -7.9 22.5 -7.8999996 C 23.715027 -7.9 24.7 -6.9150267 24.7 -5.7 Z
+D f #c9ced3ff,n #293d4bff,0.35,rr,4 M 23.6 -5.7 C 23.6 -5.0924864 23.107513 -4.6 22.5 -4.6 C 21.892487 -4.6 21.4 -5.0924864 21.4 -5.7 C 21.4 -6.307513 21.892487 -6.7999997 22.5 -6.7999997 C 23.107513 -6.7999997 23.6 -6.307513 23.6 -5.7 Z
+D f #293d4bff,n - M 23.31 -5.7 C 23.31 -5.628203 23.251797 -5.57 23.18 -5.5699997 C 23.108204 -5.57 23.050001 -5.628203 23.050001 -5.7 C 23.050001 -5.7717967 23.108204 -5.8299994 23.18 -5.83 C 23.251797 -5.8299994 23.31 -5.7717967 23.31 -5.7 Z
+D f #293d4bff,n - M 22.97 -6.29 C 22.97 -6.218203 22.911797 -6.1600003 22.84 -6.16 C 22.768204 -6.1600003 22.710001 -6.218203 22.710001 -6.29 C 22.710001 -6.361797 22.768204 -6.4199996 22.84 -6.42 C 22.911797 -6.4199996 22.97 -6.361797 22.97 -6.29 Z
+D f #293d4bff,n - M 22.289999 -6.29 C 22.289999 -6.218203 22.231796 -6.1600003 22.16 -6.16 C 22.088203 -6.1600003 22.03 -6.218203 22.03 -6.29 C 22.03 -6.361797 22.088203 -6.4199996 22.16 -6.42 C 22.231796 -6.4199996 22.289999 -6.361797 22.289999 -6.29 Z
+D f #293d4bff,n - M 21.949999 -5.7 C 21.949999 -5.628203 21.891796 -5.57 21.82 -5.5699997 C 21.748203 -5.57 21.69 -5.628203 21.69 -5.7 C 21.69 -5.7717967 21.748203 -5.8299994 21.82 -5.83 C 21.891796 -5.8299994 21.949999 -5.7717967 21.949999 -5.7 Z
+D f #293d4bff,n - M 22.289999 -5.11 C 22.289999 -5.0382032 22.231796 -4.9800005 22.16 -4.98 C 22.088203 -4.9800005 22.03 -5.0382032 22.03 -5.11 C 22.03 -5.181797 22.088203 -5.24 22.16 -5.2400002 C 22.231796 -5.24 22.289999 -5.181797 22.289999 -5.11 Z
+D f #293d4bff,n - M 22.97 -5.11 C 22.97 -5.0382032 22.911797 -4.9800005 22.84 -4.98 C 22.768204 -4.9800005 22.710001 -5.0382032 22.710001 -5.11 C 22.710001 -5.181797 22.768204 -5.24 22.84 -5.2400002 C 22.911797 -5.24 22.97 -5.181797 22.97 -5.11 Z
+D f #293d4bff,n - M 22.85 -5.7 C 22.85 -5.607174 22.813126 -5.51815 22.747488 -5.4525123 C 22.68185 -5.3868747 22.592825 -5.35 22.5 -5.35 C 22.407175 -5.35 22.31815 -5.3868747 22.252512 -5.4525123 C 22.186874 -5.51815 22.15 -5.607174 22.15 -5.7 C 22.15 -5.7928257 22.186874 -5.88185 22.252512 -5.9474874 C 22.31815 -6.013125 22.407175 -6.0499997 22.5 -6.0499997 C 22.592825 -6.0499997 22.68185 -6.013125 22.747488 -5.9474874 C 22.813126 -5.88185 22.85 -5.7928257 22.85 -5.7 Z
+D f #b9382fff,n #293d4bff,0.4,rr,4 M 16.52 -9.15 C 17.805672 -11.379106 20.224941 -12.707564 22.795826 -12.596152 C 25.36671 -12.48474 27.661987 -10.951971 28.75 -8.62 L 28.12 -8.32 C 27.143257 -10.416191 25.081062 -11.794553 22.77068 -11.895461 C 20.460299 -11.996369 18.285782 -10.803051 17.13 -8.8 Z
 E
 X
 P fond 1061 407
@@ -7264,6 +7310,7 @@ D f #a5cf8cff,n - M 1098.7 263.2 Q 1107 276.6 1091.2 280 Q 1090.5 296.2 1080.2 2
 D f #a4d384ff,n - M 0 300 C 140 282 280 312 420 298 C 580 284 720 316 880 296 C 960 288 1020 300 1061 292 L 1061 407 L 0 407 Z
 D f #b3dc8fff,n - M 800 316 C 840 288 960 284 1000 316 Z
 D f #8fca72ff,n - M 0 356 C 150 344 300 368 470 356 C 640 344 800 372 1061 352 L 1061 407 L 0 407 Z
+G 1 0.65;0;0;0.65;105;141.4
 G 1 0.5;0;0;0.5;300;404
 D f - #4f8f48ff,2.4,rr,4 M 0 0 C 4 -18 -4 -34 2 -48
 D f - #4f8f48ff,1.8,rr,4 M 1 -22 C 9 -32 14 -33 15 -26
@@ -7303,6 +7350,8 @@ D f #f1d77aff,n - M 0.8 -4.2 C 0.79999995 -3.758172 0.44182777 -3.3999999 -0.000
 D f #f1d77aff,n - M 3.8 -3 C 3.8 -2.5581722 3.4418278 -2.2 3 -2.2 C 2.5581722 -2.2 2.2 -2.5581722 2.2 -3 C 2.2 -3.4418278 2.5581722 -3.8 3 -3.8 C 3.4418278 -3.8 3.8 -3.4418278 3.8 -3 Z
 E
 E
+E
+G 1 0.65;0;0;0.65;129.5;141.4
 G 1 0.5;0;0;0.5;370;404
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 3 -26 1 -38
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-9
@@ -7357,6 +7406,8 @@ D f #d6921cff,n - M 2.5 0.6 C 2.5 1.0970563 2.0970564 1.5 1.6 1.5 C 1.1029438 1.
 D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0.8418278 2.6 -1.2 2.2418277 -1.2 1.8 C -1.2 1.3581722 -0.8418278 0.99999994 -0.4 0.99999994 C 0.0418278 0.99999994 0.4 1.3581722 0.4 1.8 Z
 E
 E
+E
+G 1 0.65;0;0;0.65;224;141.4
 G 1 0.5;0;0;0.5;640;404
 D f - #4f8f48ff,2.4,rr,4 M 0 0 C -4 -18 4 -34 -2 -48
 D f - #4f8f48ff,1.8,rr,4 M -1 -22 C -9 -32 -14 -33 -15 -26
@@ -7396,6 +7447,8 @@ D f #f1d77aff,n - M 0.8 -4.2 C 0.79999995 -3.758172 0.44182777 -3.3999999 -0.000
 D f #f1d77aff,n - M 3.8 -3 C 3.8 -2.5581722 3.4418278 -2.2 3 -2.2 C 2.5581722 -2.2 2.2 -2.5581722 2.2 -3 C 2.2 -3.4418278 2.5581722 -3.8 3 -3.8 C 3.4418278 -3.8 3.8 -3.4418278 3.8 -3 Z
 E
 E
+E
+G 1 0.65;0;0;0.65;245;141.4
 G 1 0.5;0;0;0.5;700;404
 D f - #4f9a4aff,2.6,rr,4 M 0 0 C -2 -14 -3 -26 -1 -38
 G 1 0.8660254;-0.5;0.5;0.8660254;0;-9
@@ -7450,6 +7503,8 @@ D f #d6921cff,n - M 2.5 0.6 C 2.5 1.0970563 2.0970564 1.5 1.6 1.5 C 1.1029438 1.
 D f #d6921cff,n - M 0.4 1.8 C 0.39999998 2.2418277 0.041827776 2.6 -0.4 2.6 C -0.8418278 2.6 -1.2 2.2418277 -1.2 1.8 C -1.2 1.3581722 -0.8418278 0.99999994 -0.4 0.99999994 C 0.0418278 0.99999994 0.4 1.3581722 0.4 1.8 Z
 E
 E
+E
+G 1 0.65;0;0;0.65;147;141.4
 G 1 0.8;0;0;0.8;420;404
 D f - #4f9a4aff,2,rr,4 M 0 0 C 2 -8 -2 -14 1 -20
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-5
@@ -7472,6 +7527,8 @@ E
 D f #e09b1cff,n - M 2.2 0 C 2.2 1.2150265 1.2150265 2.2 0.00000000000000013471115 2.2 C -1.2150265 2.2 -2.2 1.2150265 -2.2 0.0000000000000002694223 C -2.2 -1.2150265 -1.2150265 -2.2 -0.00000000000000040413345 -2.2 C 1.2150265 -2.2 2.2 -1.2150265 2.2 0 Z
 E
 E
+E
+G 1 0.65;0;0;0.65;210;141.4
 G 1 0.8;0;0;0.8;600;404
 D f - #4f9a4aff,2,rr,4 M 0 0 C -2 -8 2 -14 -1 -20
 G 1 0.8660254;-0.5;0.5;0.8660254;0;-5
@@ -7494,6 +7551,8 @@ E
 D f #e09b1cff,n - M 2.2 0 C 2.2 1.2150265 1.2150265 2.2 0.00000000000000013471115 2.2 C -1.2150265 2.2 -2.2 1.2150265 -2.2 0.0000000000000002694223 C -2.2 -1.2150265 -1.2150265 -2.2 -0.00000000000000040413345 -2.2 C 1.2150265 -2.2 2.2 -1.2150265 2.2 0 Z
 E
 E
+E
+G 1 0.65;0;0;0.65;266;141.4
 G 1 0.8;0;0;0.8;760;404
 D f - #4f9a4aff,2,rr,4 M 0 0 C 2 -8 -2 -14 1 -20
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-5
@@ -7514,6 +7573,7 @@ G 1 0.309017;-0.95105654;0.95105654;0.309017;0;0
 D f #f6d43cff,n #293d4bff,0.9,bm,4 M 3.4 -4.4 C 3.4 -2.190861 1.8777682 -0.4000001 0.00000000000000020818996 -0.4000001 C -1.8777682 -0.4000001 -3.4 -2.190861 -3.4 -4.4 C -3.3999999 -6.609139 -1.877768 -8.4 0.00000000000000016378172 -8.4 C 1.877768 -8.4 3.3999999 -6.609139 3.4 -4.4 Z
 E
 D f #e09b1cff,n - M 2.2 0 C 2.2 1.2150265 1.2150265 2.2 0.00000000000000013471115 2.2 C -1.2150265 2.2 -2.2 1.2150265 -2.2 0.0000000000000002694223 C -2.2 -1.2150265 -1.2150265 -2.2 -0.00000000000000040413345 -2.2 C 1.2150265 -2.2 2.2 -1.2150265 2.2 0 Z
+E
 E
 E
 D f #5aa860ff,n - M -1.2 407 Q -3 401.6 -5.4 398.1 Q -0.9 402.5 2 407 Z
@@ -7672,6 +7732,7 @@ D f #5aa860ff,n - M 1047.5 407 Q 1049.3 397.9 1055.1 391.8 Q 1053.7 399.4 1050.7
 D f #6cb35cff,n - M 1039.4 407 Q 1038.2 398.5 1036.9 392.8 Q 1040.6 399.9 1042.6 407 Z
 X
 P gauche 1061 407
+G 1 1;0;0;1;0;-30
 G 1 0.9;0;0;0.9;86;322
 D f #d9b98cff,n #293d4bff,2,rr,4 M 24 -70 L 24 -88 L 36 -88 L 36 -70 Z
 D f - #293d4bff,3,rr,4 M 22 -88 L 38 -88
@@ -7702,6 +7763,7 @@ D f #d9433bff,n - M 37.8 -15 C 37.8 -14.005888 36.994114 -13.2 36 -13.2 C 35.005
 D f #d9433bff,n - M 42.8 -15 C 42.8 -14.005888 41.994114 -13.2 41 -13.2 C 40.005886 -13.2 39.2 -14.005888 39.2 -15 C 39.2 -15.994112 40.00589 -16.8 41 -16.8 C 41.99411 -16.8 42.8 -15.994112 42.8 -15 Z
 D f #5aa860ff,n #293d4bff,1.4,rr,4 M -41 -7.1 Q -36.3 -1.4 -45.1 -2.2 Q -46.8 7.7 -52.5 1.2 Q -60.2 4.5 -56.9 -4.6 Q -64 -8.6 -57.3 -12.2 Q -58.4 -19.2 -51.5 -16 Q -47.1 -21.1 -45.2 -14.9 Q -38.5 -13 -41 -7.1 Z
 E
+E
 G 1 0.92;0;0;0.92;4.64;26.24
 G 1 1;0;0;1;208;326
 D f #293d4bff,n #293d4bff,4.4,rr,4 M -12 0 C -7 -6 -6 -30 -5 -58 L 5 -58 C 6 -30 7 -6 12 0 C 5 2 -5 2 -12 0 Z
@@ -7729,6 +7791,7 @@ D f - #c9a57aff,2.6,rr,4 M 0 339 L 34 339 M 0 346 L 34 346
 D f #d9b98cff,n #293d4bff,1.6,rr,4 M 1 352 L 1 334 L 4 330 L 7 334 L 7 352 Z
 D f #d9b98cff,n #293d4bff,1.6,rr,4 M 23 352 L 23 334 L 26 330 L 29 334 L 29 352 Z
 E
+G 1 0.56;0;0;0.56;76.4;210.4
 G 1 0.62;0;0;0.62;160;334
 D f - #e09a2aff,2.1,rr,4 M -3 -6 L -3 1 M -6 1 L 1 1 M 5 -6 L 5 1 M 2 1 L 9 1
 D f - #293d4bff,7,rr,4 M -10 -18 C -22 -22 -28 -34 -24 -47
@@ -7749,6 +7812,7 @@ D f #293d4bff,n - M 13.6 -35.6 C 13.599999 -34.716343 12.883656 -34 12 -34 C 11.
 D f #ffffffff,n - M 12.096001 -36.176 C 12.096001 -36.023235 12.0353155 -35.876724 11.927294 -35.768703 C 11.819273 -35.660683 11.672765 -35.6 11.52 -35.6 C 11.367236 -35.6 11.220728 -35.660683 11.112707 -35.768703 C 11.004685 -35.876724 10.944 -36.023235 10.944 -36.176 C 10.944 -36.328762 11.004685 -36.475273 11.112707 -36.583294 C 11.220728 -36.691315 11.367236 -36.752 11.52 -36.752 C 11.672765 -36.752 11.819273 -36.691315 11.927294 -36.583294 C 12.0353155 -36.475273 12.096001 -36.328762 12.096001 -36.176 Z
 G 0.75 -
 D f #f4a79aff,n - M 10.5 -31.4 C 10.5 -30.66546 9.649342 -30.07 8.6 -30.07 C 7.550659 -30.07 6.7000003 -30.66546 6.7000003 -31.4 C 6.7000003 -32.134537 7.550659 -32.73 8.6 -32.73 C 9.649342 -32.73 10.5 -32.134537 10.5 -31.4 Z
+E
 E
 E
 G 1 0.82;0;0;0.82;84;372
@@ -7796,24 +7860,7 @@ D f #ffffffff,n - M 52.532 -51.792 C 52.532 -51.35459 52.17741 -51 51.74 -51 C 5
 D f - #293d4bff,1.6,rr,4 M 42 -66 Q 46 -70 50 -66
 D f #f6c33cff,n #293d4bff,1.4,bm,4 M 41.4 -27 C 41.4 -25.12223 39.87777 -23.6 38 -23.6 C 36.12223 -23.6 34.6 -25.12223 34.6 -27 C 34.6 -28.87777 36.12223 -30.4 38 -30.4 C 39.87777 -30.4 41.4 -28.87777 41.4 -27 Z
 E
-G 1 1.1;0;0;1.1;222;396
-D f - #e09a2aff,1.2,rr,4 M 0 -2 L 0 1 M 3 -2 L 3 1
-D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 6.2 -5.4 C 6.2 -2.5281196 3.8718805 -0.20000029 1 -0.20000029 C -1.8718807 -0.20000029 -4.2 -2.5281196 -4.2 -5.4 C -4.2000003 -8.271881 -1.8718808 -10.6 1 -10.6 C 3.8718808 -10.6 6.2000003 -8.271881 6.2 -5.4 Z
-D f - #e6b72eff,1.2,rr,4 M -1.6 -5 Q 0.4 -3 2.4 -5
-D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 8.6 -11 C 8.6 -8.790861 6.8091393 -6.9999995 4.6 -7 C 2.3908608 -7 0.5999999 -8.790861 0.5999999 -11 C 0.5999999 -13.209139 2.3908608 -15 4.6 -15 C 6.8091393 -15 8.6 -13.209139 8.6 -11 Z
-D f #f08a2aff,n #293d4bff,0.9,rr,4 M 8 -11.6 L 11 -10.6 L 8 -9.6 Z
-D f #293d4bff,n - M 6.3 -11.8 C 6.3 -11.302944 5.897056 -10.900001 5.4 -10.900001 C 4.902944 -10.900001 4.5 -11.302944 4.5 -11.8 C 4.5 -12.297056 4.902944 -12.7 5.4 -12.7 C 5.897056 -12.7 6.3 -12.297056 6.3 -11.8 Z
-D f #ffffffff,n - M 5.5 -12 C 5.5 -11.920435 5.468393 -11.844129 5.4121323 -11.787868 C 5.355871 -11.7316065 5.279565 -11.7 5.2 -11.7 C 5.1204348 -11.7 5.0441284 -11.7316065 4.9878674 -11.787868 C 4.931607 -11.844129 4.8999996 -11.920435 4.8999996 -12 C 4.8999996 -12.079565 4.931607 -12.155871 4.9878674 -12.212132 C 5.0441284 -12.2683935 5.1204348 -12.3 5.2 -12.3 C 5.279565 -12.3 5.355871 -12.2683935 5.4121323 -12.212132 C 5.468393 -12.155871 5.5 -12.079565 5.5 -12 Z
-E
-G 1 0.9;0;0;0.9;238;400
-D f - #e09a2aff,1.2,rr,4 M 0 -2 L 0 1 M 3 -2 L 3 1
-D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 6.2 -5.4 C 6.2 -2.5281196 3.8718805 -0.20000029 1 -0.20000029 C -1.8718807 -0.20000029 -4.2 -2.5281196 -4.2 -5.4 C -4.2000003 -8.271881 -1.8718808 -10.6 1 -10.6 C 3.8718808 -10.6 6.2000003 -8.271881 6.2 -5.4 Z
-D f - #e6b72eff,1.2,rr,4 M -1.6 -5 Q 0.4 -3 2.4 -5
-D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 8.6 -11 C 8.6 -8.790861 6.8091393 -6.9999995 4.6 -7 C 2.3908608 -7 0.5999999 -8.790861 0.5999999 -11 C 0.5999999 -13.209139 2.3908608 -15 4.6 -15 C 6.8091393 -15 8.6 -13.209139 8.6 -11 Z
-D f #f08a2aff,n #293d4bff,0.9,rr,4 M 8 -11.6 L 11 -10.6 L 8 -9.6 Z
-D f #293d4bff,n - M 6.3 -11.8 C 6.3 -11.302944 5.897056 -10.900001 5.4 -10.900001 C 4.902944 -10.900001 4.5 -11.302944 4.5 -11.8 C 4.5 -12.297056 4.902944 -12.7 5.4 -12.7 C 5.897056 -12.7 6.3 -12.297056 6.3 -11.8 Z
-D f #ffffffff,n - M 5.5 -12 C 5.5 -11.920435 5.468393 -11.844129 5.4121323 -11.787868 C 5.355871 -11.7316065 5.279565 -11.7 5.2 -11.7 C 5.1204348 -11.7 5.0441284 -11.7316065 4.9878674 -11.787868 C 4.931607 -11.844129 4.8999996 -11.920435 4.8999996 -12 C 4.8999996 -12.079565 4.931607 -12.155871 4.9878674 -12.212132 C 5.0441284 -12.2683935 5.1204348 -12.3 5.2 -12.3 C 5.279565 -12.3 5.355871 -12.2683935 5.4121323 -12.212132 C 5.468393 -12.155871 5.5 -12.079565 5.5 -12 Z
-E
+G 1 0.255;0;0;0.255;156.47;298.1075
 G 1 -0.9;0;0;0.9;206;402
 D f - #e09a2aff,1.2,rr,4 M 0 -2 L 0 1 M 3 -2 L 3 1
 D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 6.2 -5.4 C 6.2 -2.5281196 3.8718805 -0.20000029 1 -0.20000029 C -1.8718807 -0.20000029 -4.2 -2.5281196 -4.2 -5.4 C -4.2000003 -8.271881 -1.8718808 -10.6 1 -10.6 C 3.8718808 -10.6 6.2000003 -8.271881 6.2 -5.4 Z
@@ -7823,10 +7870,33 @@ D f #f08a2aff,n #293d4bff,0.9,rr,4 M 8 -11.6 L 11 -10.6 L 8 -9.6 Z
 D f #293d4bff,n - M 6.3 -11.8 C 6.3 -11.302944 5.897056 -10.900001 5.4 -10.900001 C 4.902944 -10.900001 4.5 -11.302944 4.5 -11.8 C 4.5 -12.297056 4.902944 -12.7 5.4 -12.7 C 5.897056 -12.7 6.3 -12.297056 6.3 -11.8 Z
 D f #ffffffff,n - M 5.5 -12 C 5.5 -11.920435 5.468393 -11.844129 5.4121323 -11.787868 C 5.355871 -11.7316065 5.279565 -11.7 5.2 -11.7 C 5.1204348 -11.7 5.0441284 -11.7316065 4.9878674 -11.787868 C 4.931607 -11.844129 4.8999996 -11.920435 4.8999996 -12 C 4.8999996 -12.079565 4.931607 -12.155871 4.9878674 -12.212132 C 5.0441284 -12.2683935 5.1204348 -12.3 5.2 -12.3 C 5.279565 -12.3 5.355871 -12.2683935 5.4121323 -12.212132 C 5.468393 -12.155871 5.5 -12.079565 5.5 -12 Z
 E
+E
+G 1 0.22;0;0;0.22;166.16;311.94
+G 1 1.1;0;0;1.1;222;396
+D f - #e09a2aff,1.2,rr,4 M 0 -2 L 0 1 M 3 -2 L 3 1
+D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 6.2 -5.4 C 6.2 -2.5281196 3.8718805 -0.20000029 1 -0.20000029 C -1.8718807 -0.20000029 -4.2 -2.5281196 -4.2 -5.4 C -4.2000003 -8.271881 -1.8718808 -10.6 1 -10.6 C 3.8718808 -10.6 6.2000003 -8.271881 6.2 -5.4 Z
+D f - #e6b72eff,1.2,rr,4 M -1.6 -5 Q 0.4 -3 2.4 -5
+D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 8.6 -11 C 8.6 -8.790861 6.8091393 -6.9999995 4.6 -7 C 2.3908608 -7 0.5999999 -8.790861 0.5999999 -11 C 0.5999999 -13.209139 2.3908608 -15 4.6 -15 C 6.8091393 -15 8.6 -13.209139 8.6 -11 Z
+D f #f08a2aff,n #293d4bff,0.9,rr,4 M 8 -11.6 L 11 -10.6 L 8 -9.6 Z
+D f #293d4bff,n - M 6.3 -11.8 C 6.3 -11.302944 5.897056 -10.900001 5.4 -10.900001 C 4.902944 -10.900001 4.5 -11.302944 4.5 -11.8 C 4.5 -12.297056 4.902944 -12.7 5.4 -12.7 C 5.897056 -12.7 6.3 -12.297056 6.3 -11.8 Z
+D f #ffffffff,n - M 5.5 -12 C 5.5 -11.920435 5.468393 -11.844129 5.4121323 -11.787868 C 5.355871 -11.7316065 5.279565 -11.7 5.2 -11.7 C 5.1204348 -11.7 5.0441284 -11.7316065 4.9878674 -11.787868 C 4.931607 -11.844129 4.8999996 -11.920435 4.8999996 -12 C 4.8999996 -12.079565 4.931607 -12.155871 4.9878674 -12.212132 C 5.0441284 -12.2683935 5.1204348 -12.3 5.2 -12.3 C 5.279565 -12.3 5.355871 -12.2683935 5.4121323 -12.212132 C 5.468393 -12.155871 5.5 -12.079565 5.5 -12 Z
+E
+E
+G 1 0.255;0;0;0.255;161.31;299.6175
+G 1 0.9;0;0;0.9;238;400
+D f - #e09a2aff,1.2,rr,4 M 0 -2 L 0 1 M 3 -2 L 3 1
+D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 6.2 -5.4 C 6.2 -2.5281196 3.8718805 -0.20000029 1 -0.20000029 C -1.8718807 -0.20000029 -4.2 -2.5281196 -4.2 -5.4 C -4.2000003 -8.271881 -1.8718808 -10.6 1 -10.6 C 3.8718808 -10.6 6.2000003 -8.271881 6.2 -5.4 Z
+D f - #e6b72eff,1.2,rr,4 M -1.6 -5 Q 0.4 -3 2.4 -5
+D f #ffdc5aff,n #293d4bff,1.5,bm,4 M 8.6 -11 C 8.6 -8.790861 6.8091393 -6.9999995 4.6 -7 C 2.3908608 -7 0.5999999 -8.790861 0.5999999 -11 C 0.5999999 -13.209139 2.3908608 -15 4.6 -15 C 6.8091393 -15 8.6 -13.209139 8.6 -11 Z
+D f #f08a2aff,n #293d4bff,0.9,rr,4 M 8 -11.6 L 11 -10.6 L 8 -9.6 Z
+D f #293d4bff,n - M 6.3 -11.8 C 6.3 -11.302944 5.897056 -10.900001 5.4 -10.900001 C 4.902944 -10.900001 4.5 -11.302944 4.5 -11.8 C 4.5 -12.297056 4.902944 -12.7 5.4 -12.7 C 5.897056 -12.7 6.3 -12.297056 6.3 -11.8 Z
+D f #ffffffff,n - M 5.5 -12 C 5.5 -11.920435 5.468393 -11.844129 5.4121323 -11.787868 C 5.355871 -11.7316065 5.279565 -11.7 5.2 -11.7 C 5.1204348 -11.7 5.0441284 -11.7316065 4.9878674 -11.787868 C 4.931607 -11.844129 4.8999996 -11.920435 4.8999996 -12 C 4.8999996 -12.079565 4.931607 -12.155871 4.9878674 -12.212132 C 5.0441284 -12.2683935 5.1204348 -12.3 5.2 -12.3 C 5.279565 -12.3 5.355871 -12.2683935 5.4121323 -12.212132 C 5.468393 -12.155871 5.5 -12.079565 5.5 -12 Z
+E
+E
 G 1 1;0;0;1;-468;0
 D f #8fd0eaff,n #5fa8c9ff,1.6,bm,4 M 566 399 C 566 402.31372 545.4051 405 520 405 C 494.5949 405 474 402.31372 474 399 C 474 395.68628 494.5949 393 520 393 C 545.4051 393 566 395.68628 566 399 Z
 E
-G 1 1;0;0;1;-488;-1
+G 1 0.8;0;0;0.8;-384.8;78.6
 G 1 0.8;0;0;0.8;516;399
 D f #b9a48cff,n #293d4bff,1.6,rr,4 M -11 -6 C -13 -11 -10 -13 -7 -11 C -2 -13 8 -12 11 -7 C 12 -2 8 0 2 0 L -4 0 C -9 0 -11 -2 -11 -6 Z
 D f #8a7462ff,n #293d4bff,1.1,rr,4 M -6 -8 C -1 -10 6 -9 8 -5 C 4 -3 -2 -3 -6 -5 Z
@@ -8208,7 +8278,7 @@ E
 E
 X
 P tournesols 1061 407
-G 1 1;0;0;1;-10;0
+G 1 0.75;0;0;0.75;51;97.675
 G 1 0.72;0;0;0.72;244;384
 D f - #4f9a4aff,3.4,rr,4 M 0 0 C 2 -20 -2 -40 0 -58
 G 1 -0.8660254;-0.5;0.5;-0.8660254;0;-18
@@ -8567,4 +8637,1036 @@ D f #4f2e12ff,n - M 1.2 0 C 1.2 0.6627417 0.6627417 1.2 0.0000000000000000734788
 E
 E
 E
+X
+U montagne
+M {"key":"montagne","name":"La montagne","about":"Des sommets, un chalet et une marmotte.","look":{"colours":{"ink":"#1f3340","accent":"#b8322b","background":"#e6f0f7","line":"#b7cfe0","surface":"#fbfdff","selected":"#ffe8e3","sheetBackdrop":"#dbeaf4","previewBox":"#eaf2f8","caption":"#45606f","statusText":"#1f3340","sheetTitle":"#1f3340","sheetCaption":"#1f3340","quietMark":"#6f8899","swatchRing":"#5f7a8c","shadow":"#1f3340"},"shapes":{"stageRadius":20,"stageBorder":2}},"decor":{"size":[1061,407],"sheet":[266,26,526,351],"top":"#bfe0f6","front":["#8fca72","#84bf67","#6fa856"],"pieces":[{"picture":"fond","role":"ground"},{"picture":"gauche","anchor":"left"},{"picture":"droite","anchor":"right"},{"picture":"nuage","anchor":"left","at":[100,75,115,115],"move":{"name":"nuage","seconds":34}},{"picture":"nuage","anchor":"right","at":[830,60,112,112],"move":{"name":"nuage","seconds":40,"delay":-9}},{"picture":"cabine","anchor":"right","at":[1003,273.2,30,30],"move":{"name":"cabine","seconds":22,"origin":[1018,274.1]}},{"picture":"aigle","anchor":"left","at":[82,62,22,22],"move":{"name":"plane","seconds":16,"origin":[93,73]}}],"names":[{"key":"sommet","anchor":"left","at":[90,50,84,104],"name":"Le sommet enneig\u00e9","text":"Tout l\u00e0-haut, il fait si froid que la neige reste toute l\u2019ann\u00e9e, m\u00eame en \u00e9t\u00e9.","source":"CNRTL (TLFi) \u2014 D\u00e9finition de NEIGE \u2014 https://www.cnrtl.fr/definition/neige ; Encyclopaedia Britannica \u2014 snow line \u2014 https://www.britannica.com/science/snow-line-topography"},{"key":"chalet","anchor":"left","at":[18,242,112,81],"name":"Le chalet","text":"Une maison de montagne en bois et en pierre, avec un grand toit pour porter la neige.","source":"Encyclopaedia Britannica \u2014 Chalet \u2014 https://www.britannica.com/technology/chalet ; Saint-Gervais Mont-Blanc (site officiel) \u2014 Fiche technique \u00ab La toiture \u00bb (chalets d\u2019alpage) \u2014 https://www.saintgervais.com/app/uploads/saint-gervais/2023/09/06_toiture.pdf"},{"key":"sapin","anchor":"left","at":[136,258,126,59],"name":"Les sapins","text":"Leurs aiguilles restent vertes toute l\u2019ann\u00e9e, m\u00eame sous la neige.","source":"Encyclopaedia Britannica \u2014 fir \u2014 https://www.britannica.com/plant/fir ; Institut f\u00e9d\u00e9ral de recherches WSL (waldwissen.net) \u2014 Le sapin pectin\u00e9 ou sapin blanc (Abies alba) \u2014 https://www.waldwissen.net/fr/habitat-forestier/arbres-et-arbustes/resineux/le-sapin-pectine-ou-sapin-blanc"},{"key":"lac","anchor":"left","at":[133,317,130,14],"name":"Le lac de montagne","text":"Son eau vient surtout de la neige fondue : elle est souvent tr\u00e8s claire et tr\u00e8s froide.","source":"Parc national de la Vanoise \u2014 Les lacs d\u2019altitude et le changement climatique \u2014 https://www.vanoise-parcnational.fr/sites/vanoise-parcnational.fr/files/2024-03/Les%20lacs%20d%27altitude%20et%20le%20changement%20climatique.pdf"},{"key":"marmotte","anchor":"left","at":[229,358,23,33],"name":"La marmotte","text":"Elle siffle pour pr\u00e9venir ses amies du danger, et dort tout l\u2019hiver dans son terrier.","source":"Encyclopaedia Britannica \u2014 marmot \u2014 https://www.britannica.com/animal/marmot ; Parc national des \u00c9crins \u2014 Le m\u00e9mo scientifique du parc : des nouvelles de la marmotte des Alpes \u2014 https://www.ecrins-parcnational.fr/sites/ecrins-parcnational.com/files/fiche_doc/25639/livretmarmotte-versionnumerique.pdf"},{"key":"edelweiss","anchor":"left","at":[167,391,23,16],"name":"L\u2019edelweiss","text":"Une fleur blanche toute douce, comme couverte de laine. On la regarde, mais on ne la cueille pas.","source":"Parc national de la Vanoise \u2014 Sur les traces de\u2026 l\u2019edelweiss des Alpes (fiche esp\u00e8ce) \u2014 https://www3.vanoise-parcnational.fr/sites/vanoise-parcnational.fr/files/2025-05/Fiche%20esp%C3%A8ce%20edelweiss%20version%20fran%C3%A7ais.pdf ; AIDA (INERIS) \u2014 Arr\u00eat\u00e9 du 13/10/89 relatif \u00e0 la liste des esp\u00e8ces v\u00e9g\u00e9tales sauvages pouvant faire l\u2019objet d\u2019une r\u00e9glementation pr\u00e9fectorale permanente ou temporaire \u2014 https://aida.ineris.fr/reglementation/arrete-131089-relatif-a-liste-especes-vegetales-sauvages-pouvant-faire-lobjet-dune"},{"key":"gentiane","anchor":"left","at":[198.5,395,14.5,10],"name":"La gentiane","text":"Une fleur, souvent d\u2019un bleu tr\u00e8s profond, qui pousse dans l\u2019herbe des alpages.","source":"Parc national des Pyr\u00e9n\u00e9es \u2014 \u00c0 la d\u00e9couverte de la flore : quelques plantes embl\u00e9matiques du Parc national des Pyr\u00e9n\u00e9es \u2014 https://www2.pyrenees-parcnational.fr/sites/pyrenees-parcnational.fr/files/documents/downloads/pnp_dep5v_decouverte_flore_bat.pdf ; Encyclopaedia Britannica \u2014 gentian \u2014 https://www.britannica.com/plant/gentian"},{"key":"bouquetin","anchor":"right","at":[835,264,63,75],"name":"Le bouquetin","text":"Avec ses grandes cornes, il grimpe sur les rochers les plus raides, l\u00e0 o\u00f9 presque personne ne va.","source":"Parc national de la Vanoise \u2014 Sur les traces de\u2026 Le bouquetin des Alpes \u2014 https://www.vanoise-parcnational.fr/sites/vanoise-parcnational.fr/files/2024-06/Bouquetin.pdf ; Encyclopaedia Britannica \u2014 ibex \u2014 https://www.britannica.com/animal/ibex"},{"key":"telepherique","anchor":"right","at":[1008,273,53,43],"name":"Le t\u00e9l\u00e9ph\u00e9rique","text":"Une cabine suspendue \u00e0 des c\u00e2bles, qui monte et descend la montagne.","source":"CNRTL (TLFi) \u2014 D\u00e9finition de T\u00c9L\u00c9PH\u00c9RIQUE \u2014 https://www.cnrtl.fr/definition/t%C3%A9l%C3%A9ph%C3%A9rique ; Oxford Learner\u2019s Dictionaries \u2014 cable car \u2014 https://www.oxfordlearnersdictionaries.com/definition/english/cable-car"},{"key":"aigle","anchor":"left","at":[80,64,26,19],"name":"L\u2019aigle royal","text":"Il plane tr\u00e8s haut sans battre des ailes, et voit une marmotte de tr\u00e8s loin.","source":"Larousse (encyclop\u00e9die, vie sauvage) \u2014 aigle royal \u2014 https://www.larousse.fr/encyclopedie/vie-sauvage/aigle_royal/178161 ; Parc national des \u00c9crins \u2014 \u00c0 la rencontre des animaux en montagne : l\u2019aigle royal \u2014 https://geonature.ecrins-parcnational.fr/api/media/taxhub/2645_1665_Livre_ANIMAUX_EN_MONTAGNE_-_Laigle_royal.pdf"}]}}
+P aigle 100 100
+D f #6b4c32ff,n #293d4bff,2,rr,4 M 44.4 60 L 39.6 78.6 C 44 82 56 82 60.4 78.6 L 55.6 60 Z
+D f - #3f2e22ff,1.2,rm,4 M 45.6 66 L 44 78 M 50 66 L 50 80 M 54.4 66 L 56 78
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 14.79 42.08 Q 7.27 42.47 1.5 45.5 Q 7.88 46.82 15.21 45.12 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 15.18 44.92 Q 7.63 46.37 2.2 50.2 Q 8.83 50.61 16.02 47.88 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 15.79 47.78 Q 8.6 50.15 3.8 54.6 Q 10.34 54.19 17.01 50.62 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 16.61 50.68 Q 10.34 53.63 6.6 58.4 Q 12.58 57.41 18.19 53.32 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 17.62 53.41 Q 12.69 56.65 10.4 61.4 Q 15.49 60.03 19.58 55.79 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 18.8 56.03 Q 15.43 59.13 14.8 63.4 Q 18.85 61.91 21.2 57.97 Z
+D f #6b4c32ff,n #293d4bff,2.2,rr,4 M 46 46.4 C 36 41.6 26 39.6 18.6 40.6 C 14.6 42.6 15.6 50 18.4 57.6 C 24 61.6 30 62.4 36 63 C 42 62.6 46.4 60 46.6 54 Z
+D f #8a6846ff,n - M 45 47.8 C 36 44.4 26 43 19 44.6 C 19.6 47.6 27 47.2 36 48.6 Z
+D f - #3f2e22ff,1.2,rm,4 M 22 59.6 Q 23.8 62 25.6 59.6 M 27.6 61.2 Q 29.4 63.6 31.2 61.2 M 33.4 61.8 Q 35.2 64.2 37 61.8 M 39.2 61.8 Q 41 64.2 42.8 61.8
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 84.79 45.12 Q 92.12 46.82 98.5 45.5 Q 92.73 42.47 85.21 42.08 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 83.98 47.88 Q 91.17 50.61 97.8 50.2 Q 92.37 46.37 84.82 44.92 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 82.99 50.62 Q 89.66 54.19 96.2 54.6 Q 91.4 50.15 84.21 47.78 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 81.81 53.32 Q 87.42 57.41 93.4 58.4 Q 89.66 53.63 83.39 50.68 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 80.42 55.79 Q 84.51 60.03 89.6 61.4 Q 87.31 56.65 82.38 53.41 Z
+D f #3f2e22ff,n #293d4bff,1.3,rr,4 M 78.8 57.97 Q 81.15 61.91 85.2 63.4 Q 84.57 59.13 81.2 56.03 Z
+D f #6b4c32ff,n #293d4bff,2.2,rr,4 M 54 46.4 C 64 41.6 74 39.6 81.4 40.6 C 85.4 42.6 84.4 50 81.6 57.6 C 76 61.6 70 62.4 64 63 C 58 62.6 53.6 60 53.4 54 Z
+D f #8a6846ff,n - M 55 47.8 C 64 44.4 74 43 81 44.6 C 80.4 47.6 73 47.2 64 48.6 Z
+D f - #3f2e22ff,1.2,rm,4 M 78 59.6 Q 76.2 62 74.4 59.6 M 72.4 61.2 Q 70.6 63.6 68.8 61.2 M 66.6 61.8 Q 64.8 64.2 63 61.8 M 60.8 61.8 Q 59 64.2 57.2 61.8
+D f #5e4630ff,n #293d4bff,2.2,bm,4 M 57.2 54 C 57.2 60.95879 53.97645 66.6 50 66.6 C 46.02355 66.6 42.8 60.95879 42.8 54 C 42.8 47.04121 46.02355 41.4 50 41.4 C 53.97645 41.4 57.2 47.04121 57.2 54 Z
+D f - #8a6846ff,1.6,rm,4 M 45.6 62.6 Q 47.2 65.4 50 65 Q 52.8 65.4 54.4 62.6
+D f #f4c430ff,n #293d4bff,1.1,rr,4 M 46.4 64.6 L 45.6 68 L 47.8 66.8 Z M 53.6 64.6 L 54.4 68 L 52.2 66.8 Z
+D f #5e4630ff,n #293d4bff,2.2,rr,4 M 44.6 40.6 C 44 35.4 47.4 32.4 51.4 32.8 C 55.4 33.2 57.2 36.6 56.4 40.4 C 55.6 43.6 52.6 45 49.6 44.8 C 46.8 44.6 45 43 44.6 40.6 Z
+D f #d4a24cff,n - M 49.4 33.2 C 53.4 32.8 56.4 35.4 56.4 39 C 54.8 37.6 52.4 37 50.2 36.8 Z
+D f #4a4e57ff,n #293d4bff,1.3,rr,4 M 45.2 38.6 L 40.2 38.8 C 38.4 39 37.6 40.8 38.8 42.4 C 39.2 41.2 40 40.8 41 40.8 L 45 41.4 Z
+D f #f4c430ff,n #293d4bff,1,rr,4 M 45.4 38.4 L 43 38.6 L 43.2 41.2 L 45.4 41.6 Z
+D f #293d4bff,n - M 48.9 37.8 C 48.9 38.628426 48.228428 39.3 47.4 39.3 C 46.571575 39.3 45.9 38.628426 45.9 37.8 C 45.9 36.971573 46.571575 36.3 47.4 36.3 C 48.228428 36.3 48.9 36.971573 48.9 37.8 Z
+D f #ffffffff,n - M 47.5 37.3 C 47.5 37.57614 47.276142 37.8 47 37.8 C 46.723858 37.8 46.5 37.57614 46.5 37.3 C 46.5 37.023857 46.723858 36.8 47 36.8 C 47.276142 36.8 47.5 37.023857 47.5 37.3 Z
+D f - #293d4bff,1.1,rm,4 M 45.6 36.2 Q 47.4 35.2 49.4 36
+X
+P cabine 100 100
+D f - #293d4bff,4.4,rr,4 M 50 9 L 50 36
+D f - #8d97a1ff,2,rr,4 M 50 9 L 50 36
+D f #8d97a1ff,n #293d4bff,1.6,bm,4 M 43 3 L 57 3 C 58.10457 3 59 3.8954306 59 5 L 59 8 C 59 9.104569 58.10457 10 57 10 L 43 10 C 41.89543 10 41 9.104569 41 8 L 41 5 C 41 3.8954306 41.89543 3 43 3 Z
+D f #3a3f45ff,n - M 47.4 4 C 47.4 4.63652 47.147144 5.2469697 46.697056 5.697057 C 46.24697 6.1471443 45.63652 6.4000006 45 6.4 C 44.36348 6.4000006 43.75303 6.1471443 43.302944 5.697057 C 42.852856 5.2469697 42.6 4.63652 42.6 4 C 42.6 3.36348 42.852856 2.7530305 43.302944 2.3029432 C 43.75303 1.8528558 44.36348 1.5999995 45 1.5999999 C 45.63652 1.5999995 46.24697 1.8528558 46.697056 2.3029432 C 47.147144 2.7530305 47.4 3.36348 47.4 4 Z
+D f #3a3f45ff,n - M 57.4 4 C 57.4 4.63652 57.147144 5.2469697 56.697056 5.697057 C 56.24697 6.1471443 55.63652 6.4000006 55 6.4 C 54.36348 6.4000006 53.75303 6.1471443 53.302944 5.697057 C 52.852856 5.2469697 52.6 4.63652 52.6 4 C 52.6 3.36348 52.852856 2.7530305 53.302944 2.3029432 C 53.75303 1.8528558 54.36348 1.5999995 55 1.5999999 C 55.63652 1.5999995 56.24697 1.8528558 56.697056 2.3029432 C 57.147144 2.7530305 57.4 3.36348 57.4 4 Z
+D f #d9433bff,n #293d4bff,2.6,bm,4 M 30 34 L 70 34 C 75.52285 34 80 38.477154 80 44 L 80 68 C 80 73.52285 75.52285 78 70 78 L 30 78 C 24.477152 78 20 73.52285 20 68 L 20 44 C 20 38.477154 24.477152 34 30 34 Z
+D f #cfeaf5ff,n #293d4bff,1.8,bm,4 M 29 41 L 71 41 C 72.65685 41 74 42.343147 74 44 L 74 55 C 74 56.656853 72.65685 58 71 58 L 29 58 C 27.343145 58 26 56.656853 26 55 L 26 44 C 26 42.343147 27.343145 41 29 41 Z
+D f - #293d4bff,1.6,rr,4 M 42 41 L 42 58 M 58 41 L 58 58
+D f - #fbf4e2ff,4,rr,4 M 21 66 L 79 66
+D f - #ffffffff,1.6,rr,4 M 28 45 C 32 43 37 43 40 44
+X
+P droite 1061 407
+D f #8fa3b5ff,n #293d4bff,2.2,rr,4 M 796.4 322 L 928 40 L 1055.4 322 Z
+D f #7a8fa3ff,n - M 928 40 L 1055.4 322 L 953.2 322 L 922.4 181 Z
+D f #ffffffff,n #293d4bff,2,rr,4 M 928 40 L 886.7 128 L 893.7 138 L 900.7 124 L 907 144 L 914 124 L 920.3 138 L 927.3 124 L 934.3 144 L 940.6 124 L 947.6 138 L 954.6 124 L 960.9 144 L 967.9 128 Z
+D f #dfeaf2ff,n - M 928 40 L 963.7 126 L 930.8 134 Z
+D f #a2b4c4ff,n #293d4bff,2.2,rr,4 M 810 322 L 872 221.56 L 934 322 Z
+D f #8ea2b4ff,n - M 872 221.56 L 934 322 L 884.4 322 L 867.04 271.78 Z
+D f #ffffffff,n #293d4bff,2,rr,4 M 872 221.56 L 855.26 248.84 L 857.74 255.04 L 860.84 246.36 L 863.32 258.76 L 866.42 246.36 L 868.9 255.04 L 872 246.36 L 875.1 258.76 L 877.58 246.36 L 880.68 255.04 L 883.16 246.36 L 886.26 258.76 L 888.74 248.84 Z
+D f #dfeaf2ff,n - M 872 221.56 L 886.88 247.6 L 874.48 252.56 Z
+D f #5f9f86ff,n - M 800 324.17 C 825.8 288 851.6 274 908.36 277 C 965.12 280 1021.88 276 1058 314.54 L 1058 316.54 L 1047.25 317.92 L 1036.5 318.63 L 1025.75 318.88 L 1015 318.84 L 1004.25 318.61 L 993.5 318.28 L 982.75 317.92 L 972 317.59 L 961.25 317.32 L 950.5 317.15 L 939.75 317.11 L 929 317.21 L 918.25 317.48 L 907.5 317.94 L 896.75 318.58 L 886 319.43 L 875.25 320.58 L 864.5 321.78 L 853.75 322.85 L 843 323.77 L 832.25 324.56 L 821.5 325.22 L 810.75 325.75 L 800 326.17 Z
+G 1 1;0;0;1;6;0
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 801 319 L 802 297 L 810 297 L 811 319 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 806 303.2 L 819 304.2 L 815.8 295.5 L 812.5 306.6 L 809.2 300.6 L 806 309 L 802.8 299.1 L 799.5 306.6 L 796.2 296.8 L 793 304.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 806 292.1 L 816.9 304.8 L 813.8 298 L 810.7 307.2 L 807.6 299.7 L 804.4 308.4 L 801.3 297.7 L 798.2 306 L 795.1 297.1 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 806 281.1 L 814.7 294.6 L 811.8 286.3 L 808.9 297 L 806 290.9 L 803.1 297 L 800.2 286.9 L 797.3 294.6 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 806 270 L 812.6 284.2 L 810 276 L 807.3 286.6 L 804.7 277.9 L 802 285.4 L 799.4 275.5 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 806 259 L 810.5 273.7 L 808.2 267 L 806 276.1 L 803.8 266.7 L 801.5 273.7 Z
+D f #3c7d66ff,n - M 806 303.2 L 819 304.2 L 815.8 295.5 L 812.5 306.6 L 809.2 300.6 L 806 309 L 802.8 299.1 L 799.5 306.6 L 796.2 296.8 L 793 304.2 Z
+D f #3c7d66ff,n - M 806 292.1 L 816.9 304.8 L 813.8 298 L 810.7 307.2 L 807.6 299.7 L 804.4 308.4 L 801.3 297.7 L 798.2 306 L 795.1 297.1 Z
+D f #3c7d66ff,n - M 806 281.1 L 814.7 294.6 L 811.8 286.3 L 808.9 297 L 806 290.9 L 803.1 297 L 800.2 286.9 L 797.3 294.6 Z
+D f #3c7d66ff,n - M 806 270 L 812.6 284.2 L 810 276 L 807.3 286.6 L 804.7 277.9 L 802 285.4 L 799.4 275.5 Z
+D f #3c7d66ff,n - M 806 259 L 810.5 273.7 L 808.2 267 L 806 276.1 L 803.8 266.7 L 801.5 273.7 Z
+G 0.85 -
+D f #4f957aff,n - M 804 265 L 802.5 270.1 L 805.1 267.1 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 804 276 L 800.8 281.2 L 804.7 278.2 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 804 287.1 L 799.2 292.2 L 804.3 289.2 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 804 298.1 L 797.5 303 L 803.8 300 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 804 309.2 L 795.9 303 L 803.4 300 Z
+E
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 827 318 L 828 296 L 836 296 L 837 318 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 832 304.3 L 845 303.2 L 841.8 296.9 L 838.5 305.6 L 835.2 298.5 L 832 308 L 828.8 298.5 L 825.5 305.6 L 822.2 297.2 L 819 303.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 832 294.7 L 842.9 303.8 L 839.8 297.6 L 836.7 306.2 L 833.6 297.8 L 830.4 307.4 L 827.3 298.6 L 824.2 305 L 821.1 294.8 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 832 285.1 L 840.7 296.4 L 837.8 290.6 L 834.9 298.8 L 832 291.8 L 829.1 298.8 L 826.2 288.2 L 823.3 296.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 832 275.6 L 838.6 287.4 L 836 280.2 L 833.3 289.8 L 830.7 281.4 L 828 288.6 L 825.4 278.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 832 266 L 836.5 278.4 L 834.2 271.9 L 832 280.8 L 829.8 270.9 L 827.5 278.4 Z
+D f #3c7d66ff,n - M 832 304.3 L 845 303.2 L 841.8 296.9 L 838.5 305.6 L 835.2 298.5 L 832 308 L 828.8 298.5 L 825.5 305.6 L 822.2 297.2 L 819 303.2 Z
+D f #3c7d66ff,n - M 832 294.7 L 842.9 303.8 L 839.8 297.6 L 836.7 306.2 L 833.6 297.8 L 830.4 307.4 L 827.3 298.6 L 824.2 305 L 821.1 294.8 Z
+D f #3c7d66ff,n - M 832 285.1 L 840.7 296.4 L 837.8 290.6 L 834.9 298.8 L 832 291.8 L 829.1 298.8 L 826.2 288.2 L 823.3 296.4 Z
+D f #3c7d66ff,n - M 832 275.6 L 838.6 287.4 L 836 280.2 L 833.3 289.8 L 830.7 281.4 L 828 288.6 L 825.4 278.2 Z
+D f #3c7d66ff,n - M 832 266 L 836.5 278.4 L 834.2 271.9 L 832 280.8 L 829.8 270.9 L 827.5 278.4 Z
+G 0.85 -
+D f #4f957aff,n - M 830 272 L 828.5 274.8 L 831.1 271.8 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 830 281.6 L 826.8 284.4 L 830.7 281.4 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 830 291.1 L 825.2 294 L 830.3 291 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 830 300.7 L 823.5 302 L 829.8 299 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 830 310.3 L 821.9 302 L 829.4 299 Z
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 925 320 L 926 298 L 934 298 L 935 320 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 930 308.4 L 943 305.2 L 939.8 297.1 L 936.5 307.6 L 933.2 299.8 L 930 310 L 926.8 300 L 923.5 307.6 L 920.2 298.5 L 917 305.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 930 300.3 L 940.9 305.8 L 937.8 299.7 L 934.7 308.2 L 931.6 299.8 L 928.4 309.4 L 925.3 298.6 L 922.2 307 L 919.1 297.3 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 930 292.2 L 938.7 301.1 L 935.8 293.8 L 932.9 303.5 L 930 296.8 L 927.1 303.5 L 924.2 292.6 L 921.3 301.1 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 930 284.1 L 936.6 293.6 L 934 285.8 L 931.3 296 L 928.7 287.4 L 926 294.8 L 923.4 285 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 930 276 L 934.5 286.1 L 932.2 278.2 L 930 288.5 L 927.8 278.9 L 925.5 286.1 Z
+D f #3c7d66ff,n - M 930 308.4 L 943 305.2 L 939.8 297.1 L 936.5 307.6 L 933.2 299.8 L 930 310 L 926.8 300 L 923.5 307.6 L 920.2 298.5 L 917 305.2 Z
+D f #3c7d66ff,n - M 930 300.3 L 940.9 305.8 L 937.8 299.7 L 934.7 308.2 L 931.6 299.8 L 928.4 309.4 L 925.3 298.6 L 922.2 307 L 919.1 297.3 Z
+D f #3c7d66ff,n - M 930 292.2 L 938.7 301.1 L 935.8 293.8 L 932.9 303.5 L 930 296.8 L 927.1 303.5 L 924.2 292.6 L 921.3 301.1 Z
+D f #3c7d66ff,n - M 930 284.1 L 936.6 293.6 L 934 285.8 L 931.3 296 L 928.7 287.4 L 926 294.8 L 923.4 285 Z
+D f #3c7d66ff,n - M 930 276 L 934.5 286.1 L 932.2 278.2 L 930 288.5 L 927.8 278.9 L 925.5 286.1 Z
+G 0.85 -
+D f #4f957aff,n - M 928 282 L 926.5 282.5 L 929.1 279.5 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 928 290.1 L 924.8 290.6 L 928.7 287.6 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 928 298.2 L 923.2 298.7 L 928.3 295.7 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 928 306.3 L 921.5 304 L 927.8 301 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 928 314.4 L 919.9 304 L 927.4 301 Z
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 953 317 L 954 295 L 962 295 L 963 317 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 958 303.3 L 971 302.2 L 967.8 296.1 L 964.5 304.6 L 961.2 298.1 L 958 307 L 954.8 298 L 951.5 304.6 L 948.2 293.8 L 945 302.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 958 293.7 L 968.9 302.8 L 965.8 295.6 L 962.7 305.2 L 959.6 297.7 L 956.4 306.4 L 953.3 297.4 L 950.2 304 L 947.1 295 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 958 284.1 L 966.7 295.4 L 963.8 288.4 L 960.9 297.8 L 958 290.7 L 955.1 297.8 L 952.2 287.1 L 949.3 295.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 958 274.6 L 964.6 286.4 L 962 279.7 L 959.3 288.8 L 956.7 278.9 L 954 287.6 L 951.4 278.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 958 265 L 962.5 277.4 L 960.2 270.7 L 958 279.8 L 955.8 270.6 L 953.5 277.4 Z
+D f #3c7d66ff,n - M 958 303.3 L 971 302.2 L 967.8 296.1 L 964.5 304.6 L 961.2 298.1 L 958 307 L 954.8 298 L 951.5 304.6 L 948.2 293.8 L 945 302.2 Z
+D f #3c7d66ff,n - M 958 293.7 L 968.9 302.8 L 965.8 295.6 L 962.7 305.2 L 959.6 297.7 L 956.4 306.4 L 953.3 297.4 L 950.2 304 L 947.1 295 Z
+D f #3c7d66ff,n - M 958 284.1 L 966.7 295.4 L 963.8 288.4 L 960.9 297.8 L 958 290.7 L 955.1 297.8 L 952.2 287.1 L 949.3 295.4 Z
+D f #3c7d66ff,n - M 958 274.6 L 964.6 286.4 L 962 279.7 L 959.3 288.8 L 956.7 278.9 L 954 287.6 L 951.4 278.4 Z
+D f #3c7d66ff,n - M 958 265 L 962.5 277.4 L 960.2 270.7 L 958 279.8 L 955.8 270.6 L 953.5 277.4 Z
+G 0.85 -
+D f #4f957aff,n - M 956 271 L 954.5 273.8 L 957.1 270.8 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 956 280.6 L 952.8 283.4 L 956.7 280.4 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 956 290.1 L 951.2 293 L 956.3 290 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 956 299.7 L 949.5 301 L 955.8 298 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 956 309.3 L 947.9 301 L 955.4 298 Z
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 981 319 L 982 297 L 990 297 L 991 319 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 986 303.2 L 999 304.2 L 995.8 298.3 L 992.5 306.6 L 989.2 298.4 L 986 309 L 982.8 300 L 979.5 306.6 L 976.2 297.3 L 973 304.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 986 292.1 L 996.9 304.8 L 993.8 296.4 L 990.7 307.2 L 987.6 300.7 L 984.4 308.4 L 981.3 297.3 L 978.2 306 L 975.1 295.9 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 986 281.1 L 994.7 294.6 L 991.8 287.5 L 988.9 297 L 986 288.6 L 983.1 297 L 980.2 288 L 977.3 294.6 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 986 270 L 992.6 284.2 L 990 277 L 987.3 286.6 L 984.7 279.2 L 982 285.4 L 979.4 275.5 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 986 259 L 990.5 273.7 L 988.2 266.4 L 986 276.1 L 983.8 267.6 L 981.5 273.7 Z
+D f #3c7d66ff,n - M 986 303.2 L 999 304.2 L 995.8 298.3 L 992.5 306.6 L 989.2 298.4 L 986 309 L 982.8 300 L 979.5 306.6 L 976.2 297.3 L 973 304.2 Z
+D f #3c7d66ff,n - M 986 292.1 L 996.9 304.8 L 993.8 296.4 L 990.7 307.2 L 987.6 300.7 L 984.4 308.4 L 981.3 297.3 L 978.2 306 L 975.1 295.9 Z
+D f #3c7d66ff,n - M 986 281.1 L 994.7 294.6 L 991.8 287.5 L 988.9 297 L 986 288.6 L 983.1 297 L 980.2 288 L 977.3 294.6 Z
+D f #3c7d66ff,n - M 986 270 L 992.6 284.2 L 990 277 L 987.3 286.6 L 984.7 279.2 L 982 285.4 L 979.4 275.5 Z
+D f #3c7d66ff,n - M 986 259 L 990.5 273.7 L 988.2 266.4 L 986 276.1 L 983.8 267.6 L 981.5 273.7 Z
+G 0.85 -
+D f #4f957aff,n - M 984 265 L 982.5 270.1 L 985.1 267.1 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 984 276 L 980.8 281.2 L 984.7 278.2 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 984 287.1 L 979.2 292.2 L 984.3 289.2 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 984 298.1 L 977.5 303 L 983.8 300 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 984 309.2 L 975.9 303 L 983.4 300 Z
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 1035 320 L 1036 298 L 1044 298 L 1045 320 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 1040 304.2 L 1053 305.2 L 1049.8 296.7 L 1046.5 307.6 L 1043.2 301.3 L 1040 310 L 1036.8 301.7 L 1033.5 307.6 L 1030.2 297.6 L 1027 305.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 1040 293.1 L 1050.9 305.8 L 1047.8 297.3 L 1044.7 308.2 L 1041.6 300.4 L 1038.4 309.4 L 1035.3 300.7 L 1032.2 307 L 1029.1 295.9 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 1040 282.1 L 1048.7 295.6 L 1045.8 287.8 L 1042.9 298 L 1040 291.3 L 1037.1 298 L 1034.2 289.6 L 1031.3 295.6 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 1040 271 L 1046.6 285.2 L 1044 279.1 L 1041.3 287.6 L 1038.7 278.3 L 1036 286.4 L 1033.4 277 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 1040 260 L 1044.5 274.7 L 1042.2 268.5 L 1040 277.1 L 1037.8 266.4 L 1035.5 274.7 Z
+D f #3c7d66ff,n - M 1040 304.2 L 1053 305.2 L 1049.8 296.7 L 1046.5 307.6 L 1043.2 301.3 L 1040 310 L 1036.8 301.7 L 1033.5 307.6 L 1030.2 297.6 L 1027 305.2 Z
+D f #3c7d66ff,n - M 1040 293.1 L 1050.9 305.8 L 1047.8 297.3 L 1044.7 308.2 L 1041.6 300.4 L 1038.4 309.4 L 1035.3 300.7 L 1032.2 307 L 1029.1 295.9 Z
+D f #3c7d66ff,n - M 1040 282.1 L 1048.7 295.6 L 1045.8 287.8 L 1042.9 298 L 1040 291.3 L 1037.1 298 L 1034.2 289.6 L 1031.3 295.6 Z
+D f #3c7d66ff,n - M 1040 271 L 1046.6 285.2 L 1044 279.1 L 1041.3 287.6 L 1038.7 278.3 L 1036 286.4 L 1033.4 277 Z
+D f #3c7d66ff,n - M 1040 260 L 1044.5 274.7 L 1042.2 268.5 L 1040 277.1 L 1037.8 266.4 L 1035.5 274.7 Z
+G 0.85 -
+D f #4f957aff,n - M 1038 266 L 1036.5 271.1 L 1039.1 268.1 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 1038 277 L 1034.8 282.2 L 1038.7 279.2 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 1038 288.1 L 1033.2 293.2 L 1038.3 290.2 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 1038 299.1 L 1031.5 304 L 1037.8 301 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 1038 310.2 L 1029.9 304 L 1037.4 301 Z
+E
+G 1 -0.5;0;0;0.5;868;166
+D f #e7e2d6ff,n #293d4bff,1.8,rr,4 M -11 0 L -11 -14 L 11 -14 L 11 0 Z
+D f #b5463aff,n #293d4bff,1.8,rr,4 M -13.6 -13.4 L 0 -21 L 13.6 -13.4 Z
+D f #9fc6dcff,n #293d4bff,1.3,rr,4 M -6.4 -10 L -1 -10 L -1 -4.6 L -6.4 -4.6 Z M 2 -10 L 7.4 -10 L 7.4 0 L 2 0 Z
+E
+D f - #293d4bff,2,rm,4 M 1046 296 L 868 157
+G 1 1;0;0;1;1046;314
+D f #e7e2d6ff,n #293d4bff,1.8,rr,4 M -11 0 L -11 -14 L 11 -14 L 11 0 Z
+D f #b5463aff,n #293d4bff,1.8,rr,4 M -13.6 -13.4 L 0 -21 L 13.6 -13.4 Z
+D f #9fc6dcff,n #293d4bff,1.3,rr,4 M -6.4 -10 L -1 -10 L -1 -4.6 L -6.4 -4.6 Z M 2 -10 L 7.4 -10 L 7.4 0 L 2 0 Z
+E
+G 1 1;0;0;1;0;30
+D f #a8a9a4ff,n #293d4bff,2.2,rr,4 M 824 330 C 826 312 846 304 866 306 C 888 304 906 314 910 330 Z
+D f - #cfd0cbff,2.4,rr,4 M 836 320 C 842 312 856 310 866 311
+E
+G 1 0.8;0;0;0.8;870;337
+G 1 1;0;0;1;5.5;0
+D f #5e4836ff,n #293d4bff,1.8,rr,4 M -23 -28 L -22.2 -15 C -22 -11.5 -21.6 -10 -21 -8.6 L -20.6 -1.4 Q -20.5 0 -19.2 0 L -16.6 0 Q -15.4 0 -15.5 -1.4 L -15.6 -8.6 C -15.4 -10.4 -15 -12 -15 -15 L -14.6 -28 Z
+D f #2f2a26ff,n - M -20.7 -2.6 L -15.5 -2.6 L -15.5 -1.4 Q -15.4 0 -16.6 0 L -19.2 0 Q -20.5 0 -20.6 -1.4 Z
+E
+G 1 1;0;0;1;-5;0
+D f #5e4836ff,n #293d4bff,1.8,rr,4 M 13.6 -28 C 14 -22 15.6 -17 17.4 -13 L 17 -1.4 Q 17 0 18.3 0 L 20.9 0 Q 22.2 0 22.2 -1.4 L 22.3 -9.4 Q 24.6 -11 24.2 -13.6 C 26.4 -18.6 28.2 -23 28.4 -29 Z
+D f #2f2a26ff,n - M 17 -2.6 L 22.2 -2.6 L 22.2 -1.4 Q 22.2 0 20.9 0 L 18.3 0 Q 17 0 17 -1.4 Z
+E
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;-20.423035;5.709909
+D f #7f6a50ff,n #293d4bff,2,rr,4 M -29 -67 C -29.5 -82 -20 -94 -6 -96.5 C 6 -98 15.5 -91 18.6 -80 C 15 -84.6 9 -89 -1.6 -89 C -12.4 -89 -20.4 -80.5 -21.6 -66.6 Z
+E
+D f #4a3a2cff,n #293d4bff,1.4,rr,4 M 28 -40.6 C 31.6 -44 33 -48.4 31.2 -51 C 29 -48.6 27.6 -45.6 26 -42.4 Z
+D f #7a5e44ff,n #293d4bff,1.8,rr,4 M -23 -28 L -22.2 -15 C -22 -11.5 -21.6 -10 -21 -8.6 L -20.6 -1.4 Q -20.5 0 -19.2 0 L -16.6 0 Q -15.4 0 -15.5 -1.4 L -15.6 -8.6 C -15.4 -10.4 -15 -12 -15 -15 L -14.6 -28 Z
+D f #2f2a26ff,n - M -20.7 -2.6 L -15.5 -2.6 L -15.5 -1.4 Q -15.4 0 -16.6 0 L -19.2 0 Q -20.5 0 -20.6 -1.4 Z
+D f #7a5e44ff,n #293d4bff,1.8,rr,4 M 13.6 -28 C 14 -22 15.6 -17 17.4 -13 L 17 -1.4 Q 17 0 18.3 0 L 20.9 0 Q 22.2 0 22.2 -1.4 L 22.3 -9.4 Q 24.6 -11 24.2 -13.6 C 26.4 -18.6 28.2 -23 28.4 -29 Z
+D f #2f2a26ff,n - M 17 -2.6 L 22.2 -2.6 L 22.2 -1.4 Q 22.2 0 20.9 0 L 18.3 0 Q 17 0 17 -1.4 Z
+D f #b08a62ff,n #293d4bff,2.2,rr,4 M -26.8 -32 C -29.4 -38 -31.4 -48 -31 -58.6 L -20.2 -64.4 C -17.8 -56 -15.6 -50.6 -12 -47.8 C 0 -47 16 -45 26 -42 C 32.6 -40 34.6 -32.4 30.8 -27.2 C 28.4 -23.8 22.6 -23 17.6 -23.6 L -15.6 -23.6 C -21.8 -23.6 -25.6 -27 -26.8 -32 Z
+D f #e3cfaeff,n - M -14.6 -24.4 C -4 -27.4 9 -27.4 16.6 -24.4 Z
+D f - #9a7652ff,1.6,rm,4 M -9 -36 C 2 -34 13 -34.4 22 -36.6
+D f - #9a7652ff,1.4,rm,4 M -12 -47.8 C -14 -42 -14 -36 -12 -31
+D f #b08a62ff,n #293d4bff,2.2,rr,4 M -20.4 -66.6 C -24 -70.6 -33.4 -69.4 -39.8 -62.4 C -42.2 -59.8 -41.8 -56.6 -38.8 -55.8 C -35.8 -55 -32.4 -55.8 -29.2 -57.2 C -25.6 -58.8 -21.4 -61 -20.4 -66.6 Z
+D f #4a3a2cff,n #293d4bff,1.2,rr,4 M -32.6 -56.4 C -33.8 -52.4 -33 -49.2 -31 -47 C -30 -50.4 -29.6 -53.6 -29.6 -57 Z
+D f #293d4bff,n - M -28.699999 -63.4 C -28.699999 -62.949135 -28.879105 -62.51673 -29.197918 -62.197918 C -29.51673 -61.87911 -29.949131 -61.7 -30.4 -61.7 C -31.338884 -61.7 -32.1 -62.461117 -32.1 -63.4 C -32.1 -64.33888 -31.338882 -65.1 -30.4 -65.1 C -29.461117 -65.1 -28.7 -64.33888 -28.699999 -63.4 Z
+D f #ffffffff,n - M -30.3 -64 C -30.3 -63.66863 -30.568628 -63.4 -30.9 -63.4 C -31.23137 -63.4 -31.5 -63.66863 -31.5 -64 C -31.5 -64.33137 -31.23137 -64.6 -30.9 -64.6 C -30.568628 -64.6 -30.3 -64.33137 -30.3 -64 Z
+D f #293d4bff,n - M -38 -59.6 C -38 -59.158173 -38.358173 -58.8 -38.8 -58.8 C -39.241825 -58.8 -39.6 -59.158173 -39.6 -59.6 C -39.6 -60.041824 -39.241825 -60.399998 -38.8 -60.399998 C -38.358173 -60.399998 -38 -60.041824 -38 -59.6 Z
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;-24.423035;4.509909
+D f #a38c6cff,n #293d4bff,2,rr,4 M -29 -67 C -29.5 -82 -20 -94 -6 -96.5 C 6 -98 15.5 -91 18.6 -80 C 15 -84.6 9 -89 -1.6 -89 C -12.4 -89 -20.4 -80.5 -21.6 -66.6 Z
+D f - #5a4a38ff,1.3,rm,4 M -28.49 -73.94 L -23.25 -72.9 M -25.91 -81.73 L -21.45 -79.42 M -21.4 -88.24 L -18.01 -84.98 M -15.23 -93.15 L -13.09 -89.33 M -7.66 -96.15 L -6.77 -92.18 M -0.45 -96.59 L -0.87 -92.87 M 5.81 -95.03 L 4.45 -91.89 M 11.12 -91.81 L 9.1 -89.45 M 15.32 -87.17 L 12.99 -85.65 M 18.2 -81.3 L 15.86 -80.54
+E
+D f #b08a62ff,n #293d4bff,1.4,rr,4 M -21.6 -64 L -13.4 -66.8 L -18.2 -60.6 Z
+E
+G 1 0.3;0;0;0.3;578.2;281.4
+G 1 1.2;0;0;1.2;826;400
+G 1 -0.9848077;-0.17364818;0.17364818;-0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 0.9848077;-0.17364818;0.17364818;0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 -0.64278764;-0.76604444;0.76604444;-0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.64278764;-0.76604444;0.76604444;0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.9612617;-0.27563736;0.27563736;0.9612617;-5;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+G 1 0.9781476;0.20791169;-0.20791169;0.9781476;4;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+E
+E
+G 1 0.2;0;0;0.2;681.6;324
+G 1 1.2;0;0;1.2;852;402
+D f - #8fa07aff,2.2,rr,4 M 0 0 C 1 -6 -1 -10 0 -16
+G 1 -0.9396926;-0.34202015;0.34202015;-0.9396926;0;-3
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 0.9396926;-0.34202015;0.34202015;0.9396926;0;-5
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 -0.9396926;0.34202015;-0.34202015;-0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 1;0;0;1;0;-18
+G 1 0.99026805;0.1391731;-0.1391731;0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.60181504;0.7986355;-0.7986355;0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.1391731;0.99026805;-0.99026805;-0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.7986355;0.60181504;-0.60181504;-0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.99026805;-0.1391731;0.1391731;-0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.60181504;-0.7986355;0.7986355;-0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 0.1391731;-0.99026805;0.99026805;0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.7986355;-0.60181504;0.60181504;0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 1.6 0 C 1.6 0.8836556 0.8836556 1.6 0.00000000000000009797175 1.6 C -0.8836556 1.6 -1.6 0.8836556 -1.6 0.0000000000000001959435 C -1.6 -0.8836556 -0.8836556 -1.6 -0.00000000000000029391524 -1.6 C 0.8836556 -1.6 1.6 -0.8836556 1.6 0 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M -0.8000001 -1.4 C -0.8000001 -0.51634437 -1.5163444 0.20000005 -2.4 0.20000005 C -3.2836556 0.19999999 -4 -0.5163444 -4 -1.4 C -4 -2.2836556 -3.2836556 -3 -2.4 -3 C -1.5163444 -3 -0.8000001 -2.2836556 -0.8000001 -1.4 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 4 -1.2 C 4 -0.31634447 3.2836556 0.39999992 2.4 0.39999998 C 1.5163444 0.39999998 0.8000001 -0.31634444 0.8000001 -1.2 C 0.8 -2.0836556 1.5163444 -2.8000002 2.4 -2.8000002 C 3.2836556 -2.8000002 4 -2.0836556 4 -1.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 0.6 2.2 C 0.6000001 3.0836556 -0.11634434 3.8000002 -1 3.8000002 C -1.8836557 3.8000002 -2.6 3.0836556 -2.6 2.2 C -2.6 1.3163445 -1.8836555 0.6000001 -1 0.6 C -0.116344385 0.6 0.6 1.3163444 0.6 2.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 3.4 2 C 3.4 2.8836555 2.6836555 3.6 1.8 3.6 C 0.9163444 3.6 0.19999999 2.8836555 0.19999993 2 C 0.19999993 1.1163443 0.91634434 0.39999998 1.8 0.39999998 C 2.6836555 0.39999992 3.4 1.1163443 3.4 2 Z
+E
+E
+E
+G 1 0.7;0;0;0.7;900;400
+D f #b7bfc4ff,n #293d4bff,2,rr,4 M -16 0 C -20 -8 -12 -16 -2 -16 C 10 -17 19 -10 17 0 C 8 3 -8 3 -16 0 Z
+D f - #dfe5e8ff,2.2,rr,4 M -11 -8 C -7 -12 0 -13 6 -12
+D f - #8f9aa1ff,1.6,rr,4 M -12 -1 C -4 1.4 6 1.4 13 -1
+E
+X
+P fond 1061 407
+D f L:0:0:0:1:p:1061;0;0;407;0;0:0=#bfe0f6ff/1=#edf6fbff,n - M 0 0 L 1061 0 L 1061 407 L 0 407 Z
+D f #c3d6e6ff,n - M 0 250 L 53 186 L 106 250 L 159 126 L 211 250 L 256 150 L 300 250 L 344 129 L 387 250 L 422 151 L 457 250 L 492 152 L 528 250 L 558 126 L 589 250 L 637 149 L 684 250 L 727 171 L 770 250 L 809 124 L 848 250 L 898 161 L 947 250 L 994 163 L 1040 250 L 1094 145 L 1149 250 L 1061 320 L 0 320 Z
+D f #a9d68aff,n - M 0 322 C 140 306 280 334 420 320 C 580 306 720 338 880 318 C 960 310 1020 322 1061 314 L 1061 407 L 0 407 Z
+D f #8fca72ff,n - M 0 372 C 150 358 300 386 470 372 C 640 358 800 388 1061 366 L 1061 407 L 0 407 Z
+G 1 0.36;0;0;0.36;211.2;258.56
+G 1 1;0;0;1;330;404
+G 1 -0.9848077;-0.17364818;0.17364818;-0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 0.9848077;-0.17364818;0.17364818;0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 -0.64278764;-0.76604444;0.76604444;-0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.64278764;-0.76604444;0.76604444;0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.9612617;-0.27563736;0.27563736;0.9612617;-5;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+G 1 0.9781476;0.20791169;-0.20791169;0.9781476;4;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+E
+E
+G 1 0.25;0;0;0.25;337.5;303
+G 1 1;0;0;1;450;404
+D f - #8fa07aff,2.2,rr,4 M 0 0 C 1 -6 -1 -10 0 -16
+G 1 -0.9396926;-0.34202015;0.34202015;-0.9396926;0;-3
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 0.9396926;-0.34202015;0.34202015;0.9396926;0;-5
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 -0.9396926;0.34202015;-0.34202015;-0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 1;0;0;1;0;-18
+G 1 0.99026805;0.1391731;-0.1391731;0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.60181504;0.7986355;-0.7986355;0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.1391731;0.99026805;-0.99026805;-0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.7986355;0.60181504;-0.60181504;-0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.99026805;-0.1391731;0.1391731;-0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.60181504;-0.7986355;0.7986355;-0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 0.1391731;-0.99026805;0.99026805;0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.7986355;-0.60181504;0.60181504;0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 1.6 0 C 1.6 0.8836556 0.8836556 1.6 0.00000000000000009797175 1.6 C -0.8836556 1.6 -1.6 0.8836556 -1.6 0.0000000000000001959435 C -1.6 -0.8836556 -0.8836556 -1.6 -0.00000000000000029391524 -1.6 C 0.8836556 -1.6 1.6 -0.8836556 1.6 0 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M -0.8000001 -1.4 C -0.8000001 -0.51634437 -1.5163444 0.20000005 -2.4 0.20000005 C -3.2836556 0.19999999 -4 -0.5163444 -4 -1.4 C -4 -2.2836556 -3.2836556 -3 -2.4 -3 C -1.5163444 -3 -0.8000001 -2.2836556 -0.8000001 -1.4 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 4 -1.2 C 4 -0.31634447 3.2836556 0.39999992 2.4 0.39999998 C 1.5163444 0.39999998 0.8000001 -0.31634444 0.8000001 -1.2 C 0.8 -2.0836556 1.5163444 -2.8000002 2.4 -2.8000002 C 3.2836556 -2.8000002 4 -2.0836556 4 -1.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 0.6 2.2 C 0.6000001 3.0836556 -0.11634434 3.8000002 -1 3.8000002 C -1.8836557 3.8000002 -2.6 3.0836556 -2.6 2.2 C -2.6 1.3163445 -1.8836555 0.6000001 -1 0.6 C -0.116344385 0.6 0.6 1.3163444 0.6 2.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 3.4 2 C 3.4 2.8836555 2.6836555 3.6 1.8 3.6 C 0.9163444 3.6 0.19999999 2.8836555 0.19999993 2 C 0.19999993 1.1163443 0.91634434 0.39999998 1.8 0.39999998 C 2.6836555 0.39999992 3.4 1.1163443 3.4 2 Z
+E
+E
+E
+G 1 0.36;0;0;0.36;384;258.56
+G 1 1;0;0;1;600;404
+G 1 -0.9848077;-0.17364818;0.17364818;-0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 0.9848077;-0.17364818;0.17364818;0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 -0.64278764;-0.76604444;0.76604444;-0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.64278764;-0.76604444;0.76604444;0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.9612617;-0.27563736;0.27563736;0.9612617;-5;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+G 1 0.9781476;0.20791169;-0.20791169;0.9781476;4;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+E
+E
+G 1 0.25;0;0;0.25;540;303
+G 1 1;0;0;1;720;404
+D f - #8fa07aff,2.2,rr,4 M 0 0 C 1 -6 -1 -10 0 -16
+G 1 -0.9396926;-0.34202015;0.34202015;-0.9396926;0;-3
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 0.9396926;-0.34202015;0.34202015;0.9396926;0;-5
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 -0.9396926;0.34202015;-0.34202015;-0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 1;0;0;1;0;-18
+G 1 0.99026805;0.1391731;-0.1391731;0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.60181504;0.7986355;-0.7986355;0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.1391731;0.99026805;-0.99026805;-0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.7986355;0.60181504;-0.60181504;-0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.99026805;-0.1391731;0.1391731;-0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.60181504;-0.7986355;0.7986355;-0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 0.1391731;-0.99026805;0.99026805;0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.7986355;-0.60181504;0.60181504;0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 1.6 0 C 1.6 0.8836556 0.8836556 1.6 0.00000000000000009797175 1.6 C -0.8836556 1.6 -1.6 0.8836556 -1.6 0.0000000000000001959435 C -1.6 -0.8836556 -0.8836556 -1.6 -0.00000000000000029391524 -1.6 C 0.8836556 -1.6 1.6 -0.8836556 1.6 0 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M -0.8000001 -1.4 C -0.8000001 -0.51634437 -1.5163444 0.20000005 -2.4 0.20000005 C -3.2836556 0.19999999 -4 -0.5163444 -4 -1.4 C -4 -2.2836556 -3.2836556 -3 -2.4 -3 C -1.5163444 -3 -0.8000001 -2.2836556 -0.8000001 -1.4 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 4 -1.2 C 4 -0.31634447 3.2836556 0.39999992 2.4 0.39999998 C 1.5163444 0.39999998 0.8000001 -0.31634444 0.8000001 -1.2 C 0.8 -2.0836556 1.5163444 -2.8000002 2.4 -2.8000002 C 3.2836556 -2.8000002 4 -2.0836556 4 -1.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 0.6 2.2 C 0.6000001 3.0836556 -0.11634434 3.8000002 -1 3.8000002 C -1.8836557 3.8000002 -2.6 3.0836556 -2.6 2.2 C -2.6 1.3163445 -1.8836555 0.6000001 -1 0.6 C -0.116344385 0.6 0.6 1.3163444 0.6 2.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 3.4 2 C 3.4 2.8836555 2.6836555 3.6 1.8 3.6 C 0.9163444 3.6 0.19999999 2.8836555 0.19999993 2 C 0.19999993 1.1163443 0.91634434 0.39999998 1.8 0.39999998 C 2.6836555 0.39999992 3.4 1.1163443 3.4 2 Z
+E
+E
+E
+G 1 0.5;0;0;0.5;520;404
+D f #b7bfc4ff,n #293d4bff,2,rr,4 M -16 0 C -20 -8 -12 -16 -2 -16 C 10 -17 19 -10 17 0 C 8 3 -8 3 -16 0 Z
+D f - #dfe5e8ff,2.2,rr,4 M -11 -8 C -7 -12 0 -13 6 -12
+D f - #8f9aa1ff,1.6,rr,4 M -12 -1 C -4 1.4 6 1.4 13 -1
+E
+D f #5aa860ff,n - M 3.6 407 Q 4.2 401.4 7.2 397.7 Q 7.8 402.3 6.8 407 Z
+D f #6cb35cff,n - M 4.5 407 Q 6 402 11.2 398.6 Q 10.3 402.8 7.7 407 Z
+D f #5aa860ff,n - M 1.8 407 Q 3.4 402.2 8.9 399 Q 7.7 403 5 407 Z
+D f #4f9a4aff,n - M -2.8 407 Q -1.8 403 2.1 400.3 Q 2.1 403.6 0.4 407 Z
+D f #5aa860ff,n - M 2.3 407 Q 1.2 403 0.4 400.4 Q 3.7 403.7 5.5 407 Z
+D f #6cb35cff,n - M 28.9 407 Q 29.8 403.7 33.4 401.5 Q 33.6 404.2 32.1 407 Z
+D f #4f9a4aff,n - M 34.6 407 Q 34.2 402.1 35.1 398.8 Q 37.2 402.9 37.8 407 Z
+D f #4f9a4aff,n - M 36.4 407 Q 35.7 403.7 35.6 401.5 Q 38.4 404.2 39.6 407 Z
+D f #6cb35cff,n - M 61.8 407 Q 62.2 401.4 64.8 397.6 Q 65.7 402.3 65 407 Z
+D f #4f9a4aff,n - M 59.6 407 Q 59.4 402.6 60.5 399.7 Q 62.4 403.3 62.8 407 Z
+D f #4f9a4aff,n - M 57.5 407 Q 55.9 401.8 53.8 398.3 Q 58 402.6 60.7 407 Z
+D f #4f9a4aff,n - M 53.7 407 Q 52.1 401.9 50 398.5 Q 54.2 402.8 56.9 407 Z
+D f #6cb35cff,n - M 84.2 407 Q 84.8 399.4 87.8 394.3 Q 88.4 400.6 87.4 407 Z
+D f #5aa860ff,n - M 83.9 407 Q 85.6 401.8 91.3 398.3 Q 90 402.6 87.1 407 Z
+D f #4f9a4aff,n - M 85.2 407 Q 86.1 400.4 89.8 396 Q 89.9 401.5 88.4 407 Z
+D f #6cb35cff,n - M 79.7 407 Q 81.4 399.5 87.1 394.4 Q 85.8 400.7 82.9 407 Z
+D f #6cb35cff,n - M 102.4 407 Q 101.3 400.8 100.4 396.7 Q 103.8 401.9 105.6 407 Z
+D f #6cb35cff,n - M 104.9 407 Q 105.6 401.7 108.9 398.1 Q 109.3 402.6 108.1 407 Z
+D f #6cb35cff,n - M 100.8 407 Q 101.9 400.8 105.9 396.6 Q 105.8 401.8 104 407 Z
+D f #4f9a4aff,n - M 129.1 407 Q 130.5 403.1 135.5 400.5 Q 134.7 403.7 132.3 407 Z
+D f #4f9a4aff,n - M 118.9 407 Q 117.6 402.6 116.2 399.7 Q 119.9 403.3 122.1 407 Z
+D f #5aa860ff,n - M 127.7 407 Q 126.8 403.7 126.4 401.5 Q 129.4 404.3 130.9 407 Z
+D f #5aa860ff,n - M 119.1 407 Q 120.2 404.2 124.2 402.4 Q 124.1 404.7 122.3 407 Z
+D f #6cb35cff,n - M 124.7 407 Q 123 402.2 120.7 399 Q 125.1 403 127.9 407 Z
+D f #5aa860ff,n - M 149.8 407 Q 151.3 403.5 156.4 401.2 Q 155.5 404.1 153 407 Z
+D f #4f9a4aff,n - M 150.1 407 Q 150.7 401.4 153.6 397.7 Q 154.3 402.4 153.3 407 Z
+D f #5aa860ff,n - M 143.4 407 Q 141.8 402.9 139.7 400.1 Q 143.9 403.6 146.6 407 Z
+D f #5aa860ff,n - M 153.5 407 Q 155 402.8 160.2 399.9 Q 159.2 403.5 156.7 407 Z
+D f #5aa860ff,n - M 152.2 407 Q 152.5 401.2 154.7 397.3 Q 155.8 402.2 155.4 407 Z
+D f #5aa860ff,n - M 168.4 407 Q 167.9 400.3 168.3 395.8 Q 170.7 401.4 171.6 407 Z
+D f #4f9a4aff,n - M 179.6 407 Q 181.4 401.1 186.9 397.2 Q 185.7 402.1 182.8 407 Z
+D f #5aa860ff,n - M 178.4 407 Q 177.8 402.8 177.9 400 Q 180.6 403.5 181.6 407 Z
+D f #4f9a4aff,n - M 200.3 407 Q 201.4 399.5 205.5 394.5 Q 205.3 400.7 203.5 407 Z
+D f #4f9a4aff,n - M 199.6 407 Q 200.2 399.4 203.2 394.4 Q 203.8 400.7 202.8 407 Z
+D f #4f9a4aff,n - M 206 407 Q 206 401 207.7 397 Q 209.2 402 209.2 407 Z
+D f #4f9a4aff,n - M 233.2 407 Q 232.2 399.9 231.3 395.1 Q 234.6 401.1 236.4 407 Z
+D f #5aa860ff,n - M 228.5 407 Q 229.7 400.9 234 396.9 Q 233.7 401.9 231.7 407 Z
+D f #4f9a4aff,n - M 236.1 407 Q 237 400.1 240.7 395.5 Q 240.8 401.2 239.3 407 Z
+D f #5aa860ff,n - M 231.9 407 Q 230.9 401.8 230 398.3 Q 233.3 402.7 235.1 407 Z
+D f #5aa860ff,n - M 230.1 407 Q 231.2 401.9 235.4 398.5 Q 235.2 402.7 233.3 407 Z
+D f #4f9a4aff,n - M 253.2 407 Q 253.4 402.3 255.5 399.2 Q 256.8 403.1 256.4 407 Z
+D f #4f9a4aff,n - M 252 407 Q 253.7 401.1 259.2 397.2 Q 258 402.1 255.2 407 Z
+D f #5aa860ff,n - M 258.1 407 Q 256.9 400.5 255.6 396.2 Q 259.2 401.6 261.3 407 Z
+D f #4f9a4aff,n - M 252.5 407 Q 250.8 403 248.5 400.3 Q 252.9 403.7 255.7 407 Z
+D f #6cb35cff,n - M 271.1 407 Q 271.7 401.6 274.8 398 Q 275.3 402.5 274.3 407 Z
+D f #4f9a4aff,n - M 269.5 407 Q 269.4 402.4 270.8 399.4 Q 272.6 403.2 272.7 407 Z
+D f #5aa860ff,n - M 273.8 407 Q 273.4 401.7 274 398.2 Q 276.3 402.6 277 407 Z
+D f #4f9a4aff,n - M 268.4 407 Q 269 402 271.8 398.7 Q 272.5 402.9 271.6 407 Z
+D f #5aa860ff,n - M 288.1 407 Q 289.1 400.3 293 395.8 Q 292.9 401.4 291.3 407 Z
+D f #5aa860ff,n - M 298.5 407 Q 298.1 401.7 298.8 398.2 Q 301.1 402.6 301.7 407 Z
+D f #5aa860ff,n - M 288.6 407 Q 288.7 401.9 290.6 398.5 Q 292 402.7 291.8 407 Z
+D f #5aa860ff,n - M 294.2 407 Q 295.3 400.8 299.6 396.6 Q 299.3 401.8 297.4 407 Z
+D f #6cb35cff,n - M 326.2 407 Q 325.8 401.8 326.6 398.3 Q 328.8 402.6 329.4 407 Z
+D f #6cb35cff,n - M 326 407 Q 327.4 401.1 332.3 397.1 Q 331.5 402.1 329.2 407 Z
+D f #5aa860ff,n - M 323.5 407 Q 323.4 400.9 324.8 396.8 Q 326.6 401.9 326.7 407 Z
+D f #4f9a4aff,n - M 328.8 407 Q 329.4 401.2 332.3 397.3 Q 333 402.2 332 407 Z
+D f #4f9a4aff,n - M 319.6 407 Q 320 403.3 322.6 400.8 Q 323.5 403.9 322.8 407 Z
+D f #5aa860ff,n - M 362.5 407 Q 361 402.8 359.2 400 Q 363.2 403.5 365.7 407 Z
+D f #4f9a4aff,n - M 357.4 407 Q 359 402.7 364.3 399.9 Q 363.3 403.5 360.6 407 Z
+D f #4f9a4aff,n - M 363.7 407 Q 365.4 401.4 371.1 397.7 Q 369.8 402.3 366.9 407 Z
+D f #6cb35cff,n - M 356.9 407 Q 357.9 402.5 361.8 399.6 Q 361.8 403.3 360.1 407 Z
+D f #6cb35cff,n - M 380.1 407 Q 381 402 384.7 398.6 Q 384.8 402.8 383.3 407 Z
+D f #4f9a4aff,n - M 382.4 407 Q 380.9 402 378.8 398.6 Q 383 402.8 385.6 407 Z
+D f #4f9a4aff,n - M 375.8 407 Q 375.6 403.7 376.6 401.5 Q 378.6 404.2 379 407 Z
+D f #6cb35cff,n - M 379.1 407 Q 379.8 403.7 382.8 401.5 Q 383.4 404.3 382.3 407 Z
+D f #5aa860ff,n - M 378.3 407 Q 379.4 401.6 383.6 398 Q 383.4 402.5 381.5 407 Z
+D f #6cb35cff,n - M 420.8 407 Q 421.7 399 425.4 393.7 Q 425.5 400.4 424 407 Z
+D f #4f9a4aff,n - M 424 407 Q 424.6 402.5 427.5 399.5 Q 428.2 403.2 427.2 407 Z
+D f #5aa860ff,n - M 420.4 407 Q 421.5 399.3 425.9 394.1 Q 425.5 400.6 423.6 407 Z
+D f #5aa860ff,n - M 442 407 Q 443.5 402.6 448.5 399.7 Q 447.6 403.4 445.2 407 Z
+D f #5aa860ff,n - M 441.4 407 Q 442.8 403.8 447.7 401.7 Q 446.9 404.4 444.6 407 Z
+D f #5aa860ff,n - M 445.3 407 Q 444.5 402.7 444.3 399.8 Q 447.2 403.4 448.5 407 Z
+D f #4f9a4aff,n - M 438 407 Q 438 403.6 439.4 401.4 Q 441.1 404.2 441.2 407 Z
+D f #4f9a4aff,n - M 446.6 407 Q 446.7 403.8 448.4 401.6 Q 449.9 404.3 449.8 407 Z
+D f #4f9a4aff,n - M 471.4 407 Q 472.9 401.3 478.2 397.6 Q 477.2 402.3 474.6 407 Z
+D f #6cb35cff,n - M 480.7 407 Q 481.6 403.2 485.2 400.7 Q 485.3 403.8 483.9 407 Z
+D f #4f9a4aff,n - M 471.1 407 Q 470.1 401 469.4 396.9 Q 472.6 402 474.3 407 Z
+D f #6cb35cff,n - M 468.7 407 Q 468.7 401.4 470.4 397.7 Q 471.9 402.3 471.9 407 Z
+D f #4f9a4aff,n - M 490.9 407 Q 492 400.6 496.1 396.3 Q 495.9 401.6 494.1 407 Z
+D f #4f9a4aff,n - M 489.1 407 Q 487.9 403.5 486.9 401.2 Q 490.4 404.1 492.3 407 Z
+D f #6cb35cff,n - M 498.4 407 Q 498.1 403.5 499 401.2 Q 501.1 404.1 501.6 407 Z
+D f #4f9a4aff,n - M 528.9 407 Q 527.3 402 525.2 398.6 Q 529.4 402.8 532.1 407 Z
+D f #4f9a4aff,n - M 516.5 407 Q 515.1 402.6 513.4 399.7 Q 517.4 403.3 519.7 407 Z
+D f #6cb35cff,n - M 529.7 407 Q 530.4 399.6 533.6 394.6 Q 534.1 400.8 532.9 407 Z
+D f #4f9a4aff,n - M 523.9 407 Q 523.9 400.9 525.6 396.9 Q 527.1 401.9 527.1 407 Z
+D f #6cb35cff,n - M 528.7 407 Q 527.5 400.7 526.3 396.5 Q 529.9 401.8 531.9 407 Z
+D f #5aa860ff,n - M 555.1 407 Q 554.1 401.6 553.6 398 Q 556.7 402.5 558.3 407 Z
+D f #5aa860ff,n - M 551.7 407 Q 552.6 403.3 556.3 400.9 Q 556.4 404 554.9 407 Z
+D f #4f9a4aff,n - M 551.3 407 Q 552.5 401.3 556.9 397.5 Q 556.5 402.2 554.5 407 Z
+D f #5aa860ff,n - M 550.4 407 Q 551.5 403.2 555.5 400.6 Q 555.4 403.8 553.6 407 Z
+D f #5aa860ff,n - M 555.1 407 Q 555.7 401.4 558.7 397.6 Q 559.3 402.3 558.3 407 Z
+D f #6cb35cff,n - M 576.3 407 Q 574.8 403.5 572.8 401.1 Q 577 404.1 579.5 407 Z
+D f #4f9a4aff,n - M 572.7 407 Q 573.4 401.8 576.6 398.3 Q 577.1 402.6 575.9 407 Z
+D f #4f9a4aff,n - M 575.3 407 Q 574.1 400.7 572.8 396.6 Q 576.5 401.8 578.5 407 Z
+D f #4f9a4aff,n - M 599.1 407 Q 599 401.1 600.5 397.1 Q 602.2 402.1 602.3 407 Z
+D f #4f9a4aff,n - M 598.3 407 Q 599.4 403 603.5 400.3 Q 603.3 403.7 601.5 407 Z
+D f #5aa860ff,n - M 593.3 407 Q 592.1 400.6 591 396.3 Q 594.5 401.7 596.5 407 Z
+D f #6cb35cff,n - M 630.8 407 Q 629.6 401.9 628.4 398.5 Q 632 402.7 634 407 Z
+D f #6cb35cff,n - M 619.9 407 Q 620.1 402.3 622 399.2 Q 623.4 403.1 623.1 407 Z
+D f #4f9a4aff,n - M 628.1 407 Q 629.8 399.2 635.4 394.1 Q 634.1 400.5 631.3 407 Z
+D f #5aa860ff,n - M 628.7 407 Q 627 401.4 624.8 397.6 Q 629.1 402.3 631.9 407 Z
+D f #4f9a4aff,n - M 623.7 407 Q 625.2 400.7 630.3 396.5 Q 629.4 401.8 626.9 407 Z
+D f #5aa860ff,n - M 651.8 407 Q 650.7 400.7 649.7 396.6 Q 653.1 401.8 655 407 Z
+D f #4f9a4aff,n - M 655.4 407 Q 655.6 401.7 657.5 398.1 Q 658.9 402.6 658.6 407 Z
+D f #5aa860ff,n - M 645.4 407 Q 646.5 402 650.6 398.7 Q 650.4 402.8 648.6 407 Z
+D f #6cb35cff,n - M 681.3 407 Q 680.1 403.5 678.9 401.2 Q 682.5 404.1 684.5 407 Z
+D f #5aa860ff,n - M 682.8 407 Q 681 402.1 678.6 398.9 Q 683.1 402.9 686 407 Z
+D f #4f9a4aff,n - M 687.5 407 Q 688.9 403.6 693.6 401.3 Q 693 404.1 690.7 407 Z
+D f #4f9a4aff,n - M 681 407 Q 679.3 403.9 677 401.8 Q 681.4 404.4 684.2 407 Z
+D f #4f9a4aff,n - M 711.2 407 Q 710.8 404.1 711.4 402.1 Q 713.7 404.6 714.4 407 Z
+D f #4f9a4aff,n - M 715.1 407 Q 715.7 403.5 718.9 401.2 Q 719.4 404.1 718.3 407 Z
+D f #6cb35cff,n - M 715.4 407 Q 714.4 404 713.9 402 Q 717 404.5 718.6 407 Z
+D f #6cb35cff,n - M 712.3 407 Q 711.5 403.6 711.2 401.3 Q 714.2 404.1 715.5 407 Z
+D f #5aa860ff,n - M 751.1 407 Q 751.3 402.9 753.6 400.2 Q 754.7 403.6 754.3 407 Z
+D f #5aa860ff,n - M 743.7 407 Q 744.4 401.8 747.4 398.3 Q 748 402.6 746.9 407 Z
+D f #6cb35cff,n - M 746.7 407 Q 747 402 749.4 398.7 Q 750.4 402.8 749.9 407 Z
+D f #5aa860ff,n - M 771.2 407 Q 772.3 401.8 776.4 398.3 Q 776.2 402.7 774.4 407 Z
+D f #5aa860ff,n - M 774.9 407 Q 774.1 403.4 774 400.9 Q 776.8 404 778.1 407 Z
+D f #6cb35cff,n - M 767.1 407 Q 765.8 400.9 764.3 396.9 Q 768.1 402 770.3 407 Z
+D f #6cb35cff,n - M 805 407 Q 805.5 401.6 808.3 398 Q 809.1 402.5 808.2 407 Z
+D f #6cb35cff,n - M 799.3 407 Q 798.2 402.8 797.4 400 Q 800.7 403.5 802.5 407 Z
+D f #4f9a4aff,n - M 797.8 407 Q 797.1 402.6 797.2 399.6 Q 799.9 403.3 801 407 Z
+D f #5aa860ff,n - M 797.5 407 Q 797.2 401.7 798 398.2 Q 800.2 402.6 800.7 407 Z
+D f #5aa860ff,n - M 825.8 407 Q 827.5 402.1 833 398.8 Q 831.8 402.9 829 407 Z
+D f #5aa860ff,n - M 834 407 Q 835.1 401.3 839.2 397.6 Q 839 402.3 837.2 407 Z
+D f #5aa860ff,n - M 834 407 Q 832.5 402.2 830.6 399.1 Q 834.7 403 837.2 407 Z
+D f #6cb35cff,n - M 842.7 407 Q 842.9 402.8 845.1 400 Q 846.3 403.5 845.9 407 Z
+D f #6cb35cff,n - M 842.4 407 Q 841.4 402.8 840.8 400 Q 844 403.5 845.6 407 Z
+D f #5aa860ff,n - M 845.3 407 Q 846.6 400.6 851.3 396.4 Q 850.7 401.7 848.5 407 Z
+D f #4f9a4aff,n - M 844.9 407 Q 843.4 401.5 841.4 397.8 Q 845.6 402.4 848.1 407 Z
+D f #6cb35cff,n - M 844.2 407 Q 844.9 400.1 848 395.5 Q 848.5 401.3 847.4 407 Z
+D f #5aa860ff,n - M 876.5 407 Q 877.1 401.8 880.2 398.4 Q 880.7 402.7 879.7 407 Z
+D f #5aa860ff,n - M 866.6 407 Q 865.2 399.9 863.6 395.1 Q 867.5 401.1 869.8 407 Z
+D f #4f9a4aff,n - M 876.4 407 Q 876.7 402 878.9 398.7 Q 880.1 402.9 879.6 407 Z
+D f #5aa860ff,n - M 906.7 407 Q 907.8 402.8 911.8 399.9 Q 911.7 403.5 909.9 407 Z
+D f #6cb35cff,n - M 898 407 Q 897 402 896.4 398.7 Q 899.6 402.9 901.2 407 Z
+D f #4f9a4aff,n - M 892.9 407 Q 894 400.9 898.1 396.9 Q 897.9 401.9 896.1 407 Z
+D f #5aa860ff,n - M 895 407 Q 895.1 401.9 896.8 398.4 Q 898.3 402.7 898.2 407 Z
+D f #5aa860ff,n - M 903.9 407 Q 904 401.8 905.9 398.3 Q 907.3 402.6 907.1 407 Z
+D f #6cb35cff,n - M 917.2 407 Q 918.4 400 922.8 395.3 Q 922.4 401.2 920.4 407 Z
+D f #6cb35cff,n - M 916.2 407 Q 914.6 402.5 912.4 399.5 Q 916.7 403.2 919.4 407 Z
+D f #4f9a4aff,n - M 914.8 407 Q 913.8 400.7 912.9 396.5 Q 916.3 401.7 918 407 Z
+D f #6cb35cff,n - M 916.4 407 Q 915.6 400.9 915.5 396.9 Q 918.3 401.9 919.6 407 Z
+D f #5aa860ff,n - M 947.4 407 Q 947.4 403.6 948.9 401.3 Q 950.6 404.2 950.6 407 Z
+D f #6cb35cff,n - M 941 407 Q 941.6 401.8 944.7 398.4 Q 945.3 402.7 944.2 407 Z
+D f #5aa860ff,n - M 947.7 407 Q 946.6 404.2 945.6 402.3 Q 949 404.6 950.9 407 Z
+D f #4f9a4aff,n - M 974.1 407 Q 973.7 402.8 974.6 400 Q 976.7 403.5 977.3 407 Z
+D f #5aa860ff,n - M 968.4 407 Q 967.3 403.2 966.2 400.7 Q 969.7 403.8 971.6 407 Z
+D f #4f9a4aff,n - M 963 407 Q 961.5 403.6 959.6 401.3 Q 963.7 404.2 966.2 407 Z
+D f #6cb35cff,n - M 965.4 407 Q 965.3 402.2 966.9 399 Q 968.5 403 968.6 407 Z
+D f #6cb35cff,n - M 965.8 407 Q 965.7 404.3 967 402.5 Q 968.8 404.7 969 407 Z
+D f #4f9a4aff,n - M 990.5 407 Q 988.9 400 986.9 395.3 Q 991.1 401.1 993.7 407 Z
+D f #4f9a4aff,n - M 992.8 407 Q 993.1 400.2 995.4 395.7 Q 996.5 401.4 996 407 Z
+D f #5aa860ff,n - M 998.9 407 Q 998.5 399.5 999.3 394.5 Q 1001.5 400.7 1002.1 407 Z
+D f #4f9a4aff,n - M 995.9 407 Q 994.9 402.6 994.2 399.7 Q 997.4 403.3 999.1 407 Z
+D f #6cb35cff,n - M 1000.3 407 Q 1002.1 401.5 1007.8 397.9 Q 1006.5 402.4 1003.5 407 Z
+D f #4f9a4aff,n - M 1024.3 407 Q 1025.7 402.5 1030.4 399.4 Q 1029.8 403.2 1027.5 407 Z
+D f #5aa860ff,n - M 1024.2 407 Q 1025 402 1028.4 398.7 Q 1028.7 402.9 1027.4 407 Z
+D f #4f9a4aff,n - M 1023.9 407 Q 1023.6 403.4 1024.5 401 Q 1026.6 404 1027.1 407 Z
+D f #6cb35cff,n - M 1056.5 407 Q 1056.5 402.8 1058.2 400.1 Q 1059.7 403.5 1059.7 407 Z
+D f #6cb35cff,n - M 1053.4 407 Q 1052.7 401.2 1052.9 397.4 Q 1055.5 402.2 1056.6 407 Z
+D f #4f9a4aff,n - M 1051.7 407 Q 1050.9 402.5 1050.7 399.6 Q 1053.6 403.3 1054.9 407 Z
+X
+P gauche 1061 407
+D f #8fa3b5ff,n #293d4bff,2.2,rr,4 M 1.8 322 L 132 52 L 260.8 322 Z
+D f #7a8fa3ff,n - M 132 52 L 260.8 322 L 157.2 322 L 126.4 187 Z
+D f #ffffffff,n #293d4bff,2,rr,4 M 132 52 L 91.4 136 L 98.4 146 L 104.7 132 L 111.7 152 L 118.7 132 L 125 146 L 132 132 L 138.3 152 L 145.3 132 L 151.6 146 L 158.6 132 L 165.6 152 L 171.9 136 Z
+D f #dfeaf2ff,n - M 132 52 L 168.4 134 L 134.8 142 Z
+D f #a2b4c4ff,n #293d4bff,2.2,rr,4 M 134 322 L 196 215.36 L 258 322 Z
+D f #8ea2b4ff,n - M 196 215.36 L 258 322 L 208.4 322 L 191.04 268.68 Z
+D f #ffffffff,n #293d4bff,2,rr,4 M 196 215.36 L 179.26 243.88 L 182.36 250.08 L 184.84 241.4 L 187.94 253.8 L 190.42 241.4 L 193.52 250.08 L 196 241.4 L 198.48 253.8 L 201.58 241.4 L 204.06 250.08 L 207.16 241.4 L 209.64 253.8 L 212.74 243.88 Z
+D f #dfeaf2ff,n - M 196 215.36 L 210.88 242.64 L 198.48 247.6 Z
+D f #5f9f86ff,n - M 2 321.77 C 28 294 54 280 111.2 283 C 168.4 286 225.6 282 262 322.55 L 262 324.55 L 251.17 324.11 L 240.33 323.64 L 229.5 323.15 L 218.67 322.65 L 207.83 322.15 L 197 321.65 L 186.17 321.17 L 175.33 320.71 L 164.5 320.28 L 153.67 319.9 L 142.83 319.56 L 132 319.28 L 121.17 319.07 L 110.33 318.94 L 99.5 318.89 L 88.67 318.94 L 77.83 319.09 L 67 319.35 L 56.17 319.74 L 45.33 320.25 L 34.5 320.9 L 23.67 321.7 L 12.83 322.65 L 2 323.77 Z
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 145 319 L 146 297 L 154 297 L 155 319 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 150 306.9 L 163 304.2 L 159.8 297.9 L 156.5 306.6 L 153.2 299.8 L 150 309 L 146.8 298.4 L 143.5 306.6 L 140.2 297.8 L 137 304.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 150 298.4 L 160.9 304.8 L 157.8 297.2 L 154.7 307.2 L 151.6 300.1 L 148.4 308.4 L 145.3 298.3 L 142.2 306 L 139.1 297.3 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 150 289.9 L 158.7 299.4 L 155.8 293.4 L 152.9 301.8 L 150 294.6 L 147.1 301.8 L 144.2 291.5 L 141.3 299.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 150 281.5 L 156.6 291.6 L 154 284.1 L 151.3 294 L 148.7 285 L 146 292.8 L 143.4 283.6 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 150 273 L 154.5 283.7 L 152.2 275.6 L 150 286.1 L 147.8 276.8 L 145.5 283.7 Z
+D f #3c7d66ff,n - M 150 306.9 L 163 304.2 L 159.8 297.9 L 156.5 306.6 L 153.2 299.8 L 150 309 L 146.8 298.4 L 143.5 306.6 L 140.2 297.8 L 137 304.2 Z
+D f #3c7d66ff,n - M 150 298.4 L 160.9 304.8 L 157.8 297.2 L 154.7 307.2 L 151.6 300.1 L 148.4 308.4 L 145.3 298.3 L 142.2 306 L 139.1 297.3 Z
+D f #3c7d66ff,n - M 150 289.9 L 158.7 299.4 L 155.8 293.4 L 152.9 301.8 L 150 294.6 L 147.1 301.8 L 144.2 291.5 L 141.3 299.4 Z
+D f #3c7d66ff,n - M 150 281.5 L 156.6 291.6 L 154 284.1 L 151.3 294 L 148.7 285 L 146 292.8 L 143.4 283.6 Z
+D f #3c7d66ff,n - M 150 273 L 154.5 283.7 L 152.2 275.6 L 150 286.1 L 147.8 276.8 L 145.5 283.7 Z
+G 0.85 -
+D f #4f957aff,n - M 148 279 L 146.5 280.1 L 149.1 277.1 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 148 287.5 L 144.8 288.6 L 148.7 285.6 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 148 295.9 L 143.2 297 L 148.3 294 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 148 304.4 L 141.5 303 L 147.8 300 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 148 312.9 L 139.9 303 L 147.4 300 Z
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 171 321 L 172 299 L 180 299 L 181 321 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 176 304.6 L 189 306.2 L 185.8 299.6 L 182.5 308.6 L 179.2 302.5 L 176 311 L 172.8 300.4 L 169.5 308.6 L 166.2 298.3 L 163 306.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 176 293.2 L 186.9 306.7 L 183.8 300 L 180.7 309.1 L 177.6 302.4 L 174.4 310.3 L 171.3 299.8 L 168.2 307.9 L 165.1 298.1 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 176 281.8 L 184.7 295.9 L 181.8 287.6 L 178.9 298.3 L 176 291.5 L 173.1 298.3 L 170.2 289 L 167.3 295.9 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 176 270.4 L 182.6 285.1 L 180 279.2 L 177.3 287.5 L 174.7 279.7 L 172 286.3 L 169.4 276.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 176 259 L 180.5 274.3 L 178.2 268.1 L 176 276.7 L 173.8 268.2 L 171.5 274.3 Z
+D f #3c7d66ff,n - M 176 304.6 L 189 306.2 L 185.8 299.6 L 182.5 308.6 L 179.2 302.5 L 176 311 L 172.8 300.4 L 169.5 308.6 L 166.2 298.3 L 163 306.2 Z
+D f #3c7d66ff,n - M 176 293.2 L 186.9 306.7 L 183.8 300 L 180.7 309.1 L 177.6 302.4 L 174.4 310.3 L 171.3 299.8 L 168.2 307.9 L 165.1 298.1 Z
+D f #3c7d66ff,n - M 176 281.8 L 184.7 295.9 L 181.8 287.6 L 178.9 298.3 L 176 291.5 L 173.1 298.3 L 170.2 289 L 167.3 295.9 Z
+D f #3c7d66ff,n - M 176 270.4 L 182.6 285.1 L 180 279.2 L 177.3 287.5 L 174.7 279.7 L 172 286.3 L 169.4 276.4 Z
+D f #3c7d66ff,n - M 176 259 L 180.5 274.3 L 178.2 268.1 L 176 276.7 L 173.8 268.2 L 171.5 274.3 Z
+G 0.85 -
+D f #4f957aff,n - M 174 265 L 172.5 270.7 L 175.1 267.7 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 174 276.4 L 170.8 282.1 L 174.7 279.1 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 174 287.8 L 169.2 293.5 L 174.3 290.5 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 174 299.2 L 167.5 304.9 L 173.8 301.9 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 174 310.6 L 165.9 305 L 173.4 302 Z
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 199 321 L 200 299 L 208 299 L 209 321 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 204 308.9 L 217 306.2 L 213.8 298.3 L 210.5 308.6 L 207.2 299.9 L 204 311 L 200.8 300.4 L 197.5 308.6 L 194.2 297.6 L 191 306.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 204 300.4 L 214.9 306.8 L 211.8 300.8 L 208.7 309.2 L 205.6 302.2 L 202.4 310.4 L 199.3 302.1 L 196.2 308 L 193.1 297.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 204 291.9 L 212.7 301.4 L 209.8 292.8 L 206.9 303.8 L 204 297.5 L 201.1 303.8 L 198.2 292.7 L 195.3 301.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 204 283.5 L 210.6 293.6 L 208 286.1 L 205.3 296 L 202.7 286.2 L 200 294.8 L 197.4 284.8 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 204 275 L 208.5 285.7 L 206.2 277.4 L 204 288.1 L 201.8 279.2 L 199.5 285.7 Z
+D f #3c7d66ff,n - M 204 308.9 L 217 306.2 L 213.8 298.3 L 210.5 308.6 L 207.2 299.9 L 204 311 L 200.8 300.4 L 197.5 308.6 L 194.2 297.6 L 191 306.2 Z
+D f #3c7d66ff,n - M 204 300.4 L 214.9 306.8 L 211.8 300.8 L 208.7 309.2 L 205.6 302.2 L 202.4 310.4 L 199.3 302.1 L 196.2 308 L 193.1 297.4 Z
+D f #3c7d66ff,n - M 204 291.9 L 212.7 301.4 L 209.8 292.8 L 206.9 303.8 L 204 297.5 L 201.1 303.8 L 198.2 292.7 L 195.3 301.4 Z
+D f #3c7d66ff,n - M 204 283.5 L 210.6 293.6 L 208 286.1 L 205.3 296 L 202.7 286.2 L 200 294.8 L 197.4 284.8 Z
+D f #3c7d66ff,n - M 204 275 L 208.5 285.7 L 206.2 277.4 L 204 288.1 L 201.8 279.2 L 199.5 285.7 Z
+G 0.85 -
+D f #4f957aff,n - M 202 281 L 200.5 282.1 L 203.1 279.1 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 202 289.5 L 198.8 290.6 L 202.7 287.6 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 202 297.9 L 197.2 299 L 202.3 296 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 202 306.4 L 195.5 305 L 201.8 302 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 202 314.9 L 193.9 305 L 201.4 302 Z
+E
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 227 321 L 228 299 L 236 299 L 237 321 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 232 306.7 L 245 306.2 L 241.8 299.8 L 238.5 308.6 L 235.2 302.5 L 232 311 L 228.8 301.2 L 225.5 308.6 L 222.2 299.9 L 219 306.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 232 296.8 L 242.9 306.8 L 239.8 299.6 L 236.7 309.2 L 233.6 302.8 L 230.4 310.4 L 227.3 299.4 L 224.2 308 L 221.1 296.9 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 232 286.9 L 240.7 298.7 L 237.8 291.7 L 234.9 301.1 L 232 294.7 L 229.1 301.1 L 226.2 292.6 L 223.3 298.7 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 232 276.9 L 238.6 289.3 L 236 281.3 L 233.3 291.7 L 230.7 283.7 L 228 290.5 L 225.4 279.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 232 267 L 236.5 280 L 234.2 272.6 L 232 282.4 L 229.8 271.2 L 227.5 280 Z
+D f #3c7d66ff,n - M 232 306.7 L 245 306.2 L 241.8 299.8 L 238.5 308.6 L 235.2 302.5 L 232 311 L 228.8 301.2 L 225.5 308.6 L 222.2 299.9 L 219 306.2 Z
+D f #3c7d66ff,n - M 232 296.8 L 242.9 306.8 L 239.8 299.6 L 236.7 309.2 L 233.6 302.8 L 230.4 310.4 L 227.3 299.4 L 224.2 308 L 221.1 296.9 Z
+D f #3c7d66ff,n - M 232 286.9 L 240.7 298.7 L 237.8 291.7 L 234.9 301.1 L 232 294.7 L 229.1 301.1 L 226.2 292.6 L 223.3 298.7 Z
+D f #3c7d66ff,n - M 232 276.9 L 238.6 289.3 L 236 281.3 L 233.3 291.7 L 230.7 283.7 L 228 290.5 L 225.4 279.4 Z
+D f #3c7d66ff,n - M 232 267 L 236.5 280 L 234.2 272.6 L 232 282.4 L 229.8 271.2 L 227.5 280 Z
+G 0.85 -
+D f #4f957aff,n - M 230 273 L 228.5 276.4 L 231.1 273.4 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 230 282.9 L 226.8 286.3 L 230.7 283.3 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 230 292.9 L 225.2 296.3 L 230.3 293.3 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 230 302.8 L 223.5 305 L 229.8 302 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 230 312.7 L 221.9 305 L 229.4 302 Z
+E
+G 1 1;0;0;1;-12;0
+D f #8a6242ff,n #293d4bff,1.6,rr,4 M 253 316 L 254 294 L 262 294 L 263 316 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 258 303.9 L 271 301.2 L 267.8 293.3 L 264.5 303.6 L 261.2 295.3 L 258 306 L 254.8 295.9 L 251.5 303.6 L 248.2 294.7 L 245 301.2 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 258 295.4 L 268.9 301.8 L 265.8 293.6 L 262.7 304.2 L 259.6 295.7 L 256.4 305.4 L 253.3 295.1 L 250.2 303 L 247.1 293.6 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 258 286.9 L 266.7 296.4 L 263.8 289.3 L 260.9 298.8 L 258 292 L 255.1 298.8 L 252.2 288 L 249.3 296.4 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 258 278.5 L 264.6 288.6 L 262 282 L 259.3 291 L 256.7 282.7 L 254 289.8 L 251.4 278.9 Z
+D f #293d4bff,n #293d4bff,3.2,rr,4 M 258 270 L 262.5 280.7 L 260.2 273.3 L 258 283.1 L 255.8 272.5 L 253.5 280.7 Z
+D f #3c7d66ff,n - M 258 303.9 L 271 301.2 L 267.8 293.3 L 264.5 303.6 L 261.2 295.3 L 258 306 L 254.8 295.9 L 251.5 303.6 L 248.2 294.7 L 245 301.2 Z
+D f #3c7d66ff,n - M 258 295.4 L 268.9 301.8 L 265.8 293.6 L 262.7 304.2 L 259.6 295.7 L 256.4 305.4 L 253.3 295.1 L 250.2 303 L 247.1 293.6 Z
+D f #3c7d66ff,n - M 258 286.9 L 266.7 296.4 L 263.8 289.3 L 260.9 298.8 L 258 292 L 255.1 298.8 L 252.2 288 L 249.3 296.4 Z
+D f #3c7d66ff,n - M 258 278.5 L 264.6 288.6 L 262 282 L 259.3 291 L 256.7 282.7 L 254 289.8 L 251.4 278.9 Z
+D f #3c7d66ff,n - M 258 270 L 262.5 280.7 L 260.2 273.3 L 258 283.1 L 255.8 272.5 L 253.5 280.7 Z
+G 0.85 -
+D f #4f957aff,n - M 256 276 L 254.5 277.1 L 257.1 274.1 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 256 284.5 L 252.8 285.6 L 256.7 282.6 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 256 292.9 L 251.2 294 L 256.3 291 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 256 301.4 L 249.5 300 L 255.8 297 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 256 309.9 L 247.9 300 L 255.4 297 Z
+E
+E
+D f #8fcdeaff,n #5fa8c9ff,1.8,bm,4 M 262 324 C 262 326.7614 233.34622 329 198 329 C 162.65378 329 134 326.7614 134 324 C 134 321.2386 162.65378 319 198 319 C 233.34622 319 262 321.2386 262 324 Z
+D f - #ffffffff,1.6,rr,4 M 156 323.5 Q 164 322 172 323.5 M 196 326 Q 204 324.5 212 326 M 224 322.5 Q 230 321.3 236 322.5
+G 1 1;0;0;1;0;-21
+G 1 0.82;0;0;0.82;74;342
+D f #cbc6baff,n #293d4bff,1.8,bm,4 M 24 -92 L 35 -92 L 35 -72 L 24 -72 Z
+D f - #293d4bff,3,rr,4 M 22 -92 L 37 -92
+D f #c9905aff,n #293d4bff,2,rr,4 M -50 -54 L 0 -86 L 50 -54 Z
+D f #b9824fff,n #293d4bff,2.2,bm,4 M -50 -54 L 50 -54 L 50 -22 L -50 -22 Z
+D f - #9a6a3cff,1.2,rr,4 M -50 -46 L 50 -46 M -50 -38 L 50 -38 M -50 -30 L 50 -30
+D f #cbc6baff,n #293d4bff,2.2,bm,4 M -50 -22 L 50 -22 L 50 0 L -50 0 Z
+D f - #a8a295ff,1.6,rr,4 M -40 -14 L -28 -14 M -18 -8 L -6 -8 M 10 -15 L 22 -15 M 28 -7 L 40 -7 M -44 -5 L -35 -5 M -2 -4 L 6 -4
+D f #bfe3f2ff,n #293d4bff,1.6,bm,4 M -7 -72 L 7 -72 L 7 -61 L -7 -61 Z
+D f #bfe3f2ff,n #293d4bff,1.6,bm,4 M -34 -50 L -19 -50 L -19 -36 L -34 -36 Z
+D f - #293d4bff,1,rr,4 M -26.5 -50 L -26.5 -36
+D f #4f8f6aff,n #293d4bff,1.2,bm,4 M -40 -51 L -35 -51 L -35 -35 L -40 -35 Z
+D f #4f8f6aff,n #293d4bff,1.2,bm,4 M -18 -51 L -13 -51 L -13 -35 L -18 -35 Z
+D f #bfe3f2ff,n #293d4bff,1.6,bm,4 M 19 -50 L 34 -50 L 34 -36 L 19 -36 Z
+D f - #293d4bff,1,rr,4 M 26.5 -50 L 26.5 -36
+D f #4f8f6aff,n #293d4bff,1.2,bm,4 M 13 -51 L 18 -51 L 18 -35 L 13 -35 Z
+D f #4f8f6aff,n #293d4bff,1.2,bm,4 M 35 -51 L 40 -51 L 40 -35 L 35 -35 Z
+D f #7a5034ff,n #293d4bff,1.8,bm,4 M -8 -20 L 8 -20 L 8 0 L -8 0 Z
+D f #f4c430ff,n - M 5.6000004 -10 C 5.6000004 -9.337258 5.0627418 -8.8 4.4 -8.8 C 3.7372584 -8.8 3.2000003 -9.337258 3.2 -10 C 3.2000003 -10.662742 3.7372584 -11.2 4.4 -11.2 C 5.0627418 -11.2 5.6000004 -10.662742 5.6000004 -10 Z
+D f #8a5a3cff,n #293d4bff,1.6,bm,4 M -46 -30 L 46 -30 L 46 -24 L -46 -24 Z
+D f #f6b3c4ff,n - M -39.8 -32.4 C -39.8 -31.816525 -40.031784 -31.256947 -40.444363 -30.844366 C -40.856945 -30.431786 -41.416523 -30.2 -42 -30.2 C -42.583477 -30.2 -43.143055 -30.431786 -43.555637 -30.844366 C -43.968216 -31.256947 -44.2 -31.816525 -44.2 -32.4 C -44.2 -32.98348 -43.968216 -33.543056 -43.555637 -33.95564 C -43.143055 -34.368217 -42.583477 -34.600002 -42 -34.600002 C -41.416523 -34.600002 -40.856945 -34.368217 -40.444363 -33.95564 C -40.031784 -33.543056 -39.8 -32.98348 -39.8 -32.4 Z
+D f #d9433bff,n - M -32.2 -32.4 C -32.2 -31.816525 -32.431786 -31.256947 -32.844364 -30.844366 C -33.256947 -30.431786 -33.816525 -30.2 -34.4 -30.2 C -34.98348 -30.2 -35.543056 -30.431786 -35.95564 -30.844366 C -36.368217 -31.256947 -36.600002 -31.816525 -36.600002 -32.4 C -36.600002 -32.98348 -36.368217 -33.543056 -35.95564 -33.95564 C -35.543056 -34.368217 -34.98348 -34.600002 -34.4 -34.600002 C -33.816525 -34.600002 -33.256947 -34.368217 -32.844364 -33.95564 C -32.431786 -33.543056 -32.2 -32.98348 -32.2 -32.4 Z
+D f #d9433bff,n - M -24.599998 -32.4 C -24.599998 -31.816525 -24.831783 -31.256947 -25.244364 -30.844366 C -25.656944 -30.431786 -26.216522 -30.2 -26.8 -30.2 C -27.383476 -30.2 -27.943054 -30.431786 -28.355635 -30.844366 C -28.768215 -31.256947 -29 -31.816525 -29 -32.4 C -29 -32.98348 -28.768215 -33.543056 -28.355635 -33.95564 C -27.943054 -34.368217 -27.383476 -34.600002 -26.8 -34.600002 C -26.216522 -34.600002 -25.656944 -34.368217 -25.244364 -33.95564 C -24.831783 -33.543056 -24.599998 -32.98348 -24.599998 -32.4 Z
+D f #f6b3c4ff,n - M -17 -32.4 C -17 -31.816525 -17.231785 -31.256947 -17.644365 -30.844366 C -18.056946 -30.431786 -18.616524 -30.2 -19.2 -30.2 C -19.783478 -30.2 -20.343056 -30.431786 -20.755636 -30.844366 C -21.168217 -31.256947 -21.400002 -31.816525 -21.400002 -32.4 C -21.400002 -32.98348 -21.168217 -33.543056 -20.755636 -33.95564 C -20.343056 -34.368217 -19.783478 -34.600002 -19.2 -34.600002 C -18.616524 -34.600002 -18.056946 -34.368217 -17.644365 -33.95564 C -17.231785 -33.543056 -17 -32.98348 -17 -32.4 Z
+D f #d9433bff,n - M -9.400001 -32.4 C -9.400001 -31.184975 -10.384974 -30.2 -11.6 -30.2 C -12.815027 -30.2 -13.8 -31.184975 -13.8 -32.4 C -13.8 -33.61503 -12.815027 -34.600002 -11.6 -34.600002 C -10.384974 -34.600002 -9.400001 -33.61503 -9.400001 -32.4 Z
+D f #d9433bff,n - M -1.8 -32.4 C -1.7999996 -31.184975 -2.7849731 -30.2 -4 -30.2 C -5.215027 -30.2 -6.2000003 -31.184975 -6.2 -32.4 C -6.2000003 -33.61503 -5.215027 -34.600002 -4 -34.600002 C -2.7849731 -34.600002 -1.7999996 -33.61503 -1.8 -32.4 Z
+D f #f6b3c4ff,n - M 5.8 -32.4 C 5.8 -31.816525 5.5682154 -31.256947 5.1556354 -30.844366 C 4.7430553 -30.431786 4.1834764 -30.2 3.6 -30.2 C 2.384973 -30.2 1.3999995 -31.184975 1.3999999 -32.4 C 1.3999995 -33.61503 2.384973 -34.600002 3.6 -34.600002 C 4.1834764 -34.600002 4.7430553 -34.368217 5.1556354 -33.95564 C 5.5682154 -33.543056 5.8 -32.98348 5.8 -32.4 Z
+D f #d9433bff,n - M 13.4 -32.4 C 13.4 -31.184975 12.415027 -30.2 11.2 -30.2 C 9.984973 -30.2 9 -31.184975 9 -32.4 C 9 -33.61503 9.984973 -34.600002 11.2 -34.600002 C 12.415027 -34.600002 13.4 -33.61503 13.4 -32.4 Z
+D f #d9433bff,n - M 21 -32.4 C 21 -31.816525 20.768215 -31.256947 20.355635 -30.844366 C 19.943054 -30.431786 19.383476 -30.2 18.8 -30.2 C 18.216522 -30.2 17.656944 -30.431786 17.244364 -30.844366 C 16.831783 -31.256947 16.599998 -31.816525 16.599998 -32.4 C 16.599998 -32.98348 16.831783 -33.543056 17.244364 -33.95564 C 17.656944 -34.368217 18.216522 -34.600002 18.8 -34.600002 C 19.383476 -34.600002 19.943054 -34.368217 20.355635 -33.95564 C 20.768215 -33.543056 21 -32.98348 21 -32.4 Z
+D f #f6b3c4ff,n - M 28.6 -32.4 C 28.6 -31.816525 28.368216 -31.256947 27.955635 -30.844366 C 27.543055 -30.431786 26.983477 -30.2 26.4 -30.2 C 25.816523 -30.2 25.256945 -30.431786 24.844364 -30.844366 C 24.431784 -31.256947 24.199999 -31.816525 24.199999 -32.4 C 24.199999 -32.98348 24.431784 -33.543056 24.844364 -33.95564 C 25.256945 -34.368217 25.816523 -34.600002 26.4 -34.600002 C 26.983477 -34.600002 27.543055 -34.368217 27.955635 -33.95564 C 28.368216 -33.543056 28.6 -32.98348 28.6 -32.4 Z
+D f #d9433bff,n - M 36.2 -32.4 C 36.2 -31.816525 35.968216 -31.256947 35.555637 -30.844366 C 35.143055 -30.431786 34.583477 -30.2 34 -30.2 C 33.416523 -30.2 32.856945 -30.431786 32.444363 -30.844366 C 32.031784 -31.256947 31.8 -31.816525 31.8 -32.4 C 31.8 -32.98348 32.031784 -33.543056 32.444363 -33.95564 C 32.856945 -34.368217 33.416523 -34.600002 34 -34.600002 C 34.583477 -34.600002 35.143055 -34.368217 35.555637 -33.95564 C 35.968216 -33.543056 36.2 -32.98348 36.2 -32.4 Z
+D f #d9433bff,n - M 43.8 -32.4 C 43.8 -31.816525 43.568214 -31.256947 43.155636 -30.844366 C 42.743053 -30.431786 42.183475 -30.2 41.6 -30.2 C 41.01652 -30.2 40.456944 -30.431786 40.04436 -30.844366 C 39.631783 -31.256947 39.399998 -31.816525 39.399998 -32.4 C 39.399998 -32.98348 39.631783 -33.543056 40.04436 -33.95564 C 40.456944 -34.368217 41.01652 -34.600002 41.6 -34.600002 C 42.183475 -34.600002 42.743053 -34.368217 43.155636 -33.95564 C 43.568214 -33.543056 43.8 -32.98348 43.8 -32.4 Z
+D f - #4f9a4aff,1.6,rr,4 M -44 -31 Q -40 -35 -36 -31 M -20 -31 Q -16 -35 -12 -31 M 6 -31 Q 10 -35 14 -31 M 30 -31 Q 34 -35 38 -31
+D f #7a5034ff,n #293d4bff,2.2,rr,4 M -66 -50 L 0 -94 L 66 -50 L 59 -44 L 0 -83 L -59 -44 Z
+D f #a8a295ff,n #293d4bff,1,bm,4 M -26 -66 C -26 -64.78497 -27.790861 -63.8 -30 -63.8 C -32.20914 -63.8 -34 -64.78497 -34 -66 C -33.999996 -67.21503 -32.209137 -68.2 -30 -68.2 C -27.790863 -68.2 -26.000004 -67.21503 -26 -66 Z
+D f #a8a295ff,n #293d4bff,1,bm,4 M 26 -72 C 25.999996 -70.78497 24.209137 -69.8 22 -69.8 C 19.790863 -69.8 18.000004 -70.78497 18 -72 C 18.000004 -73.21503 19.790863 -74.2 22 -74.2 C 24.209137 -74.2 25.999996 -73.21503 26 -72 Z
+D f #a8a295ff,n #293d4bff,1,bm,4 M 46 -58 C 46 -56.784973 44.20914 -55.8 42 -55.8 C 39.79086 -55.8 38 -56.784973 38 -58 C 38 -59.215027 39.79086 -60.2 42 -60.2 C 44.20914 -60.2 46 -59.215027 46 -58 Z
+E
+E
+D f #8a6242ff,n #293d4bff,1.8,rr,4 M 17 344 L 18 322 L 26 322 L 27 344 Z
+D f #293d4bff,n #293d4bff,3.6,rr,4 M 22 327.1 L 37 329.2 L 33.2 320.8 L 29.5 331.6 L 25.8 325.2 L 22 334 L 18.2 324.5 L 14.5 331.6 L 10.8 322.4 L 7 329.2 Z
+D f #293d4bff,n #293d4bff,3.6,rr,4 M 22 315.3 L 34.5 329.4 L 31 321.8 L 27.4 331.8 L 23.8 325 L 20.2 333 L 16.6 324.4 L 13 330.6 L 9.5 322.1 Z
+D f #293d4bff,n #293d4bff,3.6,rr,4 M 22 303.6 L 32.1 318.2 L 28.7 310.1 L 25.4 320.6 L 22 312.3 L 18.6 320.6 L 15.3 310.6 L 11.9 318.2 Z
+D f #293d4bff,n #293d4bff,3.6,rr,4 M 22 291.8 L 29.6 307 L 26.6 299.8 L 23.5 309.4 L 20.5 300.3 L 17.4 308.2 L 14.4 298.3 Z
+D f #293d4bff,n #293d4bff,3.6,rr,4 M 22 280 L 27.2 295.9 L 24.6 289.6 L 22 298.3 L 19.4 287.9 L 16.8 295.9 Z
+D f #3c7d66ff,n - M 22 327.1 L 37 329.2 L 33.2 320.8 L 29.5 331.6 L 25.8 325.2 L 22 334 L 18.2 324.5 L 14.5 331.6 L 10.8 322.4 L 7 329.2 Z
+D f #3c7d66ff,n - M 22 315.3 L 34.5 329.4 L 31 321.8 L 27.4 331.8 L 23.8 325 L 20.2 333 L 16.6 324.4 L 13 330.6 L 9.5 322.1 Z
+D f #3c7d66ff,n - M 22 303.6 L 32.1 318.2 L 28.7 310.1 L 25.4 320.6 L 22 312.3 L 18.6 320.6 L 15.3 310.6 L 11.9 318.2 Z
+D f #3c7d66ff,n - M 22 291.8 L 29.6 307 L 26.6 299.8 L 23.5 309.4 L 20.5 300.3 L 17.4 308.2 L 14.4 298.3 Z
+D f #3c7d66ff,n - M 22 280 L 27.2 295.9 L 24.6 289.6 L 22 298.3 L 19.4 287.9 L 16.8 295.9 Z
+G 0.85 -
+D f #4f957aff,n - M 20 286 L 18 292.3 L 21 289.3 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 20 297.8 L 16.1 304 L 20.5 301 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 20 309.6 L 14.1 315.8 L 20 312.8 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 20 321.3 L 12.2 327.6 L 19.5 324.6 Z
+E
+G 0.85 -
+D f #4f957aff,n - M 20 333.1 L 10.3 328 L 19 325 Z
+E
+G 1 0.9;0;0;0.9;238;398
+D f #b7bfc4ff,n #293d4bff,2,rr,4 M -16 0 C -20 -8 -12 -16 -2 -16 C 10 -17 19 -10 17 0 C 8 3 -8 3 -16 0 Z
+D f - #dfe5e8ff,2.2,rr,4 M -11 -8 C -7 -12 0 -13 6 -12
+D f - #8f9aa1ff,1.6,rr,4 M -12 -1 C -4 1.4 6 1.4 13 -1
+D f #6cb35cff,n - M -13 -9 C -9 -15 -2 -17 4 -16 C 1 -13 -6 -12 -13 -9 Z
+E
+G 1 0.74;0;0;0.74;61.88;101.14
+G 1 0.72;0;0;0.72;238;384
+D f - #293d4bff,7.4,rr,4 M 10 -5 C 19 -6 23 1 18 5
+D f - #8a6444ff,4.2,rr,4 M 10 -5 C 19 -6 23 1 18 5
+D f #b98a5eff,n #293d4bff,2.2,rr,4 M -10 0 C -17 -14 -13 -30 -5 -34 C 5 -38 15 -30 15 -12 C 15 -4 13 0 9 0 Z
+D f #ead0a8ff,n - M 6.4 -14 C 6.4 -7.703954 3.0869071 -2.6000004 -1 -2.6000004 C -5.086907 -2.6000009 -8.4 -7.703954 -8.4 -14 C -8.4 -20.296045 -5.086907 -25.4 -1 -25.4 C 3.0869071 -25.4 6.4 -20.296045 6.4 -14 Z
+D f #8a6444ff,n #293d4bff,1.5,bm,4 M -0.4000001 1 C -0.4000001 2.4359403 -2.9072053 3.6 -6 3.6 C -9.092794 3.6000001 -11.6 2.4359403 -11.6 1 C -11.6 -0.43594038 -9.092794 -1.6 -6 -1.5999999 C -2.9072053 -1.5999999 -0.4000001 -0.4359403 -0.4000001 1 Z
+D f #8a6444ff,n #293d4bff,1.5,bm,4 M 12.6 1 C 12.6 2.4359403 10.092794 3.6000001 7 3.6 C 3.9072053 3.6 1.4000001 2.4359403 1.4000001 1 C 1.4000001 -0.4359403 3.9072053 -1.5999999 7 -1.5999999 C 10.092794 -1.6 12.6 -0.43594038 12.6 1 Z
+D f #8a6444ff,n #293d4bff,1.4,bm,4 M -3.8 -46 C -3.8000004 -44.4536 -5.0536027 -43.2 -6.6 -43.2 C -8.146397 -43.2 -9.4 -44.4536 -9.4 -46 C -9.4 -47.5464 -8.146397 -48.8 -6.6 -48.8 C -5.0536027 -48.8 -3.8000004 -47.5464 -3.8 -46 Z
+D f #8a6444ff,n #293d4bff,1.4,bm,4 M 9.4 -46 C 9.4 -44.4536 8.146397 -43.2 6.6 -43.2 C 5.0536027 -43.2 3.8000004 -44.4536 3.8 -46 C 3.8000004 -47.5464 5.0536027 -48.8 6.6 -48.8 C 8.146397 -48.8 9.4 -47.5464 9.4 -46 Z
+D f #b98a5eff,n #293d4bff,2.2,bm,4 M 10 -38 C 10 -32.477154 5.5228477 -28 0.0000000000000006123234 -28 C -5.5228477 -28 -10 -32.477154 -10 -38 C -10 -43.522846 -5.5228477 -48 -0.00000000000000183697 -48 C 5.5228477 -48 10 -43.522846 10 -38 Z
+D f #ead0a8ff,n - M 2 -34.6 C 1.9999993 -31.949032 -0.686292 -29.8 -4 -29.8 C -7.313708 -29.8 -9.999999 -31.949032 -10 -34.6 C -9.999999 -37.250965 -7.313708 -39.399998 -4 -39.399998 C -0.686292 -39.399998 1.9999993 -37.250965 2 -34.6 Z
+D f #293d4bff,n - M -1.6999999 -40.6 C -1.6999996 -40.09609 -1.9001774 -39.612816 -2.2564964 -39.256496 C -2.6128156 -38.900177 -3.0960884 -38.699997 -3.6 -38.699997 C -4.1039114 -38.699997 -4.5871844 -38.900177 -4.9435034 -39.256496 C -5.299823 -39.612816 -5.5000005 -40.09609 -5.5 -40.6 C -5.5000005 -41.10391 -5.299823 -41.58718 -4.9435034 -41.9435 C -4.5871844 -42.29982 -4.1039114 -42.5 -3.6 -42.5 C -3.0960884 -42.5 -2.6128156 -42.29982 -2.2564964 -41.9435 C -1.9001774 -41.58718 -1.6999996 -41.10391 -1.6999999 -40.6 Z
+D f #ffffffff,n - M -3.486 -41.284 C -3.4859996 -41.102592 -3.5580635 -40.92861 -3.6863384 -40.80034 C -3.8146133 -40.672062 -3.9885917 -40.6 -4.17 -40.6 C -4.3514085 -40.6 -4.525387 -40.672062 -4.6536617 -40.80034 C -4.7819366 -40.92861 -4.8540006 -41.102592 -4.854 -41.284 C -4.8540006 -41.46541 -4.7819366 -41.63939 -4.6536617 -41.767662 C -4.525387 -41.89594 -4.3514085 -41.968002 -4.17 -41.968002 C -3.9885917 -41.968002 -3.8146133 -41.89594 -3.6863384 -41.767662 C -3.5580635 -41.63939 -3.4859996 -41.46541 -3.486 -41.284 Z
+D f #293d4bff,n - M 6.5 -40.6 C 6.5000005 -40.09609 6.299823 -39.612816 5.9435034 -39.256496 C 5.5871844 -38.900177 5.1039114 -38.699997 4.6 -38.699997 C 4.0960884 -38.699997 3.6128156 -38.900177 3.2564964 -39.256496 C 2.9001772 -39.612816 2.6999993 -40.09609 2.6999998 -40.6 C 2.6999993 -41.10391 2.9001772 -41.58718 3.2564964 -41.9435 C 3.6128156 -42.29982 4.0960884 -42.5 4.6 -42.5 C 5.1039114 -42.5 5.5871844 -42.29982 5.9435034 -41.9435 C 6.299823 -41.58718 6.5000005 -41.10391 6.5 -40.6 Z
+D f #ffffffff,n - M 4.714 -41.284 C 4.7140007 -41.102592 4.641937 -40.92861 4.513662 -40.80034 C 4.385387 -40.672062 4.2114086 -40.6 4.03 -40.6 C 3.8485918 -40.6 3.6746135 -40.672062 3.5463386 -40.80034 C 3.4180636 -40.92861 3.3459997 -41.102592 3.3460002 -41.284 C 3.3459997 -41.46541 3.4180636 -41.63939 3.5463386 -41.767662 C 3.6746135 -41.89594 3.8485918 -41.968002 4.03 -41.968002 C 4.2114086 -41.968002 4.385387 -41.89594 4.513662 -41.767662 C 4.641937 -41.63939 4.7140007 -41.46541 4.714 -41.284 Z
+G 0.75 -
+D f #f4a79aff,n - M 8.6 -35 C 8.6 -34.591568 8.368216 -34.19986 7.9556355 -33.911057 C 7.5430555 -33.62225 6.9834766 -33.46 6.4 -33.46 C 5.8165236 -33.46 5.2569447 -33.62225 4.8443646 -33.911057 C 4.431784 -34.19986 4.1999993 -34.591568 4.2 -35 C 4.1999993 -35.408432 4.431784 -35.80014 4.8443646 -36.088943 C 5.2569447 -36.37775 5.8165236 -36.54 6.4 -36.54 C 6.9834766 -36.54 7.5430555 -36.37775 7.9556355 -36.088943 C 8.368216 -35.80014 8.6 -35.408432 8.6 -35 Z
+E
+D f #293d4bff,n - M -3.4 -36.6 C -3.4 -35.771572 -4.2954307 -35.1 -5.4 -35.1 C -6.5045695 -35.1 -7.4 -35.771572 -7.4 -36.6 C -7.4 -37.428425 -6.5045695 -38.1 -5.4 -38.1 C -4.2954307 -38.1 -3.4 -37.428425 -3.4 -36.6 Z
+D f #ffffffff,n #293d4bff,0.9,rr,4 M -6.6 -33.6 L -3.4 -33.6 L -3.4 -30.6 L -6.6 -30.6 Z
+D f - #293d4bff,0.6,rr,4 M -5 -33.6 L -5 -30.6
+D f - #293d4bff,4.4,rr,4 M -9 -22 C -5 -18 -2 -18 0 -20 M 10 -22 C 7 -18 4 -18 2 -20
+D f - #b98a5eff,2.2,rr,4 M -9 -22 C -5 -18 -2 -18 0 -20 M 10 -22 C 7 -18 4 -18 2 -20
+E
+E
+G 1 0.2;0;0;0.2;137.6;322.8
+G 1 1.3;0;0;1.3;172;400
+D f - #8fa07aff,2.2,rr,4 M 0 0 C 1 -6 -1 -10 0 -16
+G 1 -0.9396926;-0.34202015;0.34202015;-0.9396926;0;-3
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 0.9396926;-0.34202015;0.34202015;0.9396926;0;-5
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 -0.9396926;0.34202015;-0.34202015;-0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 1;0;0;1;0;-18
+G 1 0.99026805;0.1391731;-0.1391731;0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.60181504;0.7986355;-0.7986355;0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.1391731;0.99026805;-0.99026805;-0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.7986355;0.60181504;-0.60181504;-0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.99026805;-0.1391731;0.1391731;-0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.60181504;-0.7986355;0.7986355;-0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 0.1391731;-0.99026805;0.99026805;0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.7986355;-0.60181504;0.60181504;0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 1.6 0 C 1.6 0.8836556 0.8836556 1.6 0.00000000000000009797175 1.6 C -0.8836556 1.6 -1.6 0.8836556 -1.6 0.0000000000000001959435 C -1.6 -0.8836556 -0.8836556 -1.6 -0.00000000000000029391524 -1.6 C 0.8836556 -1.6 1.6 -0.8836556 1.6 0 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M -0.8000001 -1.4 C -0.8000001 -0.51634437 -1.5163444 0.20000005 -2.4 0.20000005 C -3.2836556 0.19999999 -4 -0.5163444 -4 -1.4 C -4 -2.2836556 -3.2836556 -3 -2.4 -3 C -1.5163444 -3 -0.8000001 -2.2836556 -0.8000001 -1.4 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 4 -1.2 C 4 -0.31634447 3.2836556 0.39999992 2.4 0.39999998 C 1.5163444 0.39999998 0.8000001 -0.31634444 0.8000001 -1.2 C 0.8 -2.0836556 1.5163444 -2.8000002 2.4 -2.8000002 C 3.2836556 -2.8000002 4 -2.0836556 4 -1.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 0.6 2.2 C 0.6000001 3.0836556 -0.11634434 3.8000002 -1 3.8000002 C -1.8836557 3.8000002 -2.6 3.0836556 -2.6 2.2 C -2.6 1.3163445 -1.8836555 0.6000001 -1 0.6 C -0.116344385 0.6 0.6 1.3163444 0.6 2.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 3.4 2 C 3.4 2.8836555 2.6836555 3.6 1.8 3.6 C 0.9163444 3.6 0.19999999 2.8836555 0.19999993 2 C 0.19999993 1.1163443 0.91634434 0.39999998 1.8 0.39999998 C 2.6836555 0.39999992 3.4 1.1163443 3.4 2 Z
+E
+E
+E
+G 1 0.2;0;0;0.2;148.8;325.2
+G 1 1;0;0;1;186;404
+D f - #8fa07aff,2.2,rr,4 M 0 0 C 1 -6 -1 -10 0 -16
+G 1 -0.9396926;-0.34202015;0.34202015;-0.9396926;0;-3
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 0.9396926;-0.34202015;0.34202015;0.9396926;0;-5
+D f #a9b894ff,n - M 0 0 C 3.3 -2.8 8.2 -2.2 11 0 C 8.2 2.2 3.3 2.8 0 0 Z
+E
+G 1 -0.9396926;0.34202015;-0.34202015;-0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 0.9396926;0.34202015;-0.34202015;0.9396926;0;-1
+D f #9fb08aff,n - M 0 0 C 2.7 -2.4 6.8 -1.9 9 0 C 6.8 1.9 2.7 2.4 0 0 Z
+E
+G 1 1;0;0;1;0;-18
+G 1 0.99026805;0.1391731;-0.1391731;0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.60181504;0.7986355;-0.7986355;0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.1391731;0.99026805;-0.99026805;-0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.7986355;0.60181504;-0.60181504;-0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 -0.99026805;-0.1391731;0.1391731;-0.99026805;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 -0.60181504;-0.7986355;0.7986355;-0.60181504;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+G 1 0.1391731;-0.99026805;0.99026805;0.1391731;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 3 -3 7.5 -2.4 10 0 C 7.5 2.4 3 3 0 0 Z
+E
+G 1 0.7986355;-0.60181504;0.60181504;0.7986355;0;0
+D f #f8f6eeff,n #293d4bff,0.9,rr,4 M 0 0 C 2.3 -3 5.7 -2.4 7.6 0 C 5.7 2.4 2.3 3 0 0 Z
+E
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 1.6 0 C 1.6 0.8836556 0.8836556 1.6 0.00000000000000009797175 1.6 C -0.8836556 1.6 -1.6 0.8836556 -1.6 0.0000000000000001959435 C -1.6 -0.8836556 -0.8836556 -1.6 -0.00000000000000029391524 -1.6 C 0.8836556 -1.6 1.6 -0.8836556 1.6 0 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M -0.8000001 -1.4 C -0.8000001 -0.51634437 -1.5163444 0.20000005 -2.4 0.20000005 C -3.2836556 0.19999999 -4 -0.5163444 -4 -1.4 C -4 -2.2836556 -3.2836556 -3 -2.4 -3 C -1.5163444 -3 -0.8000001 -2.2836556 -0.8000001 -1.4 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 4 -1.2 C 4 -0.31634447 3.2836556 0.39999992 2.4 0.39999998 C 1.5163444 0.39999998 0.8000001 -0.31634444 0.8000001 -1.2 C 0.8 -2.0836556 1.5163444 -2.8000002 2.4 -2.8000002 C 3.2836556 -2.8000002 4 -2.0836556 4 -1.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 0.6 2.2 C 0.6000001 3.0836556 -0.11634434 3.8000002 -1 3.8000002 C -1.8836557 3.8000002 -2.6 3.0836556 -2.6 2.2 C -2.6 1.3163445 -1.8836555 0.6000001 -1 0.6 C -0.116344385 0.6 0.6 1.3163444 0.6 2.2 Z
+D f #f1d24aff,n #293d4bff,0.6,bm,4 M 3.4 2 C 3.4 2.8836555 2.6836555 3.6 1.8 3.6 C 0.9163444 3.6 0.19999999 2.8836555 0.19999993 2 C 0.19999993 1.1163443 0.91634434 0.39999998 1.8 0.39999998 C 2.6836555 0.39999992 3.4 1.1163443 3.4 2 Z
+E
+E
+E
+G 1 0.3;0;0;0.3;144.2;282.8
+G 1 1.2;0;0;1.2;206;402
+G 1 -0.9848077;-0.17364818;0.17364818;-0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 0.9848077;-0.17364818;0.17364818;0.9848077;0;0
+D f #5aa860ff,n - M 0 0 C 3 -3.4 7.5 -2.7 10 0 C 7.5 2.7 3 3.4 0 0 Z
+E
+G 1 -0.64278764;-0.76604444;0.76604444;-0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.64278764;-0.76604444;0.76604444;0.64278764;0;0
+D f #6cb35cff,n - M 0 0 C 2.7 -3 6.8 -2.4 9 0 C 6.8 2.4 2.7 3 0 0 Z
+E
+G 1 0.9612617;-0.27563736;0.27563736;0.9612617;-5;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+G 1 0.9781476;0.20791169;-0.20791169;0.9781476;4;-3
+D f #4f9a4aff,n #293d4bff,0.9,rr,4 M -3.4 0 C -3.6 -3 3.6 -3 3.4 0 Z
+D f #2f4fb0ff,n #293d4bff,1.1,rr,4 M -4 0 C -5 -8 -6 -12 -8.4 -15.4 L -3 -13.4 L 0 -17.6 L 3 -13.4 L 8.4 -15.4 C 6 -12 5 -8 4 0 Z
+D f - #6f8fe0ff,1,rr,4 M -2 -3 C -2.4 -7 -2.6 -10 -3 -12
+E
+E
+E
+X
+P nuage 100 100
+D f #ffffffff,n #c3d5e2ff,2,rr,4 M 14 68 C 3 68 1 53 13 51 C 11 38 28 30 38 39 C 44 24 68 24 73 41 C 87 37 97 51 89 61 C 93 67 87 69 83 68 Z
+D f #e3edf4ff,n - M 14 64 C 30 60 66 60 86 63 C 88 66 86 67.6 83 67 L 14 67 C 11 67 11 65 14 64 Z
+D f - #eef5faff,2.4,rr,4 M 22 50 C 24 44 30 42 35 44 M 46 38 C 50 33 58 32 64 36
 X
