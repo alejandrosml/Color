@@ -178,52 +178,53 @@ STONE, STONE_SHADE, STONE_DARK = '#ece2c9', '#dccfb0', '#c9b994'
 
 
 def notre_dame(k, width=1.8):
+    """The west front: its body up to the great gallery (45 m), the two
+    towers above it up to 69 m, the spire behind; the portals, the gallery
+    of the kings at 20 m, the rose of 9.6 m between the great windows."""
     pen = Pen(k)
     # The spire behind the front, lead grey, from the roof to its top.
     pen.poly([(-3.6, -44), (-1.9, -78), (0, -96), (1.9, -78), (3.6, -44)], '#6f7f8c', 1.4)
-    pen.lines([(-3.2, -52, 3.2, -52), (-2.6, -64, 2.6, -64), (-2, -76, 2, -76)], '#4d5a66', 0.9)
+    pen.lines([(-3.1, -54, 3.1, -54), (-2.5, -66, 2.5, -66), (-1.9, -78, 1.9, -78)], '#4d5a66', 0.9)
     pen.lines([(0, -96, 0, -99)], INK, 1.0)
-    # The roof of the nave, seen between the towers above the gallery.
-    pen.poly([(-8, -48), (0, -55), (8, -48)], '#7d8a96', 1.2)
-    # The body of the front, up to the top of the great gallery (50 m).
-    pen.rect(-20.5, -50, 41, 50, STONE, width)
+    # The body of the front, up to the top of the great gallery.
+    pen.rect(-20.5, -45, 41, 45, STONE, width)
     # The towers, from the gallery up to 69 m.
     for side in (-1, 1):
         x0 = 8 if side > 0 else -20.5
-        pen.rect(x0, -69, 12.5, 19, STONE, width)
+        pen.rect(x0, -69, 12.5, 24, STONE, width)
         # The two tall openings of each tower, under their pointed arches.
         cx = side * 14.25
         for dx in (-2.6, 2.6):
-            pen.poly(pointed_arch(cx + dx, -52.5, 2.6, 61, 66.2), '#5d6470', 1.2)
+            pen.poly(pointed_arch(cx + dx, -48, 2.6, 60.5, 65.6), '#5d6470', 1.2)
         # The balustrade at the top.
         pen.lines([(x0 + 0.3, -67.3, x0 + 12.2, -67.3)], STONE_DARK, 0.9)
         pen.lines([(x0 + 0.8 + i * 1.4, -67.3, x0 + 0.8 + i * 1.4, -69) for i in range(9)], STONE_DARK, 0.7)
     # The buttresses: four, from the ground to the towers.
     for x in (-20.5, -8.5, 6.5, 18.5):
-        pen.rect(x, -50, 2, 50, STONE_SHADE, 1.0)
-    # The great gallery: an open arcade across the front (43 to 50 m).
-    pen.rect(-20.5, -50, 41, 7, STONE_SHADE, 1.2)
+        pen.rect(x, -45, 2, 45, STONE_SHADE, 1.0)
+    # The great gallery: an open arcade across the front (38 to 45 m).
+    pen.rect(-20.5, -45, 41, 7, STONE_SHADE, 1.2)
     for i in range(16):
         x = -19.4 + i * 2.55
-        pen.poly(pointed_arch(x + 1.1, -43.6, 1.5, 46, 48.4), '#8f8f93', 0.7)
+        pen.poly(pointed_arch(x + 1.1, -38.6, 1.5, 41, 43.4), '#8f8f93', 0.7)
     # The rose (9.6 m) in the middle, the great windows of the towers on
     # either side.
-    pen.circle(0, -33.5, 4.8, '#7f9cc4', 1.4)
-    pen.circle(0, -33.5, 1.4, '#d9e2ef', 0.9)
-    pen.lines([(1.6 * math.cos(math.radians(a)), -33.5 - 1.6 * math.sin(math.radians(a)),
-                4.6 * math.cos(math.radians(a)), -33.5 - 4.6 * math.sin(math.radians(a))) for a in range(0, 360, 30)],
+    pen.circle(0, -31, 4.8, '#7f9cc4', 1.4)
+    pen.circle(0, -31, 1.4, '#d9e2ef', 0.9)
+    pen.lines([(1.6 * math.cos(math.radians(a)), -31 - 1.6 * math.sin(math.radians(a)),
+                4.6 * math.cos(math.radians(a)), -31 - 4.6 * math.sin(math.radians(a))) for a in range(0, 360, 30)],
               '#e8eef6', 0.8)
     for side in (-1, 1):
         cx = side * 14.25
-        pen.poly(pointed_arch(cx, -26, 6.4, 34.5, 39.5), '#8fa5c2', 1.2)
-        pen.lines([(cx, -26, cx, -36.6)], '#e8eef6', 0.8)
-    # The gallery of the kings (20 to 24 m): a row of niches.
-    pen.rect(-20.5, -24.4, 41, 4.2, STONE_SHADE, 1.2)
-    pen.lines([(-19.5 + i * 1.44, -20.8, -19.5 + i * 1.44, -23.6) for i in range(28)], STONE_DARK, 0.8)
+        pen.poly(pointed_arch(cx, -24.4, 6.4, 30.5, 35.6), '#8fa5c2', 1.2)
+        pen.lines([(cx, -24.4, cx, -32.4)], '#e8eef6', 0.8)
+    # The gallery of the kings (20 to 23.6 m): a row of niches.
+    pen.rect(-20.5, -23.6, 41, 3.6, STONE_SHADE, 1.2)
+    pen.lines([(-19.5 + i * 1.44, -20.4, -19.5 + i * 1.44, -23) for i in range(28)], STONE_DARK, 0.8)
     # The three portals, the middle one higher and wider; their doors.
-    for cx, w, top, door in ((0, 10, 18.2, 4.4), (-14.25, 7.4, 15.4, 3.4), (14.25, 7.4, 15.4, 3.4)):
-        pen.poly(pointed_arch(cx, 0, w, top - w * .45, top), STONE_SHADE, 1.4)
-        pen.poly(pointed_arch(cx, 0, w - 2.2, top - w * .45 - 1, top - 1.6), STONE_DARK, 1.0)
+    for cx, w, top, door in ((0, 10, 17.4, 4.4), (-14.25, 7.4, 15, 3.4), (14.25, 7.4, 15, 3.4)):
+        pen.poly(pointed_arch(cx, 0, w, top - w * .72, top), STONE_SHADE, 1.4)
+        pen.poly(pointed_arch(cx, 0, w - 2.2, top - w * .72 - .4, top - 1.6), STONE_DARK, 1.0)
         pen.rect(cx - door / 2, -8.2, door, 8.2, '#8a5a3a', 1.2)
         pen.lines([(cx, 0, cx, -8.2)], '#5e3c26', 0.8)
     pen.lines([(-20.5, -0.6, 20.5, -0.6)], STONE_DARK, 1.0)
