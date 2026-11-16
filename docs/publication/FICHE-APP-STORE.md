@@ -2,9 +2,9 @@
 
 Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; jusqu'à la 1.0.1, Color n'existe qu'en français. La 1.1 parle aussi anglais : sa fiche reçoit une localisation anglaise, prête plus bas.
 
-## Où en est la fiche (16 novembre 2026)
+## Où en est la fiche (16 novembre 2026, 22 h 47)
 
-**La 1.1.1 (42) est publiée partout** : sur le Mac le 11 novembre, sur l'iPhone et l'iPad le 13 novembre, dans la catégorie Enfants, tranche « 5 ans et moins ». **La 1.2.0 (43) se prépare** : ses textes, en français et en anglais, sont plus bas, dans « La version 1.2 » — la description refaite (la pipette et le mélange sont devenus un réglage des adultes, les dix univers), les nouveautés, le texte promotionnel et les notes pour la vérification. `scripts/macos/app_store_connect.py preparer --fiche` les lit ici même et les écrit chez Apple, pour le Mac et pour l'iPhone et l'iPad ; les captures de la 1.2 se chargent par `captures`. Rien ne part à la vérification sans ton accord (`envoyer --accord-du-proprietaire`).
+**La 1.2.0 (43) est envoyée à la vérification d'Apple, pour le Mac et pour l'iPhone et l'iPad** : « en attente de vérification », publication automatique dès l'accord. Le 16 novembre : les builds 43 envoyés par « Envoyer Color vers l'App Store » (Mac à 22 h 32, iPhone et iPad à 22 h 35, « VALID » aussitôt) ; les deux versions 1.2.0 créées et remplies par la clé d'API (`app_store_connect.py preparer --fiche`) — description, nouveautés, texte promotionnel, mots-clés et adresses en `fr-FR`, `en-US` et `en-GB`, notes pour la vérification, copyright —, les 45 captures chargées par `captures` (Mac : 5 par langue ; iPhone et iPad 13 pouces : 5 et 5 par langue) ; envoyées à la vérification par `envoyer --accord-du-proprietaire` à 22 h 46 et 22 h 47. **La 1.1.1 (42) reste publiée partout** jusqu'à l'accord.
 
 Ce qui suit raconte les versions précédentes.
 
