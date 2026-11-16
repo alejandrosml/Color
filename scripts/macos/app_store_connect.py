@@ -101,6 +101,18 @@ STATES = {
 }
 
 
+class _NoRedirection(urllib.request.HTTPRedirectHandler):
+    """A token signed with the key goes to the address it was made for and
+    to no other: an answer that sends elsewhere is not followed (urllib
+    would carry the Authorization header along), it is a refusal."""
+
+    def redirect_request(self, *arguments, **named):
+        return None
+
+
+_DIRECT = urllib.request.build_opener(_NoRedirection)
+
+
 class Apple:
     """The App Store Connect API, signed with the key of the folder."""
 
@@ -134,7 +146,7 @@ class Apple:
         request = urllib.request.Request(url, data=data, method=method, headers={
             'Authorization': self._authorization(), 'Content-Type': 'application/json'})
         try:
-            with urllib.request.urlopen(request, timeout=60) as answer:
+            with _DIRECT.open(request, timeout=60) as answer:
                 text = answer.read().decode('utf-8')
         except urllib.error.HTTPError as error:
             detail = error.read().decode('utf-8', 'replace')
@@ -146,11 +158,19 @@ class Apple:
                 pass
             raise SystemExit('App Store Connect a refusé %s %s (HTTP %d) : %s'
                              % (method, path, error.code, detail[:800]))
+        except (urllib.error.URLError, OSError) as error:
+            # No network, a name that does not resolve, a connection cut:
+            # said in one line, with nothing of the request.
+            raise SystemExit('App Store Connect n’a pas répondu à %s %s : %s'
+                             % (method, path, getattr(error, 'reason', error)))
         return json.loads(text) if text else {}
 
     def upload(self, operation, data):
         """One part of an asset, sent where Apple said (its own address,
         signed by Apple: no token goes with it)."""
+        if not str(operation.get('url') or '').startswith('https://'):
+            # urllib would also open file: and ftp: addresses.
+            raise SystemExit('Apple a donné pour l’image une adresse qui n’est pas en https.')
         offset, length = operation.get('offset', 0), operation.get('length', len(data))
         headers = {header['name']: header['value']
                    for header in operation.get('requestHeaders') or []}
@@ -161,6 +181,9 @@ class Apple:
                 answer.read()
         except urllib.error.HTTPError as error:
             raise SystemExit('Apple a refusé une part de l’image (HTTP %d).' % error.code)
+        except (urllib.error.URLError, OSError) as error:
+            raise SystemExit('Une part de l’image n’est pas arrivée chez Apple : %s'
+                             % getattr(error, 'reason', error))
 
     def versions(self):
         return self.call('GET', '/v1/apps/%s/appStoreVersions' % self.app_id, query={
@@ -451,8 +474,11 @@ def put_screenshots(apple, arguments):
     if not version:
         raise SystemExit('La version %s n’existe pas pour %s.'
                          % (arguments.version, arguments.plateforme))
-    if version['attributes'].get('appStoreState') not in ('PREPARE_FOR_SUBMISSION', None) and \
-            version['attributes'].get('appVersionState') not in ('PREPARE_FOR_SUBMISSION', None):
+    # The pictures it had are deleted first: only for a version that every
+    # state Apple gives says is being prepared — one state that says
+    # otherwise, or no state at all, and nothing is touched.
+    states = {version['attributes'].get(name) for name in ('appStoreState', 'appVersionState')}
+    if states - {None} != {'PREPARE_FOR_SUBMISSION'}:
         raise SystemExit('La version %s n’est plus modifiable (%s).'
                          % (arguments.version, state_of(version['attributes'])))
     pages = {item['attributes'].get('locale'): item for item in apple.call(

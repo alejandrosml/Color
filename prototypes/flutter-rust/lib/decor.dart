@@ -61,7 +61,7 @@ enum DecorRole {
 
 Rect? _rect(Object? json) {
   if (json is! List || json.length != 4) return null;
-  if (!json.every((value) => value is num && value.isFinite)) return null;
+  if (!json.every(decorNumber)) return null;
   final values = [for (final value in json) (value as num).toDouble()];
   if (values[2] <= 0 || values[3] <= 0) return null;
   return Rect.fromLTWH(values[0], values[1], values[2], values[3]);
@@ -69,7 +69,7 @@ Rect? _rect(Object? json) {
 
 Offset? _point(Object? json) {
   if (json is! List || json.length != 2) return null;
-  if (!json.every((value) => value is num && value.isFinite)) return null;
+  if (!json.every(decorNumber)) return null;
   return Offset((json[0] as num).toDouble(), (json[1] as num).toDouble());
 }
 
@@ -77,7 +77,7 @@ Offset? _point(Object? json) {
 /// nothing.
 List<Offset> _outline(Object? json) {
   if (json is! List || json.length < 6 || json.length.isOdd) return const [];
-  if (!json.every((value) => value is num && value.isFinite)) return const [];
+  if (!json.every(decorNumber)) return const [];
   return [
     for (var index = 0; index < json.length; index += 2)
       Offset(
@@ -215,16 +215,53 @@ class DecorVeil {
     final multiply = StudioLook.parseColour(json['multiply']);
     final list = json['gradient'];
     (double, Color, Color)? gradient;
-    if (list is List && list.length == 3 && list[0] is num) {
+    if (list is List && list.length == 3 && decorNumber(list[0])) {
       final from = StudioLook.parseColour(list[1]);
       final to = StudioLook.parseColour(list[2]);
-      if (from != null && to != null && (list[0] as num).isFinite) {
+      if (from != null && to != null) {
         gradient = ((list[0] as num).toDouble(), from, to);
       }
     }
     if (multiply == null && gradient == null) return null;
     return DecorVeil(multiply: multiply, gradient: gradient);
   }
+}
+
+/// For the tests that compare the two ways: the shade of a veil is laid
+/// by [BlendMode.multiply] wherever it falls, as before step 6 of Color
+/// 1.2.
+@visibleForTesting
+bool debugVeilMultiplies = false;
+
+/// The paint that lays the shade [multiply] of a veil, as a coloured glass
+/// would darken what is under it ([DecorVeil.multiply]).
+///
+/// [onOpaque] says that every pixel it is laid on lets nothing through:
+/// the image that a decor keeps of its still pieces. There the product of
+/// [BlendMode.multiply], d × (1 − a + a·c) for what is under d and the
+/// shade c of opacity a, is exactly what [BlendMode.modulate] gives with
+/// the colour 1 − a + a·c: the same picture, and the graphics processor
+/// needs only what it is drawing on, where « multiply » makes it copy the
+/// whole frame first at every image (20 to 40 ms of an image of the decor
+/// that moves under the rendering without a graphics processor, step 6 of
+/// Color 1.2). On anything else — a pixel that is half covered at the
+/// edge of a picture is enough — the two differ: the blend of before.
+Paint veilShadePaint(Color multiply, {required bool onOpaque}) {
+  if (!onOpaque || debugVeilMultiplies) {
+    return Paint()
+      ..color = multiply
+      ..blendMode = BlendMode.multiply;
+  }
+  final a = multiply.a;
+  return Paint()
+    ..color = Color.from(
+      alpha: 1,
+      red: 1 - a + a * multiply.r,
+      green: 1 - a + a * multiply.g,
+      blue: 1 - a + a * multiply.b,
+      colorSpace: multiply.colorSpace,
+    )
+    ..blendMode = BlendMode.modulate;
 }
 
 /// The lamp of the desk: where its head turns, the direction of its light
@@ -267,7 +304,7 @@ class DecorLamp {
     final bulb = _point(json['bulb']);
     double? number(String name) {
       final value = json[name];
-      return value is num && value.isFinite ? value.toDouble() : null;
+      return decorNumber(value) ? (value as num).toDouble() : null;
     }
 
     final angle = number('angle');
@@ -1012,11 +1049,16 @@ class DecorPainting {
 
   /// The live pieces, [seconds] after the decor appeared, at [time] of the
   /// device, then the light of that moment over the whole room.
+  /// [opaqueUnder] says that no pixel of the frame lets anything through
+  /// when this is called — the image of the still pieces was laid there:
+  /// the shade of a veil is then laid at less cost, for the same picture
+  /// ([veilShadePaint]).
   void paintLive(
     Canvas canvas, {
     required double seconds,
     required DateTime time,
     required DecorMotion motion,
+    bool opaqueUnder = false,
   }) {
     final moment = DayMoment.at(time);
     final frame = Offset.zero & layout.frame;
@@ -1039,7 +1081,7 @@ class DecorPainting {
         );
       }
     }
-    _paintLight(canvas, moment);
+    _paintLight(canvas, moment, opaqueUnder);
     canvas.restore();
   }
 
@@ -1101,7 +1143,7 @@ class DecorPainting {
     ], true);
   }
 
-  void _paintLight(Canvas canvas, DayMoment moment) {
+  void _paintLight(Canvas canvas, DayMoment moment, bool opaqueUnder) {
     final frame = Offset.zero & layout.frame;
     final lamp = decor.lamp;
     final lit = lamp != null && lamp.moments.contains(moment);
@@ -1137,12 +1179,7 @@ class DecorPainting {
           ..fillType = PathFillType.evenOdd
           ..addRect(frame);
         if (beam != null) shade.addPath(beam, Offset.zero);
-        canvas.drawPath(
-          shade,
-          Paint()
-            ..color = multiply
-            ..blendMode = BlendMode.multiply,
-        );
+        canvas.drawPath(shade, veilShadePaint(multiply, onOpaque: opaqueUnder));
       }
     }
     if (!lit || beam == null) return;

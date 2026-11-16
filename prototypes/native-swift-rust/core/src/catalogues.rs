@@ -13,7 +13,20 @@
 //!   the order of their identifiers, each one after its length as four
 //!   bytes, little-endian, the number of pages first, the same way;
 //! - `univers.txt`: the universes of the studio (Color 1.2), one after the
-//!   other, as universes.rs describes them; `ep_universe` hands over one.
+//!   other, as universes.rs describes them; `ep_universe` hands over one;
+//!
+//! A core with the `deflate` feature — those of the stores — carries the two
+//! large ones packed, and the two small ones as they are:
+//!
+//! - `univers.txt.packed` for `univers.txt`, a megabyte brought to a
+//!   quarter, and `pages.bin.packed` for `pages.bin`, brought to two
+//!   fifths: the length of the file as four bytes, little-endian, then the
+//!   file in raw DEFLATE (RFC 1951).
+//!
+//! That core unpacks each one once, at the first demand, and keeps it; a
+//! core without the feature, which has no dependency, carries the files as
+//! they are. The files that are read and reviewed stay the first four; a
+//! test holds each packed one to its file.
 //!
 //! A test writes them again from the files and compares them to the byte;
 //! after a change of a picture or of a page, or of how they are read:
@@ -22,31 +35,116 @@
 //! COLOR_REGENERATE_CATALOGUES=1 cargo test --offline catalogues
 //! ```
 use super::*;
+use std::sync::OnceLock;
 
 /// Largest SVG text accepted from a caller.
 pub const MAX_SVG_BYTES: usize = 1024 * 1024;
 
 const INTERFACE: &str = include_str!("catalogues/interface.txt");
 const PAGE_CATALOGUE: &str = include_str!("catalogues/pages.txt");
+#[cfg(not(feature = "deflate"))]
 const PAGE_PROJECTS: &[u8] = include_bytes!("catalogues/pages.bin");
+#[cfg(feature = "deflate")]
+const PACKED_PAGE_PROJECTS: &[u8] = include_bytes!("catalogues/pages.bin.packed");
+#[cfg(not(feature = "deflate"))]
 const UNIVERSES: &str = include_str!("catalogues/univers.txt");
+#[cfg(feature = "deflate")]
+const PACKED_UNIVERSES: &[u8] = include_bytes!("catalogues/univers.txt.packed");
+
+/// Largest catalogue a packed one may say it holds: what is compiled in is
+/// known, and this bound keeps the reader from borrowing more for any
+/// other bytes.
+#[cfg(feature = "deflate")]
+const MAX_PACKED_CATALOGUE_BYTES: usize = 16 * 1024 * 1024;
+
+/// What a packed catalogue holds: `packed` is its length as four bytes,
+/// little-endian, then that many bytes in raw DEFLATE, and nothing else.
+/// None for anything else, for a length beyond the bound, and when the
+/// memory for it is missing.
+#[cfg(feature = "deflate")]
+fn unpacked(packed: &[u8]) -> Option<Vec<u8>> {
+    let (length, stream) = packed.split_first_chunk::<4>()?;
+    let length = u32::from_le_bytes(*length) as usize;
+    if length > MAX_PACKED_CATALOGUE_BYTES {
+        return None;
+    }
+    let mut raw = Vec::new();
+    raw.try_reserve_exact(length).ok()?;
+    project_v6::inflate(stream, length, raw).ok()
+}
+
+/// The universes of this core, read once: the text of `univers.txt` and
+/// where each universe begins in it, at its `U` line.
+struct Universes {
+    #[cfg(not(feature = "deflate"))]
+    text: &'static str,
+    #[cfg(feature = "deflate")]
+    text: String,
+    starts: Vec<usize>,
+}
+
+/// The universes, read at the first demand and kept for the life of the
+/// process: a core with the `deflate` feature unpacks their text then.
+/// None only when the memory for them is missing; nothing is kept, and
+/// the next demand tries again.
+fn universes() -> Option<&'static Universes> {
+    static READ: OnceLock<Universes> = OnceLock::new();
+    if let Some(universes) = READ.get() {
+        return Some(universes);
+    }
+    #[cfg(not(feature = "deflate"))]
+    let text = UNIVERSES;
+    #[cfg(feature = "deflate")]
+    let text = String::from_utf8(unpacked(PACKED_UNIVERSES)?).ok()?;
+    let mut starts = Vec::new();
+    for (at, _) in text.match_indices("U ") {
+        if at == 0 || text.as_bytes()[at - 1] == b'\n' {
+            starts.try_reserve(1).ok()?;
+            starts.push(at);
+        }
+    }
+    // Two threads that ask first at the same moment both read; what one of
+    // them read is kept, the other released.
+    Some(READ.get_or_init(|| Universes { text, starts }))
+}
 
 /// The text of universe `index` in `univers.txt`: from its `U` line to the
 /// line before the next one.
 fn universe_text(index: u32) -> Option<&'static str> {
-    let mut starts = UNIVERSES
-        .match_indices("U ")
-        .map(|(at, _)| at)
-        .filter(|&at| at == 0 || UNIVERSES.as_bytes()[at - 1] == b'\n');
-    let start = starts.nth(index as usize)?;
-    let end = starts.next().unwrap_or(UNIVERSES.len());
-    UNIVERSES.get(start..end)
+    let universes = universes()?;
+    let start = *universes.starts.get(index as usize)?;
+    let end = match universes.starts.get(index as usize + 1) {
+        Some(&next) => next,
+        None => universes.text.len(),
+    };
+    universes.text.get(start..end)
+}
+
+/// The bytes of `pages.bin`. A core with the `deflate` feature unpacks them
+/// at the first demand and keeps them for the life of the process; None
+/// only when the memory for them is missing, and the next demand tries
+/// again.
+fn page_projects() -> Option<&'static [u8]> {
+    #[cfg(not(feature = "deflate"))]
+    {
+        Some(PAGE_PROJECTS)
+    }
+    #[cfg(feature = "deflate")]
+    {
+        static READ: OnceLock<Vec<u8>> = OnceLock::new();
+        if let Some(projects) = READ.get() {
+            return Some(projects);
+        }
+        let projects = unpacked(PACKED_PAGE_PROJECTS)?;
+        Some(READ.get_or_init(|| projects))
+    }
 }
 
 /// The project of page `page`, as `pages.bin` holds it.
 fn page_project(page: u32) -> Option<&'static [u8]> {
+    let projects = page_projects()?;
     let word = |at: usize| -> Option<usize> {
-        let bytes = PAGE_PROJECTS.get(at..at.checked_add(4)?)?;
+        let bytes = projects.get(at..at.checked_add(4)?)?;
         Some(u32::from_le_bytes(bytes.try_into().ok()?) as usize)
     };
     if page as usize >= word(0)? {
@@ -57,7 +155,7 @@ fn page_project(page: u32) -> Option<&'static [u8]> {
         at = at.checked_add(4)?.checked_add(word(at)?)?;
     }
     let length = word(at)?;
-    PAGE_PROJECTS.get(at + 4..(at + 4).checked_add(length)?)
+    projects.get(at + 4..(at + 4).checked_add(length)?)
 }
 
 /// Owned, NUL-terminated copy of [text], or NULL when memory is short.
@@ -118,13 +216,11 @@ pub unsafe extern "C" fn ep_picture_from_svg(svg: *const u8, len: usize) -> *mut
 /// Number of universes of the studio compiled into this core (Color 1.2);
 /// their indices are 0..count, in the order the child is shown them. A
 /// universe may have no decor, and then no picture; the interface chooses
-/// among them the universe of a studio that was told none.
+/// among them the universe of a studio that was told none. 0 when the
+/// memory to read them is missing.
 #[no_mangle]
 pub extern "C" fn ep_universe_count() -> u32 {
-    UNIVERSES
-        .lines()
-        .filter(|line| line.starts_with("U "))
-        .count() as u32
+    universes().map_or(0, |universes| universes.starts.len() as u32)
 }
 
 /// Returns universe `index` as owned, NUL-terminated ASCII text, or NULL for
@@ -146,13 +242,13 @@ pub extern "C" fn ep_universe(index: u32) -> *mut c_char {
     universe_text(index).map_or(ptr::null_mut(), owned_text)
 }
 
-/// Number of colouring pages of this core; identifiers are 0..count.
+/// Number of colouring pages of this core; identifiers are 0..count. 0 when
+/// the memory to read them is missing.
 #[no_mangle]
 pub extern "C" fn ep_page_count() -> u32 {
-    PAGE_PROJECTS
-        .get(..4)
-        .and_then(|count| count.try_into().ok())
-        .map_or(0, u32::from_le_bytes)
+    page_projects()
+        .and_then(|projects| projects.first_chunk::<4>())
+        .map_or(0, |count| u32::from_le_bytes(*count))
 }
 
 /// Returns the colouring pages as owned, NUL-terminated ASCII text, or NULL

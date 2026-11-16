@@ -44,7 +44,9 @@ void _play(
           duration: duration,
           painter: painter,
           onDone: () {
-            if (entry.mounted) entry.remove();
+            if (!entry.mounted) return;
+            entry.remove();
+            entry.dispose();
           },
         ),
       ),

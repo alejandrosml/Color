@@ -141,6 +141,25 @@ fn packed(projects: &[Vec<u8>]) -> Vec<u8> {
     bytes
 }
 
+/// A catalogue as a core with the `deflate` feature carries it: the length
+/// of `raw` as four bytes, little-endian, then `raw` in raw DEFLATE, at the
+/// level that makes it smallest. The same bytes for the same text as long
+/// as miniz_oxide is the same version: the one kept in vendor/.
+#[cfg(feature = "deflate")]
+fn packed_catalogue(raw: &[u8]) -> Vec<u8> {
+    let mut bytes = (raw.len() as u32).to_le_bytes().to_vec();
+    bytes.extend_from_slice(&miniz_oxide::deflate::compress_to_vec(raw, 10));
+    bytes
+}
+
+/// `univers.txt`, the text that is read and reviewed, and `pages.bin`,
+/// whatever this core carries.
+const UNIVERSES_TEXT: &str = include_str!("univers.txt");
+const PAGE_PROJECTS_FILE: &[u8] = include_bytes!("pages.bin");
+
+#[cfg(any(feature = "svg", feature = "deflate"))]
+const WRITTEN_AGAIN: &str = "written again by COLOR_REGENERATE_CATALOGUES=1 cargo test catalogues";
+
 #[cfg(feature = "svg")]
 #[test]
 fn the_catalogues_are_those_that_the_files_make() {
@@ -150,12 +169,25 @@ fn the_catalogues_are_those_that_the_files_make() {
     let universes = universes::universe_catalogue().expect("every universe reads");
     if std::env::var_os("COLOR_REGENERATE_CATALOGUES").is_some() {
         std::fs::write("src/catalogues/univers.txt", &universes).unwrap();
+        #[cfg(feature = "deflate")]
+        {
+            std::fs::write(
+                "src/catalogues/univers.txt.packed",
+                packed_catalogue(universes.as_bytes()),
+            )
+            .unwrap();
+            std::fs::write(
+                "src/catalogues/pages.bin.packed",
+                packed_catalogue(&projects),
+            )
+            .unwrap();
+        }
         std::fs::write("src/catalogues/interface.txt", &interface).unwrap();
         std::fs::write("src/catalogues/pages.txt", &pages).unwrap();
         std::fs::write("src/catalogues/pages.bin", &projects).unwrap();
         return;
     }
-    let again = "written again by COLOR_REGENERATE_CATALOGUES=1 cargo test catalogues";
+    let again = WRITTEN_AGAIN;
     assert!(
         INTERFACE == interface,
         "interface.txt is not what the files make: {again}"
@@ -165,13 +197,323 @@ fn the_catalogues_are_those_that_the_files_make() {
         "pages.txt is not what the files make: {again}"
     );
     assert!(
-        PAGE_PROJECTS == projects.as_slice(),
+        PAGE_PROJECTS_FILE == projects.as_slice(),
         "pages.bin is not what the files make: {again}"
     );
     assert!(
-        UNIVERSES == universes,
+        UNIVERSES_TEXT == universes,
         "univers.txt is not what the files make: {again}"
     );
+}
+
+/// What the core hands over is `univers.txt` to the byte, whether it
+/// carries the text or unpacks it: each universe is what the reader of
+/// before the packing cut out of the text, and one after the other they
+/// are the whole text.
+#[test]
+fn the_universes_are_the_text_to_the_byte() {
+    let starts: Vec<usize> = UNIVERSES_TEXT
+        .match_indices("U ")
+        .map(|(at, _)| at)
+        .filter(|&at| at == 0 || UNIVERSES_TEXT.as_bytes()[at - 1] == b'\n')
+        .collect();
+    assert_eq!(ep_universe_count() as usize, starts.len());
+    let mut served = String::new();
+    for (index, &start) in starts.iter().enumerate() {
+        let end = starts
+            .get(index + 1)
+            .copied()
+            .unwrap_or(UNIVERSES_TEXT.len());
+        let universe = text(ep_universe(index as u32));
+        assert!(universe == UNIVERSES_TEXT[start..end], "universe {index}");
+        served.push_str(&universe);
+    }
+    assert!(served == UNIVERSES_TEXT);
+    let read = universes().expect("the universes are read");
+    assert!(read.text == UNIVERSES_TEXT);
+    assert_eq!(read.starts, starts);
+    // Asked again, the same universes, and the same ones: read once.
+    assert!(std::ptr::eq(read, universes().unwrap()));
+    // Beyond the last one, nothing, whatever the number.
+    for index in [starts.len() as u32, starts.len() as u32 + 1, u32::MAX] {
+        assert!(universe_text(index).is_none());
+    }
+}
+
+/// `univers.txt.packed` is `univers.txt`: unpacked, the same bytes; and packing
+/// the text today gives the file, so that writing the catalogues again
+/// changes nothing that did not change.
+#[cfg(feature = "deflate")]
+#[test]
+fn the_packed_universes_are_the_text() {
+    let again = WRITTEN_AGAIN;
+    let raw = unpacked(PACKED_UNIVERSES).expect("univers.txt.packed unpacks");
+    assert!(
+        raw == UNIVERSES_TEXT.as_bytes(),
+        "univers.txt.packed is not univers.txt: {again}"
+    );
+    assert!(
+        packed_catalogue(UNIVERSES_TEXT.as_bytes()) == PACKED_UNIVERSES,
+        "univers.txt.packed is not univers.txt as it is packed today: {again}"
+    );
+    assert!(PACKED_UNIVERSES.len() * 3 < UNIVERSES_TEXT.len());
+}
+
+/// What the core hands over of the pages is `pages.bin` to the byte,
+/// whether it carries the file or unpacks it: their number, and the
+/// project of each one, cut out of the file as its format says.
+#[test]
+fn the_page_projects_are_the_file_to_the_byte() {
+    let word =
+        |at: usize| u32::from_le_bytes(PAGE_PROJECTS_FILE[at..at + 4].try_into().unwrap()) as usize;
+    let count = word(0);
+    assert_eq!(ep_page_count() as usize, count);
+    let mut at = 4;
+    for page in 0..count {
+        let length = word(at);
+        let project = &PAGE_PROJECTS_FILE[at + 4..at + 4 + length];
+        assert!(page_project(page as u32) == Some(project), "page {page}");
+        at += 4 + length;
+    }
+    assert_eq!(at, PAGE_PROJECTS_FILE.len());
+    let read = page_projects().expect("the pages are read");
+    assert!(read == PAGE_PROJECTS_FILE);
+    // Asked again, the same bytes, and the same ones: read once.
+    assert!(std::ptr::eq(read, page_projects().unwrap()));
+    for page in [count as u32, count as u32 + 1, u32::MAX] {
+        assert!(page_project(page).is_none());
+    }
+}
+
+/// `pages.bin.packed` is `pages.bin`, as `univers.txt.packed` is
+/// `univers.txt`.
+#[cfg(feature = "deflate")]
+#[test]
+fn the_packed_page_projects_are_the_file() {
+    let again = WRITTEN_AGAIN;
+    let raw = unpacked(PACKED_PAGE_PROJECTS).expect("pages.bin.packed unpacks");
+    assert!(
+        raw == PAGE_PROJECTS_FILE,
+        "pages.bin.packed is not pages.bin: {again}"
+    );
+    assert!(
+        packed_catalogue(PAGE_PROJECTS_FILE) == PACKED_PAGE_PROJECTS,
+        "pages.bin.packed is not pages.bin as it is packed today: {again}"
+    );
+    assert!(PACKED_PAGE_PROJECTS.len() * 2 < PAGE_PROJECTS_FILE.len());
+}
+
+/// Threads that ask at the same moment — the first demand of all when this
+/// test is run alone (`cargo test asked_at_the_same_moment`), where each of
+/// them finds nothing kept and unpacks — are all given the same universes
+/// and the same pages, whole: what one of them read is kept, the others'
+/// released.
+#[test]
+fn the_catalogues_asked_at_the_same_moment_are_the_same_for_all() {
+    use std::sync::{Arc, Barrier};
+    const THREADS: usize = 16;
+    let barrier = Arc::new(Barrier::new(THREADS));
+    let asked: Vec<_> = (0..THREADS)
+        .map(|thread| {
+            let barrier = Arc::clone(&barrier);
+            std::thread::spawn(move || {
+                barrier.wait();
+                // Half of them begin by a universe, the others by the count
+                // or by a page: every way in.
+                let mut universes = Vec::new();
+                let first = (thread % 4 == 1).then(|| text(ep_universe(3)));
+                let pages = if thread % 4 == 2 {
+                    let document = ep_document_from_page(0);
+                    assert!(!document.is_null());
+                    unsafe { ep_document_free(document) };
+                    ep_page_count()
+                } else {
+                    ep_page_count()
+                };
+                let count = ep_universe_count();
+                for index in 0..count {
+                    universes.push(text(ep_universe(index)));
+                }
+                if let Some(first) = first {
+                    assert_eq!(first, universes[3]);
+                }
+                assert!(ep_universe(count).is_null());
+                assert!(ep_document_from_page(pages).is_null());
+                (universes, pages)
+            })
+        })
+        .collect();
+    let answers: Vec<_> = asked
+        .into_iter()
+        .map(|thread| thread.join().expect("no thread fails"))
+        .collect();
+    let (universes, pages) = &answers[0];
+    assert_eq!(universes.concat(), UNIVERSES_TEXT);
+    assert_eq!(
+        pages.to_le_bytes(),
+        *PAGE_PROJECTS_FILE.first_chunk::<4>().unwrap()
+    );
+    for answer in &answers {
+        assert!(answer == &answers[0]);
+    }
+}
+
+/// Bytes that look like a text with repetitions, different for each seed.
+#[cfg(feature = "deflate")]
+fn some_catalogue(seed: u32, length: usize) -> Vec<u8> {
+    let mut state = seed.wrapping_mul(2_654_435_761).wrapping_add(1);
+    let mut next = || {
+        state = state.wrapping_mul(1_664_525).wrapping_add(1_013_904_223);
+        state >> 16
+    };
+    let mut bytes = Vec::with_capacity(length);
+    while bytes.len() < length {
+        if bytes.len() > 16 && next() % 3 == 0 {
+            // A piece said before, as a catalogue repeats its words.
+            let from = next() as usize % (bytes.len() - 8);
+            let count = 3 + next() as usize % 40;
+            for at in from..(from + count).min(bytes.len()) {
+                bytes.push(bytes[at]);
+            }
+        } else {
+            bytes.push(b' ' + (next() % 95) as u8);
+        }
+    }
+    bytes.truncate(length);
+    bytes
+}
+
+/// Any catalogue comes back from its packing; and bytes that are not a
+/// packed catalogue — cut short, longer, of another length than they say,
+/// damaged — are refused or read as other bytes of the length they say,
+/// without a panic and without borrowing more than that length.
+#[cfg(feature = "deflate")]
+#[test]
+fn a_packed_catalogue_is_read_whole_or_refused() {
+    for (seed, length) in [0usize, 1, 2, 63, 64, 65, 1000, 4096, 70_000]
+        .into_iter()
+        .enumerate()
+    {
+        let raw = some_catalogue(seed as u32, length);
+        let whole = packed_catalogue(&raw);
+        assert_eq!(
+            unpacked(&whole).as_deref(),
+            Some(raw.as_slice()),
+            "{length}"
+        );
+        // Cut anywhere: refused.
+        let step = (whole.len() / 300).max(1);
+        for cut in (0..whole.len())
+            .step_by(step)
+            .chain(whole.len() - 4..whole.len())
+        {
+            assert!(unpacked(&whole[..cut]).is_none(), "{length} cut at {cut}");
+        }
+        // Anything after its end: refused.
+        for more in [&[0u8][..], &[0xff], &[0, 0, 0, 0], &whole] {
+            let longer = [&whole[..], more].concat();
+            assert!(unpacked(&longer).is_none(), "{length}");
+        }
+        // Another length than the one it holds: refused, also the largest
+        // lengths, for which nothing is borrowed.
+        for said in [
+            length.wrapping_sub(1) as u32,
+            length as u32 + 1,
+            MAX_PACKED_CATALOGUE_BYTES as u32,
+            MAX_PACKED_CATALOGUE_BYTES as u32 + 1,
+            u32::MAX,
+        ] {
+            let mut other = whole.clone();
+            other[..4].copy_from_slice(&said.to_le_bytes());
+            assert!(unpacked(&other).is_none(), "{length} said {said}");
+        }
+        // One bit turned, anywhere in the stream: never a panic, and never
+        // more or fewer bytes than the length says.
+        let step = ((whole.len() - 4) * 8 / 400).max(1);
+        for bit in (0..(whole.len() - 4) * 8).step_by(step) {
+            let mut damaged = whole.clone();
+            damaged[4 + bit / 8] ^= 1 << (bit % 8);
+            if let Some(read) = unpacked(&damaged) {
+                assert_eq!(read.len(), length, "{length} bit {bit}");
+            }
+        }
+    }
+    assert!(unpacked(&[]).is_none());
+    assert!(unpacked(&[0, 0, 0]).is_none());
+}
+
+#[cfg(feature = "deflate")]
+#[test]
+#[ignore = "a measure: cargo test --release unpacked_in_good_time -- --ignored --nocapture"]
+fn the_catalogues_are_unpacked_in_good_time() {
+    use std::time::Instant;
+    // Through the functions of the core, as the interface asks: the count,
+    // then every universe. The first round unpacks when this test runs
+    // alone, as the measure asks.
+    for round in 0..3 {
+        let start = Instant::now();
+        let count = ep_universe_count();
+        let counted = start.elapsed();
+        let mut bytes = 0;
+        for index in 0..count {
+            bytes += text(ep_universe(index)).len();
+        }
+        println!(
+            "round {round}: count {counted:?}, count and {count} universes ({bytes} bytes) {:?}",
+            start.elapsed()
+        );
+    }
+    // The unpacking alone, with the check that it is text.
+    let mut times: Vec<_> = (0..31)
+        .map(|_| {
+            let start = Instant::now();
+            let text = String::from_utf8(unpacked(PACKED_UNIVERSES).unwrap()).unwrap();
+            let time = start.elapsed();
+            assert_eq!(text.len(), UNIVERSES_TEXT.len());
+            time
+        })
+        .collect();
+    times.sort();
+    println!(
+        "unpacking {} bytes into {}: fastest {:?}, median {:?}, slowest {:?} of {}",
+        PACKED_UNIVERSES.len(),
+        UNIVERSES_TEXT.len(),
+        times[0],
+        times[times.len() / 2],
+        times[times.len() - 1],
+        times.len()
+    );
+    assert!(times[times.len() / 2].as_millis() < 100);
+    // The pages: their number, which unpacks when this test runs alone,
+    // then the unpacking alone.
+    for round in 0..2 {
+        let start = Instant::now();
+        let count = ep_page_count();
+        println!(
+            "round {round}: {count} pages counted in {:?}",
+            start.elapsed()
+        );
+    }
+    let mut times: Vec<_> = (0..31)
+        .map(|_| {
+            let start = Instant::now();
+            let projects = unpacked(PACKED_PAGE_PROJECTS).unwrap();
+            let time = start.elapsed();
+            assert_eq!(projects.len(), PAGE_PROJECTS_FILE.len());
+            time
+        })
+        .collect();
+    times.sort();
+    println!(
+        "unpacking {} bytes into {}: fastest {:?}, median {:?}, slowest {:?} of {}",
+        PACKED_PAGE_PROJECTS.len(),
+        PAGE_PROJECTS_FILE.len(),
+        times[0],
+        times[times.len() / 2],
+        times[times.len() - 1],
+        times.len()
+    );
+    assert!(times[times.len() / 2].as_millis() < 100);
 }
 
 #[cfg(feature = "svg")]

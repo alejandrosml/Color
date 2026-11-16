@@ -57,6 +57,70 @@ void main() {
     expect(softEffectsHere(context), isFalse);
   });
 
+  testWidgets('the studio may go, or change, while they play: no exception, '
+      'nothing left, and a press goes through them', (tester) async {
+    // A press under the confetti, the splash and the sparkles reaches the
+    // button they cover; a dialogue opens over them and closes.
+    var pressed = 0;
+    late BuildContext context;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (inner) {
+            context = inner;
+            return Align(
+              alignment: Alignment.topRight,
+              child: TextButton(
+                onPressed: () => pressed++,
+                child: const Text('Dessous'),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    final under = tester.getCenter(find.text('Dessous'));
+    showConfetti(context);
+    showSplash(context, under, const Color(0xffe63946));
+    showSparkles(context, under);
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.tapAt(under);
+    expect(pressed, 1);
+    showDialog<void>(
+      context: context,
+      builder: (_) => const AlertDialog(title: Text('Un dialogue')),
+    );
+    await tester.pump(const Duration(milliseconds: 100));
+    Navigator.of(context, rootNavigator: true).pop();
+    await tester.pump(const Duration(milliseconds: 100));
+    // The window is destroyed in the middle of them.
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 2));
+    expect(tester.takeException(), isNull);
+    expect(tester.binding.hasScheduledFrame, isFalse);
+    // And again, to their end, in a studio that is built again meanwhile.
+    softEffectLog.clear();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (inner) {
+            context = inner;
+            return const SizedBox.expand();
+          },
+        ),
+      ),
+    );
+    int layers() => tester.widgetList(find.byType(IgnorePointer)).length;
+    final without = layers();
+    showConfetti(context);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(layers(), without + 1);
+    await tester.pump(const Duration(milliseconds: 1500));
+    await tester.pumpAndSettle();
+    expect(layers(), without, reason: 'the confetti are gone');
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('a button that bounces still answers its press', (tester) async {
     var pressed = 0;
     await tester.pumpWidget(

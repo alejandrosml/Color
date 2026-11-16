@@ -330,6 +330,14 @@ const Set<String> _even = {'tourne'};
 /// The names of the movements this version knows.
 Iterable<String> get decorMovementNames => _movements.keys;
 
+/// Whether [value] is a number that a description of a decor may give: a
+/// length, a place, an angle, a time. A frame is about a thousand units
+/// wide; a number beyond a million is the mark of a damaged description,
+/// and sums of such numbers end beyond what a double holds — a place that
+/// is not a number, which no canvas takes (étape 7 of Color 1.2).
+bool decorNumber(Object? value) =>
+    value is num && value.isFinite && value.abs() <= 1e6;
+
 /// The movement of one piece: which one, how long a period lasts, how far
 /// into it the piece is when the decor appears, and the point it turns
 /// about, in the units of the decor.
@@ -358,22 +366,20 @@ class DecorMove {
     final name = json['name'];
     final seconds = json['seconds'];
     if (name is! String || !_movements.containsKey(name)) return null;
-    if (seconds is! num || !seconds.isFinite || seconds < 1) return null;
+    if (!decorNumber(seconds) || (seconds as num) < 1) return null;
     final delay = json['delay'];
     final origin = json['origin'];
-    final at = origin is List && origin.length == 2 && origin.every(_finite)
+    final at = origin is List && origin.length == 2 && origin.every(decorNumber)
         ? origin
         : const [0, 0];
     return DecorMove(
       name: name,
       seconds: seconds.toDouble(),
-      delay: delay is num && delay.isFinite ? delay.toDouble() : 0,
+      delay: decorNumber(delay) ? (delay as num).toDouble() : 0,
       originX: (at[0] as num).toDouble(),
       originY: (at[1] as num).toDouble(),
     );
   }
-
-  static bool _finite(Object? value) => value is num && value.isFinite;
 
   // Slow at both ends, as « ease-in-out » is: the curve of the mock-ups,
   // a cubic Bézier through (.42, 0) and (.58, 1), solved for its time.

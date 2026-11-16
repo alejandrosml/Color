@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'rust_document.dart' show maxTextBytes, maxTextLines;
 import 'fit_to_screen.dart';
+import 'inside_menu.dart';
 import 'screen_keyboard.dart';
 import 'size_choice.dart';
 import 'text_layout.dart';
@@ -218,6 +219,9 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
               keyboardType: TextInputType.multiline,
               textCapitalization: TextCapitalization.sentences,
               inputFormatters: [LengthLimitingTextInputFormatter(_limit)],
+              // Never the menu of the system, which leads to the web and
+              // to other applications: only what stays in Color.
+              contextMenuBuilder: insideContextMenu,
               // A sign that the letters of the interface do not have is
               // shown in those of the sheet, where it will be drawn.
               // In the letters chosen, as the sheet will show them.

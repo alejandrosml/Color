@@ -1578,9 +1578,11 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// coloured (a soft effect of Color 1.2).
   void _fillWithSplash(DocumentPoint point, double scale, Offset? at) {
     final before = _document?.undoCount;
+    // A press while paint is still being poured does nothing: no splash.
+    final wasPouring = _pouring;
     _fillAt(point, scale);
     if (at != null &&
-        (_pouring || _document?.undoCount != before) &&
+        ((!wasPouring && _pouring) || _document?.undoCount != before) &&
         softEffectsHere(context)) {
       showSplash(context, at, Color(0xff000000 | _fillColor));
     }
@@ -6101,7 +6103,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         ],
         Positioned.fromRect(
           rect: layout.stage,
-          child: _readAt(2, _canvas(galets: layout)),
+          child: _readAt(2, _canvas(layout)),
         ),
         // Where the sheet lies when the whole of it is shown: nothing to
         // see or to touch, a mark for whoever measures the studio.
@@ -6283,7 +6285,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         Positioned.fill(child: ColoredBox(color: studioBackground)),
         Positioned.fromRect(
           rect: layout.stage,
-          child: _readAt(2, _canvas(galets: layout)),
+          child: _readAt(2, _canvas(layout)),
         ),
         Positioned.fromRect(
           rect: layout.sheet,
@@ -8334,21 +8336,14 @@ class _DrawingStudioState extends State<DrawingStudio>
     _filled = value;
   });
 
-  /// The stage of the sheet: where it is drawn and touched. [galets]: in
-  /// the studio of the pebbles, where the decor and its names are laid
-  /// behind and over it, on the whole window, and nothing is written
+  /// The stage of the sheet: where it is drawn and touched, in the studio
+  /// of the pebbles [galets]. The decor and its names are laid behind and
+  /// over it by the studio, on the whole window, and nothing is written
   /// around the sheet.
-  Widget _canvas({GaletsLayout? galets}) => LayoutBuilder(
+  Widget _canvas(GaletsLayout galets) => LayoutBuilder(
     builder: (context, constraints) {
-      // A telephone gives the sheet all its room: no name around it.
-      final roomForCaptions =
-          _options.captions &&
-          constraints.maxHeight >= 160 &&
-          !_phoneLayout(context);
-      // The pebbles keep that room around the sheet, and write nothing
-      // in it.
-      final showCaptions = roomForCaptions && galets == null;
-      final sheetPadding = galets?.padding ?? (roomForCaptions ? 28.0 : 8.0);
+      // The room that the pebbles keep around the sheet.
+      final sheetPadding = galets.padding;
       // While a pointer is down the view keeps the size it had at the press.
       // A control that appears under the sheet, a sentence that wraps or a
       // window that is resized would otherwise slide the sheet under the
@@ -8391,411 +8386,233 @@ class _DrawingStudioState extends State<DrawingStudio>
           // The tool, the colour, a size or the view may have changed: the
           // pointer and the preview over the sheet follow (Color 1.2).
           _refreshHint();
-          // The decor of the universe, around the sheet and under it
-          // (Color 1.2): where the sheet lies when the whole of it is
-          // shown says how large the decor may be.
-          final look = studioLook.value;
-          // None on a tablet or a telephone, whatever its size (the owner,
-          // 12 November 2026): the sheet takes the screen there, and the
-          // decor is looked at on the whole screen instead.
-          final worn = touchFirst || galets != null ? null : _universe.decor;
-          final rest = ViewTransform.fit(
-            viewWidth: constraints.maxWidth,
-            viewHeight: constraints.maxHeight,
-            padding: sheetPadding,
-            documentWidth: _document!.width.toDouble(),
-            documentHeight: _document!.height.toDouble(),
-          );
-          final sheetAtRest = Rect.fromLTWH(
-            rest.left,
-            rest.top,
-            rest.width,
-            rest.height,
-          );
-          final layout = worn == null
-              ? null
-              : DecorLayout(
-                  frame: constraints.biggest,
-                  sheetAtRest: sheetAtRest,
-                  decor: worn.size,
-                  decorSheet: worn.sheet,
-                );
-          // And none where its pieces would be too small to be looked at:
-          // a ground alone has no interest. The frame is then plain, in
-          // the colour of the universe.
-          final decor = layout != null && layout.pieces ? worn : null;
-          final painting = decor == null || layout == null
-              ? null
-              : DecorPainting(decor, layout);
-          // The studio of the pebbles lays the decor itself.
-          if (galets == null) _decorPainting = painting;
-          final corners = BorderRadius.circular(
-            galets == null ? look.stageRadius : 0,
-          );
-          // The captions of the sheet stand in the corners of its frame.
-          // Over a decor they would cover what stands there — the knob of
-          // the curtain rod, the pencils on the desk — and a child must
-          // see everything: they stand along the sheet at rest instead,
-          // above its top left corner and under its bottom corners, in the
-          // margin that the sheet keeps for them. Nothing of a decor that
-          // has a name lies there.
-          final onDecor = painting != null;
-          final captionTop = onDecor
-              ? math.max(4.0, sheetAtRest.top - 23)
-              : 10.0;
-          final captionBottom = onDecor
-              ? math.max(4.0, constraints.maxHeight - sheetAtRest.bottom - 23)
-              : 9.0;
-          final captionLeft = onDecor ? math.max(4.0, sheetAtRest.left) : 16.0;
-          final captionRight = onDecor
-              ? math.max(4.0, constraints.maxWidth - sheetAtRest.right)
-              : 16.0;
-          // A caption on a decor is written on a pill of the surface.
-          Widget caption(Widget text) => painting == null
-              ? text
-              : DecorCaption(
-                  color: studioSurface.withValues(alpha: .94),
-                  child: text,
-                );
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              // A decor fills the frame: no backdrop is painted under it.
-              // The pebbles have the whole window behind the stage.
-              color: decor == null && galets == null
-                  ? studioSheetBackdrop
-                  : null,
-              borderRadius: corners,
-            ),
-            child: Stack(
-              children: [
-                // Among the pebbles the sheet floats: its shadow, wherever
-                // the view shows it.
-                if (galets != null)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        painter: GaletSheetShadow(
-                          Rect.fromLTWH(
-                            viewport.left,
-                            viewport.top,
-                            viewport.width,
-                            viewport.height,
-                          ),
-                          look: studioLook.value,
-                        ),
+          // The pebbles have the whole window behind the stage, and the
+          // studio lays the decor there itself: nothing is painted under
+          // the sheet here but its shadow.
+          return Stack(
+            children: [
+              // Among the pebbles the sheet floats: its shadow, wherever
+              // the view shows it.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: GaletSheetShadow(
+                      Rect.fromLTWH(
+                        viewport.left,
+                        viewport.top,
+                        viewport.width,
+                        viewport.height,
                       ),
+                      look: studioLook.value,
                     ),
                   ),
-                if (decor != null)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: ExcludeSemantics(
-                        child: RepaintBoundary(
-                          child: DecorView(
-                            decor: decor,
-                            sheetAtRest: sheetAtRest,
-                            motion: _options.decorMotion,
-                            now: widget.clock,
-                            resting: () => _gestureOnSheet,
-                            corners: look.stageRadius,
-                            behind: studioBackground,
-                          ),
-                        ),
-                      ),
+                ),
+              ),
+              Positioned.fill(
+                child: Semantics(
+                  label: forTouch(
+                    trf(
+                      'Feuille de dessin {0} par {1} unités. Souris ou stylet.',
+                      [_document!.width, _document!.height],
                     ),
                   ),
-                Positioned.fill(
-                  child: Semantics(
-                    label: forTouch(
-                      trf(
-                        'Feuille de dessin {0} par {1} unités. Souris ou stylet.',
-                        [_document!.width, _document!.height],
-                      ),
-                    ),
-                    child: _StageMouseRegion(
-                      // The interface draws the pointer of the tool itself,
-                      // « la pointe » (Color 1.2): the pointer of the
-                      // system shows only where it says more — the hand
-                      // that moves the sheet, the pipette, and beside the
-                      // sheet over a decor.
-                      held: _panning || _spaceHeld
-                          ? SystemMouseCursors.grab
-                          : _picking
-                          ? SystemMouseCursors.precise
-                          : null,
-                      beside: _stageCursor,
-                      onEnter: (event) {
-                        _hintFollows(event);
+                  child: _StageMouseRegion(
+                    // The interface draws the pointer of the tool itself,
+                    // « la pointe » (Color 1.2): the pointer of the
+                    // system shows only where it says more — the hand
+                    // that moves the sheet, the pipette, and beside the
+                    // sheet over a decor.
+                    held: _panning || _spaceHeld
+                        ? SystemMouseCursors.grab
+                        : _picking
+                        ? SystemMouseCursors.precise
+                        : null,
+                    beside: _stageCursor,
+                    onEnter: (event) {
+                      _hintFollows(event);
+                      _refreshHint();
+                    },
+                    onExit: (_) {
+                      _forgetAnchorEnd();
+                      // A gesture without a held button ends where the
+                      // pointer leaves the frame of the sheet.
+                      _endLatch();
+                      _hintLeft();
+                      _asking.lift();
+                    },
+                    child: Listener(
+                      key: const Key('drawingSurface'),
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: (raw) {
+                        final event = _touchShifted(raw);
+                        _decorDown(event);
+                        if (!_fingerDown(event)) {
+                          _hintFollows(event);
+                          _pointerDown(event, viewport);
+                        }
                         _refreshHint();
                       },
-                      onExit: (_) {
-                        _forgetAnchorEnd();
-                        // A gesture without a held button ends where the
-                        // pointer leaves the frame of the sheet.
-                        _endLatch();
-                        _hintLeft();
-                        _asking.lift();
-                      },
-                      child: Listener(
-                        key: const Key('drawingSurface'),
-                        behavior: HitTestBehavior.opaque,
-                        onPointerDown: (raw) {
-                          final event = _touchShifted(raw);
-                          _decorDown(event);
-                          if (!_fingerDown(event)) {
-                            _hintFollows(event);
-                            _pointerDown(event, viewport);
-                          }
-                          _refreshHint();
-                        },
-                        onPointerMove: (raw) {
-                          final event = _touchShifted(raw);
-                          _asking.move(event.localPosition + _stageOrigin);
-                          if (!_fingerMove(event)) {
-                            _hintFollows(event);
-                            _pointerMove(event, viewport);
-                          }
-                          _refreshHint();
-                        },
-                        onPointerHover: (event) {
+                      onPointerMove: (raw) {
+                        final event = _touchShifted(raw);
+                        _asking.move(event.localPosition + _stageOrigin);
+                        if (!_fingerMove(event)) {
                           _hintFollows(event);
-                          _pointerHover(event, viewport);
-                          _refreshHint();
-                        },
-                        onPointerSignal: _pointerSignal,
-                        onPointerPanZoomStart: _trackpadStart,
-                        onPointerPanZoomUpdate: _trackpadUpdate,
-                        onPointerPanZoomEnd: (event) {
-                          if (_trackpadPointer == event.pointer) {
+                          _pointerMove(event, viewport);
+                        }
+                        _refreshHint();
+                      },
+                      onPointerHover: (event) {
+                        _hintFollows(event);
+                        _pointerHover(event, viewport);
+                        _refreshHint();
+                      },
+                      onPointerSignal: _pointerSignal,
+                      onPointerPanZoomStart: _trackpadStart,
+                      onPointerPanZoomUpdate: _trackpadUpdate,
+                      onPointerPanZoomEnd: (event) {
+                        if (_trackpadPointer == event.pointer) {
+                          _endViewGesture();
+                        }
+                      },
+                      onPointerUp: (raw) {
+                        final event = _touchShifted(raw);
+                        _asking.lift();
+                        _liftedAt = raw.position;
+                        final magicBefore = _tool == StudioTool.magic
+                            ? _document?.undoCount
+                            : null;
+                        _pointerUp(event, viewport);
+                        if (magicBefore != null &&
+                            _document?.undoCount != magicBefore &&
+                            softEffectsHere(context)) {
+                          showSparkles(context, raw.position);
+                        }
+                        _hintLifted(event);
+                        _refreshHint();
+                      },
+                      onPointerCancel: (event) {
+                        _asking.lift();
+                        _hintLifted(event);
+                        if (!_fingerUp(event)) {
+                          if (_panPointer == event.pointer) {
                             _endViewGesture();
                           }
-                        },
-                        onPointerUp: (raw) {
-                          final event = _touchShifted(raw);
-                          _asking.lift();
-                          _liftedAt = raw.position;
-                          final magicBefore = _tool == StudioTool.magic
-                              ? _document?.undoCount
-                              : null;
-                          _pointerUp(event, viewport);
-                          if (magicBefore != null &&
-                              _document?.undoCount != magicBefore &&
-                              softEffectsHere(context)) {
-                            showSparkles(context, raw.position);
-                          }
-                          _hintLifted(event);
-                          _refreshHint();
-                        },
-                        onPointerCancel: (event) {
-                          _asking.lift();
-                          _hintLifted(event);
-                          if (!_fingerUp(event)) {
-                            if (_panPointer == event.pointer) {
-                              _endViewGesture();
-                            }
-                            if (_pointer == event.pointer) _cancelDraft();
-                          }
-                          _refreshHint();
-                        },
-                        // The picture of the sheet, as the reference
-                        // images of test/reference_images_test.dart take it.
-                        child: RepaintBoundary(
-                          key: const Key('sheetPicture'),
-                          child: CustomPaint(
-                            painter: DocumentPainter(
-                              viewport: viewport,
-                              paperRgb: _document!.paperRgb,
-                              background: _backgroundImage,
+                          if (_pointer == event.pointer) _cancelDraft();
+                        }
+                        _refreshHint();
+                      },
+                      // The picture of the sheet, as the reference
+                      // images of test/reference_images_test.dart take it.
+                      child: RepaintBoundary(
+                        key: const Key('sheetPicture'),
+                        child: CustomPaint(
+                          painter: DocumentPainter(
+                            viewport: viewport,
+                            paperRgb: _document!.paperRgb,
+                            background: _backgroundImage,
+                            strokes: _strokes,
+                            paintOrder: _document!.paintOrder,
+                            draft: _drafting,
+                            repaint: _canvasRepaint,
+                            revision: _revision,
+                            selectedIndex: _selectedIndex,
+                            selectionBounds: _selectedPaintBounds,
+                            selectionOffset: _selectionOffset,
+                            // What is being drawn lies on the active layer,
+                            // under the layers above it: on a colouring
+                            // page, under the lines of the page, as it will
+                            // once the pointer is released.
+                            draftDepth: draftDepthOf(
                               strokes: _strokes,
                               paintOrder: _document!.paintOrder,
-                              draft: _drafting,
-                              repaint: _canvasRepaint,
-                              revision: _revision,
-                              selectedIndex: _selectedIndex,
-                              selectionBounds: _selectedPaintBounds,
-                              selectionOffset: _selectionOffset,
-                              // What is being drawn lies on the active layer,
-                              // under the layers above it: on a colouring
-                              // page, under the lines of the page, as it will
-                              // once the pointer is released.
-                              draftDepth: draftDepthOf(
-                                strokes: _strokes,
-                                paintOrder: _document!.paintOrder,
-                                layers: _document!.layers,
-                                activeLayer: _document!.activeLayer,
-                              ),
-                              anchor: _shapeAnchor,
-                              anchorDrawn: _draftFromAnchor,
-                              anchorRgb: _color,
-                              anchorWidth: _width,
-                              anchorFillRgb: _filled && _tool.drawsFillableShape
-                                  ? _fillColor
-                                  : null,
-                              anchorShape: _newShape,
-                              images: _sheetImages,
-                              pixelRatio: MediaQuery.devicePixelRatioOf(
-                                context,
-                              ),
-                              viewMoving: _paintedMoving = _viewMoving,
+                              layers: _document!.layers,
+                              activeLayer: _document!.activeLayer,
                             ),
-                            size: Size.infinite,
+                            anchor: _shapeAnchor,
+                            anchorDrawn: _draftFromAnchor,
+                            anchorRgb: _color,
+                            anchorWidth: _width,
+                            anchorFillRgb: _filled && _tool.drawsFillableShape
+                                ? _fillColor
+                                : null,
+                            anchorShape: _newShape,
+                            images: _sheetImages,
+                            pixelRatio: MediaQuery.devicePixelRatioOf(context),
+                            viewMoving: _paintedMoving = _viewMoving,
                           ),
+                          size: Size.infinite,
                         ),
                       ),
                     ),
                   ),
                 ),
-                if (showCaptions)
-                  Positioned(
-                    top: captionTop,
-                    left: captionLeft,
-                    child: IgnorePointer(
-                      child: caption(
-                        Text(
-                          tr('MA FEUILLE'),
-                          style: TextStyle(
-                            fontSize: 10,
-                            letterSpacing: 1.2,
-                            color: studioSheetTitle,
-                          ),
-                        ),
+              ),
+              // « La pointe » of the tool, and what a press would do
+              // where it is (Color 1.2): painted apart from the sheet,
+              // which a pointer that moves never paints again.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      key: const Key('sheetHint'),
+                      painter: SheetHintPainter(
+                        viewport: viewport,
+                        hint: _hint,
                       ),
                     ),
                   ),
-                if (showCaptions)
-                  Positioned(
-                    bottom: captionBottom,
-                    left: captionLeft,
-                    child: IgnorePointer(
-                      child: caption(
-                        Text(
-                          trf('{0} × {1} unités', [
-                            _document!.width,
-                            _document!.height,
-                          ]),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: studioSheetCaption,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                if (showCaptions)
-                  Positioned(
-                    bottom: captionBottom,
-                    right: captionRight,
-                    child: IgnorePointer(
-                      child: caption(
-                        Text(
-                          _view!.isFit
-                              ? tr('Toute la feuille')
-                              : '${(viewport.scale * 100).round()} %',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: studioSheetCaption,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                // « La pointe » of the tool, and what a press would do
-                // where it is (Color 1.2): painted apart from the sheet,
-                // which a pointer that moves never paints again.
-                Positioned.fill(
+                ),
+              ),
+              // The pointer of the keyboard or the gamepad (Color 1.1).
+              if (_options.keyboardPointer && _keyPointerAt != null)
+                Positioned(
+                  left: _keyPointerAt!.dx - 14,
+                  top: _keyPointerAt!.dy - 14,
                   child: IgnorePointer(
-                    child: RepaintBoundary(
-                      child: CustomPaint(
-                        key: const Key('sheetHint'),
-                        painter: SheetHintPainter(
-                          viewport: viewport,
-                          hint: _hint,
+                    child: CustomPaint(
+                      key: const Key('keyPointer'),
+                      size: const Size.square(28),
+                      painter: KeyPointerPainter(pressed: _keyDown),
+                    ),
+                  ),
+                ),
+              // While the pot reads the drawing: nothing to see, it is quick;
+              // the tests wait for it to go.
+              if (_pouring)
+                const Positioned(
+                  left: 0,
+                  top: 0,
+                  child: SizedBox.shrink(key: Key('pouring')),
+                ),
+              if (_busyLabel != null)
+                Positioned.fill(
+                  child: Semantics(
+                    liveRegion: true,
+                    child: ColoredBox(
+                      color: const Color(0xeafffefa),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Flexible(child: Text(_busyLabel!)),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                // The names of the decor: what a screen reader may ask
-                // about, and the card of the thing that was asked.
-                if (painting != null && _namesOffered)
-                  Positioned.fill(
-                    child: ValueListenableBuilder<DecorName?>(
-                      valueListenable: _shownName,
-                      builder: (context, shown, _) => DecorNameLayer(
-                        painting: painting,
-                        sheetAtRest: sheetAtRest,
-                        shown: shown,
-                        onAsk: _showName,
-                        onClose: _closeName,
-                      ),
-                    ),
-                  ),
-                // The line around the frame, over the decor.
-                if (look.stageBorder > 0 && galets == null)
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          borderRadius: corners,
-                          border: Border.all(
-                            color: studioLine,
-                            width: look.stageBorder,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                // The pointer of the keyboard or the gamepad (Color 1.1).
-                if (_options.keyboardPointer && _keyPointerAt != null)
-                  Positioned(
-                    left: _keyPointerAt!.dx - 14,
-                    top: _keyPointerAt!.dy - 14,
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        key: const Key('keyPointer'),
-                        size: const Size.square(28),
-                        painter: KeyPointerPainter(pressed: _keyDown),
-                      ),
-                    ),
-                  ),
-                // While the pot reads the drawing: nothing to see, it is quick;
-                // the tests wait for it to go.
-                if (_pouring)
-                  const Positioned(
-                    left: 0,
-                    top: 0,
-                    child: SizedBox.shrink(key: Key('pouring')),
-                  ),
-                if (_busyLabel != null)
-                  Positioned.fill(
-                    child: Semantics(
-                      liveRegion: true,
-                      child: ColoredBox(
-                        color: const Color(0xeafffefa),
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Flexible(child: Text(_busyLabel!)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            ],
           );
         },
       );

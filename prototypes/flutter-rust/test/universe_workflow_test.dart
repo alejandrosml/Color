@@ -161,7 +161,6 @@ void main() {
       );
       expect(wood.r > wood.b + .15, isTrue, reason: '$wood');
       // Nothing is written around the sheet of the pebbles.
-      expect(find.byType(DecorCaption), findsNothing);
       expect(find.text('MA FEUILLE'), findsNothing);
       expect(find.byKey(const Key('openUniverses')), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
@@ -457,7 +456,6 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     final decor = UniverseCatalog.instance.named('bureau').decor!;
-    const behind = Color(0xff224466);
     final made = debugDecorStillImages;
     await tester.pumpWidget(
       MediaQuery(
@@ -473,8 +471,6 @@ void main() {
                   decor: decor,
                   sheetAtRest: decor.sheet,
                   motion: DecorMotion.low,
-                  corners: 12,
-                  behind: behind,
                 ),
               ),
             ),
@@ -488,20 +484,12 @@ void main() {
     final first = await picture(tester);
     final middle = decor.size.center(Offset.zero);
     expect(pixel(first, middle).toARGB32(), decor.top.toARGB32());
-    expect(pixel(first, const Offset(1, 1)).toARGB32(), behind.toARGB32());
-    // The next one: the decor, its corners in the colour behind the frame.
+    expect(pixel(first, const Offset(1, 1)).toARGB32(), decor.top.toARGB32());
+    // The next one: the decor.
     await tester.pump();
     expect(debugDecorStillImages, made + 1);
     final second = await picture(tester);
     expect(differences(first, second), greaterThan(10000));
-    for (final corner in [
-      const Offset(1, 1),
-      Offset(decor.size.width - 2, 1),
-      Offset(1, decor.size.height - 2),
-      Offset(decor.size.width - 2, decor.size.height - 2),
-    ]) {
-      expect(pixel(second, corner).toARGB32(), behind.toARGB32());
-    }
     // And no pixel of it lets anything through.
     final (bytes, _) = second;
     for (var index = 3; index < bytes.lengthInBytes; index += 4) {

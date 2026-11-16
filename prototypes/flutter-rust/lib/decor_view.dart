@@ -74,8 +74,6 @@ class DecorView extends StatefulWidget {
     required this.motion,
     this.now,
     this.resting,
-    this.corners = 0,
-    this.behind,
     this.clearTop = 0,
     this.smallest,
     this.onClock,
@@ -94,8 +92,6 @@ class DecorView extends StatefulWidget {
     this.now,
   }) : sheetAtRest = null,
        resting = null,
-       corners = 0,
-       behind = null,
        clearTop = 0,
        smallest = null,
        onClock = null,
@@ -150,12 +146,6 @@ class DecorView extends StatefulWidget {
   /// where it is, and moves on when the gesture ends. Asked at each tick
   /// of the movement, so that no end of a gesture is missed.
   final bool Function()? resting;
-
-  /// The radius of the corners of the frame, and the colour that lies
-  /// behind the frame: the corners are painted over in that colour, which
-  /// costs less at every image than cutting the decor round.
-  final double corners;
-  final Color? behind;
 
   /// Where the sheet lies in this frame when the whole of it is shown;
   /// null for a decor that is looked at without a sheet.
@@ -380,8 +370,6 @@ class _DecorViewState extends State<DecorView> with WidgetsBindingObserver {
           still: _still,
           whole: _whole,
           pixelRatio: MediaQuery.devicePixelRatioOf(context),
-          corners: widget.corners,
-          behind: widget.behind,
         ),
       );
     },
@@ -495,8 +483,6 @@ class _DecorPainter extends CustomPainter {
     required this.still,
     required this.whole,
     required this.pixelRatio,
-    required this.corners,
-    required this.behind,
   }) : super(repaint: Listenable.merge([seconds, minutes, resting]));
 
   final DecorPainting painting;
@@ -512,8 +498,6 @@ class _DecorPainter extends CustomPainter {
   final _KeptImage still;
   final _KeptImage whole;
   final double pixelRatio;
-  final double corners;
-  final Color? behind;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -521,7 +505,6 @@ class _DecorPainter extends CustomPainter {
     if (!shown) {
       // Before the first image of the studio: the colour of the room.
       canvas.drawRect(frame, Paint()..color = painting.decor.top);
-      _paintCorners(canvas, frame);
       return;
     }
     final time = now();
@@ -535,11 +518,14 @@ class _DecorPainter extends CustomPainter {
       (canvas) => painting.paintStill(canvas, moment),
       onMade: () => debugDecorStillImages++,
     );
+    // Always over the image of the still pieces, which lets nothing
+    // through: the shade of a veil is laid at less cost.
     void live(Canvas canvas) => painting.paintLive(
       canvas,
       seconds: seconds.value,
       time: time,
       motion: motion,
+      opaqueUnder: kept != null,
     );
     if (!moves || resting.value) {
       // At rest: the whole decor, its light too, is one image; every
@@ -569,20 +555,6 @@ class _DecorPainter extends CustomPainter {
       if (kept != null) still.lay(canvas, kept, pixelRatio);
       live(canvas);
     }
-    _paintCorners(canvas, frame);
-  }
-
-  // The round corners of the frame, painted over in the colour behind it.
-  void _paintCorners(Canvas canvas, Rect frame) {
-    final colour = behind;
-    if (corners <= 0 || colour == null) return;
-    canvas.drawPath(
-      Path()
-        ..fillType = PathFillType.evenOdd
-        ..addRect(frame)
-        ..addRRect(RRect.fromRectAndRadius(frame, Radius.circular(corners))),
-      Paint()..color = colour,
-    );
   }
 
   @override
@@ -592,9 +564,7 @@ class _DecorPainter extends CustomPainter {
       old.shown != shown ||
       old.moves != moves ||
       old.motion != motion ||
-      old.pixelRatio != pixelRatio ||
-      old.corners != corners ||
-      old.behind != behind;
+      old.pixelRatio != pixelRatio;
 }
 
 /// Hears what a child does beside the sheet, and says when it asks the
@@ -1022,26 +992,6 @@ class _NameCard extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A pill of the look's surface under a caption written on a decor: the
-/// name of the sheet and its size stay readable on any picture.
-class DecorCaption extends StatelessWidget {
-  const DecorCaption({super.key, required this.child, required this.color});
-  final Widget child;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => DecoratedBox(
-    decoration: BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(9),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      child: child,
-    ),
-  );
 }
 
 /// What kind of pointer [kind] is for a decor: a finger asks by a long

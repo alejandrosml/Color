@@ -91,7 +91,9 @@ class StudioLook {
   /// dessin ».
   final Color statusText;
 
-  /// « MA FEUILLE » and the captions around the sheet, on its backdrop.
+  /// « MA FEUILLE » and the captions around the sheet, on its backdrop:
+  /// what the description of a universe says for them. Nothing is written
+  /// around the sheet of the pebbles, and nothing reads them now.
   final Color sheetTitle;
   final Color sheetCaption;
 
@@ -102,7 +104,9 @@ class StudioLook {
   /// from the panel, so it is drawn darker than a decorative line.
   final Color swatchRing;
 
-  /// The frame around the sheet.
+  /// The frame around the sheet: what the description of a universe says
+  /// for it. The sheet of the pebbles has no frame, and nothing reads them
+  /// now.
   final double stageRadius;
   final double stageBorder;
 
@@ -334,12 +338,6 @@ Color get studioCaption => studioLook.value.caption;
 
 /// The last thing that happened to the drawing, in « Mon dessin ».
 Color get studioStatusText => studioLook.value.statusText;
-
-/// « MA FEUILLE », on the sheet's backdrop.
-Color get studioSheetTitle => studioLook.value.sheetTitle;
-
-/// Size and zoom captions on the sheet's backdrop.
-Color get studioSheetCaption => studioLook.value.sheetCaption;
 
 /// Icons and dots of choices that are not the chosen one.
 Color get studioQuietMark => studioLook.value.quietMark;
