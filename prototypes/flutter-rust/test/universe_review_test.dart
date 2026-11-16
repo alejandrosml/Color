@@ -107,7 +107,14 @@ void main() {
     await start(tester, mac, universe: 'papier');
     await shot(tester, 'univers-papier');
     await tester.pumpWidget(const SizedBox());
-    for (final universe in ['mer', 'espace', 'foret', 'campagne', 'montagne']) {
+    for (final universe in [
+      'mer',
+      'espace',
+      'foret',
+      'campagne',
+      'ville',
+      'montagne',
+    ]) {
       await start(tester, mac, universe: universe);
       await shot(tester, 'univers-$universe');
       await tester.pumpWidget(const SizedBox());
@@ -127,6 +134,7 @@ void main() {
         'espace',
         'foret',
         'campagne',
+        'ville',
         'montagne',
       ]) {
         await start(tester, size, universe: universe);
@@ -243,6 +251,7 @@ void main() {
       'espace',
       'foret',
       'campagne',
+      'ville',
       'montagne',
     ]) {
       await gaze(

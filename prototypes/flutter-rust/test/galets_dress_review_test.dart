@@ -165,6 +165,7 @@ void main() {
     ('espace', 'espace'),
     ('foret', 'foret'),
     ('campagne', 'campagne'),
+    ('ville', 'ville'),
     ('montagne', 'montagne'),
     ('nuit', nightTrialKey),
   ];

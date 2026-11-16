@@ -136,6 +136,17 @@ pub(crate) static UNIVERSES: &[Universe] = &[
         ]
     ),
     universe!(
+        "ville",
+        [
+            "bateau",
+            "droite",
+            "fond",
+            "gauche",
+            "nuage",
+            "pigeon",
+        ]
+    ),
+    universe!(
         "montagne",
         [
             "aigle",

@@ -48,6 +48,7 @@ void main() {
         'espace',
         'foret',
         'campagne',
+        'ville',
         'montagne',
       ],
     );
@@ -58,9 +59,10 @@ void main() {
     expect(catalog.universes[4].frenchName, 'L’espace');
     expect(catalog.universes[5].frenchName, 'La forêt');
     expect(catalog.universes[6].frenchName, 'La campagne');
-    expect(catalog.universes[7].frenchName, 'La montagne');
-    expect(RustDocument.universeCount(), 8);
-    expect(RustDocument.readUniverse(8), isNull);
+    expect(catalog.universes[7].frenchName, 'La ville');
+    expect(catalog.universes[8].frenchName, 'La montagne');
+    expect(RustDocument.universeCount(), 9);
+    expect(RustDocument.readUniverse(9), isNull);
     expect(RustDocument.readUniverse(-1), isNull);
     expect(catalog.named('papier').key, 'papier');
     expect(catalog.named('classique').key, 'classique');
@@ -247,6 +249,7 @@ void main() {
     expect(catalog.named('espace').decor!.names, hasLength(14));
     expect(catalog.named('foret').decor!.names, hasLength(14));
     expect(catalog.named('campagne').decor!.names, hasLength(13));
+    expect(catalog.named('ville').decor!.names, hasLength(11));
     expect(catalog.named('montagne').decor!.names, hasLength(10));
     for (final universe in decorated()) {
       final decor = universe.decor!;

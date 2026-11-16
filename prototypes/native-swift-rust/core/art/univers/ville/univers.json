@@ -1,0 +1,287 @@
+{
+ "key": "ville",
+ "name": "La ville",
+ "about": "La tour Eiffel, Notre-Dame et la Seine.",
+ "look": {
+  "colours": {
+   "ink": "#22303f",
+   "accent": "#2f5fa8",
+   "background": "#dfe5ec",
+   "line": "#b9c6d6",
+   "surface": "#fbfcfe",
+   "selected": "#dbe7fb",
+   "sheetBackdrop": "#cfe0ee",
+   "previewBox": "#eef2f7",
+   "caption": "#4a5a6c",
+   "statusText": "#22303f",
+   "sheetTitle": "#22303f",
+   "sheetCaption": "#22303f",
+   "quietMark": "#6f8098",
+   "swatchRing": "#6f8098",
+   "shadow": "#22303f"
+  },
+  "shapes": {
+   "galetRadius": 14,
+   "stageRadius": 14,
+   "stageBorder": 2
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#bcdcf3",
+  "front": [
+   "#ddd4c0",
+   "#d6ccb6",
+   "#b8aa8f"
+  ],
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "nuage",
+    "anchor": "left",
+    "at": [
+     6,
+     22,
+     72,
+     72
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 30
+    }
+   },
+   {
+    "picture": "nuage",
+    "anchor": "right",
+    "at": [
+     902,
+     48,
+     66,
+     66
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 38,
+     "delay": -9
+    }
+   },
+   {
+    "picture": "bateau",
+    "anchor": "left",
+    "at": [
+     96,
+     334.4,
+     96,
+     14
+    ],
+    "move": {
+     "name": "croisiere",
+     "seconds": 44
+    }
+   },
+   {
+    "picture": "pigeon",
+    "anchor": "left",
+    "at": [
+     28.4,
+     387.6,
+     20.0,
+     13.0
+    ],
+    "move": {
+     "name": "picore",
+     "seconds": 7,
+     "origin": [
+      38,
+      400.0
+     ]
+    }
+   },
+   {
+    "picture": "pigeon",
+    "anchor": "left",
+    "at": [
+     163.17,
+     383.79,
+     18.4,
+     11.96
+    ],
+    "move": {
+     "name": "picore",
+     "seconds": 9,
+     "origin": [
+      172,
+      395.2
+     ],
+     "delay": -4
+    },
+    "level": 2
+   }
+  ],
+  "names": [
+   {
+    "key": "pigeon",
+    "anchor": "left",
+    "at": [
+     28.4,
+     387.6,
+     17.2,
+     12.0
+    ],
+    "name": "Le pigeon",
+    "text": "Il vit sur les toits et picore les miettes sur les trottoirs.",
+    "source": "Ville de Paris — Pigeons : démêlez le vrai du faux sur ces oiseaux des villes — https://www.paris.fr/pages/pigeons-demelez-le-vrai-du-faux-sur-ces-oiseaux-des-villes-7515 ; LPO France — Pigeons & Tourterelles (1/2), fiche Médiation faune sauvage — https://aveyron.lpo.fr/wp-content/uploads/2019/08/FM_PigeonsTouterelles-2019_Web.pdf"
+   },
+   {
+    "key": "immeuble",
+    "anchor": "left",
+    "at": [
+     4.0,
+     138.8,
+     92.0,
+     176.8
+    ],
+    "name": "L’immeuble parisien",
+    "text": "Des murs en pierre claire, de petits balcons et un toit gris en zinc.",
+    "source": "Cité de l’architecture et du patrimoine — Bricolarchi – Immeuble haussmannien — https://www.citedelarchitecture.fr/sites/default/files/documents/2021-04/bricolarchi_immeuble_haussmannien_v2.pdf ; Ministère de la Culture — Les savoir-faire du couvreur zingueur parisien — https://www.culture.gouv.fr/Media/Thematiques/Patrimoine-culturel-immateriel/Files/Fiches-inventaire-du-PCI/Les-savoir-faire-du-couvreur-zingueur-parisien"
+   },
+   {
+    "key": "boulangerie",
+    "anchor": "left",
+    "at": [
+     4.0,
+     315.6,
+     92.0,
+     35.2
+    ],
+    "name": "La boulangerie",
+    "text": "On y achète la baguette et les croissants, tout chauds le matin.",
+    "source": "UNESCO — Les savoir-faire artisanaux et la culture de la baguette de pain — https://ich.unesco.org/fr/RL/savoir-faire-artisanal-et-culture-de-la-baguette-de-pain-01883 ; CNRTL (TLFi) — Définition de VIENNOISERIE — https://www.cnrtl.fr/definition/viennoiserie"
+   },
+   {
+    "key": "eiffel",
+    "anchor": "left",
+    "at": [
+     103.8,
+     59.8,
+     108.5,
+     282.5
+    ],
+    "name": "La tour Eiffel",
+    "text": "Une tour toute en fer, terminée en 1889. Elle mesure plus de 300 mètres de haut.",
+    "source": "Ville de Paris — Une nouvelle antenne pour la tour Eiffel… qui a grandi de 6 mètres en 2022 ! — https://www.paris.fr/pages/la-tour-eiffel-fete-ses-130-ans-6554 ; Encyclopaedia Britannica — Eiffel Tower — https://www.britannica.com/topic/Eiffel-Tower-Paris-France"
+   },
+   {
+    "key": "bateau",
+    "anchor": "left",
+    "at": [
+     97,
+     335.4,
+     93.4,
+     13
+    ],
+    "name": "Le bateau de promenade",
+    "text": "Un long bateau aux grandes vitres, qui promène les visiteurs sur la Seine, le fleuve de Paris.",
+    "source": "VisitParisRegion — Les 5 plus belles croisières à Paris — https://www.visitparisregion.com/fr/parcours/parcours-tops/croisieres-sur-la-seine-a-paris ; Encyclopaedia Britannica — Seine River — https://www.britannica.com/place/Seine-River"
+   },
+   {
+    "key": "morris",
+    "anchor": "left",
+    "at": [
+     225.8,
+     278.0,
+     38.5,
+     90.5
+    ],
+    "name": "La colonne Morris",
+    "text": "Une grosse colonne verte où l’on met les affiches des spectacles.",
+    "source": "CNRTL (TLFi) — Définition de COLONNE — https://www.cnrtl.fr/definition/colonne ; Ville de Paris — 2019 DFA 5 : Signature d’un contrat de concession de services relative à la fourniture, la pose, l’entretien, la maintenance et l’exploitation de colonnes et mâts porte-affiches — https://cdn.paris.fr/paris/2020/09/22/905b8c83ff7dcea34dc23d419d7b542b.pdf"
+   },
+   {
+    "key": "notredame",
+    "anchor": "right",
+    "at": [
+     798.0,
+     143.8,
+     84.0,
+     199.8
+    ],
+    "name": "Notre-Dame de Paris",
+    "text": "Une cathédrale très ancienne : il a fallu près de deux cents ans pour la construire.",
+    "source": "Cathédrale Notre-Dame de Paris (site officiel) — The History of the Cathedral — https://notredamedeparis.fr/en/?p=3413 ; Encyclopaedia Britannica — Notre-Dame de Paris — https://www.britannica.com/topic/Notre-Dame-de-Paris"
+   },
+   {
+    "key": "reverbere",
+    "anchor": "right",
+    "at": [
+     884.2,
+     233.5,
+     17.5,
+     135.2
+    ],
+    "name": "Le réverbère",
+    "text": "Il s’allume tout seul quand la nuit tombe, pour éclairer la rue.",
+    "source": "Mairie de Paris (Agence d’écologie urbaine) — L’éclairage public parisien (juillet 2015) — https://energy-cities.eu/wp-content/uploads/2019/02/Paris_eclairage_public_2015_fr.pdf ; Ville de Paris — CCTP n° 2100953, Travaux d’éclairage public, d’illuminations et de signalisation lumineuse — https://cdn.paris.fr/paris/2022/12/08/2100953_epslt_cctp-v1-eclairage-public-eclairage-et-signalisation-lumineuse-2nor.pdf"
+   },
+   {
+    "key": "metro",
+    "anchor": "right",
+    "at": [
+     902.8,
+     266.8,
+     70.5,
+     101.8
+    ],
+    "name": "La bouche de métro",
+    "text": "L’entrée du métro, le train qui roule surtout sous la ville.",
+    "source": "RATP — Le saviez-vous ? Le métro aérien — https://www.ratp.fr/decouvrir/coulisses/au-quotidien/le-saviez-vous-le-metro-aerien ; CNRTL (TLFi) — Définition de MÉTRO — https://www.cnrtl.fr/definition/m%C3%A9tro"
+   },
+   {
+    "key": "arc",
+    "anchor": "right",
+    "at": [
+     973.5,
+     285.8,
+     53.0,
+     56.5
+    ],
+    "name": "L’Arc de triomphe",
+    "text": "Un monument en forme de grande porte, au bout de l’avenue des Champs-Élysées.",
+    "source": "Centre des monuments nationaux — Arc de triomphe — https://www.paris-arc-de-triomphe.fr/ ; Encyclopaedia Britannica — Arc de Triomphe — https://www.britannica.com/topic/Arc-de-Triomphe"
+   },
+   {
+    "key": "wallace",
+    "anchor": "right",
+    "at": [
+     1032.8,
+     304.8,
+     20.5,
+     63.8
+    ],
+    "name": "La fontaine Wallace",
+    "text": "Une fontaine verte où tout le monde peut venir boire de l’eau.",
+    "source": "Ville de Paris — Tout savoir sur les fontaines Wallace — https://www.paris.fr/pages/le-saviez-vous-les-fontaines-wallace-sont-une-des-richesses-patrimoniales-de-paris-6560 ; Ville de Paris — Eau potable et eau non potable à Paris — https://www.paris.fr/pages/l-eau-potable-2266"
+   }
+  ]
+ }
+}
