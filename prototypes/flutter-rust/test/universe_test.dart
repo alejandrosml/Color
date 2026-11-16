@@ -36,19 +36,21 @@ void main() {
   ];
 
   test('the core has « Classique », the desk by the window, paper and pencils, '
-      'the sea and space', () {
+      'the sea, space, the forest and the countryside', () {
     final catalog = UniverseCatalog.instance;
     expect(
       [for (final u in catalog.universes) u.key],
-      ['classique', 'bureau', 'papier', 'mer', 'espace'],
+      ['classique', 'bureau', 'papier', 'mer', 'espace', 'foret', 'campagne'],
     );
     expect(catalog.first.frenchName, 'Classique');
     expect(catalog.universes[1].frenchName, 'Le bureau près de la fenêtre');
     expect(catalog.universes[2].frenchName, 'Papier et crayons');
     expect(catalog.universes[3].frenchName, 'Sous la mer');
     expect(catalog.universes[4].frenchName, 'L’espace');
-    expect(RustDocument.universeCount(), 5);
-    expect(RustDocument.readUniverse(5), isNull);
+    expect(catalog.universes[5].frenchName, 'La forêt');
+    expect(catalog.universes[6].frenchName, 'La campagne');
+    expect(RustDocument.universeCount(), 7);
+    expect(RustDocument.readUniverse(7), isNull);
     expect(RustDocument.readUniverse(-1), isNull);
     expect(catalog.named('papier').key, 'papier');
     expect(catalog.named('classique').key, 'classique');
@@ -233,6 +235,8 @@ void main() {
     expect(catalog.named('papier').decor!.names, hasLength(8));
     expect(catalog.named('mer').decor!.names, hasLength(16));
     expect(catalog.named('espace').decor!.names, hasLength(14));
+    expect(catalog.named('foret').decor!.names, hasLength(14));
+    expect(catalog.named('campagne').decor!.names, hasLength(13));
     for (final universe in decorated()) {
       final decor = universe.decor!;
       final frame = Offset.zero & decor.size;
@@ -490,6 +494,77 @@ void main() {
     };
     expect(moves['mer'], {'ondule', 'flotte', 'nage', 'nage2'});
     expect(moves['espace'], {'craie', 'nage', 'flotte', 'fusee'});
+  }, skip: !available);
+
+  test('the forest and the countryside: light pebbles, the meadow under the '
+      'line, clouds behind the trees, a sun that is not mirrored', () {
+    final catalog = UniverseCatalog.instance;
+    for (final key in ['foret', 'campagne']) {
+      final universe = catalog.named(key);
+      expect(universe.look.night, isFalse, reason: key);
+      final decor = universe.decor!;
+      // A sky that ends on the colour above it; no wall, no sky laid again.
+      expect(decor.groundAbove, isFalse, reason: key);
+      expect(decor.followsTheHour, isFalse, reason: key);
+      // The meadow goes on under the line of the pebbles.
+      expect(decor.front.$1.g, greaterThan(decor.front.$1.r), reason: key);
+      // Everything still is kept in one picture: the clouds come first
+      // among what moves, behind the crowns of the trees.
+      expect(
+        [for (final piece in decor.still) piece.picture],
+        ['fond', 'gauche', 'droite'],
+        reason: key,
+      );
+      expect(decor.live.first.picture, 'nuage', reason: key);
+      expect(decor.live[1].picture, 'nuage', reason: key);
+    }
+    final forest = catalog.named('foret').decor!;
+    final country = catalog.named('campagne').decor!;
+    final moves = {
+      for (final (key, decor) in [('foret', forest), ('campagne', country)])
+        key: {
+          for (final piece in decor.pieces)
+            if (piece.move != null) piece.move!.name,
+        },
+    };
+    expect(moves['foret'], {
+      'nuage',
+      'balance',
+      'tombe',
+      'papillon',
+      'sautille',
+    });
+    expect(moves['campagne'], {
+      'nuage',
+      'balance',
+      'tourne',
+      'picore',
+      'vol',
+      'vol2',
+    });
+    // The sails of the windmill turn about their hub; the hen pecks about
+    // her feet; the second swallow comes at « Moyen ».
+    final sails = country.pieces.singleWhere(
+      (piece) => piece.picture == 'ailes',
+    );
+    final hub = sails.at!.center;
+    expect(sails.move!.originX, closeTo(hub.dx, .01));
+    expect(sails.move!.originY, closeTo(hub.dy, .01));
+    expect(
+      country.pieces
+          .singleWhere((piece) => piece.picture == 'hirondelle-droite')
+          .level,
+      2,
+    );
+    // The sun is a piece of the right side, not of the ground: a ground
+    // wider than its window is laid again, mirrored, and would show two.
+    final right = country.drawnBox(country.pieces[2])!;
+    expect(right.top, lessThan(30));
+    // Nothing named under the sheet: the hedgehog and the duck were moved
+    // out from under it.
+    for (final decor in [forest, country]) {
+      expect(decor.middleBox, isNull);
+    }
   }, skip: !available);
 
   test('every text of every universe can be read on its surface', () {

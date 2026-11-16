@@ -79,21 +79,37 @@ void main() {
   test(
     'a period follows the other without a jump, and a delay begins inside',
     () {
+      // A whole turn is where it began: the sails of a windmill.
+      double turned(double a, double b) {
+        final apart = (a - b) % 360;
+        return math.min(apart, 360 - apart);
+      }
+
       for (final name in decorMovementNames) {
         final move = DecorMove(name: name, seconds: 6);
         for (final motion in DecorMotion.values.skip(1)) {
           final start = move.poseAt(0, motion);
           final end = move.poseAt(6 - 1e-9, motion);
-          expect(end.turn, closeTo(start.turn, 1e-5), reason: name);
+          expect(turned(end.turn, start.turn), lessThan(1e-5), reason: name);
           expect(end.dx, closeTo(start.dx, 1e-5), reason: name);
           expect(end.dy, closeTo(start.dy, 1e-5), reason: name);
           expect(end.scaleY, closeTo(start.scaleY, 1e-5), reason: name);
           expect(end.opacity, closeTo(start.opacity, 1e-5), reason: name);
-          expect(
-            move.poseAt(13.25, motion),
-            move.poseAt(1.25, motion),
-            reason: name,
-          );
+          // Two periods later, the same pose, to within the rounding of
+          // the time.
+          final later = move.poseAt(13.25, motion);
+          final now = move.poseAt(1.25, motion);
+          expect(turned(later.turn, now.turn), lessThan(1e-9), reason: name);
+          for (final (a, b) in [
+            (later.dx, now.dx),
+            (later.dy, now.dy),
+            (later.skew, now.skew),
+            (later.scaleX, now.scaleX),
+            (later.scaleY, now.scaleY),
+            (later.opacity, now.opacity),
+          ]) {
+            expect(a, closeTo(b, 1e-9), reason: name);
+          }
         }
       }
       // Minus two seconds: two seconds into the period when the decor appears.
@@ -148,6 +164,41 @@ void main() {
       chalk.poseAt(1.5, DecorMotion.high).opacity,
       chalk.poseAt(1.5, DecorMotion.low).opacity,
     );
+  });
+
+  test('the forest and the countryside: sails that turn evenly, a leaf that '
+      'comes back, a hen that pecks about its feet, two ways of flying', () {
+    // A whole turn in its period, at an even pace, the same at every level.
+    const sails = DecorMove(name: 'tourne', seconds: 28);
+    for (final motion in DecorMotion.values.skip(1)) {
+      expect(sails.poseAt(7, motion).turn, closeTo(90, 1e-9));
+      expect(sails.poseAt(14, motion).turn, closeTo(180, 1e-9));
+      expect(sails.poseAt(21, motion).turn, closeTo(270, 1e-9));
+    }
+    expect(sails.poseAt(7, DecorMotion.none), DecorPose.rest);
+    // The leaf falls and is lifted again: never out of sight.
+    const leaf = DecorMove(name: 'tombe', seconds: 15);
+    expect(leaf.poseAt(7.5, DecorMotion.low).dy, closeTo(60, 1e-9));
+    expect(leaf.poseAt(7.5, DecorMotion.high).dy, closeTo(132, 1e-9));
+    expect(leaf.poseAt(15, DecorMotion.high).isRest, isTrue);
+    // The hen stands still most of the time, then leans forward twice.
+    const hen = DecorMove(name: 'picore', seconds: 5);
+    expect(hen.poseAt(2, DecorMotion.low).isRest, isTrue);
+    expect(hen.poseAt(3.9, DecorMotion.low).turn, closeTo(8, 1e-9));
+    expect(hen.poseAt(4.6, DecorMotion.high).turn, closeTo(17.6, 1e-9));
+    // A swallow of the left flies to the right, one of the right to the
+    // left; the butterfly to the left; both rise.
+    const right = DecorMove(name: 'vol', seconds: 9);
+    const left = DecorMove(name: 'vol2', seconds: 9);
+    const butterfly = DecorMove(name: 'papillon', seconds: 14);
+    expect(right.poseAt(4.5, DecorMotion.low).dx, closeTo(50, 1e-9));
+    expect(left.poseAt(4.5, DecorMotion.low).dx, closeTo(-50, 1e-9));
+    expect(left.poseAt(4.5, DecorMotion.low).dy, closeTo(-16, 1e-9));
+    expect(butterfly.poseAt(7, DecorMotion.high).dx, closeTo(-154, 1e-9));
+    // The robin hops now and then, higher at each level.
+    const robin = DecorMove(name: 'sautille', seconds: 7);
+    expect(robin.poseAt(3, DecorMotion.low).isRest, isTrue);
+    expect(robin.poseAt(.88 * 7, DecorMotion.medium).dy, closeTo(-12, 1e-9));
   });
 
   test('a pose turns its piece about its origin', () {

@@ -52,7 +52,7 @@ fn every_core_serves_the_pictures_and_the_pages() {
 #[test]
 fn every_core_serves_the_universes() {
     let count = ep_universe_count();
-    assert_eq!(count, 5);
+    assert_eq!(count, 7);
     let mut keys = Vec::new();
     for index in 0..count {
         let universe = text(ep_universe(index));
@@ -104,7 +104,18 @@ fn every_core_serves_the_universes() {
     }
     // « Classique », without a decor, comes first; the interface takes the
     // first one with a decor for a computer that was told none.
-    assert_eq!(keys, ["classique", "bureau", "papier", "mer", "espace"]);
+    assert_eq!(
+        keys,
+        [
+            "classique",
+            "bureau",
+            "papier",
+            "mer",
+            "espace",
+            "foret",
+            "campagne"
+        ]
+    );
     assert!(ep_universe(count).is_null());
     assert!(ep_universe(u32::MAX).is_null());
 }

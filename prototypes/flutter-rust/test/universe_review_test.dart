@@ -107,7 +107,7 @@ void main() {
     await start(tester, mac, universe: 'papier');
     await shot(tester, 'univers-papier');
     await tester.pumpWidget(const SizedBox());
-    for (final universe in ['mer', 'espace']) {
+    for (final universe in ['mer', 'espace', 'foret', 'campagne']) {
       await start(tester, mac, universe: universe);
       await shot(tester, 'univers-$universe');
       await tester.pumpWidget(const SizedBox());
@@ -120,7 +120,14 @@ void main() {
       ('etroit-1024x768', const Size(1024, 768)),
       ('haut-900x1000', const Size(900, 1000)),
     ]) {
-      for (final universe in ['bureau', 'papier', 'mer', 'espace']) {
+      for (final universe in [
+        'bureau',
+        'papier',
+        'mer',
+        'espace',
+        'foret',
+        'campagne',
+      ]) {
         await start(tester, size, universe: universe);
         await shot(tester, 'fenetre-$universe-$name');
         await tester.pumpWidget(const SizedBox());
@@ -228,7 +235,14 @@ void main() {
 
     const notchSide = FakeViewPadding(left: 47, right: 47, bottom: 21);
     const notchTop = FakeViewPadding(top: 47, bottom: 34);
-    for (final universe in ['bureau', 'papier', 'mer', 'espace']) {
+    for (final universe in [
+      'bureau',
+      'papier',
+      'mer',
+      'espace',
+      'foret',
+      'campagne',
+    ]) {
       await gaze(
         '$universe-tablette-13-largeur',
         const Size(1366, 1024),

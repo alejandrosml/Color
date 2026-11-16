@@ -187,7 +187,9 @@ void main() {
       expect(find.byKey(const Key('watch-papier')), findsOneWidget);
       expect(find.byKey(const Key('watch-mer')), findsOneWidget);
       expect(find.byKey(const Key('watch-espace')), findsOneWidget);
-      expect(find.text('Regarder'), findsNWidgets(4));
+      expect(find.byKey(const Key('watch-foret')), findsOneWidget);
+      expect(find.byKey(const Key('watch-campagne')), findsOneWidget);
+      expect(find.text('Regarder'), findsNWidgets(6));
       // Large enough to press, and the three cards of the row as tall as
       // one another.
       expect(

@@ -9,16 +9,16 @@
         "mesure": "1.1.1, cœur des boutiques (sans SVG, avec la compression des projets v6, panic = abort), Rust 1.99, NDK 28.2 (r28c, sous Linux), llvm-strip --strip-unneeded comme Gradle, le 11 novembre 2026 : +5,0 % sur la 1.1.0 (1 229 176 o de référence ; 1 228 632 o reconstruite le même jour sur la même machine). Comme pour le cœur de Linux, toute la différence est le catalogue des douze pages à colorier redessinées (src/catalogues/pages.bin : +61 420 o)."
       },
       "core-linux-x86_64": {
-        "reference": 1890432,
-        "mesure": "1.2.0+43, étape 4, première part (cinq univers : « Sous la mer » et « L'espace » en plus), mesuré par la recette Linux complète (--no-default-features --features deflate, Rust 1.99) le 16 novembre 2026 : +16,6 % sur la référence de l'étape 3 (1 620 784 o), +261 360 o sur l'étape G3 (1 629 072 o). Toute la différence est le catalogue des univers (src/catalogues/univers.txt : 390 367 o au lieu de 127 808 — la mer et l'espace y pèsent 259 956 o, dont les 370 étoiles du ciel, et les sources des fiches 2 603 o), compilé tel quel, sans compression. Les cinq univers qui restent demanderont encore une nouvelle référence ; l'étape 6 dira s'il faut compresser ce catalogue (il se compresse bien : ce sont des lignes de texte)."
+        "reference": 2273120,
+        "mesure": "1.2.0+43, étape 4, deuxième part (sept univers : « La forêt » et « La campagne » en plus), cœur des boutiques construit comme la recette Linux le construit (--no-default-features --features deflate, Rust 1.99) le 16 novembre 2026 : +20,2 % sur la référence de l'étape 4a (1 890 432 o), +382 688 o. Toute la différence est le catalogue des univers (src/catalogues/univers.txt : 773 037 o au lieu de 390 367 — la forêt, dont les feuillages de trois grands arbres, et la campagne, avec les sources de leurs 27 fiches), compilé tel quel, sans compression. Les trois univers qui restent demanderont encore une nouvelle référence ; l'étape 6 dira s'il faut compresser ce catalogue (il se compresse bien : ce sont des lignes de texte)."
       },
       "core-windows-x64": {
-        "reference": 1574912,
-        "mesure": "1.2.0+43, étape 4, première part (cinq univers), mesuré par scripts/windows-desktop/recette.py sur la machine x64 de GitHub le 16 novembre 2026 (essai 43776862302) : +269 824 o sur la référence de l'étape 3 (1 305 088 o), le catalogue des univers pour l'essentiel (« Sous la mer », « L'espace », les sources des fiches), comme sous Linux (+261 360 o sur G3)."
+        "reference": 1957582,
+        "mesure": "1.2.0+43, étape 4, deuxième part (sept univers) : estimation du 16 novembre 2026, la référence de l'étape 4a (1574912 o) plus ce que le catalogue des univers a pris (+382 670 o, « La forêt » et « La campagne »), à remplacer par la mesure de scripts/windows-desktop/recette.py sur la machine de GitHub."
       },
       "core-windows-arm64": {
-        "reference": 1521664,
-        "mesure": "1.2.0+43, étape 4, première part (cinq univers), mesuré par scripts/windows-desktop/recette.py sur la machine ARM64 de GitHub le 16 novembre 2026 (essai 43776862302) : +270 336 o sur la référence de l'étape 3 (1 251 328 o), le catalogue des univers pour l'essentiel (« Sous la mer », « L'espace », les sources des fiches), comme sous Linux (+261 360 o sur G3)."
+        "reference": 1904334,
+        "mesure": "1.2.0+43, étape 4, deuxième part (sept univers) : estimation du 16 novembre 2026, la référence de l'étape 4a (1521664 o) plus ce que le catalogue des univers a pris (+382 670 o, « La forêt » et « La campagne »), à remplacer par la mesure de scripts/windows-desktop/recette.py sur la machine de GitHub."
       },
       "android-aab-arm64-v8a": {
         "reference": null,

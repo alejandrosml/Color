@@ -105,6 +105,36 @@ pub(crate) static UNIVERSES: &[Universe] = &[
             "soucoupe",
         ]
     ),
+    universe!(
+        "foret",
+        [
+            "bouleau",
+            "chene",
+            "droite",
+            "feuille",
+            "fond",
+            "gauche",
+            "hetre",
+            "nuage",
+            "papillon",
+            "rougegorge",
+        ]
+    ),
+    universe!(
+        "campagne",
+        [
+            "ailes",
+            "droite",
+            "fond",
+            "gauche",
+            "hirondelle-droite",
+            "hirondelle-gauche",
+            "nuage",
+            "pommier",
+            "poule",
+            "tournesols",
+        ]
+    ),
 ];
 
 /// `json` on one line of ASCII: the spaces and the ends of line between its

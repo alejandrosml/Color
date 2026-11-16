@@ -163,6 +163,8 @@ void main() {
     ('papier', 'papier'),
     ('mer', 'mer'),
     ('espace', 'espace'),
+    ('foret', 'foret'),
+    ('campagne', 'campagne'),
     ('nuit', nightTrialKey),
   ];
 

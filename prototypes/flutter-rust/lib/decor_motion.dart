@@ -227,7 +227,73 @@ final Map<String, List<_Key>> _movements = {
     (.5, (reach, _) => DecorPose(dx: 5.95 * reach, dy: -5.35 * reach)),
     (1, (_, _) => DecorPose.rest),
   ],
+  // A leaf that the wind lets fall, turning, and lifts again (step 4 of
+  // Color 1.2): the leaf of the mock-ups faded away at the bottom of its
+  // fall; here it never leaves the sight, as nothing blinks.
+  'tombe': [
+    (0, (_, _) => DecorPose.rest),
+    (.25, (_, travel) => DecorPose(dx: 10 * travel, dy: 30 * travel, turn: 40)),
+    (.5, (_, travel) => DecorPose(dx: 2 * travel, dy: 60 * travel, turn: -10)),
+    (.75, (_, travel) => DecorPose(dx: 12 * travel, dy: 30 * travel, turn: 30)),
+    (1, (_, _) => DecorPose.rest),
+  ],
+  // A butterfly that flutters up and to the left, and comes back.
+  'papillon': [
+    (0, (_, _) => const DecorPose(turn: -6)),
+    (
+      .25,
+      (_, travel) => DecorPose(dx: -30 * travel, dy: -40 * travel, turn: 8),
+    ),
+    (
+      .5,
+      (_, travel) => DecorPose(dx: -70 * travel, dy: -16 * travel, turn: -8),
+    ),
+    (
+      .75,
+      (_, travel) => DecorPose(dx: -36 * travel, dy: -60 * travel, turn: 6),
+    ),
+    (1, (_, _) => const DecorPose(turn: -6)),
+  ],
+  // A bird that hops, now and then.
+  'sautille': [
+    (0, (_, _) => DecorPose.rest),
+    (.82, (_, _) => DecorPose.rest),
+    (.88, (reach, _) => DecorPose(dy: -6 * reach)),
+    (.94, (_, _) => DecorPose.rest),
+    (1, (_, _) => DecorPose.rest),
+  ],
+  // A hen that pecks twice, now and then: it leans forward about its feet.
+  'picore': [
+    (0, (_, _) => DecorPose.rest),
+    (.7, (_, _) => DecorPose.rest),
+    (.78, (_, travel) => DecorPose(turn: 8 * travel)),
+    (.86, (_, _) => DecorPose.rest),
+    (.92, (_, travel) => DecorPose(turn: 8 * travel)),
+    (1, (_, _) => DecorPose.rest),
+  ],
+  // A swallow that glides to the right, rising, and back; and one that
+  // flies the other way, as a fish does.
+  'vol': [
+    (0, (_, _) => const DecorPose(turn: 4)),
+    (.5, (_, travel) => DecorPose(dx: 50 * travel, dy: -16 * travel, turn: -6)),
+    (1, (_, _) => const DecorPose(turn: 4)),
+  ],
+  'vol2': [
+    (0, (_, _) => const DecorPose(turn: -4)),
+    (.5, (_, travel) => DecorPose(dx: -50 * travel, dy: -16 * travel, turn: 6)),
+    (1, (_, _) => const DecorPose(turn: -4)),
+  ],
+  // The sails of a windmill: a whole turn, at an even pace, the same at
+  // every level. A whole turn is where it began.
+  'tourne': [
+    (0, (_, _) => DecorPose.rest),
+    (1, (_, _) => const DecorPose(turn: 360)),
+  ],
 };
+
+/// The movements that keep an even pace, instead of being slow at both
+/// ends of each glide: a wheel that turns does not stop at each turn.
+const Set<String> _even = {'tourne'};
 
 /// The names of the movements this version knows.
 Iterable<String> get decorMovementNames => _movements.keys;
@@ -307,6 +373,7 @@ class DecorMove {
     if (keys == null) return DecorPose.rest;
     final turns = (seconds - delay) / this.seconds;
     final phase = turns - turns.floorToDouble();
+    final even = _even.contains(name);
     for (var index = 1; index < keys.length; index++) {
       final (end, to) = keys[index];
       if (phase > end && index != keys.length - 1) continue;
@@ -316,7 +383,7 @@ class DecorMove {
       return DecorPose.lerp(
         from(motion.reach, motion.travel),
         to(motion.reach, motion.travel),
-        _ease(local),
+        even ? local : _ease(local),
       );
     }
     return DecorPose.rest;
