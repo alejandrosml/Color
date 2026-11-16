@@ -67,13 +67,73 @@ class HelpDialog extends StatelessWidget {
                 title: tool.label,
                 text: tool.help,
               ),
+            _HelpRow(
+              key: Key('help-colours'),
+              picture: const GaletPicture(art: EduArt.palette, size: 40),
+              title: tr('Les couleurs'),
+              text: tr(
+                'Dix couleurs sur la ligne du bas. Garde le doigt ou le bouton appuyé sur une couleur : ses nuances s’ouvrent.',
+              ),
+            ),
             if (!options.simpleControls)
+              _HelpRow(
+                key: Key('help-size-kind'),
+                picture: const GaletPicture(art: EduArt.brush, size: 40),
+                title: tr('Taille, et lequel'),
+                text: tr(
+                  'À côté des outils : « taille » rend le trait plus fin ou plus gros, et « lequel » montre les sortes de l’outil choisi.',
+                ),
+              ),
+            _HelpRow(
+              key: Key('help-point'),
+              picture: const GaletPicture(art: EduArt.fill, size: 40),
+              title: tr('La pointe'),
+              text: tr(
+                'La petite pointe de couleur au bout du pointeur montre où l’outil agit. Pour remplir au doigt, pose le pot, regarde ce qui va changer, puis lève le doigt.',
+              ),
+            ),
+            if (options.everyColour)
               _HelpRow(
                 key: Key('help-picker'),
                 picture: const GaletPicture(art: EduArt.pipette, size: 40),
-                title: tr('Pipette'),
+                title: tr('Toutes les couleurs, pour les grands'),
                 text: tr(
-                  'À côté des couleurs. Appuie dessus, puis clique sur une couleur de ton dessin pour la reprendre.',
+                  'Au bout des couleurs : un grand dégradé, la pipette qui reprend une couleur de ton dessin, et le mélange de deux couleurs.',
+                ),
+              ),
+            _HelpRow(
+              key: Key('help-my-drawing'),
+              picture: const GaletPicture(art: EduArt.mascot, size: 40),
+              title: tr('Mon dessin'),
+              text: tr(
+                'En haut à gauche : une nouvelle feuille, ouvrir, mes dessins, exporter, imprimer, l’aide, les options et « À propos ». Sur un téléphone, tout est dans le tiroir.',
+              ),
+            ),
+            if (!options.universeFixed)
+              _HelpRow(
+                key: Key('help-universes'),
+                picture: const GaletPicture(art: EduArt.universes, size: 40),
+                title: tr('Univers'),
+                text: tr(
+                  'Change l’habit de l’atelier : d’autres couleurs, un décor autour de ta feuille, un chapeau pour le personnage. Ton dessin ne change pas.',
+                ),
+              ),
+            if (options.decorNames)
+              _HelpRow(
+                key: Key('help-decor'),
+                picture: const GaletPicture(art: EduArt.universes, size: 40),
+                title: tr('Le décor répond'),
+                text: tr(
+                  'Clique deux fois sur une chose du décor, ou appuie longtemps dessus : son nom s’affiche, avec une petite phrase.',
+                ),
+              ),
+            if (options.decorWatch)
+              _HelpRow(
+                key: Key('help-watch'),
+                picture: const GaletPicture(art: EduArt.wholeSheet, size: 40),
+                title: tr('Regarder'),
+                text: tr(
+                  'Sous chaque univers : son décor sur tout l’écran, qui bouge. Touche une chose pour savoir son nom ; « Mon dessin » te ramène à ta feuille.',
                 ),
               ),
             if (options.layers)
@@ -125,7 +185,7 @@ class HelpDialog extends StatelessWidget {
               picture: GaletPicture(art: EduArt.options, size: 40),
               title: tr('Options'),
               text: tr(
-                'Pour les adultes : choisir la langue et ce que Color montre, couper les sons ou l’impression, régler l’accessibilité. Un calcul peut en garder l’entrée : c’est l’une des options.',
+                'Pour les adultes : la langue et ce que Color montre, les sons et l’impression, l’accessibilité, l’univers et le mouvement du décor, et « Toutes les couleurs, pour les grands ». Un calcul peut en garder l’entrée : c’est l’une des options.',
               ),
             ),
             const SizedBox(height: 8),
@@ -172,6 +232,13 @@ class HelpDialog extends StatelessWidget {
               _KeyRow(
                 keys: tr('Espace'),
                 text: tr('Maintenu, il permet de glisser la feuille.'),
+              ),
+            if (options.decorNames)
+              _KeyRow(
+                keys: tr('F2, Maj + F2'),
+                text: tr(
+                  'Montrer le nom des choses du décor, l’une après l’autre.',
+                ),
               ),
             _KeyRow(
               keys: tr('Échap'),

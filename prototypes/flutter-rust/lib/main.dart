@@ -35,6 +35,7 @@ import 'selection_geometry.dart';
 import 'app_folders.dart';
 import 'stroke_input.dart';
 import 'sheet_images.dart';
+import 'soft_effects.dart';
 import 'raster_source.dart';
 import 'new_sheet_dialog.dart';
 import 'coloring_pages.dart';
@@ -96,9 +97,9 @@ Future<void> main() async {
   // And in the language they ask for, from the first frame.
   appLanguage.value = languageOf(options.value.language);
   // And in the universe they name: the first frame wears its colours.
-  studioLook.value = UniverseCatalog.instance
-      .named(options.value.universe)
-      .look;
+  final universe = UniverseCatalog.instance.named(options.value.universe);
+  studioLook.value = universe.look;
+  wornUniverse = universe;
   final kept = await KeptColours.open();
   runApp(
     EduPaintApp(options: options, sounds: SystemSounds(), keptColours: kept),
@@ -819,7 +820,9 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
     // The universe of the options: the application dressed the studio
     // before it built it; a studio built alone, in a test, dresses itself
-    // after its first frame.
+    // after its first frame. The companion wears its hat from the first.
+    wornUniverse = _universe;
+    softEffectsMotion = _options.decorMotion != DecorMotion.none;
     if (!identical(studioLook.value, _universe.look)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) wearUniverse(_universe);
@@ -901,6 +904,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _optionsChanged() {
     if (!mounted) return;
     final options = _options;
+    softEffectsMotion = options.decorMotion != DecorMotion.none;
     appLanguage.value = languageOf(options.language);
     // The universe may be another: the studio wears it at once.
     wearUniverse(_universe);
@@ -1567,6 +1571,21 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// their colour: a click on or near a line colours the zone under it. A
   /// zone receives the colour of its inside and nothing else, the one change
   /// that its locked layer accepts.
+  /// Where the last finger, pen or button was lifted, in the window.
+  Offset? _liftedAt;
+
+  /// Pours with the pot, and splashes where it poured when something was
+  /// coloured (a soft effect of Color 1.2).
+  void _fillWithSplash(DocumentPoint point, double scale, Offset? at) {
+    final before = _document?.undoCount;
+    _fillAt(point, scale);
+    if (at != null &&
+        (_pouring || _document?.undoCount != before) &&
+        softEffectsHere(context)) {
+      showSplash(context, at, Color(0xff000000 | _fillColor));
+    }
+  }
+
   void _fillAt(DocumentPoint point, double scale) {
     if (_pouring) return;
     final document = _document!;
@@ -2622,7 +2641,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       if (event.kind == PointerDeviceKind.mouse) {
         // The mouse saw what would be coloured before it clicked.
         _pourHintQuiet = event.localPosition;
-        _fillAt(point, viewport.scale);
+        _fillWithSplash(point, viewport.scale, event.position);
         return;
       }
       // A finger or a pen shows it first: the part it would colour is
@@ -3139,7 +3158,11 @@ class _DrawingStudioState extends State<DrawingStudio>
           at != null &&
           viewport != null &&
           viewport.contains(at.dx, at.dy)) {
-        _fillAt(viewport.point(at.dx, at.dy), viewport.scale);
+        _fillWithSplash(
+          viewport.point(at.dx, at.dy),
+          viewport.scale,
+          _liftedAt,
+        );
       }
       return;
     }
@@ -4809,6 +4832,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       });
       _sound(StudioSound.saved);
       _react();
+      if (mounted && softEffectsHere(context)) showConfetti(context);
       return true;
     } catch (error) {
       _error(
@@ -8549,7 +8573,16 @@ class _DrawingStudioState extends State<DrawingStudio>
                         onPointerUp: (raw) {
                           final event = _touchShifted(raw);
                           _asking.lift();
+                          _liftedAt = raw.position;
+                          final magicBefore = _tool == StudioTool.magic
+                              ? _document?.undoCount
+                              : null;
                           _pointerUp(event, viewport);
+                          if (magicBefore != null &&
+                              _document?.undoCount != magicBefore &&
+                              softEffectsHere(context)) {
+                            showSparkles(context, raw.position);
+                          }
                           _hintLifted(event);
                           _refreshHint();
                         },

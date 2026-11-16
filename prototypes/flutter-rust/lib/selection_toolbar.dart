@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'child_art.dart';
+import 'galets.dart';
 import 'rust_document.dart' show VectorKind;
 import 'studio_colors.dart';
 import 'platform_words.dart';
@@ -79,13 +80,8 @@ class SelectionToolbar extends StatelessWidget {
   bool get _canChangeOrder =>
       canBringForward || canSendBackward || canMoveLayerUp || canMoveLayerDown;
 
-  static final _actionStyle = OutlinedButton.styleFrom(
-    minimumSize: const Size(48, 48),
-    visualDensity: VisualDensity.standard,
-    padding: const EdgeInsets.symmetric(horizontal: 6),
-  );
-
-  // One action on the chosen element. Its name is written when the names
+  // One action on the chosen element, a button of the pebbles: its
+  // picture in the ink of the universe, and its name written when the names
   // of all fit on one line; otherwise its picture stands alone, and the
   // name stays the one a screen reader says and a pointer is shown.
   static Widget _action({
@@ -94,40 +90,28 @@ class SelectionToolbar extends StatelessWidget {
     required IconData icon,
     required VoidCallback? onPressed,
     required bool named,
-  }) => named
-      ? OutlinedButton.icon(
-          key: Key(key),
-          onPressed: onPressed,
-          style: _actionStyle,
-          icon: Icon(icon, size: 18),
-          label: Text(name, style: const TextStyle(fontSize: 12)),
-        )
-      : Tooltip(
-          message: name,
-          excludeFromSemantics: true,
-          child: OutlinedButton(
-            key: Key(key),
-            onPressed: onPressed,
-            style: _actionStyle,
-            child: Icon(icon, size: 20, semanticLabel: name),
-          ),
-        );
+  }) => GaletButton(
+    key: Key(key),
+    label: name,
+    onPressed: onPressed,
+    marksSelection: false,
+    height: 48,
+    padding: EdgeInsets.symmetric(horizontal: named ? 12 : 0),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: named ? 18 : 22, color: studioInk),
+        if (named) ...[
+          const SizedBox(width: 6),
+          Text(name, maxLines: 1, style: galetText(13)),
+        ],
+      ],
+    ),
+  );
 
   // The width of a name as a button writes it.
-  static double _nameWidth(BuildContext context, String name) {
-    final painter = TextPainter(
-      text: TextSpan(
-        text: name,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 12),
-      ),
-      textDirection: TextDirection.ltr,
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: 1,
-    )..layout();
-    final width = painter.width;
-    painter.dispose();
-    return width;
-  }
+  static double _nameWidth(BuildContext context, String name) =>
+      galetTextWidth(context, name, galetText(13));
 
   /// The width of the line of actions with every name written: paddings,
   /// pictures and gaps as the buttons below lay them out, and a small margin.
@@ -135,11 +119,11 @@ class SelectionToolbar extends StatelessWidget {
     double name(String text) => _nameWidth(context, text);
     final written = [
       56 + name(tr('Ordre')),
-      if (selectedKind == VectorKind.text) 38 + name(tr('Modifier')),
-      38 + name(tr('Tourner')),
-      38 + name(tr('Miroir')),
-      38 + name(tr('Copier')),
-      38 + name(tr('Effacer')),
+      if (selectedKind == VectorKind.text) 48 + name(tr('Modifier')),
+      48 + name(tr('Tourner')),
+      48 + name(tr('Miroir')),
+      48 + name(tr('Copier')),
+      48 + name(tr('Effacer')),
       100.0,
     ];
     return written.fold(0.0, (sum, width) => sum + width) +
@@ -308,28 +292,22 @@ class SelectionToolbar extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton.outlined(
+            GaletButton(
               key: const Key('shrinkSelection'),
-              tooltip: tr('Plus petit'),
-              style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+              label: tr('Rendre l’élément plus petit'),
               onPressed: onShrink,
-              icon: Icon(
-                Icons.remove,
-                size: 20,
-                semanticLabel: tr('Rendre l’élément plus petit'),
-              ),
+              marksSelection: false,
+              height: 48,
+              child: Icon(Icons.remove_rounded, size: 22, color: studioInk),
             ),
             const SizedBox(width: 4),
-            IconButton.outlined(
+            GaletButton(
               key: const Key('growSelection'),
-              tooltip: tr('Plus grand'),
-              style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
+              label: tr('Rendre l’élément plus grand'),
               onPressed: onGrow,
-              icon: Icon(
-                Icons.add,
-                size: 20,
-                semanticLabel: tr('Rendre l’élément plus grand'),
-              ),
+              marksSelection: false,
+              height: 48,
+              child: Icon(Icons.add_rounded, size: 22, color: studioInk),
             ),
           ],
         ),

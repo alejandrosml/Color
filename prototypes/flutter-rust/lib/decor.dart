@@ -351,8 +351,17 @@ class Decor {
     required this.veils,
     required this.lamp,
     required this.names,
+    this.hatName,
     required String pictures,
   }) : _pictureText = pictures;
+
+  /// The picture of the companion's hat in this universe (`"hat"`), drawn
+  /// over the head of the companion seated (`logo`, 512 × 512) that the
+  /// pebble « Mon dessin » shows; null for a universe without one.
+  final String? hatName;
+
+  /// The hat itself, or null.
+  VectorPicture? get hat => hatName == null ? null : pictures[hatName];
 
   /// The frame the decor is drawn in.
   final Size size;
@@ -566,6 +575,9 @@ class Decor {
       veils: Map.unmodifiable(veils),
       lamp: light is Map ? DecorLamp.fromJson(light['lamp']) : null,
       names: List.unmodifiable(names),
+      hatName: json['hat'] is String && (json['hat'] as String).isNotEmpty
+          ? json['hat'] as String
+          : null,
       pictures: pictures,
     );
   }

@@ -149,11 +149,15 @@ class UniverseCatalog {
   Universe get first => universes.first;
 }
 
+/// The universe the studio wears: the companion puts on its hat.
+Universe? wornUniverse;
+
 /// Dresses the studio in [universe]: its look becomes that of the moment,
 /// and everything that is shown is built and painted again — also what was
 /// built once and for all, which would otherwise keep the colours it was
 /// built with. The state of every part, the drawing first, is kept.
 void wearUniverse(Universe universe) {
+  wornUniverse = universe;
   if (identical(studioLook.value, universe.look)) return;
   studioLook.value = universe.look;
   final root = WidgetsBinding.instance.rootElement;

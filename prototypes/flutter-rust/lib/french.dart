@@ -24,6 +24,16 @@ const _months = [
   'décembre',
 ];
 
+/// French typography on a card of the decor: the space before « : », « ! »,
+/// « ? » and « ; », and inside guillemets, does not break, so a mark is
+/// never alone at the start of a line. It is the no-break space that every
+/// font of the interface has (Atkinson Hyperlegible has no narrow one). An
+/// English text, which has no such space, is given back as it is.
+String keptTogether(String text) => text.replaceAllMapped(
+  RegExp(r' ([:!?;»])|(«) '),
+  (found) => found[1] != null ? '\u00a0${found[1]}' : '${found[2]}\u00a0',
+);
+
 /// When a drawing was saved, as a child would say it: « aujourd’hui à
 /// 14 h 05 », « hier à 9 h 30 », « le 1er octobre à 8 h 00 », and with its
 /// year when that is not the year of [now]. Both moments are taken as given:

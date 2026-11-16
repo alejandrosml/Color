@@ -17,6 +17,8 @@ the wheelhouse at the front).
 """
 import math
 
+import letters
+
 INK = '#293d4b'
 
 
@@ -262,72 +264,81 @@ def arc(k, width=1.8):
 
 
 # --------------------------------------------------------------------------
-# A building of Haussmann's Paris, three bays wide (10.6 m), six levels and
-# a zinc roof; on its ground floor, the bakery.
+# A building of Haussmann's Paris, five bays wide (14.5 m), its ground
+# floor and five floors under a cornice at 20 m, a zinc roof; on its ground
+# floor the bakery, over three bays, and the great door of the building.
 
 def building(k, width=1.8):
     pen = Pen(k)
-    half = 5.3
-    bays = (-3.53, 0, 3.53)
-    # The chimneys behind the roof, then the roof of zinc with its three
-    # dormers.
-    for x in (-3.4, 3.4):
-        pen.rect(x - 0.55, -25.6, 1.1, 3.6, '#d9c7a8', 1.2)
-        for dx in (-0.25, 0.25):
-            pen.rect(x + dx - 0.16, -26.3, 0.32, 0.7, '#c46a4a', 0.8)
-    pen.poly([(-5.5, -19.7), (-4.5, -23.6), (4.5, -23.6), (5.5, -19.7)], '#8f9dac', 1.6)
-    pen.lines([(-4.6, -23.2, 4.6, -23.2)], '#a9b5c1', 0.8)
+    half = 7.25
+    bays = (-5.8, -2.9, 0, 2.9, 5.8)
+    # The chimneys behind the roof, then the roof of zinc with a dormer
+    # over each bay.
+    for x in (-4.6, 4.6):
+        pen.rect(x - 0.6, -25.8, 1.2, 3.4, '#d9c7a8', 1.2)
+        for dx in (-0.28, 0.28):
+            pen.rect(x + dx - 0.16, -26.5, 0.32, 0.7, '#c46a4a', 0.8)
+    pen.poly([(-7.45, -20.2), (-6.3, -24.2), (6.3, -24.2), (7.45, -20.2)], '#8f9dac', 1.6)
+    pen.lines([(-6.4, -23.8, 6.4, -23.8)], '#a9b5c1', 0.8)
     for x in bays:
-        pen.path('M%s -20 V-21.8 Q%s -22.9 %s -21.8 V-20 Z' % (n(x - 0.55), n(x), n(x + 0.55)), '#e9eef3', 1.1)
-        pen.rect(x - 0.32, -21.6, 0.64, 1.3, '#7f9bb5', 0.7)
-    # The front of pale stone, its cornice.
-    pen.rect(-half, -19.7, half * 2, 15.5, STONE, width)
-    pen.rect(-5.65, -20.1, 11.3, 0.8, STONE_SHADE, 1.2)
+        pen.path('M%s -20.5 V-22.2 Q%s -23.2 %s -22.2 V-20.5 Z' % (n(x - 0.5), n(x), n(x + 0.5)), '#e9eef3', 1.1)
+        pen.rect(x - 0.3, -22.0, 0.6, 1.2, '#7f9bb5', 0.7)
+    # The front of pale stone, its cornice at 20 m.
+    pen.rect(-half, -19.6, half * 2, 15.4, STONE, width)
+    pen.rect(-7.6, -20.2, 15.2, 0.8, STONE_SHADE, 1.2)
     for y in (-7.0, -10.4, -13.4, -16.3):
         pen.lines([(-half, y, half, y)], STONE_DARK, 0.7)
     # The windows: tall, with their small railings; the long balconies of
     # the second and the fifth floors.
-    floors = ((-6.6, 1.8, None), (-9.9, 2.5, 'long'), (-13.0, 2.3, 'small'), (-15.9, 2.2, 'small'), (-18.6, 2.0, 'long'))
+    floors = ((-6.6, 1.8, None), (-9.9, 2.5, 'long'), (-13.0, 2.3, 'small'), (-15.9, 2.2, 'small'), (-18.9, 2.1, 'long'))
     for top_down, h, balcony in floors:
         for x in bays:
-            pen.rect(x - 0.62, top_down, 1.24, h, '#9cbfd8', 1.0)
+            pen.rect(x - 0.6, top_down, 1.2, h, '#9cbfd8', 1.0)
             pen.lines([(x, top_down, x, top_down + h)], '#e9f1f7', 0.6)
             if balcony == 'small':
-                pen.rect(x - 0.8, top_down + h - 0.75, 1.6, 0.75, 'none', 0.8, '#2f3a44')
-                pen.lines([(x - 0.8 + i * 0.4, top_down + h - 0.75, x - 0.8 + i * 0.4, top_down + h) for i in range(1, 4)], '#2f3a44', 0.5)
+                pen.rect(x - 0.78, top_down + h - 0.75, 1.56, 0.75, 'none', 0.8, '#2f3a44')
+                pen.lines([(x - 0.78 + i * 0.39, top_down + h - 0.75, x - 0.78 + i * 0.39, top_down + h) for i in range(1, 4)], '#2f3a44', 0.5)
         if balcony == 'long':
             y = top_down + h
-            pen.rect(-5.1, y - 0.8, 10.2, 0.8, 'none', 0.9, '#2f3a44')
-            pen.lines([(-5.1 + i * 0.6, y - 0.8, -5.1 + i * 0.6, y) for i in range(1, 17)], '#2f3a44', 0.5)
-            pen.rect(-5.25, y, 10.5, 0.25, STONE_SHADE, 0.7)
-    # The ground floor: the bakery.
-    pen.rect(-half, -4.2, half * 2, 4.2, '#2f5e50', width)
-    # Its sign, a golden baguette and a croissant painted on it, no letters.
-    pen.rect(-5.0, -4.05, 10.0, 0.8, '#2f5e50', 1.0, '#d9b45a')
-    pen.path('M-2.6 -3.55 Q0 -3.95 2.6 -3.55 Q0 -3.35 -2.6 -3.55 Z', '#e0a75a', 0.8)
-    pen.lines([(-1.6 + i * 0.8, -3.7, -1.2 + i * 0.8, -3.5) for i in range(5)], '#a86d2c', 0.5)
-    for x in (-3.8, 3.8):
-        pen.path('M%s -3.45 Q%s -3.9 %s -3.45 Q%s -3.62 %s -3.45 Z' % (n(x - 0.5), n(x), n(x + 0.5), n(x), n(x - 0.5)), '#e7b25e', 0.7)
+            pen.rect(-6.9, y - 0.8, 13.8, 0.8, 'none', 0.9, '#2f3a44')
+            pen.lines([(-6.9 + i * 0.6, y - 0.8, -6.9 + i * 0.6, y) for i in range(1, 23)], '#2f3a44', 0.5)
+            pen.rect(-7.05, y, 14.1, 0.25, STONE_SHADE, 0.7)
+    # The ground floor: its stone, the great door of the building and a
+    # window behind its grille on the right.
+    pen.rect(-half, -4.2, half * 2, 4.2, STONE_SHADE, width)
+    pen.lines([(1.45, -2.8, half, -2.8), (1.45, -1.4, half, -1.4)], STONE_DARK, 0.6)
+    pen.path('M1.75 0 V-3.2 Q2.9 -4.05 4.05 -3.2 V0 Z', '#2e4a44', 1.2)
+    pen.lines([(2.9, 0, 2.9, -3.62)], '#1f3530', 0.8)
+    pen.circle(2.6, -1.6, 0.07, '#d9b45a', None)
+    pen.circle(3.2, -1.6, 0.07, '#d9b45a', None)
+    pen.rect(5.2, -3.3, 1.2, 2.4, '#9cbfd8', 1.0)
+    pen.lines([(5.2 + i * 0.3, -3.3, 5.2 + i * 0.3, -0.9) for i in range(1, 4)], '#2f3a44', 0.6)
+    # The bakery, over three bays: its painted front and its sign, in
+    # gold letters.
+    pen.rect(-half, -4.2, 8.7, 4.2, '#2f5e50', width)
+    pen.rect(-7.0, -4.05, 8.2, 0.82, '#2f5e50', 1.0, '#d9b45a')
+    pen.path(letters.path_of('BOULANGERIE', 0.46, -2.9, -3.41, spacing=0.05), '#e9c46a', None)
     # The awning, red and white, scalloped.
-    stripes = 10
+    stripes = 9
+    step = 8.2 / stripes
     for i in range(stripes):
-        x0 = -4.9 + i * 0.98
-        pen.rect(x0, -3.2, 0.98, 0.55, '#c8473c' if i % 2 == 0 else '#fbf6ee', None)
-    scallops = ' '.join('Q%s -2.25 %s -2.65' % (n(-4.9 + i * 0.98 + 0.49), n(-4.9 + (i + 1) * 0.98)) for i in range(stripes))
-    pen.path('M-4.9 -3.2 H4.9 V-2.65 %s Z' % scallops.replace('Q', 'Q', 1), 'none', 1.0)
-    pen.path('M-4.9 -2.65 ' + scallops, 'none', 1.0)
-    # The window full of bread, and the door.
-    pen.rect(-4.7, -2.3, 6.2, 1.9, '#f3e3b8', 1.2)
-    for i in range(4):
-        x = -4.3 + i * 0.75
+        x0 = -7.0 + i * step
+        pen.rect(x0, -3.2, step, 0.55, '#c8473c' if i % 2 == 0 else '#fbf6ee', None)
+    scallops = ' '.join('Q%s -2.25 %s -2.65' % (n(-7.0 + i * step + step / 2), n(-7.0 + (i + 1) * step)) for i in range(stripes))
+    pen.path('M-7 -3.2 H1.2 V-2.65 ' + scallops.replace('Q', 'Q', 1) + ' Z', 'none', 1.0)
+    pen.path('M-7 -2.65 ' + scallops, 'none', 1.0)
+    # The window full of bread, and the glass door.
+    pen.rect(-6.8, -2.3, 5.9, 1.9, '#f3e3b8', 1.2)
+    for i in range(5):
+        x = -6.4 + i * 0.72
         pen.path('M%s -0.6 L%s -2.0' % (n(x), n(x + 0.55)), 'none', 2.6, '#c98a3d')
         pen.path('M%s -0.6 L%s -2.0' % (n(x), n(x + 0.55)), 'none', 0.9, '#e9b866')
-    for x, y in ((-0.6, -0.75), (0.5, -0.75), (-0.05, -1.4)):
+    for x, y in ((-2.6, -0.75), (-1.5, -0.75), (-2.05, -1.4)):
         pen.path('M%s %s Q%s %s %s %s Q%s %s %s %s Z' % (
             n(x - 0.42), n(y), n(x), n(y - 0.62), n(x + 0.42), n(y), n(x), n(y - 0.28), n(x - 0.42), n(y)), '#e3a24d', 0.7)
-    pen.rect(2.2, -2.5, 2.4, 2.5, '#9cbfd8', 1.2)
-    pen.lines([(3.4, -2.5, 3.4, 0)], '#2f5e50', 1.0)
-    pen.circle(3.15, -1.2, 0.09, '#d9b45a', None)
+    pen.rect(-0.6, -2.5, 1.65, 2.5, '#9cbfd8', 1.2)
+    pen.lines([(0.22, -2.5, 0.22, 0)], '#2f5e50', 1.0)
+    pen.circle(0.0, -1.2, 0.08, '#d9b45a', None)
     return pen.text()
 
 
@@ -456,8 +467,12 @@ def metro(k, height, across, width=1.8):
             n(cx + .07), n(cy - .4), n(cx + .19), n(cy - .26), n(cx + .17), n(cy)), '#e2552c', 1.3)
         pen.ellipse(cx - .04, cy - .2, .05, .11, '#ffd27a', None)
         pen.path('M%s %s Q%s %s %s %s' % (n(cx - .17), n(cy), n(cx), n(cy + .07), n(cx + .17), n(cy)), 'none', 1.3, GREEN_DARK)
-    pen.rect(-half * .62, -H * .76, half * 1.24, H * .085, '#2c5442', 1.4)
-    pen.rect(-half * .55, -H * .745, half * 1.1, H * .055, 'none', 0.9, '#e7d9a2')
+    plate_w, plate_h = half * 1.3, H * .09
+    pen.rect(-plate_w / 2, -H * .762, plate_w, plate_h, '#2c5442', 1.4)
+    pen.rect(-plate_w / 2 + .05, -H * .762 + .05, plate_w - .1, plate_h - .1, 'none', 0.7, '#e7d9a2')
+    word = 'METROPOLITAIN'
+    size = min(plate_h * .48, (plate_w - .3) / letters.width_of(word, 1, spacing=0.0) * 1.0)
+    pen.path(letters.path_of(word, size, 0, -H * .762 + plate_h / 2 + size / 2, spacing=size * .04), '#f0d27a', None)
     pen.lines([(0, -H * .82, 0, -H * .76)], GREEN, 1.4)
     return pen.text()
 

@@ -676,6 +676,28 @@ class _Pictures {
 
   /// Opens « Revoir ton dessin », lets the film run once to learn its
   /// length, then shows it again up to eight tenths of it.
+  /// « Regarder » (Color 1.2): the scenery of [universe] on the whole
+  /// screen, the card of [thing] open, as a child who touched it sees it.
+  /// The way back, « Mon dessin », is still shown at the top.
+  Future<void> gaze(String universe, String thing) async {
+    await tap('openUniverses');
+    await tester.pumpAndSettle();
+    final watch = find.byKey(Key('watch-$universe'));
+    await tester.ensureVisible(watch);
+    await tester.pumpAndSettle();
+    await tester.tap(watch);
+    await tester.pumpAndSettle();
+    await tester.tapAt(tester.getCenter(find.byKey(Key('decorName-$thing'))));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('decorNameCard')), findsOneWidget);
+  }
+
+  /// Back from « Regarder » to the drawing.
+  Future<void> leaveGaze() async {
+    await tester.tap(find.byKey(const Key('leaveDecorGaze')));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> film() async {
     await closePebblePanel(tester);
     // Between two rails the film is in the menu. Not settled: settling
@@ -779,18 +801,23 @@ void main() {
         await tester.pumpAndSettle();
         await pictures.shot('dessin');
 
-        // 2. Its film.
+        // 2. A world looked at on the whole screen, a thing named (1.2).
+        await pictures.gaze('savane', 'girafe');
+        await pictures.shot('univers');
+        await pictures.leaveGaze();
+
+        // 3. Its film.
         await pictures.film();
         await pictures.shot('film');
         await tester.pumpWidget(const SizedBox.shrink());
 
-        // 3. A colouring page.
+        // 4. A colouring page.
         await pictures.start();
         await pictures.colouring();
         await pictures.shot('coloriage');
         await tester.pumpWidget(const SizedBox.shrink());
 
-        // 4. The very simple interface of the youngest.
+        // 5. The very simple interface of the youngest.
         final store = StudioOptionsStore.memory();
         addTearDown(store.dispose);
         await store.change(store.value.copyWith(level: InterfaceLevel.toddler));

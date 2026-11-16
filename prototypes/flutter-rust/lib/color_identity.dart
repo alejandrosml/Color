@@ -82,7 +82,9 @@ String get colorPrivacyPolicy => inEnglish
           'que les fichiers que tu lui ouvres toi-même. Pour savoir si le pot de '
           'peinture peut fermer les petits trous, Color lit sur l’appareil le pays '
           'qu’il indique (sa région, son fuseau horaire, la boutique, la carte SIM '
-          'et le réseau mobile) : ce pays n’est ni gardé ni envoyé.\n\n'
+          'et le réseau mobile) : ce pays n’est ni gardé ni envoyé. De même, pour '
+          'la lumière du décor du bureau et son horloge, Color lit l’heure de '
+          'l’appareil : elle n’est ni gardée ni envoyée.\n\n'
           'Imprimer. Quand tu imprimes, l’image du dessin va à l’imprimante que tu '
           'choisis, par le système de l’appareil.\n\n'
           'Effacer. Retirer une carte de « Mes dessins » efface sa copie. Supprimer '
@@ -93,7 +95,7 @@ String get colorPrivacyPolicy => inEnglish
           'sur personne.\n\n'
           'Cette politique peut changer avec une nouvelle version de Color ; elle '
           'est toujours lisible ici, dans « À propos ». Dernière mise à jour : '
-          '2 novembre 2026.';
+          '16 novembre 2026.';
 
 const _englishPrivacyPolicy =
     'Color collects no data. It asks for no account, no name, no address, '
@@ -112,7 +114,9 @@ const _englishPrivacyPolicy =
     'anything but the files you open in it yourself. To know whether the '
     'paint pot may close small gaps, Color reads on the device the country it '
     'gives (its region, its time zone, the store, the SIM card and the mobile '
-    'network): that country is neither kept nor sent.\n\n'
+    'network): that country is neither kept nor sent. Likewise, for the light '
+    'of the desk scene and its clock, Color reads the time of the device: it '
+    'is neither kept nor sent.\n\n'
     'Printing. When you print, the picture of the drawing goes to the printer '
     'you choose, through the system of the device.\n\n'
     'Deleting. Removing a card from “My drawings” deletes its copy. Deleting '
@@ -122,4 +126,4 @@ const _englishPrivacyPolicy =
     'Children. Color is made for them: it gathers nothing about them, or '
     'about anyone.\n\n'
     'This policy may change with a new version of Color; it can always be '
-    'read here, in “About”. Last updated: 2 November 2026.';
+    'read here, in “About”. Last updated: 16 November 2026.';

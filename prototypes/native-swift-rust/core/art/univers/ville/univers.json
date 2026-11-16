@@ -3,25 +3,30 @@
  "name": "La ville",
  "about": "La tour Eiffel, Notre-Dame et la Seine.",
  "look": {
+  "galets": "nuit",
   "colours": {
-   "ink": "#22303f",
-   "accent": "#2f5fa8",
+   "ink": "#ffffff",
+   "accent": "#ffffff",
    "background": "#dfe5ec",
-   "line": "#b9c6d6",
-   "surface": "#fbfcfe",
-   "selected": "#dbe7fb",
-   "sheetBackdrop": "#cfe0ee",
-   "previewBox": "#eef2f7",
-   "caption": "#4a5a6c",
-   "statusText": "#22303f",
-   "sheetTitle": "#22303f",
-   "sheetCaption": "#22303f",
-   "quietMark": "#6f8098",
-   "swatchRing": "#6f8098",
+   "line": "#7f9bd6",
+   "surface": "#234a8f",
+   "selected": "#3a64ad",
+   "sheetBackdrop": "#1b3a73",
+   "previewBox": "#1d3f7e",
+   "warning": "#ffb4ab",
+   "caption": "#dbe4f6",
+   "statusText": "#dbe4f6",
+   "sheetTitle": "#ffffff",
+   "sheetCaption": "#ffffff",
+   "quietMark": "#dbe4f6",
+   "swatchRing": "#dbe4f6",
+   "galetDisc": "#f4f6fb",
+   "galetEdge": "#3f9a63",
    "shadow": "#22303f"
   },
   "shapes": {
-   "galetRadius": 14,
+   "galetRadius": 7,
+   "shadowDepth": 1.6,
    "stageRadius": 14,
    "stageBorder": 2
   }
@@ -43,6 +48,7 @@
    "#d6ccb6",
    "#b8aa8f"
   ],
+  "hat": "chapeau",
   "pieces": [
    {
     "picture": "fond",
@@ -89,10 +95,10 @@
     "picture": "bateau",
     "anchor": "left",
     "at": [
-     96,
-     334.4,
-     96,
-     14
+     136,
+     335.8,
+     88,
+     13
     ],
     "move": {
      "name": "croisiere",
@@ -121,7 +127,7 @@
     "picture": "pigeon",
     "anchor": "left",
     "at": [
-     163.17,
+     187.17,
      383.79,
      18.4,
      11.96
@@ -130,7 +136,7 @@
      "name": "picore",
      "seconds": 9,
      "origin": [
-      172,
+      196,
       395.2
      ],
      "delay": -4
@@ -156,10 +162,10 @@
     "key": "immeuble",
     "anchor": "left",
     "at": [
-     4.0,
-     138.8,
-     92.0,
-     176.8
+     0.8,
+     124.5,
+     130.5,
+     189.6
     ],
     "name": "L’immeuble parisien",
     "text": "Des murs en pierre claire, de petits balcons et un toit gris en zinc.",
@@ -169,10 +175,10 @@
     "key": "boulangerie",
     "anchor": "left",
     "at": [
-     4.0,
-     315.6,
-     92.0,
-     35.2
+     0.8,
+     314.1,
+     77.5,
+     37.2
     ],
     "name": "La boulangerie",
     "text": "On y achète la baguette et les croissants, tout chauds le matin.",
@@ -182,10 +188,10 @@
     "key": "eiffel",
     "anchor": "left",
     "at": [
-     103.8,
-     59.8,
-     108.5,
-     282.5
+     133.2,
+     109.0,
+     89.5,
+     233.0
     ],
     "name": "La tour Eiffel",
     "text": "Une tour toute en fer, terminée en 1889. Elle mesure plus de 300 mètres de haut.",
@@ -195,10 +201,10 @@
     "key": "bateau",
     "anchor": "left",
     "at": [
-     97,
-     335.4,
-     93.4,
-     13
+     137,
+     336.8,
+     85.4,
+     12
     ],
     "name": "Le bateau de promenade",
     "text": "Un long bateau aux grandes vitres, qui promène les visiteurs sur la Seine, le fleuve de Paris.",
@@ -206,9 +212,9 @@
    },
    {
     "key": "morris",
-    "anchor": "left",
+    "anchor": "right",
     "at": [
-     225.8,
+     992.8,
      278.0,
      38.5,
      90.5
@@ -221,10 +227,10 @@
     "key": "notredame",
     "anchor": "right",
     "at": [
-     798.0,
-     143.8,
-     84.0,
-     199.8
+     794.2,
+     192.8,
+     63.5,
+     150.0
     ],
     "name": "Notre-Dame de Paris",
     "text": "Une cathédrale très ancienne : il a fallu près de deux cents ans pour la construire.",
@@ -234,7 +240,7 @@
     "key": "reverbere",
     "anchor": "right",
     "at": [
-     884.2,
+     857.2,
      233.5,
      17.5,
      135.2
@@ -247,7 +253,7 @@
     "key": "metro",
     "anchor": "right",
     "at": [
-     902.8,
+     876.8,
      266.8,
      70.5,
      101.8
@@ -260,10 +266,10 @@
     "key": "arc",
     "anchor": "right",
     "at": [
-     973.5,
-     285.8,
-     53.0,
-     56.5
+     949.2,
+     298.0,
+     41.5,
+     44.0
     ],
     "name": "L’Arc de triomphe",
     "text": "Un monument en forme de grande porte, au bout de l’avenue des Champs-Élysées.",
@@ -273,7 +279,7 @@
     "key": "wallace",
     "anchor": "right",
     "at": [
-     1032.8,
+     1035.8,
      304.8,
      20.5,
      63.8

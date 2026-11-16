@@ -50,6 +50,7 @@ void main() {
         'campagne',
         'ville',
         'montagne',
+        'savane',
       ],
     );
     expect(catalog.first.frenchName, 'Classique');
@@ -61,8 +62,9 @@ void main() {
     expect(catalog.universes[6].frenchName, 'La campagne');
     expect(catalog.universes[7].frenchName, 'La ville');
     expect(catalog.universes[8].frenchName, 'La montagne');
-    expect(RustDocument.universeCount(), 9);
-    expect(RustDocument.readUniverse(9), isNull);
+    expect(catalog.universes[9].frenchName, 'La savane');
+    expect(RustDocument.universeCount(), 10);
+    expect(RustDocument.readUniverse(10), isNull);
     expect(RustDocument.readUniverse(-1), isNull);
     expect(catalog.named('papier').key, 'papier');
     expect(catalog.named('classique').key, 'classique');
@@ -143,7 +145,8 @@ void main() {
           expect(decor.pictures[names.first]!.height, decor.size.height);
         }
       }
-      // And every picture of the core is a piece of the decor.
+      // And every picture of the core is a piece of the decor, or the hat
+      // of the companion.
       final used = {
         for (final piece in decor.pieces)
           if (piece.role == DecorRole.sky)
@@ -151,6 +154,7 @@ void main() {
               '${piece.picture}-${moment.name}'
           else
             ?piece.picture,
+        ?decor.hatName,
       };
       expect(decor.pictures.keys.toSet(), used, reason: universe.key);
     }
@@ -241,6 +245,27 @@ void main() {
     expect(decor.veils, isEmpty);
   }, skip: !available);
 
+  test('the companion wears the hat of each universe that has clothes', () {
+    final catalog = UniverseCatalog.instance;
+    for (final key in [
+      'mer',
+      'espace',
+      'foret',
+      'campagne',
+      'ville',
+      'montagne',
+      'savane',
+    ]) {
+      final hat = catalog.named(key).decor!.hat;
+      expect(hat, isNotNull, reason: key);
+      // Drawn over the head of the companion seated, in its square of 512.
+      expect(hat!.width, 512, reason: key);
+      expect(hat.height, 512, reason: key);
+    }
+    expect(catalog.named('bureau').decor!.hat, isNull);
+    expect(catalog.named('papier').decor!.hat, isNull);
+  }, skip: !available);
+
   test('what a child may ask about: fourteen things of the desk, eight of the paper', () {
     final catalog = UniverseCatalog.instance;
     expect(catalog.named('bureau').decor!.names, hasLength(14));
@@ -251,6 +276,7 @@ void main() {
     expect(catalog.named('campagne').decor!.names, hasLength(13));
     expect(catalog.named('ville').decor!.names, hasLength(11));
     expect(catalog.named('montagne').decor!.names, hasLength(10));
+    expect(catalog.named('savane').decor!.names, hasLength(9));
     for (final universe in decorated()) {
       final decor = universe.decor!;
       final frame = Offset.zero & decor.size;

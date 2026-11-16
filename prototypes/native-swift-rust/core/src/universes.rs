@@ -81,6 +81,7 @@ pub(crate) static UNIVERSES: &[Universe] = &[
             "algue-gauche",
             "bulles-droite",
             "bulles-gauche",
+            "chapeau",
             "droite",
             "fond",
             "gauche",
@@ -95,6 +96,7 @@ pub(crate) static UNIVERSES: &[Universe] = &[
         "espace",
         [
             "astronaute",
+            "chapeau",
             "droite",
             "etoiles-droite",
             "etoiles-gauche",
@@ -109,6 +111,7 @@ pub(crate) static UNIVERSES: &[Universe] = &[
         "foret",
         [
             "bouleau",
+            "chapeau",
             "chene",
             "droite",
             "feuille",
@@ -124,6 +127,7 @@ pub(crate) static UNIVERSES: &[Universe] = &[
         "campagne",
         [
             "ailes",
+            "chapeau",
             "droite",
             "fond",
             "gauche",
@@ -139,6 +143,7 @@ pub(crate) static UNIVERSES: &[Universe] = &[
         "ville",
         [
             "bateau",
+            "chapeau",
             "droite",
             "fond",
             "gauche",
@@ -151,10 +156,23 @@ pub(crate) static UNIVERSES: &[Universe] = &[
         [
             "aigle",
             "cabine",
+            "chapeau",
             "droite",
             "fond",
             "gauche",
             "nuage",
+        ]
+    ),
+    universe!(
+        "savane",
+        [
+            "chapeau",
+            "droite",
+            "fond",
+            "gauche",
+            "herbes",
+            "herbes-droite",
+            "vautour",
         ]
     ),
 ];

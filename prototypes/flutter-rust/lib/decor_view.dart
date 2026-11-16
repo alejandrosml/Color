@@ -32,6 +32,7 @@ import 'package:flutter/scheduler.dart';
 
 import 'decor.dart';
 import 'decor_motion.dart';
+import 'french.dart';
 import 'galets.dart';
 import 'language.dart';
 import 'studio_colors.dart';
@@ -987,12 +988,12 @@ class _NameCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          tr(name.frenchName),
+                          keptTogether(tr(name.frenchName)),
                           style: galetText(17, bold: true, color: look.ink),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          tr(name.frenchText),
+                          keptTogether(tr(name.frenchText)),
                           style: galetText(14.5, color: look.ink, height: 1.38),
                         ),
                       ],

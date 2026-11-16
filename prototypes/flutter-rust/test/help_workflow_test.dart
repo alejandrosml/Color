@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:edupaint_flutter_study/help_dialog.dart';
+import 'package:edupaint_flutter_study/studio_options.dart';
 import 'package:edupaint_flutter_study/studio_tool.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -84,13 +85,24 @@ void main() {
         );
       }
       for (final key in [
-        'help-picker',
+        'help-colours',
+        'help-size-kind',
+        'help-point',
+        'help-my-drawing',
+        'help-universes',
+        'help-decor',
+        'help-watch',
         'help-layers',
         'help-big-sheet',
         'help-print',
       ]) {
         expect(find.byKey(Key(key), skipOffstage: false), findsOneWidget);
       }
+      // Every colour is a setting for grown-ups: its help waits for it.
+      expect(
+        find.byKey(const Key('help-picker'), skipOffstage: false),
+        findsNothing,
+      );
       // Printing is explained with its picture, and with its keys.
       expect(
         find.descendant(
@@ -154,6 +166,41 @@ void main() {
     },
     skip: !available,
   );
+
+  testWidgets('the help follows what the grown-up chose', (tester) async {
+    Future<void> show(StudioOptions options) => tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: HelpDialog(options: options)),
+      ),
+    );
+    bool shown(String key) =>
+        find.byKey(Key(key), skipOffstage: false).evaluate().isNotEmpty;
+
+    await show(StudioOptions.defaults);
+    expect(shown('help-picker'), isFalse);
+    expect(shown('help-decor'), isTrue);
+    expect(find.text('F2, Maj + F2', skipOffstage: false), findsOneWidget);
+
+    await show(StudioOptions.defaults.copyWith(grownUpColours: true));
+    expect(shown('help-picker'), isTrue);
+    expect(
+      find.text('Toutes les couleurs, pour les grands', skipOffstage: false),
+      findsOneWidget,
+    );
+
+    await show(
+      StudioOptions.defaults.copyWith(
+        decorNames: false,
+        decorWatch: false,
+        universeFixed: true,
+      ),
+    );
+    expect(shown('help-decor'), isFalse);
+    expect(shown('help-watch'), isFalse);
+    expect(shown('help-universes'), isFalse);
+    expect(find.text('F2, Maj + F2', skipOffstage: false), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('the keys named in the help are those of this computer', (
     tester,

@@ -114,6 +114,7 @@ void main() {
       'campagne',
       'ville',
       'montagne',
+      'savane',
     ]) {
       await start(tester, mac, universe: universe);
       await shot(tester, 'univers-$universe');
@@ -136,6 +137,7 @@ void main() {
         'campagne',
         'ville',
         'montagne',
+        'savane',
       ]) {
         await start(tester, size, universe: universe);
         await shot(tester, 'fenetre-$universe-$name');
@@ -253,6 +255,7 @@ void main() {
       'campagne',
       'ville',
       'montagne',
+      'savane',
     ]) {
       await gaze(
         '$universe-tablette-13-largeur',

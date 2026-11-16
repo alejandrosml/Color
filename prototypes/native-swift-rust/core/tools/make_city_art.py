@@ -48,7 +48,7 @@ SIZES = dict(
     eiffel=330,  # with its antennas; the first floor at 57.6 m, the second at 115.7 m
     notre_dame=69,  # its towers; the front 41 m wide, the spire 96 m
     arc=49.54,  # 44.82 m wide; its great arch 29.42 m high, 14.62 m wide
-    building=25.6,  # to the top of its chimneys; the cornice at 20 m, three bays
+    building=25.8,  # to the top of its chimneys; the cornice at 20 m; five bays, 14.5 m
     morris=(4.0, 1.4),  # high with its dome, across (estimates: see the report)
     wallace=(2.71, .82),
     lamp=5.8,  # the great lamp of the quays: its post 5 m, its lantern 0.8 m
@@ -59,17 +59,17 @@ SIZES = dict(
 
 # The scale of each thing, in units to the metre, from the furthest to the
 # nearest: its feet stand at feet(scale).
-EIFFEL, ARC, NOTRE_DAME, TREES, SKYLINE = .85, 1.1, 2.0, 2.0, 2.2
-BOAT = 2.4  # on the river, nearer the far bank: 38.65 m long, 93 units
-BOAT_WATERLINE = 347.4  # the water is lower than the street: its line is not feet(BOAT)
-BUILDING = 8.0  # at the corner of the quay
+EIFFEL, ARC, NOTRE_DAME, TREES, SKYLINE = .7, .85, 1.5, 1.5, 1.6
+BOAT = 2.2  # on the river, nearer the far bank: 38.65 m long, 85 units
+BOAT_WATERLINE = 347.8  # the water is lower than the street: its line is not feet(BOAT)
+BUILDING = 8.5  # at the corner of the quay
 STREET = 23.0  # the pavement a few steps away
 PIGEON, PIGEON_2 = 50.0, 46.0  # at the child's feet
 
-LEFT = dict(building=50, eiffel=158, morris=245)
-RIGHT = dict(notre_dame=840, lamp=893, metro=938, arc=1000, wallace=1043)
-BOAT_AT = 96  # its bow, at rest; it goes 16 units to the right and back (35 at most)
-PIGEON_AT, PIGEON_2_AT = 38, 172  # their feet
+LEFT = dict(building=66, eiffel=178)
+RIGHT = dict(notre_dame=826, lamp=866, metro=912, arc=970, morris=1012, wallace=1046)
+BOAT_AT = 136  # its bow, at rest; it goes 16 units to the right and back (35 at most)
+PIGEON_AT, PIGEON_2_AT = 38, 196  # their feet
 
 SKY = '#bcdcf3'
 FRONT = ('#ddd4c0', '#d6ccb6', '#b8aa8f')
@@ -117,11 +117,11 @@ def river_and_quays():
     """The far quay, the Seine, our curb and the pavement, its slabs in
     rows that widen towards us."""
     far, near = feet(NOTRE_DAME), feet(BUILDING)
-    out = ['<rect x="0" y="%s" width="1061" height="%s" fill="#e8dfcb" stroke="#293d4b" stroke-width="1.2" />' % (n(far), n(1.8)),
-           '<rect x="0" y="%s" width="1061" height="%s" fill="#6fa8c9" />' % (n(far + 1.8), n(near - far - 1.8))]
-    for x, dy in ((40, 2.2), (190, 4), (330, 1.6), (470, 3.4), (610, 2.4), (760, 4), (905, 1.8), (1010, 3.2)):
+    out = ['<rect x="0" y="%s" width="1061" height="%s" fill="#e8dfcb" stroke="#293d4b" stroke-width="1" />' % (n(far), n(1)),
+           '<rect x="0" y="%s" width="1061" height="%s" fill="#6fa8c9" />' % (n(far + 1), n(near - far - 1))]
+    for x, dy in ((40, 2.6), (190, 5), (330, 1.8), (470, 4.4), (610, 3), (760, 5.2), (905, 2.2), (1010, 4)):
         out.append('<path d="M%s %s q4 -1.4 8 0" fill="none" stroke="#a9d0e6" stroke-width="1" stroke-linecap="round" />' % (
-            n(x), n(far + 1.8 + dy)))
+            n(x), n(far + 1 + dy)))
     out.append('<rect x="0" y="%s" width="1061" height="%s" fill="url(#trottoir)" />' % (n(near), n(407 - near)))
     out.append('<rect x="0" y="%s" width="1061" height="1.4" fill="#d3c8b0" />' % n(near))
     out.append('<path d="M0 %s H1061" fill="none" stroke="#293d4b" stroke-width="1.4" />' % n(near))
@@ -143,15 +143,14 @@ def river_and_quays():
 
 
 def ground():
-    trees = ''.join(placed(x, feet(TREES), TREES, things.plane_tree(TREES)) for x in (226, 330, 470, 612, 748, 884, 1046))
+    trees = ''.join(placed(x, feet(TREES), TREES, things.plane_tree(TREES)) for x in (110, 236, 330, 470, 612, 748, 880, 948, 1052))
     body = ('<rect width="1061" height="407" fill="url(#ciel)" />' + skyline() + trees + river_and_quays())
     return body
 
 
 def left():
     return (placed(LEFT['eiffel'], feet(EIFFEL), EIFFEL, things.eiffel(EIFFEL))
-            + placed(LEFT['building'], feet(BUILDING), BUILDING, things.building(BUILDING))
-            + placed(LEFT['morris'], feet(STREET), STREET, things.morris(STREET, *SIZES['morris'])))
+            + placed(LEFT['building'], feet(BUILDING), BUILDING, things.building(BUILDING)))
 
 
 def right():
@@ -159,11 +158,12 @@ def right():
             + placed(RIGHT['arc'], feet(ARC), ARC, things.arc(ARC))
             + placed(RIGHT['lamp'], feet(STREET), STREET, things.lamp(STREET, SIZES['lamp']))
             + placed(RIGHT['metro'], feet(STREET), STREET, things.metro(STREET, *SIZES['metro']))
+            + placed(RIGHT['morris'], feet(STREET), STREET, things.morris(STREET, *SIZES['morris']))
             + placed(RIGHT['wallace'], feet(STREET), STREET, things.wallace(STREET, *SIZES['wallace'])))
 
 
 # The small pictures that move: their boxes in the decor.
-BOAT_BOX = (96, 14)  # the boat, its waterline 1 unit above the bottom
+BOAT_BOX = (88, 13)  # the boat, its waterline 1 unit above the bottom
 PIGEON_BOX = (20, 13)
 
 

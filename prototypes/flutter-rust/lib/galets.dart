@@ -21,7 +21,9 @@ import 'child_art.dart';
 import 'color_palette.dart' show NamedPaintColor, paletteTickColor;
 import 'decor.dart';
 import 'language.dart';
+import 'soft_effects.dart';
 import 'studio_colors.dart';
+import 'universe.dart';
 import 'vector_art.dart';
 
 /// The ten elementary colours of the line, in the order of the rainbow, then
@@ -900,6 +902,8 @@ class _GaletButtonState extends State<GaletButton> {
       ),
     );
     if (!enabled) button = Opacity(opacity: .38, child: button);
+    // A small bounce when pressed (a soft effect of Color 1.2).
+    if (enabled) button = BounceOnPress(child: button);
     if (long != null && enabled) {
       // The equal of the long press for a keyboard.
       button = CallbackShortcuts(
@@ -1076,11 +1080,17 @@ class _GaletPortraitState extends State<GaletPortrait>
   @override
   Widget build(BuildContext context) {
     final picture = VectorArtCatalog.instance?['logo'];
+    // The hat of the universe the studio wears, over the head of the
+    // companion (step 4 of Color 1.2).
+    final hat = wornUniverse?.decor?.hat;
     final portrait = picture == null
         ? EduIllustration(art: EduArt.mascot, size: widget.size)
         : SizedBox.square(
             dimension: widget.size,
-            child: CustomPaint(painter: _PicturePainter(picture)),
+            child: CustomPaint(
+              painter: _PicturePainter(picture),
+              foregroundPainter: hat == null ? null : _PicturePainter(hat),
+            ),
           );
     return ExcludeSemantics(
       child: AnimatedBuilder(
