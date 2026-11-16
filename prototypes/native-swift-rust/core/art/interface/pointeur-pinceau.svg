@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le pointeur du pinceau (Color 1.2). Les poils sont la pointe : le trait part de leur bout, en haut à
+     gauche, au point (3, 3), et ils prennent la couleur choisie (groupe « couleur »). Dessin original, grille de
+     64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Le pointeur du pinceau</title>
+  <path d="M3 3 C13 4 21 8 26.6 15.4 L15.4 26.6 C8 21 4 13 3 3 Z" fill="#ffffff" stroke="#ffffff" stroke-width="6.4" stroke-linejoin="round"/>
+  <path d="M30 21.6 L57.4 49 C62 54 54 62 49 57.4 L21.6 30 Z" fill="#9a82c9" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M26.6 15.4 L32.6 21.4 L21.4 32.6 L15.4 26.6 Z" fill="#ffcd62" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g id="couleur">
+    <path d="M3 3 C13 4 21 8 26.6 15.4 L15.4 26.6 C8 21 4 13 3 3 Z" fill="#ed8c88"/>
+  </g>
+  <path d="M3 3 C13 4 21 8 26.6 15.4 L15.4 26.6 C8 21 4 13 3 3 Z" fill="none" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8 8 C12 9.4 16 12 18.6 15" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-opacity=".75"/>
+  <circle cx="52.6" cy="52.6" r="1.6" fill="#fffcf0"/>
+</svg>

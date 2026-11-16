@@ -1,0 +1,362 @@
+{
+ "key": "foret",
+ "name": "La forêt",
+ "about": "De grands arbres, un écureuil et un hérisson.",
+ "look": {
+  "colours": {
+   "ink": "#2a3d22",
+   "accent": "#8a5a00",
+   "background": "#cfe6b3",
+   "line": "#a7cc86",
+   "surface": "#fffbee",
+   "selected": "#e4f4d3",
+   "sheetBackdrop": "#d7ebc2",
+   "previewBox": "#eef6e2",
+   "caption": "#48603c",
+   "statusText": "#2a3d22",
+   "sheetTitle": "#2a3d22",
+   "sheetCaption": "#2a3d22",
+   "quietMark": "#6b8a58",
+   "swatchRing": "#5f8a4a",
+   "shadow": "#1f3a1a"
+  },
+  "shapes": {
+   "stageRadius": 18,
+   "stageBorder": 2
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#d6eef7",
+  "front": [
+   "#84c56c",
+   "#79b962",
+   "#5f9e4f"
+  ],
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "nuage",
+    "anchor": "left",
+    "at": [
+     60,
+     0,
+     151,
+     151
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 30
+    }
+   },
+   {
+    "picture": "nuage",
+    "anchor": "right",
+    "at": [
+     880,
+     0,
+     119,
+     119
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 38,
+     "delay": -9
+    }
+   },
+   {
+    "picture": "chene",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 9,
+     "origin": [
+      99.7,
+      240.1
+     ]
+    }
+   },
+   {
+    "picture": "bouleau",
+    "anchor": "right",
+    "move": {
+     "name": "balance",
+     "seconds": 11,
+     "delay": -4,
+     "origin": [
+      880.48,
+      222.16
+     ]
+    }
+   },
+   {
+    "picture": "hetre",
+    "anchor": "right",
+    "move": {
+     "name": "balance",
+     "seconds": 10,
+     "delay": -2,
+     "origin": [
+      982.5,
+      284.9
+     ]
+    }
+   },
+   {
+    "picture": "feuille",
+    "anchor": "left",
+    "at": [
+     123.3,
+     243.3,
+     9.4,
+     9.4
+    ],
+    "move": {
+     "name": "tombe",
+     "seconds": 15,
+     "origin": [
+      128,
+      248
+     ]
+    }
+   },
+   {
+    "picture": "papillon",
+    "anchor": "left",
+    "at": [
+     189.14,
+     269.14,
+     5.72,
+     5.72
+    ],
+    "move": {
+     "name": "papillon",
+     "seconds": 14,
+     "origin": [
+      192,
+      272
+     ]
+    }
+   },
+   {
+    "picture": "rougegorge",
+    "anchor": "right",
+    "at": [
+     892.4,
+     365.6,
+     11.2,
+     11.2
+    ],
+    "move": {
+     "name": "sautille",
+     "seconds": 7
+    }
+   }
+  ],
+  "names": [
+   {
+    "key": "chene",
+    "anchor": "left",
+    "at": [
+     30,
+     128,
+     176,
+     232
+    ],
+    "name": "Le chêne",
+    "text": "Un grand arbre très solide, qui peut vivre des centaines d’années. Ses fruits sont les glands.",
+    "source": "Forestry England — Oak | Tree species (English oak) — https://www.forestryengland.uk/article/english-oak ; Royal Botanic Gardens, Kew — Common oak — https://www.kew.org/plants/common-oak"
+   },
+   {
+    "key": "epicea",
+    "anchor": "left",
+    "at": [
+     194,
+     198,
+     64,
+     152
+    ],
+    "name": "L’épicéa",
+    "text": "Il garde ses aiguilles vertes tout l’hiver. C’est parfois lui, le sapin de Noël.",
+    "source": "Woodland Trust — Norway Spruce (Picea abies) — https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/norway-spruce ; VALHOR — Dossier de presse, décembre 2025 (chiffres Kantar pour FranceAgriMer et VALHOR, ventes 2024) — https://bo.valhor.fr/wp-content/uploads/2025/12/valhor-dp-elysee-sapin-2025-.pdf"
+   },
+   {
+    "key": "bouleau",
+    "anchor": "right",
+    "at": [
+     833.6,
+     152.4,
+     88,
+     209.6
+    ],
+    "name": "Le bouleau",
+    "text": "On le reconnaît à son tronc blanc, taché de noir. Ses branches fines se balancent au moindre vent.",
+    "source": "Forestry England — Silver birch — https://forestryengland.uk/article/silver-birch ; Royal Horticultural Society — Betula pendula | silver birch — https://www.rhs.org.uk/plants/2261/betula-pendula/details"
+   },
+   {
+    "key": "hetre",
+    "anchor": "right",
+    "at": [
+     932,
+     166,
+     118,
+     192
+    ],
+    "name": "Le hêtre",
+    "text": "Son écorce grise est toute lisse. Ses petits fruits s’appellent les faînes.",
+    "source": "Woodland Trust — Beech, common (Fagus sylvatica) — https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/british-trees/a-z-of-british-trees/common-beech ; Office québécois de la langue française, Grand dictionnaire terminologique — faîne — https://vitrinelinguistique.oqlf.gouv.qc.ca/fiche-gdt/fiche/8433613/faine"
+   },
+   {
+    "key": "ecureuil",
+    "anchor": "left",
+    "at": [
+     128.8,
+     385.5,
+     17.7,
+     18.5
+    ],
+    "name": "L’écureuil",
+    "text": "Il grimpe aux arbres à toute vitesse et cache des provisions pour l’hiver.",
+    "source": "Larousse, encyclopédie — écureuil roux — https://www.larousse.fr/encyclopedie/vie-sauvage/écureuil_roux/178167 ; Musée d’histoire naturelle Fribourg — Le clin d’œil nature - Le petit cachottier — https://www.fr.ch/mhnf/le-clin-doeil-nature-le-petit-cachottier"
+   },
+   {
+    "key": "amanite",
+    "anchor": "left",
+    "at": [
+     191.5,
+     374,
+     50.3,
+     21
+    ],
+    "name": "L’amanite tue-mouches",
+    "text": "Très jolie avec son chapeau rouge à pois blancs, mais on n’y goûte pas : elle rend malade.",
+    "source": "Woodland Trust — Fly Agaric (Amanita muscaria) — https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/fungi-and-lichens/fly-agaric/ ; Encyclopaedia Britannica — fly agaric — https://www.britannica.com/science/fly-agaric"
+   },
+   {
+    "key": "coquelicot",
+    "anchor": "left",
+    "at": [
+     233.5,
+     364,
+     27,
+     41.8
+    ],
+    "name": "Le coquelicot",
+    "text": "Une fleur rouge aux pétales fins comme du papier de soie.",
+    "source": "Royal Horticultural Society — Plants for kids - poppy — https://rhs.org.uk/education-learning/children-young-people/family-activities/grow-it/poppy ; Royal Horticultural Society — Papaver rhoeas | common poppy — https://www.rhs.org.uk/Plants/56687/i-Papaver-rhoeas-i/Details"
+   },
+   {
+    "key": "marguerite",
+    "anchor": "left",
+    "at": [
+     156.8,
+     366.2,
+     30.7,
+     39.8
+    ],
+    "name": "La marguerite",
+    "text": "Des pétales blancs autour d’un cœur jaune. Elle fleurit dans les prés, du printemps à l’été.",
+    "source": "Woodland Trust — Oxeye daisy (Leucanthemum vulgare) — https://www.woodlandtrust.org.uk/trees-woods-and-wildlife/plants/wild-flowers/oxeye-daisy/ ; Université de Lorraine, e-FloraSys — Leucanthemum vulgare — https://eflorasys.univ-lorraine.fr/index.php/en/species/view/105817"
+   },
+   {
+    "key": "herisson",
+    "anchor": "left",
+    "at": [
+     97.2,
+     393,
+     21,
+     12.5
+    ],
+    "name": "Le hérisson",
+    "text": "Quand il a peur, il se roule en boule sous ses piquants. Il sort surtout la nuit.",
+    "source": "Encyclopædia Universalis — Hérisson — https://www.universalis.fr/encyclopedie/herisson/ ; RSPCA — Hedgehogs in the UK | Wildlife Advice — https://www.rspca.org.uk/adviceandwelfare/wildlife/animals/hedgehogs"
+   },
+   {
+    "key": "jacinthe",
+    "anchor": "right",
+    "at": [
+     809,
+     377.5,
+     17,
+     24.5
+    ],
+    "name": "La jacinthe des bois",
+    "text": "Au printemps, ses clochettes bleues couvrent le sol de certaines forêts.",
+    "source": "Woodland Trust — Bluebell (Hyacinthoides non-scripta) — https://woodlandtrust.org.uk/trees-woods-and-wildlife/plants/wild-flowers/bluebell/ ; Forestry Commission — Plants of the forest floor — https://forestrycommission.blog.gov.uk/2025/04/23/plants-of-the-forest-floor/"
+   },
+   {
+    "key": "rougegorge",
+    "anchor": "right",
+    "at": [
+     891.5,
+     365,
+     13,
+     12
+    ],
+    "name": "Le rouge-gorge",
+    "text": "Un petit oiseau curieux à la poitrine orange, qui chante même en hiver.",
+    "source": "RSPB — Robin Red Breast Bird Facts | Erithacus rubecula — https://rspb.org.uk/birds-and-wildlife/robin ; Musée du Louvre — Le Rougegorge familier — https://www.louvre.fr/decouvrir/les-parcours-de-visite/l-avifaune-du-jardin-des-tuileries/le-rougegorge-familier"
+   },
+   {
+    "key": "cepe",
+    "anchor": "right",
+    "at": [
+     921.8,
+     388.5,
+     26.4,
+     16.5
+    ],
+    "name": "Le cèpe",
+    "text": "Un champignon au gros pied et au chapeau brun, que l’on cherche en automne.",
+    "source": "Woodland Trust — Penny Bun (Boletus edulis) – British Fungi — https://woodlandtrust.org.uk/trees-woods-and-wildlife/fungi-and-lichens/penny-bun/ ; VIDAL — Cèpes et bolets : gastronomiques mais parfois toxiques — https://www.vidal.fr/actualites/38418-cepes-et-bolets-gastronomiques-mais-parfois-toxiques.html"
+   },
+   {
+    "key": "papillon",
+    "anchor": "left",
+    "at": [
+     185,
+     265,
+     14,
+     12
+    ],
+    "name": "Le papillon",
+    "text": "Avant d’avoir des ailes, il était une chenille.",
+    "source": "American Museum of Natural History — The Butterfly Life Cycle Explained — https://www.amnh.org/explore/news-blogs/life-cycle-butterfly ; Encyclopædia Universalis — MÉTAMORPHOSE, biologie — https://www.universalis.fr/encyclopedie/metamorphose-biologie/"
+   },
+   {
+    "key": "fougere",
+    "anchor": "right",
+    "at": [
+     986,
+     336,
+     70,
+     38
+    ],
+    "name": "La fougère",
+    "text": "Une plante très ancienne : il y en avait déjà au temps des dinosaures.",
+    "source": "Science Learning Hub, The University of Waikato — What is a fern? — https://www.sciencelearn.org.nz/resources/1103-what-is-a-fern ; University of Waterloo, Earth Sciences Museum — Fern fossils — https://uwaterloo.ca/earth-sciences-museum/resources/history-life/carboniferous-period/pennsylvanian-sub-period/fern-fossils"
+   }
+  ],
+  "hat": "chapeau"
+ }
+}

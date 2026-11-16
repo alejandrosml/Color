@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
-// The menu of a telephone: what the top bar of a computer holds, and what
-// waits above its sheet — the film of the drawing, the layers, the whole
-// sheet — in large buttons over the sheet, closed as soon as one is chosen.
+// The menu of a telephone and of a small window: « Mon dessin » between two
+// rails. What the panel of the same name holds above a line, and what waits
+// in the pebble of the right there — the film of the drawing, the layers,
+// the whole sheet —, in large buttons over the sheet, closed as soon as one
+// is chosen. It is made of the matter of the pebbles (Color 1.2, step G3):
+// their surface, their letters, their buttons.
 import 'package:flutter/material.dart';
 
-import 'child_art.dart';
+import 'galets.dart';
 import 'studio_colors.dart';
 import 'language.dart';
 
@@ -24,7 +27,7 @@ class PhoneMenuEntry {
   final Widget Function(double size) picture;
   final bool enabled;
 
-  /// « Enregistrer » stands out, as in the top bar.
+  /// « Enregistrer » stands out, as in the pebbles.
   final bool filled;
 }
 
@@ -60,65 +63,58 @@ class PhoneMenu extends StatelessWidget {
     final onPressed = entry.enabled
         ? () => Navigator.of(context).pop(entry.id)
         : null;
-    final content = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        entry.picture(28),
-        const SizedBox(height: 4),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            entry.name,
-            maxLines: 1,
-            softWrap: false,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+    return GaletButton(
+      key: Key(entry.id),
+      label: entry.name,
+      onPressed: onPressed,
+      fill: entry.filled ? studioSaveFill : null,
+      width: buttonSize.width,
+      height: buttonSize.height,
+      corners: 18,
+      tip: false,
+      padding: const EdgeInsets.all(4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          entry.picture(30),
+          const SizedBox(height: 5),
+          // With enlarged letters the name takes the height that is left,
+          // and no more: it is never cut.
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                entry.name,
+                maxLines: 1,
+                softWrap: false,
+                style: galetText(
+                  13.5,
+                  color: entry.filled ? studioSaveInk : studioInk,
+                ),
+              ),
+            ),
           ),
-        ),
-      ],
-    );
-    final style = ButtonStyle(
-      minimumSize: const WidgetStatePropertyAll(buttonSize),
-      maximumSize: const WidgetStatePropertyAll(buttonSize),
-      padding: const WidgetStatePropertyAll(EdgeInsets.all(4)),
-      shape: WidgetStatePropertyAll(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        ],
       ),
     );
-    return entry.filled
-        ? FilledButton(
-            key: Key(entry.id),
-            onPressed: onPressed,
-            style: style.copyWith(
-              backgroundColor: const WidgetStatePropertyAll(Color(0xffffd575)),
-              foregroundColor: const WidgetStatePropertyAll(studioInk),
-            ),
-            child: content,
-          )
-        : OutlinedButton(
-            key: Key(entry.id),
-            onPressed: onPressed,
-            style: style,
-            child: content,
-          );
   }
 
   @override
   Widget build(BuildContext context) => Dialog(
     key: const Key('phoneMenuDialog'),
     insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    backgroundColor: studioSurface,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
     child: ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 680),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 10, 10, 16),
+        padding: const EdgeInsets.fromLTRB(14, 10, 10, 14),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                const EduIllustration(art: EduArt.brush, size: 28),
+                const SizedBox(width: 4),
+                const GaletPortrait(size: 38),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -128,19 +124,13 @@ class PhoneMenu extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: galetText(17, bold: true),
                       ),
                       Text(
                         caption,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: studioDocumentCaption,
-                        ),
+                        style: galetText(13, color: studioCaption),
                       ),
                     ],
                   ),
@@ -153,10 +143,10 @@ class PhoneMenu extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 4,
+              runSpacing: 4,
               children: [for (final entry in entries) _button(context, entry)],
             ),
           ],

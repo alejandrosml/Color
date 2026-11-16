@@ -203,7 +203,7 @@ void main() {
     // Places are points of the sheet of 1200 by 800 units.
     await studio.drag(studio.at(150, 150), studio.at(350, 300));
     expect(sounds.take(), [StudioSound.stroke]);
-    await studio.tap('color-d75e56');
+    await studio.tap('color-e83d48');
     expect(sounds.take(), [StudioSound.colour]);
     // « Formes » begins with the rectangle.
     await studio.tap('tool-shapes');

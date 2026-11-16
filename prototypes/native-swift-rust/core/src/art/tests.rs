@@ -534,7 +534,13 @@ fn damaged_pictures_are_read_or_refused() {
         state ^= state << 17;
         (state % bound as u64) as usize
     };
-    let pieces: [&[u8]; 12] = [
+    let pieces: [&[u8]; 16] = [
+        // What passed the guard of the numbers before étape 7: a number
+        // against the letter of its command, a digit written by its number.
+        b"A6e93 6e93 ",
+        b"&#54;",
+        b"e93",
+        b"#",
         b"<",
         b">",
         b"\"",
@@ -698,6 +704,66 @@ fn numbers_of_ten_million_or_more_are_refused_before_anything_is_read() {
     // Through the C interface too.
     let text = arc("6e93");
     assert!(through_c(text.as_bytes()).is_none());
+}
+
+#[test]
+fn a_number_written_against_a_letter_of_a_path_is_one_number() {
+    // What a drawing program writes: the number against the letter of its
+    // command, with every digit a double has. Its fraction is not a number
+    // of fifteen digits (étape 7).
+    for written in [
+        "M10 10H27.599999999999998V20Z",
+        "M.5.5L27.599999999999998,3.0000000000000004 5 40zM1 1h2.2500000000000004v3z",
+        "M0 0c1.0000000000000002.30000000000000004 2 3 4 5",
+    ] {
+        assert!(numbers_within(written, MAX_NUMBER_DIGITS), "{written}");
+        let text = picture(&format!(r##"<path d="{written}" fill="#f4cdb4"/>"##));
+        assert!(read(&text).is_ok(), "{written}");
+    }
+    // And a number too large stays one when it is written against that
+    // letter: the radius of 6e93 of the test above, without its space.
+    // Asked of the guard alone: handed to the reader, it would stop the
+    // whole program.
+    for written in [
+        "M10 50A6e93 6e93 0 1 0 80 0Z",
+        "M10 50a40,40 0 1 0 80 0zA10000000 5 0 1 0 80 0",
+        "M0 0H1e7",
+        "M0 0zm6e93 1",
+        "M0 0L1 1.6e93",
+        "M0 0L1 1.5.5e9",
+    ] {
+        assert!(!numbers_within(written, MAX_NUMBER_DIGITS), "{written}");
+        let text = picture(&format!(r##"<path d="{written}" fill="#f4cdb4"/>"##));
+        assert!(!numbers_within(&text, MAX_NUMBER_DIGITS), "{written}");
+    }
+    // A name and a colour still are no numbers, whatever their letters.
+    for written in [
+        r##"<rect id="r99999999" width="10" height="10" fill="#ffe9ad"/>"##,
+        r##"<rect id="path12345678" width="10" height="10" fill="#1a2e4567"/>"##,
+        r##"<rect id="x1e99" width="10" height="10" fill="#99999999"/>"##,
+        r##"<rect class="st0 cls12" width="10" height="10" fill="#a1e99f"/>"##,
+    ] {
+        assert!(numbers_within(written, MAX_NUMBER_DIGITS), "{written}");
+        assert!(read(&picture(written)).is_ok(), "{written}");
+    }
+}
+
+#[test]
+fn a_digit_written_as_a_character_reference_is_refused() {
+    // `&#54;` is the digit 6 once the XML reader has read it: the radius
+    // 6e93 would pass the guard of the numbers, which reads the text as it
+    // is written. No picture needs a character written by its number.
+    for radius in ["&#54;e93", "&#x36;e93", "6&#101;93"] {
+        let text = picture(&format!(
+            r##"<path d="M10 50 a40 {radius} 0 1 0 80 0 Z" fill="#f4cdb4"/>"##
+        ));
+        assert_eq!(
+            read(&text),
+            Err(Refusal::Unsupported("character references")),
+            "{radius}"
+        );
+        assert!(through_c(text.as_bytes()).is_none());
+    }
 }
 
 #[test]

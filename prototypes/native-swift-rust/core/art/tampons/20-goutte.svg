@@ -3,9 +3,13 @@
      Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
      changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
      l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
-     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56.
+     Créé par Alejandro San Martin Lamas (https://github.com/alejandrosml). -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <title>Goutte</title>
-  <path d="M 50 6 C 36 28 20 46 20 62 C 20 80 34 93 50 93 C 66 93 80 80 80 62 C 80 46 64 28 50 6 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 43 62 C 43 67.52 40.76 72 38 72 C 35.24 72 33 67.52 33 62 C 33 56.48 35.24 52 38 52 C 40.76 52 43 56.48 43 62 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 50 5 C 62 26 83 46 83 63 C 83 81 68 95 50 95 C 32 95 17 81 17 63 C 17 46 38 26 50 5 Z" fill="#96413c" data-fill="sombre"/>
+  <path d="M 49.3 12.14 C 59.62 30.2 77.68 47.4 77.68 62.02 C 77.68 77.5 64.78 89.54 49.3 89.54 C 33.82 89.54 20.92 77.5 20.92 62.02 C 20.92 47.4 38.98 30.2 49.3 12.14 Z" fill="#d75e56" data-fill="couleur"/>
+  <path d="M 50 5 C 62 26 83 46 83 63 C 83 81 68 95 50 95 C 32 95 17 81 17 63 C 17 46 38 26 50 5 Z" fill="none" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 39.85 64.21 C 38.38 70.11 35.02 74.34 32.34 73.67 C 29.66 73.01 28.68 67.69 30.15 61.79 C 31.62 55.89 34.98 51.66 37.66 52.33 C 40.34 52.99 41.32 58.31 39.85 64.21 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 42.6 44 C 42.6 45.44 41.44 46.6 40 46.6 C 38.56 46.6 37.4 45.44 37.4 44 C 37.4 42.56 38.56 41.4 40 41.4 C 41.44 41.4 42.6 42.56 42.6 44 Z" fill="#efbebb" data-fill="claire"/>
 </svg>

@@ -64,6 +64,12 @@ Future<void> printAndWait(
     await press();
   } else {
     final control = find.byKey(Key(key));
+    // In the studio of the pebbles, « Imprimer » is in « Mon dessin ».
+    final myDrawing = find.byKey(const Key('myDrawing'));
+    if (control.evaluate().isEmpty && myDrawing.evaluate().isNotEmpty) {
+      await tester.tap(myDrawing);
+      await tester.pumpAndSettle();
+    }
     await tester.ensureVisible(control);
     await tester.pumpAndSettle();
     await tester.tap(control);

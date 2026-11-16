@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : la loupe qui éloigne la feuille (Color 1.2, « Les galets »). Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Voir plus petit</title>
+  <path d="M41 41 L55 55" fill="none" stroke="#293d4b" stroke-width="11" stroke-linecap="round"/>
+  <path d="M41 41 L55 55" fill="none" stroke="#9a82c9" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="27" cy="27" r="19" fill="#a8d8f0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M18 27 H36" fill="none" stroke="#293d4b" stroke-width="5" stroke-linecap="round"/>
+</svg>

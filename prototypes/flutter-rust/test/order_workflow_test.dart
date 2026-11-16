@@ -12,12 +12,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
   final surface = find.byKey(const Key('drawingSurface'));
 
   Future<void> tap(WidgetTester tester, String key) async {
+    key = await revealControl(tester, key);
     await tester.tap(find.byKey(Key(key)));
     if (key == 'openProject') {
       await waitForPreparedOpen(tester, allowSaveDecision: true);
@@ -95,26 +97,8 @@ void main() {
       try {
         await start(tester);
         final order = find.byKey(const Key('selectionOrder'));
-        expect(
-          tester.getSemantics(order),
-          isSemantics(
-            label: 'Ordre',
-            tooltip: 'Ordre des éléments',
-            isButton: true,
-            isTextField: false,
-            hasEnabledState: true,
-            isEnabled: false,
-            hasExpandedState: true,
-            isExpanded: false,
-            hasTapAction: false,
-            isFocusable: false,
-            hasFocusAction: false,
-            hasSetTextAction: false,
-          ),
-        );
-        await tester.tap(order);
-        await tester.pumpAndSettle();
-        expect(find.byKey(const Key('bringSelectionToFront')), findsNothing);
+        // Nothing is chosen: the actions of an element are not there.
+        expect(order, findsNothing);
 
         await tester.tapAt(point(tester, 250, 250));
         await tester.pumpAndSettle();
@@ -185,14 +169,11 @@ void main() {
     expect(menu(tester).onBringToFront, isNull);
     expect(menu(tester).onSendToBack, isNotNull);
     expect(
-      find.textContaining('3 éléments · modifications non enregistrées'),
-      findsOneWidget,
+      drawingCaption(tester),
+      contains('3 éléments · modifications non enregistrées'),
     );
     await tap(tester, 'undo');
-    expect(
-      find.textContaining('3 éléments · projet enregistré'),
-      findsOneWidget,
-    );
+    expect(drawingCaption(tester), contains('3 éléments · projet enregistré'));
     await tap(tester, 'saveProject');
     expect(files.projects[files.savePath!]!, original);
     await tap(tester, 'redo');
@@ -228,18 +209,18 @@ void main() {
     await tap(tester, 'saveProject');
     expect(files.projects[files.savePath!]!, original);
     // The colour is on the element at once, before it changes place.
-    await tap(tester, 'color-d75e56');
+    await tap(tester, 'color-e83d48');
     await tap(tester, 'saveProject');
-    expect(objects(files.projects[files.savePath!]!).first.rgb, 0xd75e56);
+    expect(objects(files.projects[files.savePath!]!).first.rgb, 0xe83d48);
     await tap(tester, 'selectionOrder');
     await tap(tester, 'bringSelectionToFront');
     await tap(tester, 'saveProject');
-    expect(objects(files.projects[files.savePath!]!).last.rgb, 0xd75e56);
+    expect(objects(files.projects[files.savePath!]!).last.rgb, 0xe83d48);
     menu(tester).onSendToBack!();
     await tester.pumpAndSettle();
     await tap(tester, 'saveProject');
     expect(objects(files.projects[files.savePath!]!).map((s) => s.rgb), [
-      0xd75e56,
+      0xe83d48,
       0xeebf4e,
       0x176c5f,
     ]);

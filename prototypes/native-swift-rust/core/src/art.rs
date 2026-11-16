@@ -56,10 +56,14 @@ const READER_STACK_BYTES: usize = 64 * 1024 * 1024;
 /// tests, which write their descriptions into catalogues/interface.txt.
 #[cfg(test)]
 static INTERFACE: &[(&str, &str)] = &[
+    ("a-propos", include_str!("../art/interface/a-propos.svg")),
+    ("aide", include_str!("../art/interface/aide.svg")),
     ("aimant", include_str!("../art/interface/aimant.svg")),
     ("annuler", include_str!("../art/interface/annuler.svg")),
     ("calques", include_str!("../art/interface/calques.svg")),
     ("choisir", include_str!("../art/interface/choisir.svg")),
+    ("deplacer", include_str!("../art/interface/deplacer.svg")),
+    ("en-grand", include_str!("../art/interface/en-grand.svg")),
     (
         "enregistrer",
         include_str!("../art/interface/enregistrer.svg"),
@@ -78,12 +82,50 @@ static INTERFACE: &[(&str, &str)] = &[
     ("options", include_str!("../art/interface/options.svg")),
     ("ouvrir", include_str!("../art/interface/ouvrir.svg")),
     ("ovale", include_str!("../art/interface/ovale.svg")),
+    ("palette", include_str!("../art/interface/palette.svg")),
     ("pinceau", include_str!("../art/interface/pinceau.svg")),
+    ("pipette", include_str!("../art/interface/pipette.svg")),
+    (
+        "pointeur-choisir",
+        include_str!("../art/interface/pointeur-choisir.svg"),
+    ),
+    (
+        "pointeur-pinceau",
+        include_str!("../art/interface/pointeur-pinceau.svg"),
+    ),
+    (
+        "pointeur-pointe",
+        include_str!("../art/interface/pointeur-pointe.svg"),
+    ),
+    (
+        "pointeur-remplir",
+        include_str!("../art/interface/pointeur-remplir.svg"),
+    ),
     ("rectangle", include_str!("../art/interface/rectangle.svg")),
     ("remplir", include_str!("../art/interface/remplir.svg")),
     ("retablir", include_str!("../art/interface/retablir.svg")),
+    ("retourner", include_str!("../art/interface/retourner.svg")),
+    (
+        "sur-une-image",
+        include_str!("../art/interface/sur-une-image.svg"),
+    ),
     ("tampon", include_str!("../art/interface/tampon.svg")),
     ("texte", include_str!("../art/interface/texte.svg")),
+    ("tourner", include_str!("../art/interface/tourner.svg")),
+    (
+        "tous-les-outils",
+        include_str!("../art/interface/tous-les-outils.svg"),
+    ),
+    (
+        "toute-la-feuille",
+        include_str!("../art/interface/toute-la-feuille.svg"),
+    ),
+    ("univers", include_str!("../art/interface/univers.svg")),
+    (
+        "zoom-moins",
+        include_str!("../art/interface/zoom-moins.svg"),
+    ),
+    ("zoom-plus", include_str!("../art/interface/zoom-plus.svg")),
 ];
 
 /// Why a picture is not handed over.
@@ -559,6 +601,13 @@ pub(crate) fn describe(key: &str, svg: &str, out: &mut String) -> Result<(), Ref
     if svg.contains("<!ENTITY") {
         return Err(Refusal::Unsupported("entities"));
     }
+    // A character written by its number (`&#54;` for the digit 6) is only
+    // that character once the XML reader has read it: the guard of the
+    // numbers below, which reads the text as it is written, would not see
+    // the number it makes. No picture needs one: the text is refused.
+    if svg.contains("&#") {
+        return Err(Refusal::Unsupported("character references"));
+    }
     if !nesting_within(svg, MAX_XML_DEPTH) {
         return Err(Refusal::TooLarge);
     }
@@ -586,19 +635,47 @@ pub(crate) fn describe(key: &str, svg: &str, out: &mut String) -> Result<(), Ref
 /// Whether every number written in `text` stays within `limit` digits before
 /// its decimal point, its exponent counted, whatever the way it is written:
 /// `1e7`, `10000000` and `.5e8` have eight. Read on the text itself, before
-/// anything else: a number begins where a digit or a point follows anything
-/// but a letter, a digit, `#` or `_`, so names and colours (`r99999`,
-/// `#ffe9ad`) are not numbers. A number in a comment counts too.
+/// anything else, from left to right. A number begins at a digit or a point
+/// and is read whole, fraction and exponent, so its fraction is never taken
+/// for a number of its own. It may be written against the letters of the
+/// commands of a path (`H27.599999999999998`, `zM1e7`): after letters that
+/// are all such commands, what follows is a number. After any other word,
+/// and after `#`, the letters and digits that follow are the rest of a name
+/// or of a colour (`r99999`, `path12345678`, `#ffe9ad`), which nothing reads
+/// as a number. A name made only of letters of commands is read as a path
+/// would be: refused with a number too large in it, never the other way. A
+/// number in a comment counts too.
 fn numbers_within(text: &str, limit: i64) -> bool {
     let bytes = text.as_bytes();
-    let word = |byte: u8| byte.is_ascii_alphanumeric() || byte == b'#' || byte == b'_';
+    let word = |byte: u8| byte.is_ascii_alphanumeric() || byte == b'_';
+    let letter = |byte: u8| byte.is_ascii_alphabetic() || byte == b'_';
+    let command = |byte: u8| b"MmZzLlHhVvCcSsQqTtAa".contains(&byte);
     let mut at = 0;
     while at < bytes.len() {
         let first = bytes[at];
-        let starts = (first.is_ascii_digit() || first == b'.')
-            && (at == 0 || !word(bytes[at - 1]) || bytes[at - 1].is_ascii_digit());
-        if !starts || (at > 0 && bytes[at - 1].is_ascii_digit()) {
-            // Inside a word, or the rest of a number already counted.
+        if first == b'#' {
+            // A colour, or the name something is referred to by.
+            at += 1;
+            while at < bytes.len() && word(bytes[at]) {
+                at += 1;
+            }
+            continue;
+        }
+        if letter(first) {
+            let mut commands = true;
+            while at < bytes.len() && letter(bytes[at]) {
+                commands &= command(bytes[at]);
+                at += 1;
+            }
+            if !commands {
+                // The rest of a name.
+                while at < bytes.len() && word(bytes[at]) {
+                    at += 1;
+                }
+            }
+            continue;
+        }
+        if !first.is_ascii_digit() && first != b'.' {
             at += 1;
             continue;
         }

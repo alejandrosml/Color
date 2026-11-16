@@ -1,0 +1,464 @@
+{
+ "key": "bureau",
+ "name": "Le bureau près de la fenêtre",
+ "about": "La lumière change avec l’heure, et le chat dort.",
+ "look": {
+  "colours": {},
+  "shapes": {}
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#f3eefa",
+  "front": [
+   "#cfa873",
+   "#c69c66",
+   "#b3884f"
+  ],
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "ciel",
+    "anchor": "left",
+    "at": [
+     47,
+     41,
+     166,
+     188
+    ],
+    "role": "sky"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "crayons",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "milieu",
+    "anchor": "middle"
+   },
+   {
+    "picture": "nuage",
+    "anchor": "left",
+    "at": [
+     59,
+     69,
+     58,
+     58
+    ],
+    "clip": [
+     47,
+     41,
+     166,
+     188
+    ],
+    "moments": [
+     "matin",
+     "jour"
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 34
+    }
+   },
+   {
+    "picture": "fenetre",
+    "anchor": "left"
+   },
+   {
+    "picture": "rideau-gauche",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 9,
+     "origin": [
+      43,
+      22
+     ]
+    }
+   },
+   {
+    "picture": "rideau-droite",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 9,
+     "delay": -1.5,
+     "origin": [
+      217,
+      22
+     ]
+    }
+   },
+   {
+    "picture": "plante",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 7,
+     "delay": -2,
+     "origin": [
+      214.3,
+      313.4
+     ]
+    }
+   },
+   {
+    "role": "clock",
+    "anchor": "right",
+    "centre": [
+     848,
+     66
+    ],
+    "hour": [
+     11,
+     3.6
+    ],
+    "minute": [
+     16.5,
+     2.6
+    ],
+    "ink": "#293d4b",
+    "hub": "#d75e56"
+   },
+   {
+    "picture": "chat",
+    "anchor": "right",
+    "at": [
+     924,
+     284,
+     130,
+     66
+    ],
+    "move": {
+     "name": "souffle",
+     "seconds": 4.6,
+     "origin": [
+      989,
+      350
+     ]
+    }
+   }
+  ],
+  "light": {
+   "veils": {
+    "matin": {
+     "gradient": [
+      100,
+      "#ffc48c42",
+      "#ffd6aa0f"
+     ]
+    },
+    "soir": {
+     "multiply": "#e2804638"
+    },
+    "nuit": {
+     "multiply": "#1a205c8f"
+    }
+   },
+   "lamp": {
+    "anchor": "right",
+    "pivot": [
+     846.0,
+     234.0
+    ],
+    "angle": 52,
+    "half": 24,
+    "rim": 34,
+    "rimHalf": 27,
+    "bulb": [
+     869.4,
+     263.94
+    ],
+    "bulbRadius": 10.5,
+    "hood": [
+     852.9,
+     229.9,
+     857.7,
+     229.5,
+     862.5,
+     229.6,
+     867.1,
+     230.3,
+     871.5,
+     231.4,
+     875.7,
+     233.1,
+     879.5,
+     235.1,
+     883.1,
+     237.6,
+     886.3,
+     240.4,
+     889.1,
+     243.5,
+     889.3,
+     244.3,
+     888.6,
+     244.9,
+     883.1,
+     247.6,
+     877.9,
+     250.6,
+     872.8,
+     253.8,
+     867.9,
+     257.3,
+     863.3,
+     260.9,
+     858.7,
+     264.8,
+     854.4,
+     269.0,
+     850.2,
+     273.3,
+     846.3,
+     277.9,
+     845.5,
+     278.5,
+     844.8,
+     278.1,
+     842.4,
+     274.6,
+     840.5,
+     270.9,
+     839.0,
+     266.8,
+     837.9,
+     262.5,
+     837.3,
+     258.1,
+     837.3,
+     253.5,
+     837.7,
+     248.9,
+     838.8,
+     244.3,
+     840.4,
+     239.7,
+     840.5,
+     239.5,
+     841.6,
+     238.1,
+     842.8,
+     236.8,
+     844.0,
+     235.6,
+     845.3,
+     234.5,
+     846.6,
+     233.4,
+     848.0,
+     232.4,
+     849.5,
+     231.5,
+     851.0,
+     230.7,
+     852.6,
+     230.0
+    ],
+    "moments": [
+     "soir",
+     "nuit"
+    ]
+   }
+  },
+  "names": [
+   {
+    "key": "fenetre",
+    "anchor": "left",
+    "at": [
+     72,
+     34,
+     116,
+     202
+    ],
+    "name": "La fenêtre",
+    "text": "Elle laisse entrer la lumière du jour. Regarde bien : le ciel change avec l’heure !",
+    "source": "CNRTL, Trésor de la langue française informatisé (TLFi) — « fenêtre » — https://www.cnrtl.fr/definition/fenêtre"
+   },
+   {
+    "key": "rideau",
+    "anchor": "left",
+    "at": [
+     12,
+     24,
+     42,
+     274
+    ],
+    "name": "Le rideau",
+    "text": "On le tire le soir pour être tranquille, et on l’ouvre le matin pour laisser entrer le soleil.",
+    "source": "CNRTL, Trésor de la langue française informatisé (TLFi) — « rideau » — https://www.cnrtl.fr/definition/rideau"
+   },
+   {
+    "key": "livres",
+    "anchor": "left",
+    "at": [
+     8,
+     304,
+     90,
+     42
+    ],
+    "name": "Les livres",
+    "text": "Pleins d’histoires et d’images. On peut les lire et les relire autant qu’on veut."
+   },
+   {
+    "key": "pinceaux",
+    "anchor": "left",
+    "at": [
+     108,
+     256,
+     54,
+     90
+    ],
+    "name": "Le pot à pinceaux",
+    "text": "Les pinceaux s’y reposent la tête en l’air, pour ne pas abîmer leurs poils.",
+    "source": "Winsor & Newton — How to reshape, dry and store acrylic paint brushes (les ranger dans un pot, les poils vers le haut, une fois secs) — https://uk.winsornewton.com/blogs/guides/reshape-dry-storing-acrylic-paint-brush"
+   },
+   {
+    "key": "plante",
+    "anchor": "left",
+    "at": [
+     172,
+     244,
+     86,
+     102
+    ],
+    "name": "La plante verte",
+    "text": "Elle a besoin d’eau et de lumière pour grandir. Ses feuilles se tournent vers la fenêtre.",
+    "source": "Encyclopædia Britannica — Tropism — https://www.britannica.com/science/tropism"
+   },
+   {
+    "key": "horloge",
+    "anchor": "right",
+    "at": [
+     812,
+     30,
+     72,
+     72
+    ],
+    "name": "L’horloge",
+    "text": "Elle donne l’heure : la petite aiguille montre les heures, la grande montre les minutes.",
+    "source": "Académie française, Dictionnaire, 9e édition — « aiguille » — https://dictionnaire-academie.fr/article/A9A0986"
+   },
+   {
+    "key": "dessin",
+    "anchor": "right",
+    "at": [
+     898,
+     16,
+     156,
+     82
+    ],
+    "name": "Les dessins au mur",
+    "text": "Un arc-en-ciel et une marguerite, accrochés comme dans une exposition. Et si le prochain était le tien ?"
+   },
+   {
+    "key": "livres2",
+    "anchor": "right",
+    "at": [
+     822,
+     122,
+     72,
+     58
+    ],
+    "name": "Les livres rangés",
+    "text": "Debout sur l’étagère, bien serrés, pour retrouver vite son histoire préférée."
+   },
+   {
+    "key": "ours",
+    "anchor": "right",
+    "at": [
+     900,
+     118,
+     44,
+     62
+    ],
+    "name": "L’ours en peluche",
+    "text": "Un vieil ami tout doux, qui regarde chaque dessin depuis son étagère."
+   },
+   {
+    "key": "globe",
+    "anchor": "right",
+    "at": [
+     954,
+     112,
+     48,
+     68
+    ],
+    "name": "Le globe terrestre",
+    "text": "Une petite Terre penchée sur son axe, comme la vraie. On la fait tourner pour voir tous les pays et tous les océans.",
+    "source": "Encyclopædia Britannica (Britannica Kids, niveau Students) — globe — https://kids.britannica.com/students/article/globe/37046"
+   },
+   {
+    "key": "cubes",
+    "anchor": "right",
+    "at": [
+     1006,
+     138,
+     46,
+     42
+    ],
+    "name": "Les cubes",
+    "text": "Des cubes en bois pour construire des tours… et recommencer quand elles tombent."
+   },
+   {
+    "key": "lampe",
+    "anchor": "right",
+    "at": [
+     798,
+     216,
+     92,
+     132
+    ],
+    "name": "La lampe de bureau",
+    "text": "Quand le jour baisse, son ampoule s’allume et éclaire le bureau pour continuer à dessiner.",
+    "source": "Larousse, dictionnaire de français — « lampe » — https://www.larousse.fr/dictionnaires/francais/lampe/46085"
+   },
+   {
+    "key": "chat",
+    "anchor": "right",
+    "at": [
+     926,
+     290,
+     126,
+     62
+    ],
+    "name": "Le chat",
+    "text": "Roulé en boule sur son coussin, il dort : un chat peut dormir plus de douze heures par jour.",
+    "source": "Encyclopædia Britannica — Why Do Cats Sleep So Much? — https://www.britannica.com/story/why-do-cats-sleep-so-much"
+   },
+   {
+    "key": "crayons",
+    "anchor": "left",
+    "at": [
+     9,
+     382,
+     250,
+     22
+    ],
+    "name": "Les crayons de couleur",
+    "text": "Une mine de couleur dans un habit de bois. Beaucoup ont six côtés, pour ne pas rouler ; on les taille quand la pointe s’arrondit.",
+    "source": "Faber-Castell — « Did you know? » : le bois des crayons est passé du rond à six pans ou à trois faces parce qu’ils roulaient de la table — https://www.faber-castell.com.sg/hexo-ballpoint-pen-rose ; Larousse, dictionnaire de français — « crayon » — https://www.larousse.fr/dictionnaires/francais/crayon/20275"
+   }
+  ]
+ }
+}

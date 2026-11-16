@@ -1,0 +1,255 @@
+{
+ "key": "savane",
+ "name": "La savane",
+ "about": "Une girafe, un éléphant, un zèbre et un lion.",
+ "look": {
+  "colours": {
+   "ink": "#3a2c22",
+   "accent": "#8f4424",
+   "background": "#f1dfb6",
+   "line": "#dcc08a",
+   "surface": "#fffaf0",
+   "selected": "#ffe4bd",
+   "sheetBackdrop": "#f6d9a6",
+   "previewBox": "#f6ecd4",
+   "caption": "#5f4c3a",
+   "statusText": "#3a2c22",
+   "sheetTitle": "#3a2c22",
+   "sheetCaption": "#3a2c22",
+   "quietMark": "#8a7358",
+   "swatchRing": "#a8552f",
+   "shadow": "#3a2c22"
+  },
+  "shapes": {
+   "stageRadius": 16,
+   "stageBorder": 2
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#f3d9a4",
+  "front": [
+   "#d6b062",
+   "#cea758",
+   "#b28e45"
+  ],
+  "hat": "chapeau",
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "vautour",
+    "anchor": "left",
+    "at": [
+     40,
+     84,
+     16,
+     16
+    ],
+    "move": {
+     "name": "plane",
+     "seconds": 18,
+     "origin": [
+      48.0,
+      92.0
+     ]
+    }
+   },
+   {
+    "picture": "vautour",
+    "anchor": "right",
+    "at": [
+     884,
+     124,
+     12.8,
+     12.8
+    ],
+    "move": {
+     "name": "plane",
+     "seconds": 22,
+     "delay": -7,
+     "origin": [
+      890.4,
+      130.4
+     ]
+    },
+    "level": 2
+   },
+   {
+    "picture": "herbes",
+    "anchor": "left",
+    "at": [
+     6,
+     347.0,
+     36,
+     38
+    ],
+    "move": {
+     "name": "herbe",
+     "seconds": 6,
+     "origin": [
+      24.0,
+      384.0
+     ]
+    }
+   },
+   {
+    "picture": "herbes-droite",
+    "anchor": "right",
+    "at": [
+     1018,
+     347.0,
+     36,
+     38
+    ],
+    "move": {
+     "name": "herbe",
+     "seconds": 7,
+     "delay": -2,
+     "origin": [
+      1036.0,
+      384.0
+     ]
+    }
+   }
+  ],
+  "names": [
+   {
+    "key": "baobab",
+    "anchor": "left",
+    "at": [
+     18.8,
+     223.0,
+     90.5,
+     114.5
+    ],
+    "name": "Le baobab",
+    "text": "Un arbre énorme, qui garde l’eau de pluie dans son gros tronc pour tenir pendant la saison sèche.",
+    "source": "Encyclopaedia Britannica — baobab — https://www.britannica.com/plant/baobab-tree-genus ; AGRIS (FAO) — Chapotin et al., New Phytologist, 2006 : Baobab trees (Adansonia) in Madagascar use stored water to flush new leaves but not to support stomatal opening before the rainy season — https://agris.fao.org/search/en/records/65df25c74c5aef494fe045ca"
+   },
+   {
+    "key": "girafe",
+    "anchor": "left",
+    "at": [
+     152.8,
+     269.2,
+     52.8,
+     78.2
+    ],
+    "name": "La girafe",
+    "text": "L’animal terrestre le plus haut du monde. Son long cou lui permet de manger les feuilles très haut dans les arbres.",
+    "source": "Encyclopaedia Britannica — Giraffe — https://www.britannica.com/animal/giraffe ; San Diego Zoo Wildlife Alliance — Giraffe — https://animals.sandiegozoo.org/animals/giraffe"
+   },
+   {
+    "key": "termitiere",
+    "anchor": "left",
+    "at": [
+     211.5,
+     320.0,
+     45.2,
+     38.8
+    ],
+    "name": "La termitière",
+    "text": "Un château de terre bâti par des milliers, parfois des millions de termites, des insectes minuscules.",
+    "source": "Larousse (encyclopédie, vie sauvage) — termite — https://www.larousse.fr/encyclopedie/vie-sauvage/termite/184043 ; CNRTL (TLFi) — Définition de TERMITE — https://www.cnrtl.fr/definition/termite"
+   },
+   {
+    "key": "suricate",
+    "anchor": "left",
+    "at": [
+     201.8,
+     365.5,
+     7.5,
+     13.0
+    ],
+    "name": "Le suricate",
+    "text": "Il se dresse sur ses pattes arrière pour monter la garde pendant que sa famille cherche à manger.",
+    "source": "San Diego Zoo Wildlife Alliance — Meerkat — https://animals.sandiegozoo.org/animals/meerkat"
+   },
+   {
+    "key": "acacia",
+    "anchor": "right",
+    "at": [
+     815.0,
+     295.0,
+     62.5,
+     43.0
+    ],
+    "name": "L’acacia",
+    "text": "Son feuillage tout plat fait comme un parasol, où les animaux viennent chercher l’ombre.",
+    "source": "SANBI (PlantZAfrica) — Vachellia tortilis — https://pza.sanbi.org/node/9642 ; SANBI (PlantZAfrica) — Vachellia erioloba — https://pza.sanbi.org/node/9634"
+   },
+   {
+    "key": "lion",
+    "anchor": "right",
+    "at": [
+     811.8,
+     327.8,
+     103.2,
+     40.0
+    ],
+    "name": "Le lion",
+    "text": "On l’appelle le roi des animaux. Il dort ou se repose presque toute la journée.",
+    "source": "Larousse (encyclopédie, vie sauvage) — lion — https://www.larousse.fr/encyclopedie/vie-sauvage/lion/178160 ; Encyclopaedia Britannica — lion — https://www.britannica.com/animal/lion"
+   },
+   {
+    "key": "elephant",
+    "anchor": "right",
+    "at": [
+     916.8,
+     297.0,
+     66.0,
+     50.5
+    ],
+    "name": "L’éléphant",
+    "text": "Sa trompe lui sert de nez et de main : il s’en sert pour boire, sentir et attraper.",
+    "source": "Encyclopaedia Britannica — elephant — https://www.britannica.com/animal/elephant-mammal ; San Diego Zoo Wildlife Alliance — Elephant — https://animals.sandiegozoo.org/animals/elephant"
+   },
+   {
+    "key": "zebre",
+    "anchor": "right",
+    "at": [
+     998.5,
+     312.2,
+     49.8,
+     42.2
+    ],
+    "name": "Le zèbre",
+    "text": "Chaque zèbre a ses rayures à lui : il n’y en a pas deux pareils.",
+    "source": "San Diego Zoo Wildlife Alliance — Zebra — https://animals.sandiegozoo.org/animals/zebra ; Encyclopaedia Britannica — zebra — https://www.britannica.com/animal/zebra"
+   },
+   {
+    "key": "soleil",
+    "anchor": "right",
+    "at": [
+     993.6,
+     45.6,
+     40.8,
+     40.8
+    ],
+    "name": "Le soleil de la savane",
+    "text": "Ici il fait souvent très chaud. Beaucoup d’animaux se reposent à l’ombre pendant les heures les plus chaudes.",
+    "source": "Encyclopaedia Britannica — savanna — https://www.britannica.com/science/savanna ; University of Cape Town, FitzPatrick Institute — Shady Dealings — https://science.uct.ac.za/media/16178"
+   }
+  ]
+ }
+}

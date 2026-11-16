@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 
 import 'rust_document.dart' show maxTextBytes, maxTextLines;
 import 'fit_to_screen.dart';
+import 'inside_menu.dart';
 import 'screen_keyboard.dart';
 import 'size_choice.dart';
 import 'text_layout.dart';
 import 'language.dart';
+import 'studio_colors.dart';
 
 /// What the child confirmed: normalized characters, a size choice and the
 /// font of the letters (one of [textFonts]).
@@ -95,17 +97,18 @@ class TextEntryDialog extends StatefulWidget {
 
   static const _inset = 16.0;
   // The height the dialog with its keys needs for letters enlarged that many
-  // times, measured with DejaVu Sans. From about one and a half the two
+  // times, measured with the letters of the interface (Atkinson
+  // Hyperlegible, step G3 of Color 1.2). From about one and a half the two
   // buttons go under the sizes. A test lays the dialog out in windows of
   // several sizes and fails if these no longer hold.
   static const _heights = [
-    (1.0, 478.0),
-    (1.25, 502.0),
-    (1.5, 580.0),
-    (1.75, 604.0),
-    (2.0, 626.0),
-    (2.5, 684.0),
-    (3.0, 806.0),
+    (1.0, 456.0),
+    (1.25, 480.0),
+    (1.5, 560.0),
+    (1.75, 582.0),
+    (2.0, 606.0),
+    (2.5, 660.0),
+    (3.0, 730.0),
   ];
   static String get tooManyLines => trf(
     'Ton texte a trop de lignes : il peut en avoir {0} au plus.',
@@ -186,6 +189,15 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
       key: const Key('textDialog'),
       scrollable: true,
       insetPadding: const EdgeInsets.all(TextEntryDialog._inset),
+      // With the keys the dialog is as low as it can be: the letters of
+      // the pebbles are a little taller than those of a system, and all of
+      // it must still be in view in the smallest window.
+      titlePadding: widget.screenKeyboard
+          ? const EdgeInsets.fromLTRB(24, 16, 24, 0)
+          : null,
+      contentPadding: widget.screenKeyboard
+          ? const EdgeInsets.fromLTRB(24, 12, 24, 8)
+          : null,
       title: Text(
         widget.editing ? tr('Change ton texte') : tr('Écris ton texte'),
       ),
@@ -207,6 +219,9 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
               keyboardType: TextInputType.multiline,
               textCapitalization: TextCapitalization.sentences,
               inputFormatters: [LengthLimitingTextInputFormatter(_limit)],
+              // Never the menu of the system, which leads to the web and
+              // to other applications: only what stays in Color.
+              contextMenuBuilder: insideContextMenu,
               // A sign that the letters of the interface do not have is
               // shown in those of the sheet, where it will be drawn.
               // In the letters chosen, as the sheet will show them.
@@ -245,7 +260,9 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
           ],
         ),
       ),
-      actionsPadding: const EdgeInsets.all(16),
+      actionsPadding: widget.screenKeyboard
+          ? const EdgeInsets.fromLTRB(16, 4, 16, 12)
+          : const EdgeInsets.all(16),
       actionsOverflowButtonSpacing: 8,
       // With the keys, the sizes stand beside the two buttons: the field,
       // the keys and the buttons are then all in view in the smallest
@@ -316,9 +333,11 @@ class _TextEntryDialogState extends State<TextEntryDialog> {
     ],
   );
 
-  static const _chosen = Color(0xffe6f2e8);
-  static const _chosenLine = Color(0xff3f7f4f);
-  static const _line = Color(0xffc9c1b3);
+  // A chosen face in the colour of a choice of the look, with a line of
+  // its accent around it.
+  static Color get _chosen => studioSelected;
+  static Color get _chosenLine => studioGreen;
+  static Color get _line => studioQuietMark;
 
   Widget _sizeChoice({String? label}) => Wrap(
     spacing: 12,

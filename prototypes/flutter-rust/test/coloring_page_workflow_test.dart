@@ -367,9 +367,9 @@ void main() {
       // Choisir sees through the page the same way.
       await studio.tap('tool-select');
       await studio.click(studio.at(onLine.dx, onLine.dy));
-      expect(find.text('Clique un élément pour le choisir.'), findsOneWidget);
+      expect(find.byKey(const Key('galetSelection')), findsNothing);
       await studio.click(studio.at(box.center.dx, box.center.dy));
-      expect(find.text('Clique un élément pour le choisir.'), findsOneWidget);
+      expect(find.byKey(const Key('galetSelection')), findsNothing);
       await studio.click(studio.at(crossing.dx, crossing.dy));
       expect(find.text('Clique un élément pour le choisir.'), findsNothing);
       // The page has no layer of its own to receive an element.
@@ -589,7 +589,7 @@ void main() {
       (int, double, VectorKind, List<(double, double)>, int, int?) trait(
         double y,
         int layer,
-      ) => (0xd75e56, 12, VectorKind.stroke, [(200, y), (500, y)], layer, null);
+      ) => (0xe83d48, 12, VectorKind.stroke, [(200, y), (500, y)], layer, null);
       const sheet = [(100.0, 100.0), (1100.0, 700.0)];
       final files = MemoryFiles()..openPath = '/drawings/au-dessus.edupaint';
       files.projects[files.openPath!] = _projectV5(
@@ -700,7 +700,7 @@ void main() {
       await studio.tap('newProject');
       await studio.tap('page-maison');
       await studio.tap('tool-stroke');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       final gesture = await tester.startGesture(
         studio.sheetCenter + studio.at(box.left - 60, y),
       );
@@ -709,16 +709,16 @@ void main() {
       await tester.pump();
       // Still being drawn: over the zone, under the line.
       var sheet = await _sheetNow(tester);
-      expect(sheet(box.left - 40, y), 0xd75e56);
-      expect(sheet(box.left + 40, y), 0xd75e56);
+      expect(sheet(box.left - 40, y), 0xe83d48);
+      expect(sheet(box.left + 40, y), 0xe83d48);
       expect(sheet(box.left, y), _ink);
       await gesture.up();
       await tester.pumpAndSettle();
       studio.expectCount(1);
       // Drawn: nothing moved.
       sheet = await _sheetNow(tester);
-      expect(sheet(box.left - 40, y), 0xd75e56);
-      expect(sheet(box.left + 40, y), 0xd75e56);
+      expect(sheet(box.left - 40, y), 0xe83d48);
+      expect(sheet(box.left + 40, y), 0xe83d48);
       expect(sheet(box.left, y), _ink);
 
       // On a sheet without a page, the trait being drawn covers the
@@ -727,7 +727,7 @@ void main() {
       await studio.tap('tool-stroke');
       await studio.tap('color-9385bc');
       await studio.drag(studio.at(600, 200), studio.at(600, 600));
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       final across = await tester.startGesture(
         studio.sheetCenter + studio.at(500, 400),
       );
@@ -736,13 +736,13 @@ void main() {
       await tester.pump();
       sheet = await _sheetNow(tester);
       expect(sheet(600, 300), 0x9385bc);
-      expect(sheet(600, 400), 0xd75e56);
+      expect(sheet(600, 400), 0xe83d48);
       await across.up();
       await tester.pumpAndSettle();
       studio.expectCount(2);
       sheet = await _sheetNow(tester);
       expect(sheet(600, 300), 0x9385bc);
-      expect(sheet(600, 400), 0xd75e56);
+      expect(sheet(600, 400), 0xe83d48);
       expect(tester.takeException(), isNull);
       await studio.finish();
     },
@@ -760,9 +760,7 @@ void main() {
       await studio.start();
       await studio.tap('newProject');
       await studio.tap('page-maison');
-      VoidCallback? replayButton() => tester
-          .widget<IconButton>(find.byKey(const Key('replayDrawing')))
-          .onPressed;
+      VoidCallback? replayButton() => onPressedOf(tester, 'replayDrawing');
       // The page alone has nothing to show again.
       expect(replayButton(), isNull);
       expect(studio.menu.onReplay, isNull);
@@ -778,7 +776,7 @@ void main() {
       expect(replayButton(), isNotNull);
       // A trait of the child, under the left line of an outlined zone.
       await studio.tap('tool-stroke');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       final y = box.top + box.height / 2;
       await studio.drag(
         studio.at(box.left - 60, y),
@@ -798,18 +796,18 @@ void main() {
           Offset(sheet.left + x * sheet.scale, sheet.top + y * sheet.scale);
       expect(shot.rgbAt(at(box.left, box.top + box.height / 4)), _ink);
       expect(shot.rgbAt(at(middle.x, middle.y)), _white);
-      expect(shot.rgbAt(at(box.left - 40, y)), isNot(0xd75e56));
+      expect(shot.rgbAt(at(box.left - 40, y)), isNot(0xe83d48));
       // The zone takes its colour first…
       await tester.pump(ReplayPlan.zone + ReplayPlan.pause);
       shot = await _replayShot(tester);
       expect(shot.rgbAt(at(middle.x, middle.y)), 0xeebf4e);
-      expect(shot.rgbAt(at(box.left - 40, y)), isNot(0xd75e56));
+      expect(shot.rgbAt(at(box.left - 40, y)), isNot(0xe83d48));
       // … then the trait, a short film however many lines the page has.
       await tester.pump(_oneTraitFilm);
       await tester.pump();
       expect(find.text('Ton dessin est fini.'), findsOneWidget);
       shot = await _replayShot(tester);
-      expect(shot.rgbAt(at(box.left - 40, y)), 0xd75e56);
+      expect(shot.rgbAt(at(box.left - 40, y)), 0xe83d48);
       // The line of the page stays over the trait.
       expect(shot.rgbAt(at(box.left, y)), _ink);
       expect(shot.rgbAt(at(middle.x, middle.y)), 0xeebf4e);

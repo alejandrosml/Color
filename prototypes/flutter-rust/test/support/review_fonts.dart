@@ -52,5 +52,13 @@ Future<void> loadReviewFonts() async {
     ]);
   }
   await load('MaterialIcons', ['$fonts/MaterialIcons-Regular.otf']);
+  // The five fonts of the texts of a sheet, as pubspec.yaml names them.
   await load('ColorSans', ['fonts/DejaVuSans.ttf']);
+  await load('ColorAtkinson', [
+    'fonts/AtkinsonHyperlegible.ttf',
+    'fonts/AtkinsonHyperlegible-Bold.ttf',
+  ]);
+  await load('ColorComic', ['fonts/ComicNeue.ttf']);
+  await load('ColorFredoka', ['fonts/Fredoka.ttf']);
+  await load('ColorPlaywrite', ['fonts/PlaywriteFRTrad.ttf']);
 }

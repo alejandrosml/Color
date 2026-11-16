@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 class _Files extends MemoryFiles {
   int opens = 0;
@@ -104,7 +105,7 @@ void main() {
     expect(files.projects, isEmpty);
     expect(files.png, isNull); expect(files.svg, isNull);
     await _draw(tester);
-    expect(find.textContaining('0 élément · nouvelle feuille'), findsOneWidget);
+    expect(drawingCaption(tester), contains('0 élément · nouvelle feuille'));
     expect(recovery.writes, 0, reason: 'the recovery debounce has not elapsed');
     expect(recovery.bytes, isNull);
     // This simulates view teardown only; no process, VM or application is quit.
@@ -125,7 +126,7 @@ void main() {
     expect(recovery.clears, 0);
     expect(_menu(tester).onSave, isNotNull);
     await _draw(tester);
-    expect(find.textContaining('2 éléments · modifications non enregistrées'), findsOneWidget);
+    expect(drawingCaption(tester), contains('2 éléments · modifications non enregistrées'));
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   }, skip: !available);
@@ -137,7 +138,7 @@ void main() {
     expect(recovery.clears, 1);
     expect(_menu(tester).onSave, isNotNull);
     await _draw(tester);
-    expect(find.textContaining('1 élément · modifications non enregistrées'), findsOneWidget);
+    expect(drawingCaption(tester), contains('1 élément · modifications non enregistrées'));
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   }, skip: !available);
@@ -152,7 +153,7 @@ void main() {
     expect(recovery.clears, 1, reason: 'Studio exit vote completed before a later veto');
     expect(_menu(tester).onSave, isNotNull);
     await _draw(tester);
-    expect(find.textContaining('1 élément · modifications non enregistrées'), findsOneWidget);
+    expect(drawingCaption(tester), contains('1 élément · modifications non enregistrées'));
     await tester.pumpWidget(const SizedBox.shrink());
     expect(tester.takeException(), isNull);
   }, skip: !available);

@@ -3,9 +3,13 @@
      Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
      changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
      l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
-     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56.
+     Créé par Alejandro San Martin Lamas (https://github.com/alejandrosml). -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <title>Étoile</title>
-  <path d="M 50 10 L 60.58 38.44 L 90.9 39.71 L 67.12 58.56 L 75.27 87.79 L 50 71 L 24.73 87.79 L 32.88 58.56 L 9.1 39.71 L 39.42 38.44 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 45 44 C 45 46.21 43.21 48 41 48 C 38.79 48 37 46.21 37 44 C 37 41.79 38.79 40 41 40 C 43.21 40 45 41.79 45 44 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 50 10 L 61.46 37.22 L 90.9 39.71 L 68.55 59.03 L 75.27 87.79 L 50 72.5 L 24.73 87.79 L 31.45 59.03 L 9.1 39.71 L 38.54 37.22 Z" fill="#96413c" data-fill="sombre"/>
+  <path d="M 49.44 15.04 L 59.3 38.45 L 84.61 40.59 L 65.39 57.21 L 71.17 81.94 L 49.44 68.79 L 27.71 81.94 L 33.49 57.21 L 14.27 40.59 L 39.58 38.45 Z" fill="#d75e56" data-fill="couleur"/>
+  <path d="M 50 10 L 61.46 37.22 L 90.9 39.71 L 68.55 59.03 L 75.27 87.79 L 50 72.5 L 24.73 87.79 L 31.45 59.03 L 9.1 39.71 L 38.54 37.22 Z" fill="none" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 41.68 40.3 C 42.62 41.93 41.28 44.45 38.7 45.94 C 36.12 47.43 33.26 47.33 32.32 45.7 C 31.38 44.07 32.72 41.55 35.3 40.06 C 37.88 38.57 40.74 38.67 41.68 40.3 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 48 35 C 48 36.1 47.1 37 46 37 C 44.9 37 44 36.1 44 35 C 44 33.9 44.9 33 46 33 C 47.1 33 48 33.9 48 35 Z" fill="#efbebb" data-fill="claire"/>
 </svg>

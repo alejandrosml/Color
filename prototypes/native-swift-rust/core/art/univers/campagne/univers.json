@@ -1,0 +1,360 @@
+{
+ "key": "campagne",
+ "name": "La campagne",
+ "about": "Une ferme, un moulin et des animaux.",
+ "look": {
+  "colours": {
+   "ink": "#3a2c22",
+   "accent": "#a8402f",
+   "background": "#dcecc0",
+   "line": "#d9c48e",
+   "surface": "#fffbee",
+   "selected": "#ffe0d6",
+   "sheetBackdrop": "#e6f0d0",
+   "previewBox": "#f6efd9",
+   "caption": "#5f4c3a",
+   "statusText": "#3a2c22",
+   "sheetTitle": "#3a2c22",
+   "sheetCaption": "#3a2c22",
+   "quietMark": "#8a7455",
+   "swatchRing": "#7a6548",
+   "shadow": "#3b2a1e"
+  },
+  "shapes": {
+   "stageRadius": 18,
+   "stageBorder": 2
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#c6e6f8",
+  "front": [
+   "#8fca72",
+   "#84bf67",
+   "#6fa856"
+  ],
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "nuage",
+    "anchor": "left",
+    "at": [
+     60,
+     6,
+     144,
+     144
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 30
+    }
+   },
+   {
+    "picture": "nuage",
+    "anchor": "right",
+    "at": [
+     872,
+     0,
+     115,
+     115
+    ],
+    "move": {
+     "name": "nuage",
+     "seconds": 38,
+     "delay": -9
+    }
+   },
+   {
+    "picture": "pommier",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 10,
+     "origin": [
+      196,
+      273.4
+     ]
+    }
+   },
+   {
+    "picture": "tournesols",
+    "anchor": "left",
+    "move": {
+     "name": "balance",
+     "seconds": 7,
+     "delay": -2,
+     "origin": [
+      234,
+      390.7
+     ]
+    }
+   },
+   {
+    "picture": "ailes",
+    "anchor": "right",
+    "at": [
+     818,
+     103.1,
+     164,
+     164
+    ],
+    "move": {
+     "name": "tourne",
+     "seconds": 28,
+     "origin": [
+      900,
+      185.1
+     ]
+    }
+   },
+   {
+    "picture": "poule",
+    "anchor": "left",
+    "at": [
+     187.6,
+     385.22,
+     15.4,
+     15.4
+    ],
+    "move": {
+     "name": "picore",
+     "seconds": 5,
+     "origin": [
+      196,
+      398.8
+     ]
+    }
+   },
+   {
+    "picture": "hirondelle-gauche",
+    "anchor": "left",
+    "at": [
+     54.6,
+     74.6,
+     14.8,
+     14.8
+    ],
+    "move": {
+     "name": "vol",
+     "seconds": 9,
+     "origin": [
+      62,
+      82
+     ]
+    }
+   },
+   {
+    "picture": "hirondelle-droite",
+    "anchor": "right",
+    "at": [
+     962,
+     44,
+     12,
+     12
+    ],
+    "level": 2,
+    "move": {
+     "name": "vol2",
+     "seconds": 11,
+     "delay": -4,
+     "origin": [
+      968,
+      50
+     ]
+    }
+   }
+  ],
+  "names": [
+   {
+    "key": "ferme",
+    "anchor": "left",
+    "at": [
+     30,
+     211,
+     112,
+     86
+    ],
+    "name": "La ferme",
+    "text": "La maison des fermiers. Ils travaillent du matin au soir pour s’occuper des animaux et des champs.",
+    "source": "Académie française — ferme | Dictionnaire de l’Académie française, 9e édition — https://dictionnaire-academie.fr/article/A9F0490 ; Onisep — Agriculteur / Agricultrice - Fiche métier — https://www.onisep.fr/ressources/univers-metier/metiers/agriculteur-agricultrice"
+   },
+   {
+    "key": "pommier",
+    "anchor": "left",
+    "at": [
+     156,
+     196,
+     83,
+     132
+    ],
+    "name": "Le pommier",
+    "text": "Au printemps il est couvert de fleurs ; en automne, on cueille ses pommes.",
+    "source": "Royal Horticultural Society — How to grow apples | RHS Guide — https://www.rhs.org.uk/fruit/apples/grow-your-own"
+   },
+   {
+    "key": "coq",
+    "anchor": "left",
+    "at": [
+     154.2,
+     379,
+     21,
+     20
+    ],
+    "name": "Le coq",
+    "text": "C’est lui qui chante « cocorico » au lever du jour.",
+    "source": "Larousse — cocorico — https://www.larousse.fr/dictionnaires/francais/cocorico ; Nagoya University, ITbM — How a Rooster Knows to Crow at Dawn ? — https://www.itbm.nagoya-u.ac.jp/en_backup/research/2013/06/how-a-rooster-knows-to-crow-at-dawn.php"
+   },
+   {
+    "key": "vache",
+    "anchor": "left",
+    "at": [
+     46,
+     308,
+     94,
+     76
+    ],
+    "name": "La vache",
+    "text": "Elle mange de l’herbe pendant des heures. Après la naissance de son veau, elle donne du lait.",
+    "source": "VetAgro Sup, Chaire bien-être animal — Les vaches laitières produisent spontanément du lait toute l’année, VRAI ou FAUX ? — https://chaire-bea.vetagro-sup.fr/wp-content/uploads/2024/07/21-06-Les-vaches-laitieres-produisent-spontanement-du-lait-toute-lannee-VRAI-ou-FAUX.pdf ; VetAgro Sup, Chaire bien-être animal — Est-ce une bonne idée de mettre des chevaux et des vaches dans une même pâture ? — https://chaire-bea.vetagro-sup.fr/wp-content/uploads/2025/04/25-04-Est-ce-une-bonne-idee-de-mettre-des-chevaux-et-des-vaches-dans-une-meme-pature.pdf"
+   },
+   {
+    "key": "poule",
+    "anchor": "left",
+    "at": [
+     186.5,
+     384.5,
+     39,
+     18.5
+    ],
+    "name": "La poule et ses poussins",
+    "text": "La poule pond des œufs. Ses poussins la suivent partout.",
+    "source": "Larousse — poule — https://www.larousse.fr/dictionnaires/francais/poule ; Encyclopaedia Britannica — Animal learning : Imprinting — https://www.britannica.com/topic/animal-learning/Imprinting"
+   },
+   {
+    "key": "tournesol",
+    "anchor": "left",
+    "at": [
+     219,
+     342,
+     30,
+     44
+    ],
+    "name": "Le tournesol",
+    "text": "Quand il est jeune, il suit le soleil. Une fois en fleur, il reste tourné vers le soleil du matin.",
+    "source": "UC Davis — Sunflowers Move by the Clock — https://www.ucdavis.edu/news/sunflowers-move-clock ; PubMed (National Library of Medicine) — Circadian regulation of sunflower heliotropism, floral orientation, and pollinator visits (Science, 2016) — https://pubmed.ncbi.nlm.nih.gov/27493185/"
+   },
+   {
+    "key": "moulin",
+    "anchor": "right",
+    "at": [
+     818,
+     103,
+     164,
+     191
+    ],
+    "name": "Le moulin à vent",
+    "text": "Le vent fait tourner ses ailes, et les ailes font tourner une meule qui écrase le blé en farine.",
+    "source": "Encyclopædia Universalis — MOULIN À VENT — https://www.universalis.fr/encyclopedie/moulin-a-vent/ ; Cambridge Dictionary — MILLSTONE | English meaning — https://dictionary.cambridge.org/dictionary/english/millstone"
+   },
+   {
+    "key": "tracteur",
+    "anchor": "right",
+    "at": [
+     800,
+     297,
+     149,
+     104
+    ],
+    "name": "Le tracteur",
+    "text": "Très fort, avec ses grosses roues : il tire les outils qui travaillent la terre.",
+    "source": "Larousse — tracteur — https://www.larousse.fr/dictionnaires/francais/tracteur ; Cambridge Dictionary — TRACTOR | English meaning — https://dictionary.cambridge.org/dictionary/english/tractor"
+   },
+   {
+    "key": "mouton",
+    "anchor": "right",
+    "at": [
+     960,
+     307,
+     49,
+     27
+    ],
+    "name": "Le mouton",
+    "text": "Sa laine le tient au chaud. Une fois tondue, elle sert à faire des pulls.",
+    "source": "British Wool — How wool keeps us warm — https://shop.britishwool.org.uk/how-wool-keeps-us-warm/ ; Larousse — laine — https://www.larousse.fr/dictionnaires/francais/laine"
+   },
+   {
+    "key": "botte",
+    "anchor": "right",
+    "at": [
+     958.5,
+     339,
+     41,
+     38
+    ],
+    "name": "La botte de paille",
+    "text": "Après la moisson, les tiges du blé sont souvent roulées en grosses bottes.",
+    "source": "Cemagref, sur le site du ministère de l’Agriculture — H2 - Ramasseuse-presse à balles cylindriques — https://agriculture.gouv.fr/sites/minagri/files/h2_ramasseuse_presse_cylindrique.pdf ; Larousse — paille — https://www.larousse.fr/dictionnaires/francais/paille/57264"
+   },
+   {
+    "key": "epouvantail",
+    "anchor": "right",
+    "at": [
+     1017,
+     298,
+     34,
+     39
+    ],
+    "name": "L’épouvantail",
+    "text": "Un bonhomme de paille planté dans le champ pour faire peur aux oiseaux gourmands.",
+    "source": "Encyclopaedia Britannica — Scarecrow — https://www.britannica.com/topic/scarecrow-agriculture ; Larousse — épouvantail — https://www.larousse.fr/dictionnaires/francais/%C3%A9pouvantail"
+   },
+   {
+    "key": "canard",
+    "anchor": "left",
+    "at": [
+     19,
+     384,
+     23,
+     15
+    ],
+    "name": "Le canard",
+    "text": "Ses pattes palmées lui servent de rames pour nager sur la mare.",
+    "source": "San Diego Zoo Wildlife Alliance — Webbed feet — https://animals.sandiegozoo.org/animal-glossary/webbed-feet ; Ducks Unlimited — Understanding Waterfowl: Masters of the Air and Water — https://ducks.org/conservation/waterfowl-research-science/understanding-waterfowl-masters-of-the-air-and-water"
+   },
+   {
+    "key": "hirondelle",
+    "anchor": "left",
+    "at": [
+     51,
+     73,
+     22,
+     17
+    ],
+    "name": "L’hirondelle",
+    "text": "Elle arrive au printemps et repart en automne vers les pays chauds.",
+    "source": "British Trust for Ornithology — Swallow | BTO — https://bto.org/understanding-birds/birdfacts/swallow ; LPO PACA (faune-paca.org) — Hirondelle rustique — https://paca.lpo.fr/images/mediatheque/fichiers/section_etudes/connaissance/abc/abc_briancon/enq_hiron_fiche_hirondelle_rustique.pdf"
+   }
+  ],
+  "hat": "chapeau"
+ }
+}

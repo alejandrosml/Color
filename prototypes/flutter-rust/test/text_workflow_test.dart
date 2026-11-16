@@ -33,19 +33,9 @@ void main() {
       expect(find.text('Écris ton texte'), findsOneWidget);
       studio.expectCount(0);
       // Nothing to pose yet: the confirmation is disabled.
-      expect(
-        tester
-            .widget<FilledButton>(find.byKey(const Key('confirmText')))
-            .onPressed,
-        isNull,
-      );
+      expect(onPressedOf(tester, 'confirmText'), isNull);
       await studio.write('   ');
-      expect(
-        tester
-            .widget<FilledButton>(find.byKey(const Key('confirmText')))
-            .onPressed,
-        isNull,
-      );
+      expect(onPressedOf(tester, 'confirmText'), isNull);
       await studio.write('Bonjour');
       await studio.tap('confirmText');
       expect(find.byKey(const Key('textDialog')), findsNothing);
@@ -54,18 +44,18 @@ void main() {
 
       final exported = await studio.svg();
       expect(exported, contains('>Bonjour</tspan>'));
-      expect(exported, contains('fill="#477fb2"'));
+      expect(exported, contains('fill="#3370d1"'));
       final document = await studio.saved();
       try {
         final text = document.strokes.single;
         expect(text.kind, VectorKind.text);
         expect(text.text, 'Bonjour');
-        expect(text.rgb, 0x477fb2);
+        expect(text.rgb, 0x3370d1);
         expect(text.width, 56, reason: 'medium letters on a 1200 × 800 sheet');
         // The box starts where the pointer was released: the sheet's centre.
         expect(left(text), closeTo(600, .5));
         expect(top(text), closeTo(400, .5));
-        final layout = TextLayout('Bonjour', size: 56, rgb: 0x477fb2);
+        final layout = TextLayout('Bonjour', size: 56, rgb: 0x3370d1);
         expect(right(text) - left(text), closeTo(layout.width, .01));
         expect(bottom(text) - top(text), closeTo(layout.height, .01));
         expect(document.exportProject()[8], 6);
@@ -115,10 +105,7 @@ void main() {
       // The single stroke is still the only step to undo.
       await studio.tap('undo');
       studio.expectCount(0);
-      expect(
-        tester.widget<IconButton>(find.byKey(const Key('undo'))).onPressed,
-        isNull,
-      );
+      expect(onPressedOf(tester, 'undo'), isNull);
       await studio.finish();
     },
     skip: !available,
@@ -129,7 +116,7 @@ void main() {
     (tester) async {
       final studio = StudioDriver(tester);
       await studio.start();
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.tap('tool-text');
       await studio.click(studio.at(100, 100));
       // Short lines: the test font makes every character one em wide, and a
@@ -140,7 +127,7 @@ void main() {
       studio.expectCount(1);
       final exported = await studio.svg();
       expect(exported, contains('font-size="96"'));
-      expect(exported, contains('fill="#d75e56"'));
+      expect(exported, contains('fill="#e83d48"'));
       expect(exported, contains('>un</tspan>'));
       expect(exported, contains('>a &amp; &lt;b&gt;</tspan>'));
       expect('<tspan'.allMatches(exported), hasLength(2));
@@ -221,10 +208,10 @@ void main() {
       // Colour through the palette, at once, as for shapes.
       await studio.tap('tool-select');
       await studio.click(const Offset(12, 8));
-      await studio.tap('color-78a66f');
+      await studio.tap('color-4db266');
       expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
       exported = await studio.svg();
-      expect(exported, contains('fill="#78a66f"'));
+      expect(exported, contains('fill="#4db266"'));
       expect(exported, contains('font-size="56"'));
 
       await studio.tap('duplicateSelection');
@@ -239,7 +226,7 @@ void main() {
           'Après\ncoup',
         ]);
         expect(document.strokes.map((object) => object.rgb).toSet(), {
-          0x78a66f,
+          0x4db266,
         });
         expect(left(document.strokes[0]), closeTo(600, .5));
         expect(left(document.strokes[1]), lessThan(left(document.strokes[0])));

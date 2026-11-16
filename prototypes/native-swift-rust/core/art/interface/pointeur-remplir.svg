@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le pointeur du pot de peinture (Color 1.2). Le pot, vu du dessus, verse vers sa pointe, en haut à
+     gauche, au point (3, 3) : là où la peinture ira. La peinture qui coule et celle du pot prennent la couleur
+     choisie (groupes « couleur » et « couleur-pot »). Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Le pointeur du pot de peinture</title>
+  <path d="M3 3 C12 4.4 24 12 33.6 23 L24.4 33 C14 24 5.4 13 3 3 Z" fill="#ffffff" stroke="#ffffff" stroke-width="6.4" stroke-linejoin="round"/>
+  <g transform="translate(41 43) rotate(-50) scale(.84)">
+    <path d="M -16 -14 A 16 17 0 0 1 16 -14" fill="none" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M -18 -13 L 18 -13 L 13 20 L -13 20 Z" fill="#43ac9c" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M -12 -4 L -10 14" fill="none" stroke="#8fd6c8" stroke-width="3" stroke-linecap="round"/>
+    <g id="couleur-pot">
+      <ellipse cx="0" cy="-13" rx="18" ry="5.4" fill="#ed8c88"/>
+    </g>
+    <ellipse cx="0" cy="-13" rx="18" ry="5.4" fill="none" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g id="couleur">
+    <path d="M3 3 C12 4.4 24 12 33.6 23 L24.4 33 C14 24 5.4 13 3 3 Z" fill="#ed8c88"/>
+  </g>
+  <path d="M3 3 C12 4.4 24 12 33.6 23 L24.4 33 C14 24 5.4 13 3 3 Z" fill="none" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8.6 8 C13 10 18 14 22 18.4" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-opacity=".75"/>
+</svg>

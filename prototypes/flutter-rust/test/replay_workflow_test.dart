@@ -12,9 +12,8 @@ import 'support/studio_driver.dart';
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
 
-  VoidCallback? replayButton(WidgetTester tester) => tester
-      .widget<IconButton>(find.byKey(const Key('replayDrawing')))
-      .onPressed;
+  VoidCallback? replayButton(WidgetTester tester) =>
+      onPressedOf(tester, 'replayDrawing');
 
   testWidgets('an empty sheet has no film to show', (tester) async {
     final studio = StudioDriver(tester);

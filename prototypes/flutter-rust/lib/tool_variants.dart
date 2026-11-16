@@ -8,9 +8,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'document_renderer.dart' show insidePaint, markPaths, markerAlpha;
+import 'galets.dart';
 import 'rust_document.dart';
-import 'stamp_catalog.dart';
-import 'stamp_dialog.dart';
 import 'studio_colors.dart';
 import 'studio_tool.dart';
 import 'language.dart';
@@ -74,7 +73,17 @@ const brushTips = [
   BrushTool.airbrush,
 ];
 
-/// The row of choices of [tool]: nothing for a tool without any.
+/// How the choices of a tool are drawn among the pebbles (Color 1.2).
+enum ToolVariantStyle {
+  /// Large buttons, each with its name under what it draws: in a panel.
+  tiles,
+
+  /// Cells with what each draws, its name said and shown on demand: in
+  /// the drawer of a rail, which has the width of a telephone.
+  cells,
+}
+
+/// The choices of [tool]: nothing for a tool without any.
 class ToolVariants extends StatelessWidget {
   const ToolVariants({
     super.key,
@@ -85,16 +94,21 @@ class ToolVariants extends StatelessWidget {
     required this.rgb,
     this.pour = PourKind.plain,
     this.secondRgb = 0xffffff,
-    this.stamp,
-    this.stampLook = ObjectLook.plain,
-    this.onTurnStamp,
-    this.onMirrorStamp,
     this.onBrush,
     this.onMagic,
     this.onShape,
     this.onTool,
     this.onPour,
+    this.style = ToolVariantStyle.tiles,
+    this.tileWidth = 104,
   });
+
+  /// How each choice is drawn. The two buttons that turn a stamp are left
+  /// to the panel, which has them with the stamps.
+  final ToolVariantStyle style;
+
+  /// The width of a tile: wider with enlarged letters.
+  final double tileWidth;
 
   final StudioTool tool;
   final BrushTool brush;
@@ -107,13 +121,6 @@ class ToolVariants extends StatelessWidget {
   /// How the pot pours, and the second colour of its gradients.
   final PourKind pour;
   final int secondRgb;
-
-  /// The stamp a click poses, and how it is turned and mirrored; null when
-  /// the catalogue is not there.
-  final StampArt? stamp;
-  final ObjectLook stampLook;
-  final VoidCallback? onTurnStamp;
-  final VoidCallback? onMirrorStamp;
 
   /// Null while the studio is busy: the choices are then disabled.
   final ValueChanged<BrushTool>? onBrush;
@@ -143,6 +150,8 @@ class ToolVariants extends StatelessWidget {
             selected: tip == brush,
             onPressed: onBrush == null ? null : () => onBrush!(tip),
             preview: _VariantPreview.brush(tip, rgb),
+            style: style,
+            tileWidth: tileWidth,
           ),
       if (tool == StudioTool.magic)
         for (final each in Magic.values)
@@ -152,23 +161,9 @@ class ToolVariants extends StatelessWidget {
             selected: each == magic,
             onPressed: onMagic == null ? null : () => onMagic!(each),
             preview: _VariantPreview.magic(each, rgb),
+            style: style,
+            tileWidth: tileWidth,
           ),
-      if (tool == StudioTool.stamp && stamp != null) ...[
-        _Choice(
-          buttonKey: const Key('turnStamp'),
-          name: tr('Tourner le tampon'),
-          selected: stampLook.rotation != 0,
-          onPressed: onTurnStamp,
-          picture: _turned(stamp!, stampLook, Icons.rotate_right),
-        ),
-        _Choice(
-          buttonKey: const Key('mirrorStamp'),
-          name: tr('Retourner le tampon'),
-          selected: stampLook.mirrorX,
-          onPressed: onMirrorStamp,
-          picture: _turned(stamp!, stampLook, Icons.flip),
-        ),
-      ],
       if (tool == StudioTool.fill)
         for (final each in PourKind.values)
           _Choice(
@@ -177,6 +172,8 @@ class ToolVariants extends StatelessWidget {
             selected: each == pour,
             onPressed: onPour == null ? null : () => onPour!(each),
             preview: _VariantPreview.pour(each, rgb, secondRgb),
+            style: style,
+            tileWidth: tileWidth,
           ),
       if (tool.group == ToolGroup.shapes) ...[
         for (final box in [StudioTool.rectangle, StudioTool.ellipse])
@@ -186,6 +183,8 @@ class ToolVariants extends StatelessWidget {
             selected: tool == box,
             onPressed: onTool == null ? null : () => onTool!(box),
             preview: _VariantPreview.box(box.kind!, rgb),
+            style: style,
+            tileWidth: tileWidth,
           ),
         for (final each in NewShape.values)
           _Choice(
@@ -194,6 +193,8 @@ class ToolVariants extends StatelessWidget {
             selected: tool == StudioTool.shapes && each == shape,
             onPressed: onShape == null ? null : () => onShape!(each),
             preview: _VariantPreview.shape(each, rgb),
+            style: style,
+            tileWidth: tileWidth,
           ),
         _Choice(
           buttonKey: Key(StudioTool.magnet.keyName),
@@ -201,31 +202,41 @@ class ToolVariants extends StatelessWidget {
           selected: tool == StudioTool.magnet,
           onPressed: onTool == null ? null : () => onTool!(StudioTool.magnet),
           preview: _VariantPreview.magnet(rgb),
+          style: style,
+          tileWidth: tileWidth,
         ),
       ],
     ];
     if (choices.isEmpty) return const SizedBox.shrink();
-    return Wrap(spacing: 6, runSpacing: 6, children: choices);
+    return Wrap(spacing: 4, runSpacing: 4, children: choices);
   }
 
-  // The stamp as it will be posed, with the sign of what the button does.
-  Widget _turned(StampArt art, ObjectLook look, IconData sign) => Stack(
-    children: [
-      Center(
-        child: Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.rotationZ(look.rotation)
-            ..multiply(Matrix4.diagonal3Values(look.mirrorX ? -1 : 1, 1, 1)),
-          child: StampPreview(stamp: art, rgb: rgb, size: 30),
-        ),
-      ),
-      Positioned(
-        right: 0,
-        bottom: 0,
-        child: Icon(sign, size: 14, color: studioInk),
-      ),
-    ],
-  );
+  /// What [tool] draws with the choices of the moment, small: the witness
+  /// on the « lequel » button of the pebbles. Null for a tool without
+  /// choices, or whose witness is not a drawing (the stamp).
+  static CustomPainter? witness({
+    required StudioTool tool,
+    required BrushTool brush,
+    required Magic magic,
+    required NewShape shape,
+    required int rgb,
+    PourKind pour = PourKind.plain,
+    int secondRgb = 0xffffff,
+    Color? outline,
+  }) {
+    final preview = switch (tool) {
+      StudioTool.brush => _VariantPreview.brush(brush, rgb),
+      StudioTool.magic => _VariantPreview.magic(magic, rgb),
+      StudioTool.fill => _VariantPreview.pour(pour, rgb, secondRgb),
+      StudioTool.rectangle ||
+      StudioTool.ellipse => _VariantPreview.box(tool.kind!, rgb),
+      StudioTool.shapes => _VariantPreview.shape(shape, rgb),
+      StudioTool.magnet => _VariantPreview.magnet(rgb),
+      _ => null,
+    };
+    if (preview == null) return null;
+    return outline == null ? preview : _Outlined(preview, outline);
+  }
 }
 
 class _Choice extends StatelessWidget {
@@ -235,52 +246,52 @@ class _Choice extends StatelessWidget {
     required this.selected,
     required this.onPressed,
     this.preview,
-    this.picture,
+    this.style = ToolVariantStyle.tiles,
+    this.tileWidth = 104,
   });
 
+  final ToolVariantStyle style;
+  final double tileWidth;
+
   /// The key of the button, which carries its name and its state for a
-  /// screen reader, as the buttons of the tool bar do.
+  /// screen reader, as the buttons of the line do.
   final Key buttonKey;
   final String name;
   final bool selected;
   final VoidCallback? onPressed;
 
-  /// What it draws, painted; or [picture], made of widgets.
+  /// What it draws, painted.
   final _VariantPreview? preview;
-  final Widget? picture;
 
   @override
-  Widget build(BuildContext context) => Tooltip(
-    message: name,
-    excludeFromSemantics: true,
-    child: OutlinedButton(
+  Widget build(BuildContext context) => switch (style) {
+    ToolVariantStyle.tiles => GaletTile(
       key: buttonKey,
+      name: name,
+      selected: selected,
       onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(52, 48),
-        maximumSize: const Size(52, 48),
-        padding: const EdgeInsets.all(4),
-        backgroundColor: selected ? studioSelected : studioSurface,
-        side: BorderSide(
-          color: selected ? studioGreen : studioLine,
-          width: selected ? 2 : 1,
-        ),
-      ),
-      // The name and the state on the button itself: a screen reader meets
-      // one control, which it can press.
-      child: Semantics(
-        selected: selected,
-        label: name,
-        child: ExcludeSemantics(
-          child: SizedBox(
-            width: 42,
-            height: 38,
-            child: picture ?? CustomPaint(painter: preview),
-          ),
-        ),
+      width: tileWidth,
+      picture: SizedBox(
+        width: 61,
+        height: 36,
+        child: CustomPaint(painter: preview),
       ),
     ),
-  );
+    ToolVariantStyle.cells => GaletButton(
+      key: buttonKey,
+      label: name,
+      selected: selected,
+      framed: true,
+      onPressed: onPressed,
+      width: 48,
+      height: 48,
+      child: SizedBox(
+        width: 38,
+        height: 24,
+        child: CustomPaint(painter: preview),
+      ),
+    ),
+  };
 }
 
 /// What a choice draws, small.
@@ -556,4 +567,37 @@ class _VariantPreview extends CustomPainter {
       old.pour != pour ||
       old.secondRgb != secondRgb ||
       old.rgb != rgb;
+}
+
+/// A preview with a thin line of [outline] around what it draws: a colour
+/// as light as the surface of a pebble would be lost on it.
+class _Outlined extends CustomPainter {
+  const _Outlined(this.inner, this.outline);
+  final _VariantPreview inner;
+  final Color outline;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.saveLayer(
+      null,
+      Paint()..colorFilter = ColorFilter.mode(outline, BlendMode.srcIn),
+    );
+    for (final shift in const [
+      Offset(-.9, 0),
+      Offset(.9, 0),
+      Offset(0, -.9),
+      Offset(0, .9),
+    ]) {
+      canvas.save();
+      canvas.translate(shift.dx, shift.dy);
+      inner.paint(canvas, size);
+      canvas.restore();
+    }
+    canvas.restore();
+    inner.paint(canvas, size);
+  }
+
+  @override
+  bool shouldRepaint(_Outlined old) =>
+      old.outline != outline || inner.shouldRepaint(old.inner);
 }

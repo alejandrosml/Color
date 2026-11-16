@@ -6,12 +6,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'decor_motion.dart';
 import 'fit_to_screen.dart';
 import 'studio_colors.dart';
 import 'studio_options.dart';
 import 'platform_words.dart';
 import 'touch_calibration.dart';
 import 'language.dart';
+import 'universe.dart';
 
 /// How the options were left: closed, or towards one of the two dialogs
 /// that the simplest interface no longer shows in its header.
@@ -149,6 +151,147 @@ class _OptionsDialogState extends State<OptionsDialog> {
     onChanged: onChanged,
   );
 
+  // « Univers et effets » (Color 1.2): who chooses the universe, how much
+  // its decor moves, and whether it tells the names of its things.
+  List<Widget> _universeOptions(StudioOptions options) {
+    final universes = UniverseCatalog.instance.universes;
+    final worn = UniverseCatalog.instance.named(options.universe);
+    const small = TextStyle(fontSize: 13, height: 1.3);
+    const title = TextStyle(fontSize: 15, fontWeight: FontWeight.w600);
+    return [
+      if (universes.length > 1)
+        Padding(
+          padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr('Qui choisit l’univers ?'), style: title),
+              const SizedBox(height: 2),
+              Text(
+                tr('Le bouton « Univers » disparaît quand l’univers est fixé.'),
+                style: small,
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ChoiceChip(
+                    key: const Key('universe-child'),
+                    label: Text(tr('L’enfant')),
+                    labelStyle: const TextStyle(fontSize: 15),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
+                    selected: !options.universeFixed,
+                    onSelected: (_) =>
+                        store.change(options.copyWith(universeFixed: false)),
+                  ),
+                  for (final universe in universes)
+                    ChoiceChip(
+                      key: Key('universe-fixed-${universe.key}'),
+                      label: Text(trf('Toujours : {0}', [universe.name])),
+                      labelStyle: const TextStyle(fontSize: 15),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 10,
+                      ),
+                      selected:
+                          options.universeFixed && worn.key == universe.key,
+                      onSelected: (_) => store.change(
+                        options.copyWith(
+                          universeFixed: true,
+                          universe: universe.key,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(4, 10, 4, 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(tr('Mouvement du décor'), style: title),
+            const SizedBox(height: 2),
+            Text(
+              // A tablet and a telephone show a decor on the whole screen
+              // only, where it moves as much as it can: there the choice
+              // is whether it moves.
+              touchFirst
+                  ? tr(
+                      'Quand on regarde un décor en plein écran, il bouge beaucoup. Sur « Aucun », plus rien ne bouge ; Color suit aussi « Réduire les animations » de l’appareil.',
+                    )
+                  : tr(
+                      'Les rideaux, les feuilles, le chat… Sur « Faible », le décor bouge à peine. Sur « Aucun », plus rien ne bouge ; Color suit aussi « Réduire les animations » de l’appareil. Regardé en plein écran, un décor bouge au maximum, sauf sur « Aucun ».',
+                    ),
+              style: small,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final motion
+                    in touchFirst
+                        ? const [DecorMotion.none, DecorMotion.low]
+                        : DecorMotion.values)
+                  ChoiceChip(
+                    key: Key('motion-${motion.code}'),
+                    label: Text(switch (motion) {
+                      DecorMotion.none => tr('Aucun (mode calme)'),
+                      DecorMotion.low =>
+                        touchFirst ? tr('Le décor bouge') : tr('Faible'),
+                      DecorMotion.medium => tr('Moyen'),
+                      DecorMotion.high => tr('Maximum'),
+                    }),
+                    labelStyle: const TextStyle(fontSize: 15),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 10,
+                    ),
+                    selected: touchFirst
+                        ? options.decorMotion.moves == motion.moves
+                        : options.decorMotion == motion,
+                    onSelected: (_) =>
+                        store.change(options.copyWith(decorMotion: motion)),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      _switch(
+        key: const Key('optionDecorNames'),
+        title: tr('Fiches du décor'),
+        subtitle: touchFirst
+            ? tr(
+                'Quand on regarde un décor en plein écran, un appui sur un élément affiche son nom et une ou deux lignes.',
+              )
+            : tr(
+                'Un double-clic sur un élément du décor affiche son nom et une ou deux lignes ; un seul clic quand on regarde le décor en plein écran.',
+              ),
+        value: options.decorNames,
+        onChanged: (value) => store.change(options.copyWith(decorNames: value)),
+      ),
+      if (universes.any((universe) => universe.decor != null))
+        _switch(
+          key: const Key('optionDecorWatch'),
+          title: tr('Bouton « Regarder »'),
+          subtitle: tr(
+            'Dans « Choisis ton univers », il montre un décor sur tout l’écran, pour le regarder et apprendre le nom des choses.',
+          ),
+          value: options.decorWatch,
+          onChanged: (value) =>
+              store.change(options.copyWith(decorWatch: value)),
+        ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) => Focus(
     // Keys are swallowed while the dialog settles, wherever the focus is;
@@ -179,7 +322,7 @@ class _OptionsDialogState extends State<OptionsDialog> {
             // a language that can be.
             Row(
               children: [
-                const Icon(Icons.language, color: studioGreen),
+                Icon(Icons.language, color: studioGreen),
                 const SizedBox(width: 8),
                 Text(tr('Langue'), style: _heading),
               ],
@@ -235,12 +378,27 @@ class _OptionsDialogState extends State<OptionsDialog> {
               key: const Key('optionCompanion'),
               title: tr('Le personnage réagit'),
               subtitle: tr(
-                'Il se lève et donne un coup de pinceau quand l’enfant enregistre un dessin ou prend une nouvelle feuille.',
+                'Il fait un petit saut quand l’enfant enregistre un dessin ou prend une nouvelle feuille.',
               ),
               value: options.companionReacts,
               onChanged: (value) =>
                   store.change(options.copyWith(companionReacts: value)),
             ),
+            // The simplest interface never has it: ten colours, no more.
+            if (options.level != InterfaceLevel.toddler)
+              _switch(
+                key: const Key('optionGrownUpColours'),
+                title: tr('Toutes les couleurs, pour les grands'),
+                subtitle: tr(
+                  'Un bouton au bout des couleurs ouvre un dégradé, la pipette, le mélange et les dernières couleurs choisies. Sans lui, l’enfant a dix couleurs, et leurs nuances d’un appui long.',
+                ),
+                value: options.grownUpColours,
+                onChanged: (value) =>
+                    store.change(options.copyWith(grownUpColours: value)),
+              ),
+            const SizedBox(height: 8),
+            Text(tr('Univers et effets'), style: _heading),
+            ..._universeOptions(options),
             const SizedBox(height: 8),
             Text(tr('Accessibilité'), style: _heading),
             _switch(

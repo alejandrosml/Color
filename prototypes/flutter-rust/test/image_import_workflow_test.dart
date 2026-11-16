@@ -13,6 +13,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 final _surface = find.byKey(const Key('drawingSurface'));
 
@@ -92,9 +93,11 @@ Offset _point(WidgetTester tester, double x, double y) {
 }
 
 bool _idle(WidgetTester tester) {
-  final buttons = find.byKey(const Key('importImage'));
+  // « Sur une image » waits in « Mon dessin » ; « Enregistrer », always in
+  // view, is asleep for as long as the studio is busy.
+  final buttons = find.byKey(const Key('saveProject'));
   return buttons.evaluate().isNotEmpty &&
-      tester.widget<OutlinedButton>(buttons).onPressed != null;
+      onPressedOf(tester, 'saveProject') != null;
 }
 
 /// Real image codecs and worker isolates need real event-loop turns. A busy
@@ -117,6 +120,7 @@ Future<void> _until(
 }
 
 Future<void> _tap(WidgetTester tester, String key) async {
+  key = await revealControl(tester, key);
   final finder = find.byKey(Key(key));
   await tester.ensureVisible(finder);
   await tester.tap(finder);

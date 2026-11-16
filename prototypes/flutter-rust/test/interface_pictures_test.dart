@@ -60,6 +60,21 @@ void main() {
       EduArt.magic,
       EduArt.shapes,
       EduArt.magnet,
+      EduArt.universes,
+      // The small pictures of the pebbles (Color 1.2).
+      EduArt.help,
+      EduArt.about,
+      EduArt.zoomIn,
+      EduArt.zoomOut,
+      EduArt.wholeSheet,
+      EduArt.moveSheet,
+      EduArt.bigSheet,
+      EduArt.onPicture,
+      EduArt.turn,
+      EduArt.mirror,
+      EduArt.allTools,
+      EduArt.pipette,
+      EduArt.palette,
     };
     for (final art in EduArt.values) {
       expect(catalogue!.keys, contains(art.svgKey), reason: art.name);

@@ -3,9 +3,13 @@
      Son numéro est celui que gardent les projets : un tampon s’ajoute à la fin, sans jamais
      changer de place. data-fill et data-stroke disent quelle peinture suit la couleur que
      l’enfant choisit : « couleur » elle-même, « sombre » (7/10 de chaque canal), « claire »
-     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56. -->
+     (6/10 de l’écart au blanc en plus) ; ici montrée avec le coquelicot, #d75e56.
+     Créé par Alejandro San Martin Lamas (https://github.com/alejandrosml). -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <title>Cœur</title>
-  <path d="M 50 88 C 22 66 7 50 7 32 C 7 18 18 9 30 9 C 39 9 46 14 50 22 C 54 14 61 9 70 9 C 82 9 93 18 93 32 C 93 50 78 66 50 88 Z" fill="#d75e56" data-fill="couleur" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M 36 28 C 36 31.31 32.42 34 28 34 C 23.58 34 20 31.31 20 28 C 20 24.69 23.58 22 28 22 C 32.42 22 36 24.69 36 28 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 50 88 C 22 68 8 48 8 33 C 8 19 19 9 31 9 C 39 9 46 13 50 20 C 54 13 61 9 69 9 C 81 9 92 19 92 33 C 92 48 78 68 50 88 Z" fill="#96413c" data-fill="sombre"/>
+  <path d="M 48.96 81.24 C 24.6 63.84 12.42 46.44 12.42 33.39 C 12.42 21.21 21.99 12.51 32.43 12.51 C 39.39 12.51 45.48 15.99 48.96 22.08 C 52.44 15.99 58.53 12.51 65.49 12.51 C 75.93 12.51 85.5 21.21 85.5 33.39 C 85.5 46.44 73.32 63.84 48.96 81.24 Z" fill="#d75e56" data-fill="couleur"/>
+  <path d="M 50 88 C 22 68 8 48 8 33 C 8 19 19 9 31 9 C 39 9 46 13 50 20 C 54 13 61 9 69 9 C 81 9 92 19 92 33 C 92 48 78 68 50 88 Z" fill="none" stroke="#293d4b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 35.37 22.84 C 37.08 25.28 35.17 29.57 31.1 32.42 C 27.03 35.27 22.34 35.6 20.63 33.16 C 18.92 30.72 20.83 26.43 24.9 23.58 C 28.97 20.73 33.66 20.4 35.37 22.84 Z" fill="#efbebb" data-fill="claire"/>
+  <path d="M 42.6 19 C 42.6 20.44 41.44 21.6 40 21.6 C 38.56 21.6 37.4 20.44 37.4 19 C 37.4 17.56 38.56 16.4 40 16.4 C 41.44 16.4 42.6 17.56 42.6 19 Z" fill="#efbebb" data-fill="claire"/>
 </svg>

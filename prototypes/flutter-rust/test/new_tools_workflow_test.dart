@@ -37,6 +37,8 @@ void main() {
     final studio = StudioDriver(tester);
     await studio.start();
     await studio.tap('tool-stroke');
+    // The tips of the brush are what « lequel » opens.
+    await studio.reveal('brushTip-chalk');
     expect(find.byKey(const Key('toolVariants')), findsOneWidget);
     await studio.tap('brushTip-chalk');
     await trace(studio, wave(studio));

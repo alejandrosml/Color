@@ -1,0 +1,318 @@
+{
+ "key": "espace",
+ "name": "L’espace",
+ "about": "Le Soleil, les planètes et une fusée, parmi les étoiles.",
+ "look": {
+  "galets": "nuit",
+  "colours": {
+   "ink": "#eef0ff",
+   "accent": "#ffffff",
+   "background": "#141842",
+   "line": "#4b55c4",
+   "surface": "#232a66",
+   "selected": "#3d46a3",
+   "sheetBackdrop": "#141842",
+   "previewBox": "#1a2052",
+   "warning": "#ffb4ab",
+   "caption": "#c9cdfa",
+   "statusText": "#c9cdfa",
+   "sheetTitle": "#eef0ff",
+   "sheetCaption": "#eef0ff",
+   "quietMark": "#c9cdfa",
+   "swatchRing": "#c9cdfa",
+   "galetDisc": "#eceeff",
+   "galetEdge": "#8f97f28c",
+   "shadow": "#000000"
+  },
+  "shapes": {
+   "shadowDepth": 2.6
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#141842",
+  "above": "ground",
+  "front": [
+   "#141842",
+   "#141842",
+   "#141842"
+  ],
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "etoiles-gauche",
+    "anchor": "left",
+    "move": {
+     "name": "craie",
+     "seconds": 6
+    }
+   },
+   {
+    "picture": "etoiles-droite",
+    "anchor": "right",
+    "move": {
+     "name": "craie",
+     "seconds": 7,
+     "delay": -2
+    }
+   },
+   {
+    "picture": "satellite",
+    "anchor": "left",
+    "at": [
+     140,
+     20,
+     34,
+     34
+    ],
+    "move": {
+     "name": "nage",
+     "seconds": 40
+    }
+   },
+   {
+    "picture": "astronaute",
+    "anchor": "right",
+    "move": {
+     "name": "flotte",
+     "seconds": 8,
+     "delay": -2
+    }
+   },
+   {
+    "picture": "fusee",
+    "anchor": "right",
+    "at": [
+     924,
+     236,
+     70,
+     70
+    ],
+    "move": {
+     "name": "fusee",
+     "seconds": 6
+    }
+   },
+   {
+    "picture": "soucoupe",
+    "anchor": "right",
+    "at": [
+     968,
+     304,
+     64,
+     64
+    ],
+    "move": {
+     "name": "flotte",
+     "seconds": 5,
+     "delay": -2
+    }
+   }
+  ],
+  "names": [
+   {
+    "key": "soleil",
+    "anchor": "left",
+    "at": [
+     12,
+     50,
+     108,
+     108
+    ],
+    "name": "Le Soleil",
+    "text": "C’est une étoile : une énorme boule de gaz brûlant. Il nous donne la lumière et la chaleur.",
+    "source": "NASA Science — Sun: Facts — https://science.nasa.gov/sun/facts/"
+   },
+   {
+    "key": "satellite",
+    "anchor": "left",
+    "at": [
+     140,
+     24,
+     34,
+     26
+    ],
+    "name": "Un satellite",
+    "text": "Il tourne autour de la Terre et sert au téléphone, à la météo et aux cartes.",
+    "source": "NASA Space Place — What Is a Satellite? — https://spaceplace.nasa.gov/satellite/en/"
+   },
+   {
+    "key": "terre",
+    "anchor": "left",
+    "at": [
+     166,
+     128,
+     60,
+     60
+    ],
+    "name": "La Terre",
+    "text": "Notre planète ! Le bleu, ce sont les océans : ils recouvrent presque les trois quarts de la Terre.",
+    "source": "NOAA National Ocean Service — How much water is in the ocean? — https://oceanservice.noaa.gov/facts/oceanwater.html"
+   },
+   {
+    "key": "lune",
+    "anchor": "left",
+    "at": [
+     226,
+     92,
+     36,
+     36
+    ],
+    "name": "La Lune",
+    "text": "Elle tourne autour de la Terre. Des astronautes y ont marché pour la première fois en 1969.",
+    "source": "NASA — Apollo 11 — https://www.nasa.gov/mission/apollo-11/"
+   },
+   {
+    "key": "ourse",
+    "anchor": "left",
+    "at": [
+     24,
+     196,
+     124,
+     50
+    ],
+    "name": "La Grande Ourse",
+    "text": "Sept de ses étoiles brillantes dessinent une casserole. Deux d’entre elles montrent le chemin de l’étoile Polaire.",
+    "source": "NASA Science — What is the North Star and How Do You Find It? — https://science.nasa.gov/solar-system/what-is-the-north-star-and-how-do-you-find-it/"
+   },
+   {
+    "key": "galaxie",
+    "anchor": "left",
+    "at": [
+     184,
+     238,
+     76,
+     48
+    ],
+    "name": "Une galaxie",
+    "text": "Des milliards d’étoiles qui tournent ensemble. La nôtre s’appelle la Voie lactée.",
+    "source": "NASA Space Place — What Is a Galaxy? — https://spaceplace.nasa.gov/galaxy/en/"
+   },
+   {
+    "key": "saturne",
+    "anchor": "left",
+    "at": [
+     41,
+     284,
+     154,
+     84
+    ],
+    "name": "Saturne",
+    "text": "Une planète géante entourée d’anneaux faits de morceaux de glace, de roche et de poussière.",
+    "source": "NASA Science — Saturn: Facts — https://science.nasa.gov/saturn/facts/"
+   },
+   {
+    "key": "asteroide",
+    "anchor": "left",
+    "at": [
+     222,
+     336,
+     34,
+     34
+    ],
+    "name": "Un astéroïde",
+    "text": "Un gros caillou qui voyage dans l’espace.",
+    "source": "NASA Science — Asteroid Facts — https://science.nasa.gov/solar-system/asteroids/facts/"
+   },
+   {
+    "key": "mars",
+    "anchor": "right",
+    "at": [
+     826,
+     46,
+     40,
+     40
+    ],
+    "name": "Mars",
+    "text": "La planète rouge. Des robots à roulettes s’y promènent pour l’étudier.",
+    "source": "NASA Science — Mars: Facts — https://science.nasa.gov/mars/facts/"
+   },
+   {
+    "key": "jupiter",
+    "anchor": "right",
+    "at": [
+     922,
+     46,
+     136,
+     100
+    ],
+    "name": "Jupiter",
+    "text": "La plus grosse planète du système solaire. Sa tache rouge est une tempête plus grande que la Terre.",
+    "source": "NASA Science — Jupiter Facts — https://science.nasa.gov/jupiter/jupiter-facts/"
+   },
+   {
+    "key": "comete",
+    "anchor": "right",
+    "at": [
+     821,
+     185,
+     96,
+     65
+    ],
+    "name": "Une comète",
+    "text": "Une boule de glace et de poussière. Près du Soleil, elle laisse une longue traînée brillante.",
+    "source": "NASA Science — Comets — https://science.nasa.gov/solar-system/comets/"
+   },
+   {
+    "key": "astronaute",
+    "anchor": "right",
+    "at": [
+     814,
+     260,
+     54,
+     94
+    ],
+    "name": "L’astronaute",
+    "text": "Dans l’espace, il flotte ! Sa combinaison lui donne de quoi respirer et le protège du chaud et du froid.",
+    "source": "NASA — What Is a Spacesuit? (Grades K-4) — https://www.nasa.gov/learning-resources/for-kids-and-students/what-is-a-spacesuit-grades-k-4/"
+   },
+   {
+    "key": "fusee",
+    "anchor": "right",
+    "at": [
+     924,
+     236,
+     70,
+     70
+    ],
+    "name": "La fusée",
+    "text": "Elle doit aller très, très vite pour quitter la Terre.",
+    "source": "NASA Space Place — How Do We Launch Things Into Space? — https://spaceplace.nasa.gov/launching-into-space/en/"
+   },
+   {
+    "key": "soucoupe",
+    "anchor": "right",
+    "at": [
+     968,
+     314,
+     64,
+     40
+    ],
+    "name": "Une soucoupe volante",
+    "text": "Personne n’en a jamais vu pour de vrai… mais on peut toujours l’imaginer !",
+    "source": "NASA Science — UAP FAQs — https://science.nasa.gov/uap/faqs/"
+   }
+  ],
+  "hat": "chapeau"
+ }
+}

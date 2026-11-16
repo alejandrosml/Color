@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'color_identity.dart';
 import 'fit_to_screen.dart';
+import 'inside_menu.dart';
 import 'french.dart';
 import 'licences.dart';
 import 'platform_words.dart';
@@ -327,6 +328,9 @@ Future<void> showPrivacyPolicy(BuildContext context) => showDialog<void>(
               const SizedBox(height: 12),
               SelectableText(
                 trf('Aide et questions : {0}', [colorSupportAddress]),
+                // To copy it; never « Rechercher sur le Web » or
+                // « Partager », which the menu of the system would add.
+                contextMenuBuilder: insideContextMenu,
               ),
             ],
           ],

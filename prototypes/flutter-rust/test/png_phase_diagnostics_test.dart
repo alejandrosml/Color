@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 class _GatedFiles extends MemoryFiles {
   final chooser = Completer<String?>();
@@ -65,8 +66,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
-    await tester.tap(find.byKey(const Key('exportImage')));
-    await tester.pumpAndSettle();
+    // « Exporter » waits in « Mon dessin » (Color 1.2, the pebbles).
+    await pressControl(tester, 'exportImage');
     await tester.tap(find.byKey(const Key('exportPng')));
     await tester.pumpAndSettle();
     expect(phaseNames(), ['started', 'busy-entered', 'choosePng-started']);

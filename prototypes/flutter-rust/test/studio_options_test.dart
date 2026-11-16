@@ -192,6 +192,16 @@ void main() {
         'keyboardPointer': false,
         'language': 'en',
         'companionReacts': false,
+        // The universe (Color 1.2): none named, the child chooses, the
+        // decor hardly moves, tells the names of its things, and may be
+        // looked at on the whole screen.
+        'universe': '',
+        'universeFixed': false,
+        'decorMotion': 'faible',
+        'decorNames': true,
+        'decorWatch': true,
+        // Every colour, for the grown-ups (Color 1.2): not asked for.
+        'grownUpColours': false,
       });
       // Nothing is left beside the file. By their names: Windows lists a
       // folder with its own separator.

@@ -12,6 +12,7 @@ import 'package:edupaint_flutter_study/rust_document.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 class _Files extends MemoryFiles {
   int preparedReads = 0;
@@ -92,6 +93,7 @@ Future<void> _tap(
   String key, {
   bool decision = false,
 }) async {
+  key = await revealControl(tester, key);
   await tester.tap(find.byKey(Key(key)));
   await waitForPreparedOpen(tester, allowSaveDecision: decision);
 }
@@ -106,8 +108,7 @@ Future<void> _draw(WidgetTester tester) async {
 }
 
 Future<void> _export(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('exportImage')));
-  await tester.pumpAndSettle();
+  await pressAction(tester, 'exportImage');
   await _tap(tester, 'exportSvg');
 }
 
@@ -170,7 +171,7 @@ void main() {
         expect(old.undoCount, oldUndo);
         expect(old.redoCount, oldRedo);
         expect(identical(_background(tester), oldImage), isTrue);
-        expect(find.textContaining('2 éléments'), findsOneWidget);
+        expect(drawingCaption(tester), contains('2 éléments'));
         expect(find.byKey(const Key('saveChanges')), findsNothing);
         await _export(tester);
         expect(files.svg, oldSvg);
@@ -220,6 +221,7 @@ void main() {
       final document = prepared!.document;
       files.openPath = '/drawings/held.edupaint';
       files.held = Completer<PreparedProject>();
+      await revealControl(tester, 'openProject');
       await tester.tap(find.byKey(const Key('openProject')));
       await tester.pump();
       await tester.pump();
@@ -244,6 +246,7 @@ void main() {
       final document = prepared!.document;
       files.openPath = '/drawings/held-image.edupaint';
       files.held = Completer<PreparedProject>();
+      await revealControl(tester, 'openProject');
       await tester.tap(find.byKey(const Key('openProject')));
       await tester.pump();
       await tester.pump();

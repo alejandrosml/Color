@@ -9,9 +9,10 @@ import 'package:edupaint_flutter_study/desktop_menu.dart';
 import 'package:edupaint_flutter_study/main.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:edupaint_flutter_study/viewport.dart';
-import 'package:edupaint_flutter_study/color_palette.dart';
+import 'package:edupaint_flutter_study/studio_options.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 import 'support/prepared_open_wait.dart';
 
 void main() {
@@ -30,16 +31,9 @@ void main() {
         Offset(v.left + x * v.scale, v.top + y * v.scale);
   }
 
-  Future<void> tap(WidgetTester tester, String key) async {
-    await tester.tap(find.byKey(Key(key)));
-    if (key == 'openProject') {
-      await waitForPreparedOpen(tester, allowSaveDecision: true);
-    } else if (key == 'restoreRecovery') {
-      await waitForPreparedOpen(tester);
-    } else {
-      await tester.pumpAndSettle();
-    }
-  }
+  // What holds the control is opened first: « Mon dessin », a panel.
+  Future<void> tap(WidgetTester tester, String key) =>
+      pressControl(tester, key);
 
   Future<void> mount(
     WidgetTester tester,
@@ -50,8 +44,14 @@ void main() {
     tester.view.physicalSize = const Size(1100, 800);
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    // With « Toutes les couleurs, pour les grands » : the dialog where a
+    // colour is found is one of the things a command may meet.
+    final options = StudioOptionsStore.memory(
+      const StudioOptions(grownUpColours: true),
+    );
+    addTearDown(options.dispose);
     await tester.pumpWidget(
-      EduPaintApp(files: files, recoveryStorage: recovery),
+      EduPaintApp(files: files, recoveryStorage: recovery, options: options),
     );
     await waitForPreparedOpen(tester, allowRecoveryDecision: true);
   }
@@ -68,7 +68,7 @@ void main() {
         VectorKind.rectangle,
         const DocumentPoint(450, 250),
         const DocumentPoint(750, 550),
-        rgb: 0x477fb2,
+        rgb: 0x3370d1,
         width: 8,
         fillRgb: 0xeebf4e,
       );
@@ -144,7 +144,7 @@ void main() {
       await tester.drag(surface, const Offset(60, -25));
       await tester.pumpAndSettle();
       expect(identical(painter(tester).strokes, paths), isTrue);
-      expect(find.textContaining('projet enregistré'), findsOneWidget);
+      expect(await drawingStatus(tester), contains('projet enregistré'));
       await tap(tester, 'saveProject');
       expect(files.projects[files.savePath!], original);
       await exportSvg(tester);
@@ -263,8 +263,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(viewport(tester).scale, closeTo(beforeTrackpad * 1.2, 1e-8));
-      expect(find.textContaining('1 élément'), findsOneWidget);
-      expect(find.textContaining('projet enregistré'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
+      expect(await drawingStatus(tester), contains('projet enregistré'));
       expect(recovery.writes, 0);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
@@ -295,25 +295,25 @@ void main() {
       }
 
       // The outline first: the inside is untouched.
-      await tap(tester, 'color-d75e56');
+      await tap(tester, 'color-e83d48');
       await tap(tester, 'saveProject');
-      expect(colours(), (rgb: 0xd75e56, fillRgb: insideBefore));
+      expect(colours(), (rgb: 0xe83d48, fillRgb: insideBefore));
       // Then the inside: the outline keeps its new colour.
       await tap(tester, 'paint-target-fill');
-      await tap(tester, 'color-78a66f');
+      await tap(tester, 'color-4db266');
       await tap(tester, 'saveProject');
-      expect(colours(), (rgb: 0xd75e56, fillRgb: 0x78a66f));
+      expect(colours(), (rgb: 0xe83d48, fillRgb: 0x4db266));
       expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
       await tap(tester, 'undo');
       await tap(tester, 'saveProject');
-      expect(colours(), (rgb: 0xd75e56, fillRgb: insideBefore));
+      expect(colours(), (rgb: 0xe83d48, fillRgb: insideBefore));
       await tap(tester, 'undo');
       await tap(tester, 'saveProject');
       expect(files.projects[files.savePath!], original);
-      expect(
-        tester.widget<ColorPalette>(find.byType(ColorPalette)).history!.colors,
-        containsAll([0xd75e56, 0x78a66f]),
-      );
+      // The colours chosen last are still those of the session.
+      await tap(tester, 'everyColour');
+      expect(find.byKey(const Key('recent-e83d48')), findsOneWidget);
+      expect(find.byKey(const Key('recent-4db266')), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },
     skip: !available,
@@ -325,7 +325,7 @@ void main() {
       final seed = RustDocument(width: 640, height: 480);
       seed.addStroke(
         const [DocumentPoint(30, 40), DocumentPoint(200, 180)],
-        rgb: 0xd75e56,
+        rgb: 0xe83d48,
         width: 13,
       );
       final original = seed.exportProject();
@@ -372,9 +372,9 @@ void main() {
     (tester) async {
       final (files, _) = await start(tester);
       await tester.sendKeyDownEvent(LogicalKeyboardKey.space);
-      await tap(tester, 'color-d75e56');
+      await tap(tester, 'color-e83d48');
       final swatchIcon = find.descendant(
-        of: find.byKey(const Key('color-d75e56')),
+        of: find.byKey(const Key('color-e83d48')),
         matching: find.byIcon(Icons.check_rounded),
       );
       // Explicitly exercise keyboard/accessibility focus inside the palette,
@@ -406,7 +406,7 @@ void main() {
       try {
         expect(saved.count, 2);
         expect(saved.strokes.last.kind, VectorKind.stroke);
-        expect(saved.strokes.last.rgb, 0xd75e56);
+        expect(saved.strokes.last.rgb, 0xe83d48);
         expect(saved.strokes.last.points.first.x, closeTo(200, .001));
         expect(saved.strokes.last.points.last.x, closeTo(260, .001));
       } finally {
@@ -428,9 +428,7 @@ void main() {
       await tester.pumpAndSettle();
       final original = List<int>.of(files.projects[files.savePath!]!);
       final before = painter(tester).strokes;
-      final initialColor = tester
-          .widget<ColorPalette>(find.byType(ColorPalette))
-          .selectedRgb;
+      final initialColor = colourInHand(tester);
       final commands = tester.widget<EduPaintDesktopMenu>(
         find.byType(EduPaintDesktopMenu),
       );
@@ -461,10 +459,7 @@ void main() {
       await tap(tester, 'shade-a8d8f0');
       await tap(tester, 'cancelPaintColor');
       expect(find.byType(AlertDialog, skipOffstage: false), findsNothing);
-      expect(
-        tester.widget<ColorPalette>(find.byType(ColorPalette)).selectedRgb,
-        initialColor,
-      );
+      expect(colourInHand(tester), initialColor);
       commands.onSaveAs!();
       await tester.pumpAndSettle();
       expect(files.saveDialogCount, 1);
@@ -474,10 +469,7 @@ void main() {
       await tap(tester, 'shade-a8d8f0');
       await tap(tester, 'confirmPaintColor');
       expect(find.byType(AlertDialog, skipOffstage: false), findsNothing);
-      expect(
-        tester.widget<ColorPalette>(find.byType(ColorPalette)).selectedRgb,
-        0xa8d8f0,
-      );
+      expect(colourInHand(tester), 0xa8d8f0);
       final gesture = await tester.startGesture(point(tester, 200, 180));
       await gesture.moveTo(point(tester, 260, 220));
       await gesture.up();

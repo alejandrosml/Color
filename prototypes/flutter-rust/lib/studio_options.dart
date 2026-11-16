@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 import 'app_folders.dart';
+import 'decor_motion.dart';
 import 'recovery_location.dart';
 import 'studio_tool.dart';
 import 'language.dart';
@@ -58,6 +59,12 @@ class StudioOptions {
     this.keyboardPointer = false,
     this.language = LanguageChoice.device,
     this.companionReacts = false,
+    this.universe = '',
+    this.universeFixed = false,
+    this.decorMotion = DecorMotion.low,
+    this.decorNames = true,
+    this.decorWatch = true,
+    this.grownUpColours = false,
   });
 
   /// What a file that says nothing, or nothing readable, stands for: Color
@@ -105,6 +112,34 @@ class StudioOptions {
   /// does.
   final bool companionReacts;
 
+  /// The universe the studio wears (Color 1.2), by its key; empty, or a key
+  /// this Color does not know, for that of the device: the desk by the
+  /// window on a computer, « Classique », which has no decor, on a tablet
+  /// or a telephone. The child chooses it with the button « Univers »,
+  /// unless [universeFixed].
+  final String universe;
+
+  /// An adult fixed the universe: the button « Univers » is not shown.
+  final bool universeFixed;
+
+  /// How much the decor of the universe moves: hardly, by default.
+  final DecorMotion decorMotion;
+
+  /// A double click on something of the decor shows its name and a line or
+  /// two about it.
+  final bool decorNames;
+
+  /// The child may look at a decor on the whole screen, with the button
+  /// « Regarder » of « Choisis ton univers ».
+  final bool decorWatch;
+
+  /// « Toutes les couleurs, pour les grands » (Color 1.2): a button at the
+  /// end of the colours opens a field of every colour, the pipette, the
+  /// mixing and the colours chosen last. Off until an adult switches it
+  /// on: by default a child has ten colours and their shades, and nothing
+  /// else to find its way in (the owner, 12 November 2026).
+  final bool grownUpColours;
+
   /// A multiplication keeps the door of « Options », so that the youngest
   /// do not open them by chance. Off until an adult switches it on: by
   /// default everything is within reach.
@@ -123,6 +158,12 @@ class StudioOptions {
     bool? keyboardPointer,
     LanguageChoice? language,
     bool? companionReacts,
+    String? universe,
+    bool? universeFixed,
+    DecorMotion? decorMotion,
+    bool? decorNames,
+    bool? decorWatch,
+    bool? grownUpColours,
   }) => StudioOptions(
     level: level ?? this.level,
     printing: printing ?? this.printing,
@@ -136,6 +177,12 @@ class StudioOptions {
     keyboardPointer: keyboardPointer ?? this.keyboardPointer,
     language: language ?? this.language,
     companionReacts: companionReacts ?? this.companionReacts,
+    universe: universe ?? this.universe,
+    universeFixed: universeFixed ?? this.universeFixed,
+    decorMotion: decorMotion ?? this.decorMotion,
+    decorNames: decorNames ?? this.decorNames,
+    decorWatch: decorWatch ?? this.decorWatch,
+    grownUpColours: grownUpColours ?? this.grownUpColours,
   );
 
   /// The tools of the bar, in its order.
@@ -184,6 +231,10 @@ class StudioOptions {
   /// The line that says where the project is saved.
   bool get statusLine => _full;
 
+  /// The field of every colour, the pipette and the mixing: where an adult
+  /// asked for them, and never in the simplest interface.
+  bool get everyColour => grownUpColours && !_toddler;
+
   /// A few large colours and three sizes, instead of every colour, the
   /// pipette and the slider.
   bool get simpleControls => _toddler;
@@ -201,6 +252,12 @@ class StudioOptions {
     'keyboardPointer': keyboardPointer,
     'language': language.key,
     'companionReacts': companionReacts,
+    'universe': universe,
+    'universeFixed': universeFixed,
+    'decorMotion': decorMotion.code,
+    'decorNames': decorNames,
+    'decorWatch': decorWatch,
+    'grownUpColours': grownUpColours,
   };
 
   /// What a decoded options file says. Whatever is missing, of another type
@@ -240,8 +297,19 @@ class StudioOptions {
       keyboardPointer: flag('keyboardPointer', defaults.keyboardPointer),
       language: LanguageChoice.fromKey(json['language']),
       companionReacts: flag('companionReacts', defaults.companionReacts),
+      universe: universeKey(json['universe']),
+      universeFixed: flag('universeFixed', defaults.universeFixed),
+      decorMotion: DecorMotion.fromCode(json['decorMotion']),
+      decorNames: flag('decorNames', defaults.decorNames),
+      decorWatch: flag('decorWatch', defaults.decorWatch),
+      grownUpColours: flag('grownUpColours', defaults.grownUpColours),
     );
   }
+
+  /// The key of a universe as a file may write it: a short name of small
+  /// letters, digits and hyphens; anything else stands for none.
+  static String universeKey(Object? key) =>
+      key is String && RegExp(r'^[a-z0-9-]{1,40}$').hasMatch(key) ? key : '';
 
   @override
   bool operator ==(Object other) =>
@@ -257,7 +325,13 @@ class StudioOptions {
       other.touchShiftY == touchShiftY &&
       other.keyboardPointer == keyboardPointer &&
       other.language == language &&
-      other.companionReacts == companionReacts;
+      other.companionReacts == companionReacts &&
+      other.universe == universe &&
+      other.universeFixed == universeFixed &&
+      other.decorMotion == decorMotion &&
+      other.decorNames == decorNames &&
+      other.decorWatch == decorWatch &&
+      other.grownUpColours == grownUpColours;
 
   @override
   int get hashCode => Object.hash(
@@ -273,6 +347,12 @@ class StudioOptions {
     keyboardPointer,
     language,
     companionReacts,
+    universe,
+    universeFixed,
+    decorMotion,
+    decorNames,
+    decorWatch,
+    grownUpColours,
   );
 
   @override

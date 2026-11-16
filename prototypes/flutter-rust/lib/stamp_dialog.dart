@@ -5,6 +5,8 @@ import 'fit_to_screen.dart';
 import 'stamp_catalog.dart';
 import 'studio_colors.dart';
 import 'language.dart';
+import 'galets.dart';
+import 'studio_theme.dart';
 
 /// A catalogue stamp drawn at any size, tinted with the current colour.
 class StampPreview extends StatelessWidget {
@@ -68,6 +70,8 @@ Future<int?> showStampDialog(
                 key: Key('stamp-${stamp.key}'),
                 autofocus: stamp.id == selected,
                 onPressed: () => Navigator.pop(dialogContext, stamp.id),
+                // A tile of a panel of the pebbles: no line around it but
+                // for the chosen one.
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(104, 104),
                   padding: const EdgeInsets.symmetric(
@@ -76,11 +80,13 @@ Future<int?> showStampDialog(
                   ),
                   backgroundColor: stamp.id == selected
                       ? studioSelected
-                      : Colors.white,
-                  side: BorderSide(
-                    color: stamp.id == selected ? studioGreen : studioLine,
-                    width: stamp.id == selected ? 2 : 1,
+                      : Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: studioPanelCorners(18),
                   ),
+                  side: stamp.id == selected
+                      ? BorderSide(color: studioGreen, width: 2.5)
+                      : BorderSide.none,
                 ),
                 // One name on the button itself, which keeps its own action:
                 // the picture and the written name under it only decorate.
@@ -93,14 +99,23 @@ Future<int?> showStampDialog(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        StampPreview(stamp: stamp, rgb: rgb, size: 60),
+                        // On its light round in pebbles of the night: a
+                        // stamp is drawn with a dark line.
+                        galetOnDisc(
+                          StampPreview(stamp: stamp, rgb: rgb, size: 60),
+                          spread: 4,
+                        ),
                         const SizedBox(height: 6),
                         Text(
                           stamp.label,
                           maxLines: 2,
                           textAlign: TextAlign.center,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
+                          style: galetText(
+                            13,
+                            bold: stamp.id == selected,
+                            color: stamp.id == selected ? studioGreen : null,
+                          ),
                         ),
                       ],
                     ),

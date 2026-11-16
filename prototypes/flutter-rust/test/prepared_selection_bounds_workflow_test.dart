@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 EduPaintDesktopMenu _menu(WidgetTester tester) =>
     tester.widget<EduPaintDesktopMenu>(find.byType(EduPaintDesktopMenu));
@@ -45,6 +46,7 @@ Future<void> _idle(WidgetTester tester) async {
 }
 
 Future<void> _tap(WidgetTester tester, String key) async {
+  key = await revealControl(tester, key);
   final control = find.byKey(Key(key));
   await tester.ensureVisible(control);
   await tester.tap(control);
@@ -85,7 +87,7 @@ void main() {
           VectorKind.rectangle,
           const DocumentPoint(400, 250),
           const DocumentPoint(650, 500),
-          rgb: 0x477fb2,
+          rgb: 0x3370d1,
           width: 12,
           fillRgb: 0xeebf4e,
         );
@@ -133,9 +135,9 @@ void main() {
       expect(_painter(tester).selectedIndex, 0);
       _checkBounds(tester);
 
-      await _tap(tester, 'color-d75e56');
+      await _tap(tester, 'color-e83d48');
       final restyled = _elements(tester);
-      expect(restyled[0].data.rgb, 0xd75e56);
+      expect(restyled[0].data.rgb, 0xe83d48);
       expect(identical(restyled[0], reordered[0]), isFalse);
       expect(identical(restyled[1], reordered[1]), isTrue);
       expect(restyled[0].controlBounds, reordered[0].controlBounds);

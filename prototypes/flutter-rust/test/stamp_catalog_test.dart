@@ -178,14 +178,19 @@ void main() {
       final rainbow = StampCatalog.instance[23]!;
       expect(rainbow.key, 'arcenciel');
       expect(rainbow.takesColour, isFalse);
-      final bows = [
+      // Six bows, then the ink of the outline that holds them (Color 1.2).
+      final strokes = [
         for (final layer in rainbow.layers) layer.stroke.resolve(0x000000)!,
       ];
-      expect(bows.toSet(), hasLength(4));
+      expect(strokes, hasLength(7));
+      expect(strokes.last, 0x293d4b);
+      final bows = strokes.take(6).toList();
+      expect(bows.toSet(), hasLength(6));
       for (final bow in bows) {
         for (final named in [...paintColors, ...morePaintColors]) {
           // The bows used to be « Prairie » and « Ciel » themselves, and a
-          // near « Soleil » (at 6): on such a sheet, a bow was gone.
+          // near « Soleil » (at 6): on such a sheet, a bow was gone. The
+          // first six bows of 1.2 were six colours of the palette.
           expect(
             distance(bow, named.rgb),
             greaterThanOrEqualTo(15),

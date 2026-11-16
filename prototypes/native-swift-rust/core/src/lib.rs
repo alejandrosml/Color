@@ -21,6 +21,8 @@ mod art;
 mod catalogues;
 #[cfg(all(feature = "svg", test))]
 mod pages;
+#[cfg(all(feature = "svg", test))]
+mod universes;
 pub use catalogues::*;
 mod background;
 use background::{validate_canonical_png, BackgroundPng};

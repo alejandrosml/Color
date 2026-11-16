@@ -107,7 +107,7 @@ void main() {
       ]);
       studio.expectCount(3);
       await studio.tap('tool-fill');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.pour(studio.at(450, 350));
       studio.expectCount(4);
       document = await studio.saved();
@@ -116,7 +116,7 @@ void main() {
         expect(outer.look.zone, isTrue);
         expect(outer.fillRgb, 0x9385bc);
         expect(window.look.zone, isTrue);
-        expect(window.fillRgb, 0xd75e56);
+        expect(window.fillRgb, 0xe83d48);
         expect(bounds(window).width, inInclusiveRange(80, 100));
         expect(box.kind, VectorKind.stroke);
         expect(round.kind, VectorKind.stroke);
@@ -176,19 +176,20 @@ void main() {
       await studio.tap('tool-rectangle');
       await studio.drag(studio.at(200, 200), studio.at(500, 450));
       await studio.tap('tool-fill');
+      await studio.reveal('pour-plain');
       expect(find.byKey(const Key('pour-plain')), findsOneWidget);
       await studio.tap('pour-linear');
       await studio.tap('color-eebf4e');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       // Inside the rectangle: its inside, from red to the yellow before.
       await studio.click(studio.at(350, 325));
       var document = await studio.saved();
       try {
         final box = document.strokes.single;
-        expect(box.fillRgb, 0xd75e56);
+        expect(box.fillRgb, 0xe83d48);
         expect(box.look.gradient, GradientKind.linear);
         expect(box.look.gradientRgb, 0xeebf4e);
-        expect(box.rgb, 0x477fb2);
+        expect(box.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -235,7 +236,7 @@ void main() {
       final zone = document.strokes.single;
       expect(zone.look.zone, isTrue);
       expect(zone.look.gradient, GradientKind.linear);
-      expect(zone.look.gradientRgb, 0x477fb2);
+      expect(zone.look.gradientRgb, 0x3370d1);
       expect(zone.points, hasLength(4));
       expect(document.paperRgb, whitePaper);
     } finally {
@@ -252,7 +253,7 @@ void main() {
     await studio.tap('tool-rectangle');
     await studio.drag(studio.at(200, 200), studio.at(500, 450));
     await studio.tap('tool-fill');
-    await studio.tap('color-78a66f');
+    await studio.tap('color-4db266');
     await studio.pour(studio.at(900, 600));
     studio.expectCount(2);
     final document = await studio.saved();

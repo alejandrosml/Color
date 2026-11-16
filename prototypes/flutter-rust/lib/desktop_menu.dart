@@ -26,6 +26,8 @@ class EduPaintDesktopMenu extends StatefulWidget {
     this.onExportPng,
     this.onPrint,
     this.onOptions,
+    this.onUniverses,
+    this.hasUniverses = false,
     this.onReplay,
     this.onUndo,
     this.onRedo,
@@ -58,6 +60,11 @@ class EduPaintDesktopMenu extends StatefulWidget {
 
   /// « Options… », for the adult: behind a calculation if the adult chose one.
   final VoidCallback? onOptions;
+
+  /// « Univers… » (Color 1.2): in the menu only when [hasUniverses] — the
+  /// child chooses the universe; null while the studio is busy.
+  final VoidCallback? onUniverses;
+  final bool hasUniverses;
 
   /// « Revoir le dessin se faire tout seul ».
   final VoidCallback? onReplay;
@@ -106,6 +113,8 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
       menu.onExportPng != null,
       menu.onPrint != null,
       menu.onOptions != null,
+      menu.onUniverses != null,
+      menu.hasUniverses,
       menu.onReplay != null,
       menu.onUndo != null,
       menu.onRedo != null,
@@ -184,6 +193,11 @@ class _EduPaintDesktopMenuState extends State<EduPaintDesktopMenu> {
                   meta: true,
                 ),
               ),
+              if (widget.hasUniverses)
+                PlatformMenuItem(
+                  label: tr('Univers…'),
+                  onSelected: _command((menu) => menu.onUniverses),
+                ),
             ],
           ),
           if (PlatformProvidedMenuItem.hasMenu(

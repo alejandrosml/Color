@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
@@ -35,6 +36,7 @@ void main() {
   }
 
   Future<void> tap(WidgetTester tester, String key) async {
+    key = await revealControl(tester, key);
     final control = find.byKey(Key(key));
     // The rectangle and the oval are chosen in « Formes ».
     if (control.evaluate().isEmpty &&
@@ -53,10 +55,8 @@ void main() {
   }
 
   void expectCount(int count) => expect(
-    find.textContaining(
-      count <= 1 ? '$count élément · ' : '$count éléments · ',
-    ),
-    findsOneWidget,
+    drawingCaptionNow(),
+    contains(count <= 1 ? '$count élément · ' : '$count éléments · '),
   );
 
   Future<void> draw(
@@ -72,6 +72,8 @@ void main() {
   }
 
   Future<void> fill(WidgetTester tester, bool enabled) async {
+    // The inside of a shape is one of the things « lequel » opens.
+    await revealControl(tester, 'fillShapeCheckbox');
     final control = find.byKey(const Key('fillShapeCheckbox'));
     expect(control, findsOneWidget);
     final direct = tester.widget(control);
@@ -81,6 +83,7 @@ void main() {
             find.descendant(of: control, matching: find.byType(Checkbox)),
           );
     if (checkbox.value != enabled) await tap(tester, 'fillShapeCheckbox');
+    await closePebblePanel(tester);
   }
 
   Future<String> svg(WidgetTester tester, MemoryFiles files) async {

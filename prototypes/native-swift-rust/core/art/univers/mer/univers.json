@@ -1,0 +1,394 @@
+{
+ "key": "mer",
+ "name": "Sous la mer",
+ "about": "Des poissons, une tortue et un coffre au trésor.",
+ "look": {
+  "colours": {
+   "ink": "#154a66",
+   "accent": "#ab3a27",
+   "background": "#1f6f93",
+   "line": "#9fd8e6",
+   "surface": "#f4fbfd",
+   "selected": "#d3ecf5",
+   "sheetBackdrop": "#c8ebf5",
+   "previewBox": "#e3f4f9",
+   "caption": "#2c5f78",
+   "statusText": "#154a66",
+   "sheetTitle": "#154a66",
+   "sheetCaption": "#154a66",
+   "quietMark": "#4d8198",
+   "swatchRing": "#5b8fa6",
+   "shadow": "#0c3a52"
+  },
+  "shapes": {
+   "stageRadius": 18,
+   "stageBorder": 2
+  }
+ },
+ "decor": {
+  "size": [
+   1061,
+   407
+  ],
+  "sheet": [
+   266,
+   26,
+   526,
+   351
+  ],
+  "top": "#9adcee",
+  "front": [
+   "#f6e2b3",
+   "#ecd397",
+   "#dcc083"
+  ],
+  "pieces": [
+   {
+    "picture": "fond",
+    "role": "ground"
+   },
+   {
+    "picture": "gauche",
+    "anchor": "left"
+   },
+   {
+    "picture": "droite",
+    "anchor": "right"
+   },
+   {
+    "picture": "algue-gauche",
+    "anchor": "left",
+    "move": {
+     "name": "ondule",
+     "seconds": 9,
+     "origin": [
+      101,
+      396
+     ]
+    }
+   },
+   {
+    "picture": "algue-droite",
+    "anchor": "right",
+    "move": {
+     "name": "ondule",
+     "seconds": 11,
+     "delay": -3,
+     "origin": [
+      963,
+      400
+     ]
+    }
+   },
+   {
+    "picture": "bulles-gauche",
+    "anchor": "left",
+    "move": {
+     "name": "flotte",
+     "seconds": 7
+    }
+   },
+   {
+    "picture": "bulles-droite",
+    "anchor": "right",
+    "move": {
+     "name": "flotte",
+     "seconds": 8,
+     "delay": -3
+    }
+   },
+   {
+    "picture": "hippocampe",
+    "anchor": "left",
+    "move": {
+     "name": "flotte",
+     "seconds": 6,
+     "delay": -1
+    }
+   },
+   {
+    "picture": "meduse",
+    "anchor": "left",
+    "at": [
+     170,
+     34,
+     56,
+     56
+    ],
+    "move": {
+     "name": "flotte",
+     "seconds": 7
+    }
+   },
+   {
+    "picture": "poisson-clown",
+    "anchor": "left",
+    "at": [
+     58,
+     138,
+     66,
+     66
+    ],
+    "move": {
+     "name": "nage",
+     "seconds": 12
+    }
+   },
+   {
+    "picture": "poisson-clown",
+    "anchor": "left",
+    "at": [
+     16,
+     232,
+     40,
+     40
+    ],
+    "level": 3,
+    "move": {
+     "name": "nage",
+     "seconds": 10,
+     "delay": -5
+    }
+   },
+   {
+    "picture": "poisson-papillon",
+    "anchor": "right",
+    "at": [
+     842,
+     202,
+     52,
+     52
+    ],
+    "move": {
+     "name": "nage2",
+     "seconds": 14
+    }
+   },
+   {
+    "picture": "tortue",
+    "anchor": "right",
+    "at": [
+     850,
+     90,
+     76,
+     76
+    ],
+    "move": {
+     "name": "nage2",
+     "seconds": 18,
+     "delay": -4
+    }
+   }
+  ],
+  "names": [
+   {
+    "key": "meduse",
+    "anchor": "left",
+    "at": [
+     170,
+     34,
+     56,
+     62
+    ],
+    "name": "La méduse",
+    "text": "Elle se laisse porter par l’eau. Attention : ses longs filaments piquent.",
+    "source": "Smithsonian Ocean — Jellyfish and Comb Jellies — https://ocean.si.edu/ocean-life/invertebrates/jellyfish-and-comb-jellies"
+   },
+   {
+    "key": "clown",
+    "anchor": "left",
+    "at": [
+     58,
+     138,
+     66,
+     66
+    ],
+    "name": "Le poisson-clown",
+    "text": "Il habite au milieu d’une anémone de mer, qui le protège avec ses tentacules.",
+    "source": "Encyclopaedia Britannica — anemone fish — https://www.britannica.com/animal/anemone-fish"
+   },
+   {
+    "key": "algue",
+    "anchor": "left",
+    "at": [
+     64,
+     178,
+     62,
+     220
+    ],
+    "name": "Les algues",
+    "text": "Elles ont besoin de lumière, comme les plantes. Beaucoup de poissons s’y cachent.",
+    "source": "NOAA National Ocean Service — What is a kelp forest? — https://oceanservice.noaa.gov/facts/kelp.html"
+   },
+   {
+    "key": "hippocampe",
+    "anchor": "left",
+    "at": [
+     164,
+     260,
+     32,
+     70
+    ],
+    "name": "L’hippocampe",
+    "text": "On l’appelle aussi le cheval de mer. Chez lui, c’est le papa qui porte les bébés.",
+    "source": "NOAA National Ocean Service — How do seahorses differ from all other animals? — https://oceanservice.noaa.gov/facts/seahorse.html"
+   },
+   {
+    "key": "eponge",
+    "anchor": "left",
+    "at": [
+     28,
+     318,
+     46,
+     40
+    ],
+    "name": "L’éponge de mer",
+    "text": "C’est un animal ! Elle reste fixée à son rocher et filtre l’eau pour se nourrir.",
+    "source": "NOAA National Ocean Service — What is a sponge? — https://oceanservice.noaa.gov/facts/sponge.html"
+   },
+   {
+    "key": "crabe",
+    "anchor": "left",
+    "at": [
+     108,
+     376,
+     40,
+     30
+    ],
+    "name": "Le crabe",
+    "text": "Il marche le plus souvent de côté et se défend avec ses deux pinces.",
+    "source": "Encyclopaedia Britannica — crab summary — https://www.britannica.com/summary/crab"
+   },
+   {
+    "key": "anemone",
+    "anchor": "left",
+    "at": [
+     146,
+     358,
+     40,
+     38
+    ],
+    "name": "L’anémone de mer",
+    "text": "On dirait une fleur, mais c’est un animal aux tentacules qui piquent.",
+    "source": "Britannica Kids — sea anemone — https://kids.britannica.com/students/article/sea-anemone/276965"
+   },
+   {
+    "key": "etoile",
+    "anchor": "left",
+    "at": [
+     181,
+     350,
+     31,
+     32
+    ],
+    "name": "L’étoile de mer",
+    "text": "Elle a le plus souvent cinq bras. Si elle en perd un, il repousse !",
+    "source": "NOAA National Ocean Service — Are starfish really fish? — https://oceanservice.noaa.gov/facts/starfish.html"
+   },
+   {
+    "key": "ancre",
+    "anchor": "left",
+    "at": [
+     218,
+     331,
+     40,
+     44
+    ],
+    "name": "L’ancre",
+    "text": "Les bateaux la jettent au fond de l’eau pour ne pas dériver. Celle-ci a été oubliée.",
+    "source": "Larousse — Définitions : ancre - Dictionnaire de français Larousse — https://www.larousse.fr/dictionnaires/francais/ancre/3342"
+   },
+   {
+    "key": "coffre",
+    "anchor": "right",
+    "at": [
+     806,
+     354,
+     66,
+     46
+    ],
+    "name": "Le coffre au trésor",
+    "text": "Un vieux coffre tombé d’un navire, il y a très longtemps…"
+   },
+   {
+    "key": "oursin",
+    "anchor": "right",
+    "at": [
+     870,
+     380,
+     30,
+     26
+    ],
+    "name": "L’oursin",
+    "text": "Une boule de piquants : mieux vaut ne pas marcher dessus.",
+    "source": "Encyclopaedia Britannica — Sea urchin | Description, Anatomy, & Facts — https://www.britannica.com/animal/sea-urchin"
+   },
+   {
+    "key": "corail",
+    "anchor": "right",
+    "at": [
+     868,
+     320,
+     70,
+     77
+    ],
+    "name": "Le corail",
+    "text": "Il ressemble à un petit arbre, mais il est construit par de minuscules animaux.",
+    "source": "NOAA National Ocean Service — Are corals animals or plants? — https://oceanservice.noaa.gov/facts/coral.html"
+   },
+   {
+    "key": "papillon",
+    "anchor": "right",
+    "at": [
+     842,
+     202,
+     52,
+     52
+    ],
+    "name": "Le poisson-papillon",
+    "text": "Un poisson tout plat et très coloré, qui vit près des coraux.",
+    "source": "Encyclopaedia Britannica — Butterflyfish | Marine, Reef, Colorful — https://www.britannica.com/animal/butterflyfish"
+   },
+   {
+    "key": "tortue",
+    "anchor": "right",
+    "at": [
+     850,
+     96,
+     76,
+     60
+    ],
+    "name": "La tortue de mer",
+    "text": "Elle nage très loin dans les océans et revient pondre ses œufs sur la plage où elle est née, ou tout près.",
+    "source": "NOAA Fisheries — 7 Sea Turtle Facts for the Ocean Lover — https://www.fisheries.noaa.gov/feature-story/7-sea-turtle-facts-ocean-lover"
+   },
+   {
+    "key": "dauphin",
+    "anchor": "right",
+    "at": [
+     918,
+     34,
+     118,
+     53
+    ],
+    "name": "Les dauphins",
+    "text": "Ce ne sont pas des poissons : ils remontent respirer à la surface et se parlent en sifflant.",
+    "source": "NOAA National Ocean Service — Are dolphins fish? — https://oceanservice.noaa.gov/facts/dolphin.html"
+   },
+   {
+    "key": "pieuvre",
+    "anchor": "right",
+    "at": [
+     981,
+     319,
+     62,
+     47
+    ],
+    "name": "La pieuvre",
+    "text": "Elle a huit bras et sait changer de couleur pour se cacher. Elle est très maligne.",
+    "source": "Smithsonian Ocean — Cephalopods — https://ocean.si.edu/ocean-life/invertebrates/cephalopods"
+   }
+  ],
+  "hat": "chapeau"
+ }
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Univers » (Color 1.2). Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Univers</title>
+  <circle cx="22" cy="24" r="14" fill="#a8d8f0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="43" cy="26" r="13" fill="#ffcd62" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="43" r="14" fill="#8fce8a" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 37 L33.8 41.2 L38 43 L33.8 44.8 L32 49 L30.2 44.8 L26 43 L30.2 41.2 Z" fill="#fffcf0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

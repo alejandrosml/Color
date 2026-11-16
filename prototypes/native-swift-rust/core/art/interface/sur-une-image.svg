@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : le bouton « Sur une image » (Color 1.2, « Les galets »). Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Sur une image</title>
+  <rect x="7" y="16" width="42" height="36" rx="5" fill="#fffcf0" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M11 47 L23 33 L31 41 L37 35 L45 47 Z" fill="#b7e6d2" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="19" cy="26" r="4" fill="#ffcd62" stroke="#293d4b" stroke-width="1.8"/>
+  <circle cx="47" cy="17" r="11" fill="#43ac9c" stroke="#293d4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M41.500 17 H52.500 M47 11.500 V22.500" fill="none" stroke="#fffcf0" stroke-width="3.6" stroke-linecap="round"/>
+</svg>

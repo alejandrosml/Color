@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/memory_files.dart';
+import 'support/studio_driver.dart';
 
 void main() {
   final available = Platform.environment['EDUPAINT_CORE_LIBRARY'] != null;
@@ -114,7 +115,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog, skipOffstage: false), findsNothing);
-      expect(find.textContaining('1 élément'), findsOneWidget);
+      expect(drawingCaption(tester), contains('1 élément'));
       menu(tester).onNew!();
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('createNewSheet')));
@@ -127,7 +128,7 @@ void main() {
       expect(find.text(title, skipOffstage: false), findsNothing);
       await tester.tap(find.byKey(const Key('saveChanges')));
       await tester.pumpAndSettle();
-      expect(find.textContaining('0 élément · '), findsOneWidget);
+      expect(drawingCaption(tester), contains('0 élément · '));
       final saved = RustDocument.fromProject(files.projects.values.single);
       try {
         expect(saved.count, 1);

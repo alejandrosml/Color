@@ -567,7 +567,7 @@ fn raw_bytes(block: &Block<'_>, limit: usize) -> Result<Vec<u8>, i32> {
 }
 
 #[cfg(feature = "deflate")]
-fn inflate(stored: &[u8], raw_length: usize, mut raw: Vec<u8>) -> Result<Vec<u8>, i32> {
+pub(crate) fn inflate(stored: &[u8], raw_length: usize, mut raw: Vec<u8>) -> Result<Vec<u8>, i32> {
     use miniz_oxide::inflate::core::{decompress, inflate_flags, DecompressorOxide};
     use miniz_oxide::inflate::TINFLStatus;
     raw.resize(raw_length, 0);

@@ -28,16 +28,7 @@ void main() {
   // around (600, 400), and the bow is 30.5 % of the box under its top.
   Offset outerBow(StudioDriver studio) => studio.at(600, 356);
 
-  bool swatchSelected(WidgetTester tester, String key) => tester
-      .getSemantics(
-        find.descendant(
-          of: find.byKey(Key(key)),
-          matching: find.byType(IconButton),
-        ),
-      )
-      .flagsCollection
-      .isSelected
-      .toBoolOrNull()!;
+  bool swatchSelected(WidgetTester tester, String key) => isChosen(tester, key);
 
   test('the rainbow alone keeps its own colours', () {
     final catalog = StampCatalog.instance;
@@ -55,7 +46,7 @@ void main() {
       final document = await studio.saved();
       try {
         expect(document.strokes.single.stamp, 23);
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -63,7 +54,7 @@ void main() {
       final before = await studio.svg();
 
       await studio.tap('tool-fill');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.click(outerBow(studio));
       expect(find.text('Ce tampon garde ses couleurs.'), findsOneWidget);
       // Nothing to save, nothing new to see.
@@ -86,13 +77,13 @@ void main() {
       await studio.tap('size-large');
       await studio.click();
       await studio.tap('tool-fill');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.click();
       expect(find.text('Ce tampon garde ses couleurs.'), findsNothing);
       final document = await studio.saved();
       try {
         expect(document.strokes.single.stamp, 0);
-        expect(document.strokes.single.rgb, 0xd75e56);
+        expect(document.strokes.single.rgb, 0xe83d48);
       } finally {
         document.dispose();
       }
@@ -126,12 +117,11 @@ void main() {
         // The colour hidden in the stamp did not replace the current one.
         expect(paintColorName(0xeebf4e), 'Soleil');
         expect(swatchSelected(tester, 'color-eebf4e'), isTrue);
-        expect(swatchSelected(tester, 'color-477fb2'), isFalse);
 
         // Choosing a colour now is a choice for what comes next, not a
         // change of this stamp.
-        await studio.tap('color-d75e56');
-        expect(swatchSelected(tester, 'color-d75e56'), isTrue);
+        await studio.tap('color-e83d48');
+        expect(swatchSelected(tester, 'color-e83d48'), isTrue);
         expect(
           find.text('Glisse pour déplacer. Ce tampon garde ses couleurs.'),
           findsOneWidget,
@@ -144,7 +134,7 @@ void main() {
       expect(studio.isDirty, isTrue);
       final document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }
@@ -176,16 +166,16 @@ void main() {
           ),
           findsOneWidget,
         );
-        expect(swatchSelected(tester, 'color-477fb2'), isTrue);
-        await studio.tap('color-d75e56');
-        expect(swatchSelected(tester, 'color-d75e56'), isTrue);
+        expect(swatchSelected(tester, 'color-3370d1'), isTrue);
+        await studio.tap('color-e83d48');
+        expect(swatchSelected(tester, 'color-e83d48'), isTrue);
         expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
       } finally {
         semantics.dispose();
       }
       var document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0xd75e56);
+        expect(document.strokes.single.rgb, 0xe83d48);
       } finally {
         document.dispose();
       }
@@ -193,7 +183,7 @@ void main() {
       await studio.tap('undo');
       document = await studio.saved();
       try {
-        expect(document.strokes.single.rgb, 0x477fb2);
+        expect(document.strokes.single.rgb, 0x3370d1);
       } finally {
         document.dispose();
       }

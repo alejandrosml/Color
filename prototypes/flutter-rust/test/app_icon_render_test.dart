@@ -12,13 +12,17 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:edupaint_flutter_study/child_art.dart';
-import 'package:edupaint_flutter_study/studio_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+// The colours of the band and of the name « Color » in the studio of
+// before the pebbles, which this tile was drawn with.
+const _tile = Color(0xffeee7fa);
+const _edge = Color(0xff6a4f99);
+
 /// The tile of the icon, [side] pixels wide: a rounded sheet in the colour of
-/// the studio's banner, the brush in its middle.
+/// the studio's banner of then, the brush in its middle.
 class ColorIconTile extends StatelessWidget {
   const ColorIconTile({super.key, required this.side});
   final double side;
@@ -31,10 +35,10 @@ class ColorIconTile extends StatelessWidget {
       padding: EdgeInsets.all(side * 0.04),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: studioBanner,
+          color: _tile,
           borderRadius: BorderRadius.circular(side * 0.2),
           border: Border.all(
-            color: studioTitle.withValues(alpha: 0.35),
+            color: _edge.withValues(alpha: 0.35),
             width: side / 64,
           ),
         ),

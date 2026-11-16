@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Color : « la pointe », le repère commun des pointeurs (Color 1.2). L'outil agit au bout de la pointe, en haut à
+     gauche, au point (3, 3) ; l'interface dessine l'outil derrière et donne à la pointe la couleur choisie : elle
+     remplace le remplissage du groupe « couleur ». Dessin original, grille de 64 unités. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>La pointe</title>
+  <path d="M3 3 L20.4 8.4 C23.4 9.4 24.2 13.2 22 15.4 L15.4 22 C13.2 24.2 9.4 23.4 8.4 20.4 Z" fill="#ffffff" stroke="#ffffff" stroke-width="6.4" stroke-linejoin="round"/>
+  <g id="couleur">
+    <path d="M3 3 L20.4 8.4 C23.4 9.4 24.2 13.2 22 15.4 L15.4 22 C13.2 24.2 9.4 23.4 8.4 20.4 Z" fill="#ed8c88"/>
+  </g>
+  <path d="M3 3 L20.4 8.4 C23.4 9.4 24.2 13.2 22 15.4 L15.4 22 C13.2 24.2 9.4 23.4 8.4 20.4 Z" fill="none" stroke="#293d4b" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M8.6 7.6 L13.4 9.2" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-opacity=".8"/>
+</svg>

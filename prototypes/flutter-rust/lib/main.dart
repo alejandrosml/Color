@@ -5,9 +5,11 @@ import 'dart:math' as math;
 import 'dart:ui' show AppExitResponse;
 import 'dart:ui' as ui show Image;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 import 'rust_document.dart';
@@ -33,6 +35,7 @@ import 'selection_geometry.dart';
 import 'app_folders.dart';
 import 'stroke_input.dart';
 import 'sheet_images.dart';
+import 'soft_effects.dart';
 import 'raster_source.dart';
 import 'new_sheet_dialog.dart';
 import 'coloring_pages.dart';
@@ -45,13 +48,8 @@ import 'size_choice.dart';
 import 'layers_dialog.dart';
 import 'studio_colors.dart';
 import 'studio_tool.dart';
-import 'tool_bar.dart';
 import 'tool_variants.dart';
-import 'view_controls.dart';
-import 'studio_header.dart';
 import 'selection_toolbar.dart';
-import 'studio_inspector.dart';
-import 'studio_layout.dart';
 import 'studio_painters.dart';
 import 'studio_printer.dart';
 import 'export_dialog.dart';
@@ -60,8 +58,6 @@ import 'french.dart';
 import 'gallery_dialog.dart';
 import 'gallery_storage.dart';
 import 'gallery_thumbnail.dart';
-import 'document_toolbar.dart';
-import 'size_control.dart';
 import 'studio_questions.dart';
 import 'studio_options.dart';
 import 'options_dialog.dart';
@@ -76,7 +72,16 @@ import 'country_signs.dart';
 import 'kept_colours.dart';
 import 'paint_pot.dart';
 import 'language.dart';
-import 'companion.dart';
+import 'sheet_hint.dart';
+import 'tool_pointer.dart';
+import 'decor.dart';
+import 'decor_gaze.dart';
+import 'decor_motion.dart';
+import 'decor_view.dart';
+import 'universe.dart';
+import 'universe_dialog.dart';
+import 'galets.dart';
+import 'studio_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -91,6 +96,10 @@ Future<void> main() async {
   final options = await StudioOptionsStore.open();
   // And in the language they ask for, from the first frame.
   appLanguage.value = languageOf(options.value.language);
+  // And in the universe they name: the first frame wears its colours.
+  final universe = UniverseCatalog.instance.named(options.value.universe);
+  studioLook.value = universe.look;
+  wornUniverse = universe;
   final kept = await KeptColours.open();
   runApp(
     EduPaintApp(options: options, sounds: SystemSounds(), keptColours: kept),
@@ -118,9 +127,14 @@ class EduPaintApp extends StatelessWidget {
     this.sounds = const SilentSounds(),
     this.countrySigns = readCountrySigns,
     this.keptColours,
+    this.clock,
   });
   final StudioFiles files;
   final ProjectStorage? recoveryStorage;
+
+  /// The time of the device, for a decor that follows it (Color 1.2): the
+  /// clock of the system unless a test gives its own.
+  final DateTime Function()? clock;
 
   /// Where the device says it is: the paint pot closes small gaps only
   /// where that is allowed (lib/country_signs.dart).
@@ -145,12 +159,20 @@ class EduPaintApp extends StatelessWidget {
   /// recovery is injected gets no album unless one is injected too.
   final GalleryStorage? gallery;
   @override
-  Widget build(BuildContext context) => ValueListenableBuilder<AppLanguage>(
-    // A change of language builds the studio again, in the new one: its
-    // state, the drawing first, is kept.
-    valueListenable: appLanguage,
-    builder: (context, language, _) => materialApp(language),
-  );
+  Widget build(BuildContext context) {
+    // Dressed before it is built: the first frame wears the universe that
+    // the options name (Color 1.2), the first one when they name none.
+    studioLook.wearBeforeBuild(
+      UniverseCatalog.instance.named(options?.value.universe).look,
+    );
+    return ListenableBuilder(
+      // A change of language builds the studio again, in the new one: its
+      // state, the drawing first, is kept. A change of universe does the
+      // same for its colours and the shapes of its buttons.
+      listenable: Listenable.merge([appLanguage, studioLook]),
+      builder: (context, _) => materialApp(appLanguage.value),
+    );
+  }
 
   /// The application in [language], as [build] makes it.
   @visibleForTesting
@@ -168,45 +190,9 @@ class EduPaintApp extends StatelessWidget {
     builder: touchFirst
         ? (context, child) => FitToScreen(child: child ?? const SizedBox())
         : null,
-    theme: ThemeData(
-      useMaterial3: true,
-      // The same generous controls on every platform. Left to itself the
-      // framework makes them compact on desktop systems, eight pixels less
-      // in each direction: too small for a child's hand, and not what the
-      // layout of the studio is measured with.
-      visualDensity: VisualDensity.standard,
-      materialTapTargetSize: MaterialTapTargetSize.padded,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: studioGreen,
-        surface: studioSurface,
-      ),
-      scaffoldBackgroundColor: studioBackground,
-      textTheme: ThemeData.light().textTheme.apply(
-        bodyColor: studioInk,
-        displayColor: studioInk,
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: studioGreen,
-          foregroundColor: Colors.white,
-          minimumSize: const Size(48, 48),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          foregroundColor: studioInk,
-          minimumSize: const Size(48, 48),
-          side: const BorderSide(color: studioLine),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(13),
-          ),
-        ),
-      ),
-    ),
+    // The dialogs and their controls wear the matter of the pebbles, in
+    // the look of the moment (studio_theme.dart).
+    theme: studioTheme(),
     home: DrawingStudio(
       files: files,
       recoveryStorage: recoveryStorage,
@@ -216,6 +202,7 @@ class EduPaintApp extends StatelessWidget {
       sounds: sounds,
       countrySigns: countrySigns,
       keptColours: keptColours,
+      clock: clock,
     ),
   );
 }
@@ -231,10 +218,14 @@ class DrawingStudio extends StatefulWidget {
     this.sounds = const SilentSounds(),
     this.countrySigns = readCountrySigns,
     this.keptColours,
+    this.clock,
   });
   final StudioFiles files;
   final ProjectStorage? recoveryStorage;
   final GalleryStorage? gallery;
+
+  /// The time of the device for the decor; null for the clock of the system.
+  final DateTime Function()? clock;
   final StudioPrinter printer;
   final StudioOptionsStore? options;
   final SoundPlayer sounds;
@@ -252,6 +243,69 @@ enum _HistoryChange { edit, undo, redo, amend }
 /// that began it and the click that ends it: a trait, the move of the chosen
 /// element, or the sheet under the hand.
 enum _Latch { stroke, move, pan }
+
+/// What a button of the pebbles opened (Color 1.2, galets.dart): the panel
+/// of the drawing, the size, « lequel » — which trait, which stamp, which
+/// shape —, or the shades of a colour.
+enum _GaletPanel {
+  drawing,
+  size,
+  which,
+  shades,
+
+  /// Beside a rail: every tool, with the size and « lequel ».
+  drawer,
+
+  /// Beside a rail: the ten colours.
+  colours,
+
+  /// The field of every colour, the pipette and the mixing, where an
+  /// adult asked for them.
+  everyColour,
+}
+
+/// What a line of the pebbles holds in the room it is given: whether the
+/// tool in hand has its name, which colours, how large its cells.
+final class _GaletLinePlan {
+  const _GaletLinePlan({
+    required this.named,
+    required this.palette,
+    required this.cell,
+    required this.inner,
+    required this.nameWidth,
+    required this.longest,
+    required this.extra,
+  });
+  final bool named;
+  final GaletPalette palette;
+  final double cell;
+
+  /// Its width between its two ends.
+  final double inner;
+
+  /// The width of the name of the tool in hand, and of the longest name.
+  final double nameWidth;
+  final double longest;
+
+  /// The colour in hand is not one of the line: it has a place of its own.
+  final bool extra;
+}
+
+/// What the paint pot does on the paper: it gives its colour to a zone it
+/// poured before, or to the sheet ([zone] null), or it pours a new zone,
+/// [points] and [rings], over the zone [above] or under everything.
+final class _PotPaper {
+  const _PotPaper.over(this.zone) : points = null, rings = null, above = null;
+  const _PotPaper.zone(
+    List<DocumentPoint> this.points,
+    List<int> this.rings,
+    this.above,
+  ) : zone = null;
+  final int? zone;
+  final List<DocumentPoint>? points;
+  final List<int>? rings;
+  final int? above;
+}
 
 class _DrawingStudioState extends State<DrawingStudio>
     with WidgetsBindingObserver {
@@ -291,7 +345,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   int? _trackpadPointer;
   double _trackpadScale = 1;
   PaintColorTarget _colorTarget = PaintColorTarget.stroke;
-  int _fillColor = 0x477fb2;
+  int _fillColor = galetStartColour;
   late final AppLifecycleListener _lifecycle;
   List<RenderedElement> _strokes = const [];
 
@@ -360,10 +414,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   // The drawing was saved a moment ago: « Enregistrer » shows a tick.
   bool _savedJustNow = false;
   Timer? _savedTimer;
-
-  /// The column of a telephone, on the right of the sheet: a new tool shows
-  /// it from its top, where its choices are.
-  final _phoneRail = ScrollController();
   static const _bounceTime = Duration(milliseconds: 350);
   static const _bounceReach = 24.0;
   StudioTool _tool = StudioTool.brush;
@@ -398,9 +448,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   StrokeData? _selectionBoundsObject;
   Rect? _selectionPaintBounds;
   final _selectionOffset = ValueNotifier<Offset>(Offset.zero);
-  // The width slider is being moved for the chosen element: the element
-  // takes the new width when the hand leaves the slider, in one step.
-  bool _selectionWidthMoving = false;
   VectorKind get _draftKind => _drafting.kind;
   set _draftKind(VectorKind kind) => _drafting.kind = kind;
   // The brush is heard when it touches the sheet, then again while it
@@ -473,7 +520,7 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   int? get _draftFillRgb => _drafting.fillRgb;
   set _draftFillRgb(int? rgb) => _drafting.fillRgb = rgb;
-  int _color = 0x477fb2;
+  int _color = galetStartColour;
   int get _draftColor => _drafting.rgb;
   set _draftColor(int rgb) => _drafting.rgb = rgb;
   double _width = 12;
@@ -533,6 +580,201 @@ class _DrawingStudioState extends State<DrawingStudio>
       widget.options ?? StudioOptionsStore.memory();
   StudioOptions get _options => _optionsStore.value;
 
+  // The universe the studio wears (Color 1.2): its look, and its decor
+  // around the sheet. See universe.dart, decor.dart and decor_view.dart.
+
+  /// The universe the options name; the first one when they name none.
+  Universe get _universe => UniverseCatalog.instance.named(_options.universe);
+
+  /// The child may change it: more than one to choose from, and no adult
+  /// fixed one.
+  bool get _choosesUniverse =>
+      !_options.universeFixed && UniverseCatalog.instance.universes.length > 1;
+
+  /// The decor as the frame of the sheet shows it; null without a decor.
+  DecorPainting? _decorPainting;
+
+  /// The thing of the decor whose card is open.
+  final _shownName = ValueNotifier<DecorName?>(null);
+  Timer? _nameTimer;
+  late final _asking = DecorAsking(onAsk: _showName);
+
+  /// The pointer of the system in the frame of the sheet: none on the
+  /// sheet, where « la pointe » is drawn; an arrow beside it, over a decor,
+  /// and the arrow that asks over what has a name.
+  final _stageCursor = ValueNotifier<MouseCursor>(SystemMouseCursors.none);
+
+  /// Whether the names of the decor can be asked for now.
+  bool get _namesOffered =>
+      _options.decorNames && (_decorPainting?.layout.pieces ?? false);
+
+  void _showName(DecorName name) {
+    if (!mounted || !_namesOffered || _busy || _confirmationOpen) return;
+    _nameTimer?.cancel();
+    _shownName.value = name;
+    _nameTimer = Timer(DecorNameLayer.shownFor, _closeName);
+  }
+
+  void _closeName() {
+    _nameTimer?.cancel();
+    _nameTimer = null;
+    _shownName.value = null;
+  }
+
+  // The next named thing of the decor, from left to right, for the
+  // keyboard: F2 goes on, Maj + F2 back.
+  void _nextName(int step) {
+    final painting = _decorPainting;
+    if (painting == null || !_namesOffered || _busy || _confirmationOpen) {
+      return;
+    }
+    final next = nextDecorName(painting, _shownName.value, step);
+    if (next != null) _showName(next);
+  }
+
+  // A pointer is at [at] in the frame of the sheet: beside the sheet, over
+  // a decor, the pointer of the system shows, and « la pointe » of the
+  // tool is not drawn — it is for the sheet.
+  void _pointerOverDecor(Offset at, {required bool mouse}) {
+    final viewport = _keyViewport;
+    final painting = _decorPainting;
+    final beside =
+        painting != null &&
+        painting.layout.pieces &&
+        viewport != null &&
+        !viewport.contains(at.dx, at.dy);
+    _stageCursor.value = !beside
+        ? SystemMouseCursors.none
+        : _options.decorNames && painting.nameAt(at + _stageOrigin) != null
+        ? SystemMouseCursors.help
+        : SystemMouseCursors.basic;
+    if (beside && mouse) _hint.mouseAt = null;
+  }
+
+  // A pointer came down in the frame of the sheet: beside the sheet, it
+  // may be asking the name of something. Nothing is taken from the tool.
+  void _decorDown(PointerDownEvent event) {
+    final viewport = _keyViewport;
+    if (viewport == null) return;
+    final at = event.localPosition;
+    _decorPressed(
+      event,
+      at + _stageOrigin,
+      beside: !viewport.contains(at.dx, at.dy),
+    );
+  }
+
+  // A pointer came down at [at] of the frame of the decor; [beside]: not
+  // on the sheet.
+  void _decorPressed(
+    PointerDownEvent event,
+    Offset at, {
+    required bool beside,
+  }) {
+    final painting = _decorPainting;
+    if (painting == null) return;
+    final asks =
+        _namesOffered &&
+        !_busy &&
+        !_confirmationOpen &&
+        !_panning &&
+        !_spaceHeld &&
+        (event.buttons & kPrimaryButton) != 0 &&
+        beside;
+    final under = asks ? painting.nameAt(at) : null;
+    // A press anywhere else puts the open card away.
+    if (_shownName.value != null && !identical(under, _shownName.value)) {
+      _closeName();
+    }
+    _asking.down(at, event.timeStamp, under);
+  }
+
+  /// Where the stage of the sheet begins in the frame of the decor: at its
+  /// corner in the studio of before, where the stage is that frame; lower
+  /// in the studio of the pebbles, where the decor has the whole window.
+  Offset _stageOrigin = Offset.zero;
+
+  /// The pointer of the system over the decor where the stage is not: an
+  /// arrow, and the arrow that asks over what has a name.
+  final _besideCursor = ValueNotifier<MouseCursor>(SystemMouseCursors.basic);
+  // Ticks when the decor of the pebbles looks at the clock again: the
+  // ground under the line is tinted as the room is.
+  final _decorClock = ValueNotifier<int>(0);
+
+  // ——— « Les galets » (Color 1.2, galets.dart) ———
+
+  /// The frame of the pebbles, and the buttons that open a panel: a panel
+  /// is laid beside its button, wherever the window put it.
+  final _galetsFrame = GlobalKey(debugLabel: 'galets');
+  final _drawingButton = GlobalKey(debugLabel: 'Mon dessin');
+  final _sizeButton = GlobalKey(debugLabel: 'taille');
+  final _whichButton = GlobalKey(debugLabel: 'lequel');
+  late final _swatchButtons = [
+    for (var index = 0; index < galetColours.length; index++)
+      GlobalKey(debugLabel: 'godet $index'),
+  ];
+
+  final _drawerButton = GlobalKey(debugLabel: 'tiroir');
+  final _coloursButton = GlobalKey(debugLabel: 'couleurs');
+  final _everyColourButton = GlobalKey(debugLabel: 'toutes les couleurs');
+  late final _railSwatchButtons = [
+    for (var index = 0; index < galetColours.length; index++)
+      GlobalKey(debugLabel: 'godet du rail $index'),
+  ];
+
+  /// The panel that is open; for the shades, the swatch they belong to and
+  /// the button they open beside.
+  _GaletPanel? _galetPanel;
+  int _galetFamily = 0;
+  GlobalKey? _shadesButton;
+
+  /// The form of the pebbles and the colours of their line, as the window
+  /// was last laid out.
+  GaletsForm _galetsForm = GaletsForm.line;
+  GaletPalette _galetPalette = GaletPalette.whole;
+
+  /// « Univers » : the child chooses how the workshop is dressed, or looks
+  /// at a decor on the whole screen. The drawing is not touched.
+  Future<void> _openUniverses() async {
+    _settleLatch();
+    if (!_dialogAllowed || !_choosesUniverse) return;
+    _finishStroke();
+    _closeName();
+    final chosen = await _guardedDialog<UniverseChoice>(
+      () => showUniverseDialog(
+        context,
+        catalog: UniverseCatalog.instance,
+        current: _universe,
+        watch: _options.decorWatch,
+        now: widget.clock,
+      ),
+    );
+    if (!mounted || chosen == null) return;
+    if (chosen.watch) {
+      await _watchDecor(chosen.universe);
+      return;
+    }
+    await _optionsStore.change(
+      _options.copyWith(universe: chosen.universe.key),
+    );
+  }
+
+  /// « Regarder » : the decor of [universe] on the whole screen, until the
+  /// child comes back to the drawing (decor_gaze.dart). Nothing of the
+  /// studio changes: neither the drawing nor the universe it wears.
+  Future<void> _watchDecor(Universe universe) async {
+    if (!mounted || universe.decor == null || !_options.decorWatch) return;
+    await _guardedDialog<void>(
+      () => showDecorGaze(
+        context,
+        universe: universe,
+        motion: _options.decorMotion,
+        names: _options.decorNames,
+        now: widget.clock,
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -576,6 +818,16 @@ class _DrawingStudioState extends State<DrawingStudio>
         if (mounted) appLanguage.value = languageOf(_options.language);
       });
     }
+    // The universe of the options: the application dressed the studio
+    // before it built it; a studio built alone, in a test, dresses itself
+    // after its first frame. The companion wears its hat from the first.
+    wornUniverse = _universe;
+    softEffectsMotion = _options.decorMotion != DecorMotion.none;
+    if (!identical(studioLook.value, _universe.look)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) wearUniverse(_universe);
+      });
+    }
     if (_options.simpleControls) _fitSimpleControls();
     if (!_options.tools.contains(_tool)) _tool = StudioTool.brush;
     _lifecycle = AppLifecycleListener(
@@ -617,7 +869,16 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (widget.options == null) _optionsStore.dispose();
     _bounceTimer?.cancel();
     _savedTimer?.cancel();
-    _phoneRail.dispose();
+    _noticeTimer?.cancel();
+    _nameTimer?.cancel();
+    _asking.dispose();
+    _shownName.dispose();
+    _stageCursor.dispose();
+    _besideCursor.dispose();
+    _pourHintTimer?.cancel();
+    _pourHintSerial++;
+    _forgetInk();
+    _hint.dispose();
     _recoveryScheduler.dispose();
     clearNativeExitHandler();
     clearNativeDiagnostics();
@@ -627,6 +888,7 @@ class _DrawingStudioState extends State<DrawingStudio>
     _canvasRepaint.dispose();
     _sheetImages.dispose();
     _viewRebuild.dispose();
+    _decorClock.dispose();
     _companionCue.dispose();
     _recentColors.dispose();
     _selectionOffset.dispose();
@@ -642,7 +904,11 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _optionsChanged() {
     if (!mounted) return;
     final options = _options;
+    softEffectsMotion = options.decorMotion != DecorMotion.none;
     appLanguage.value = languageOf(options.language);
+    // The universe may be another: the studio wears it at once.
+    wearUniverse(_universe);
+    if (!options.decorNames || _shownName.value != null) _closeName();
     if (!options.tools.contains(_tool)) _cancelDraft();
     setState(() {
       if (!options.tools.contains(_tool)) {
@@ -685,6 +951,7 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _refreshAfterMutation({_HistoryChange change = _HistoryChange.edit}) {
     // Keep monotonic work invalidation independent from the reversible save point.
     _documentRevision++;
+    _forgetInk();
     final document = _document!;
     final state = _saveState!;
     switch (change) {
@@ -736,37 +1003,68 @@ class _DrawingStudioState extends State<DrawingStudio>
     );
   }
 
+  // The notice that is shown, in a pebble over the top of the sheet; and
+  // what puts it away by itself.
+  StudioProblem? _notice;
+  Timer? _noticeTimer;
+
+  /// How long a notice stays when nobody closes it. One that has details
+  /// for a grown-up stays until it is closed.
+  static const _noticeFor = Duration(seconds: 12);
+
   void _showProblem(StudioProblem problem) {
     if (!mounted) return;
     _sound(StudioSound.notice);
-    final messenger = ScaffoldMessenger.of(context);
-    // Keep only the latest notification, never a queue of exception objects.
-    messenger.clearSnackBars();
-    messenger.removeCurrentSnackBar();
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: studioInk,
-        persist: problem.details != null,
-        showCloseIcon: problem.details != null,
-        closeIconColor: Colors.white,
-        duration: const Duration(seconds: 12),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(problem.message, key: const Key('problemMessage')),
-            if (problem.details != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  key: const Key('showProblemDetails'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.white),
-                  // A blocked press must not dismiss the notification.
-                  onPressed: () => _showProblemDetails(problem),
-                  child: Text(tr('Détails')),
-                ),
-              ),
-          ],
+    // Only the latest notice, never a queue of them.
+    _noticeTimer?.cancel();
+    _noticeTimer = problem.details != null
+        ? null
+        : Timer(_noticeFor, _closeNotice);
+    setState(() => _notice = problem);
+  }
+
+  void _closeNotice() {
+    _noticeTimer?.cancel();
+    _noticeTimer = null;
+    if (_notice == null) return;
+    if (mounted) {
+      setState(() => _notice = null);
+    } else {
+      _notice = null;
+    }
+  }
+
+  // Over the top of the sheet: under the pebbles of the top where there
+  // are some, between the rails otherwise. It never covers the line.
+  Widget _noticeLayer(BuildContext context, StudioProblem problem) {
+    final window = MediaQuery.sizeOf(context);
+    final safe = MediaQuery.paddingOf(context);
+    final rails = _galetsForm == GaletsForm.rails;
+    final pebbles = !rails && !_bigSheet && _startupError == null;
+    final side = rails
+        ? math.max(safe.left, safe.right) + GaletsLayout.railWidth + 26
+        : GaletsLayout.side + (_bigSheet ? GaletsLayout.topHeight + 12 : 0);
+    return Positioned(
+      left: side,
+      right: side,
+      top:
+          safe.top +
+          (pebbles
+              ? (safe.top > 0 ? 8 : 14) + GaletsLayout.topHeight + 10
+              : 10),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: math.min(620.0, math.max(160.0, window.width - 2 * side)),
+          ),
+          child: GaletNotice(
+            message: problem.message,
+            onClose: _closeNotice,
+            onDetails: problem.details == null
+                ? null
+                // A blocked press must not dismiss the notice.
+                : () => _showProblemDetails(problem),
+          ),
         ),
       ),
     );
@@ -782,7 +1080,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         _trackpadPointer != null) {
       return;
     }
-    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+    _closeNotice();
     // No drawing mutation, finishing gesture, IO or retry belongs to this view.
     setState(() => _confirmationOpen = true);
     try {
@@ -855,7 +1153,6 @@ class _DrawingStudioState extends State<DrawingStudio>
     _selectionDragBounds = null;
     _selectionOffset.value = Offset.zero;
     _colorTarget = PaintColorTarget.stroke;
-    _selectionWidthMoving = false;
     if (index != null) {
       final object = _document!.strokes[index];
       // The colour kept by a stamp that shows none of it is nobody's choice:
@@ -952,6 +1249,15 @@ class _DrawingStudioState extends State<DrawingStudio>
 
   void _escape() {
     if (_busy || _confirmationOpen) return;
+    // An open panel of the pebbles goes first.
+    if (_galetPanel != null) {
+      _closeGaletPanel();
+      return;
+    }
+    if (_shownName.value != null) {
+      _closeName();
+      return;
+    }
     if (_picking) {
       setState(() => _picking = false);
       return;
@@ -1265,34 +1571,27 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// their colour: a click on or near a line colours the zone under it. A
   /// zone receives the colour of its inside and nothing else, the one change
   /// that its locked layer accepts.
+  /// Where the last finger, pen or button was lifted, in the window.
+  Offset? _liftedAt;
+
+  /// Pours with the pot, and splashes where it poured when something was
+  /// coloured (a soft effect of Color 1.2).
+  void _fillWithSplash(DocumentPoint point, double scale, Offset? at) {
+    final before = _document?.undoCount;
+    // A press while paint is still being poured does nothing: no splash.
+    final wasPouring = _pouring;
+    _fillAt(point, scale);
+    if (at != null &&
+        ((!wasPouring && _pouring) || _document?.undoCount != before) &&
+        softEffectsHere(context)) {
+      showSplash(context, at, Color(0xff000000 | _fillColor));
+    }
+  }
+
   void _fillAt(DocumentPoint point, double scale) {
     if (_pouring) return;
     final document = _document!;
-    // The zones the pot poured on this layer are paper to it: it fills
-    // within them or over them.
-    final poured = _pouredZones();
-    // What the pot can colour, bottom first: everything seen but the lines
-    // of a page, whose locked layer keeps them as they are.
-    final order = document.lockedLayers.isEmpty && poured.isEmpty
-        ? document.paintOrder
-        : [
-            for (final index in document.paintOrder)
-              if (!poured.contains(index) &&
-                  (!document.isLockedObject(index) ||
-                      document.strokes[index].fillRgb != null))
-                index,
-          ];
-    // The pot touches what is seen under the pointer, then the frame around
-    // it; a neighbour that is only near is not what the child pointed at.
-    final index =
-        _objectAt(
-          point,
-          scale,
-          tolerancePixels: precisePixels,
-          insideShapes: true,
-          order: order,
-        ) ??
-        _zoneAlongLine(point, scale);
+    final (:index, :order, :poured) = _potTouch(point, scale);
     if (index == null) {
       if (_backgroundImage != null) {
         _showProblem(StudioProblem.notice(_imageCoversSheet));
@@ -1373,6 +1672,44 @@ class _DrawingStudioState extends State<DrawingStudio>
     }
   }
 
+  /// What the paint pot touches at [point]: the element [index] under it,
+  /// null on the paper; [order], what it can colour, bottom first; [poured],
+  /// the zones it poured on the active layer. Nothing is changed: the pot
+  /// that pours and the preview of what it would colour (Color 1.2) both
+  /// ask here.
+  ({int? index, List<int> order, Set<int> poured}) _potTouch(
+    DocumentPoint point,
+    double scale,
+  ) {
+    final document = _document!;
+    // The zones the pot poured on this layer are paper to it: it fills
+    // within them or over them.
+    final poured = _pouredZones();
+    // What the pot can colour, bottom first: everything seen but the lines
+    // of a page, whose locked layer keeps them as they are.
+    final order = document.lockedLayers.isEmpty && poured.isEmpty
+        ? document.paintOrder
+        : [
+            for (final index in document.paintOrder)
+              if (!poured.contains(index) &&
+                  (!document.isLockedObject(index) ||
+                      document.strokes[index].fillRgb != null))
+                index,
+          ];
+    // The pot touches what is seen under the pointer, then the frame around
+    // it; a neighbour that is only near is not what the child pointed at.
+    final index =
+        _objectAt(
+          point,
+          scale,
+          tolerancePixels: precisePixels,
+          insideShapes: true,
+          order: order,
+        ) ??
+        _zoneAlongLine(point, scale);
+    return (index: index, order: order, poured: poured);
+  }
+
   /// The zones that the paint pot poured on the active layer.
   Set<int> _pouredZones() {
     final document = _document!;
@@ -1398,6 +1735,62 @@ class _DrawingStudioState extends State<DrawingStudio>
     Set<int> poured,
   ) async {
     final document = _document!;
+    final found = _potPaperAt(point, viewScale, poured);
+    final _PotPaper? paper;
+    if (found is Future<_PotPaper?>) {
+      // The pot reads the drawing as an image: a moment.
+      setState(() => _pouring = true);
+      try {
+        paper = await found;
+      } catch (error) {
+        _error(error);
+        return;
+      } finally {
+        _pouring = false;
+        if (mounted) setState(() {});
+      }
+    } else {
+      paper = found;
+    }
+    // Anything done meanwhile won: nothing to pour.
+    if (paper == null || !mounted || !identical(_document, document)) return;
+    final points = paper.points;
+    if (points == null) {
+      _pourOver(paper.zone);
+      return;
+    }
+    try {
+      final rings = paper.rings!;
+      final before = document.undoCount;
+      document.addObject(
+        VectorKind.contour,
+        points,
+        rgb: _color,
+        width: _zoneOutline,
+        fillRgb: _color,
+        look: _pourKind.lookOf(ObjectLook.pouredZone, _previousColor),
+        rings: rings.length > 1 ? rings : null,
+        quant: 4,
+        bottom: paper.above == null,
+        above: paper.above,
+      );
+      setState(() => _refreshAfterEdits(before));
+      _sound(StudioSound.fill);
+    } catch (error) {
+      _error(error);
+    }
+  }
+
+  /// What the pot would do on the paper at [point], or on a zone it poured
+  /// before: null when it would do nothing — on the edge of a line —, or
+  /// when the drawing changed while it was read. At once where no image of
+  /// the drawing is needed; nothing is changed either way.
+  FutureOr<_PotPaper?> _potPaperAt(
+    DocumentPoint point,
+    double viewScale,
+    Set<int> poured,
+  ) {
+    final document = _document!;
     final under = poured.isEmpty
         ? null
         : _objectAt(
@@ -1412,98 +1805,110 @@ class _DrawingStudioState extends State<DrawingStudio>
           );
     final ink = [
       for (final index in document.paintOrder)
-        if (!poured.contains(index)) _strokes[index],
+        if (!poured.contains(index)) index,
     ];
     // A colouring page draws its zones itself: beside them is the sheet, as
     // in Color 1.0.
     if (ink.isEmpty || document.lockedLayers.isNotEmpty) {
-      _pourOver(under);
-      return;
+      return _PotPaper.over(under);
     }
+    return _potZoneAt(point, viewScale, poured, under, ink);
+  }
+
+  Future<_PotPaper?> _potZoneAt(
+    DocumentPoint point,
+    double viewScale,
+    Set<int> poured,
+    int? under,
+    List<int> ink,
+  ) async {
+    final document = _document!;
     final revision = _documentRevision;
-    setState(() => _pouring = true);
-    try {
-      final mask = await renderInkMask(
-        ink,
-        sheetWidth: document.width,
-        sheetHeight: document.height,
-      );
-      // Anything done meanwhile wins: the drawing the zone was found in is
-      // no longer the one shown.
-      if (!mounted ||
-          !identical(_document, document) ||
-          revision != _documentRevision) {
-        return;
-      }
-      final (x, y) = mask.pixelAt(point);
-      final zone = RustDocument.fillZone(
-        mask.bytes,
-        mask.width,
-        mask.height,
-        x,
-        y,
-        potRadius(
-          viewScale: viewScale,
-          mask: mask,
-          closesGaps: potClosesGaps(_countrySigns, DateTime.now()),
-        ),
-      );
-      if (zone.onInk || zone.wholeSheet) {
-        // On the edge of a line, nothing to pour but what is under it.
-        if (zone.wholeSheet || under != null) _pourOver(under);
-        return;
-      }
-      final points = zonePointsOnSheet(
-        zone,
-        mask,
-        sheetWidth: document.width,
-        sheetHeight: document.height,
-      );
-      final rings = zone.rings!.toList();
-      final pixel = 1 / math.min(mask.scaleX, mask.scaleY);
-      if (under != null &&
-          isSameZone(
-            document.strokes[under],
-            points,
-            rings,
-            tolerance: 2 * pixel + 1,
-          )) {
-        _pourOver(under);
-        return;
-      }
-      // Over every zone poured before that it overlaps, under the rest.
-      final box = shownBounds(
-        StrokeData(points, _color, 1, kind: VectorKind.contour),
-        includeStroke: false,
-      );
-      int? above;
-      for (final index in poured) {
-        if ((above == null || index > above) &&
-            _boundsForObject(index, document.strokes[index]).overlaps(box)) {
-          above = index;
-        }
-      }
-      final before = document.undoCount;
-      document.addObject(
-        VectorKind.contour,
-        points,
-        rgb: _color,
-        width: _zoneOutline,
-        fillRgb: _color,
-        look: _pourKind.lookOf(ObjectLook.pouredZone, _previousColor),
-        rings: rings.length > 1 ? rings : null,
-        quant: 4,
-        bottom: above == null,
-        above: above,
-      );
-      setState(() => _refreshAfterEdits(before));
-      _sound(StudioSound.fill);
-    } catch (error) {
-      _error(error);
-    } finally {
-      _pouring = false;
-      if (mounted) setState(() {});
+    final mask = await _inkMask(ink);
+    // Anything done meanwhile wins: the drawing the zone was found in is
+    // no longer the one shown.
+    if (!mounted ||
+        !identical(_document, document) ||
+        revision != _documentRevision) {
+      return null;
     }
+    final (x, y) = mask.pixelAt(point);
+    final zone = RustDocument.fillZone(
+      mask.bytes,
+      mask.width,
+      mask.height,
+      x,
+      y,
+      potRadius(
+        viewScale: viewScale,
+        mask: mask,
+        closesGaps: potClosesGaps(_countrySigns, DateTime.now()),
+      ),
+    );
+    if (zone.onInk || zone.wholeSheet) {
+      // On the edge of a line, nothing to pour but what is under it.
+      return zone.wholeSheet || under != null ? _PotPaper.over(under) : null;
+    }
+    final points = zonePointsOnSheet(
+      zone,
+      mask,
+      sheetWidth: document.width,
+      sheetHeight: document.height,
+    );
+    final rings = zone.rings!.toList();
+    final pixel = 1 / math.min(mask.scaleX, mask.scaleY);
+    if (under != null &&
+        isSameZone(
+          document.strokes[under],
+          points,
+          rings,
+          tolerance: 2 * pixel + 1,
+        )) {
+      return _PotPaper.over(under);
+    }
+    // Over every zone poured before that it overlaps, under the rest.
+    final box = shownBounds(
+      StrokeData(points, _color, 1, kind: VectorKind.contour),
+      includeStroke: false,
+    );
+    int? above;
+    for (final index in poured) {
+      if ((above == null || index > above) &&
+          _boundsForObject(index, document.strokes[index]).overlaps(box)) {
+        above = index;
+      }
+    }
+    return _PotPaper.zone(points, rings, above);
+  }
+
+  // The ink of the drawing as the paint pot reads it, kept while the
+  // drawing stays what it is: the preview of the pot asks for it each time
+  // the pointer rests, and the press that follows finds it made (Color
+  // 1.2). By the elements it holds, in their order.
+  final _inkMasks = <String, Future<InkMask>>{};
+
+  Future<InkMask> _inkMask(List<int> indices) {
+    final document = _document!;
+    if (_inkMasks.length >= 3) _forgetInk();
+    return _inkMasks[indices.join(',')] ??= renderInkMask(
+      [for (final index in indices) _strokes[index]],
+      sheetWidth: document.width,
+      sheetHeight: document.height,
+      keepImage: true,
+    );
+  }
+
+  /// The drawing changed, or the pot is put down: its images go, and with
+  /// them the preview that was painted through one.
+  void _forgetInk() {
+    if (_inkMasks.isEmpty) return;
+    if (_hint.preview is PourPreview) _hint.preview = null;
+    for (final mask in _inkMasks.values) {
+      unawaited(
+        mask.then<void>((mask) => mask.image?.dispose(), onError: (_) {}),
+      );
+    }
+    _inkMasks.clear();
   }
 
   /// The outline of a poured zone, in its colour: it hides the seam between
@@ -1777,6 +2182,361 @@ class _DrawingStudioState extends State<DrawingStudio>
     _focus.requestFocus();
   }
 
+  // « La pointe » and the preview before a tool acts (Color 1.2).
+
+  /// What the layer over the sheet shows: the pointer of the tool in hand,
+  /// and what a press would do where it is. See sheet_hint.dart.
+  final _hint = SheetHint();
+
+  /// Where the pointer that the preview follows is, in the frame of the
+  /// sheet: the mouse that hovers, the finger on the sheet, the pointer of
+  /// the keyboard. Null when none is over the sheet.
+  Offset? _hintAt;
+
+  /// The pointer of the keyboard moved last: a mouse that leaves the sheet
+  /// does not take its preview away.
+  bool _hintByKey = false;
+
+  /// That pointer is a finger. A finger does not hover: it shows a preview
+  /// only of what it is doing — the pot it holds, the eraser it rubs with.
+  bool _hintByFinger = false;
+
+  /// A finger or a pen holds the paint pot on the sheet: the part it would
+  /// colour is hatched and follows the finger; the paint flows where the
+  /// finger is lifted. [_potAt] is where it is, in the frame of the sheet.
+  bool _potHeld = false;
+  Offset? _potAt;
+
+  /// How long the pointer rests before the pot looks at what it would
+  /// colour there: while it travels, nothing is read.
+  static const _pourHintRest = Duration(milliseconds: 60);
+  Timer? _pourHintTimer;
+  int _pourHintSerial = 0;
+
+  /// What the preview of the pot was last asked for: nothing is read again
+  /// for the same point of the same drawing in the same colour.
+  ({double x, double y, int revision, int rgb, PourKind kind})? _pourHintAsked;
+
+  /// Where the pot has just poured: no preview there, over what the child
+  /// has just coloured, until the pointer moves away.
+  Offset? _pourHintQuiet;
+
+  /// The pointer of the tool in hand; null where the pointer of the system
+  /// says more: the hand that moves the sheet, the pipette.
+  ToolPointer? get _toolPointer =>
+      _panning || _spaceHeld || _picking ? null : ToolPointer(_tool, _color);
+
+  /// A real pointer is on the sheet: the preview follows it, and « la
+  /// pointe » when it is a mouse.
+  void _hintFollows(PointerEvent event) {
+    _hintAt = event.localPosition;
+    _hintByKey = false;
+    _hintByFinger = event.kind == PointerDeviceKind.touch;
+    if (event.kind == PointerDeviceKind.mouse) {
+      _hint.mouseAt = event.localPosition;
+    }
+    _pointerOverDecor(
+      event.localPosition,
+      mouse: event.kind == PointerDeviceKind.mouse,
+    );
+  }
+
+  /// A finger or a pen left the sheet: nothing is under it any more. A
+  /// mouse stays where it is.
+  void _hintLifted(PointerEvent event) {
+    if (event.kind != PointerDeviceKind.mouse && !_hintByKey) _hintAt = null;
+  }
+
+  /// The mouse left the frame of the sheet.
+  void _hintLeft() {
+    if (!mounted) return;
+    _hint.mouseAt = null;
+    if (!_hintByKey && !_potHeld) _hintAt = null;
+    _refreshHint();
+  }
+
+  void _dropPourHint() {
+    _pourHintTimer?.cancel();
+    _pourHintTimer = null;
+    _pourHintSerial++;
+    _pourHintAsked = null;
+  }
+
+  /// Says again what the layer over the sheet shows: after every move of a
+  /// pointer, and at every build of the sheet — the tool, the colour, a
+  /// size or the view may have changed. It builds nothing.
+  void _refreshHint() {
+    if (!mounted) return;
+    final viewport = _keyViewport;
+    final pointer = _toolPointer;
+    _hint
+      ..pointer = pointer
+      ..keyAt = _options.keyboardPointer ? _keyPointerAt : null;
+    final document = _document;
+    if (_tool != StudioTool.fill) _dropPourHint();
+    if (viewport == null ||
+        document == null ||
+        pointer == null ||
+        _busy ||
+        _confirmationOpen ||
+        _viewMoving) {
+      _dropPourHint();
+      _hint.preview = null;
+      return;
+    }
+    // The text waits for the pointer to be released: its stroke stays where
+    // the press began.
+    final anchor = _textAnchor;
+    if (anchor != null) {
+      _hint.preview = _caretAt(anchor);
+      return;
+    }
+    final at = _hintAt;
+    if (at == null) {
+      _dropPourHint();
+      _hint.preview = null;
+      return;
+    }
+    final onSheet = viewport.contains(at.dx, at.dy);
+    // Nothing is promised while a gesture goes on: what it makes is seen.
+    final idle = _pointer == null && _latch == null && !_hintByFinger;
+    switch (_tool) {
+      case StudioTool.fill:
+        if (onSheet && (idle || _potHeld)) {
+          _pourHintAt(at, viewport.point(at.dx, at.dy), viewport.scale);
+        } else {
+          _dropPourHint();
+          _hint.preview = null;
+        }
+      case StudioTool.eraser:
+        _hint.preview = idle || _erasing
+            ? EraserPreview(at: at, radius: _eraserPixels)
+            : null;
+      case StudioTool.select:
+        _hint.preview = null;
+      case StudioTool.text:
+        _hint.preview = onSheet && idle
+            ? _caretAt(viewport.point(at.dx, at.dy))
+            : null;
+      case StudioTool.stamp:
+        _hint.preview = onSheet && idle
+            ? _stampPreviewAt(viewport.point(at.dx, at.dy))
+            : null;
+      case StudioTool.brush ||
+          StudioTool.magic ||
+          StudioTool.magnet ||
+          StudioTool.line ||
+          StudioTool.rectangle ||
+          StudioTool.ellipse ||
+          StudioTool.shapes:
+        // Between the two clicks of a shape, the shape itself is shown.
+        _hint.preview = onSheet && idle && _shapeAnchor == null
+            ? _dotAt(at)
+            : null;
+    }
+  }
+
+  // A dot of the size and colour of the trait the tool would begin.
+  DotPreview _dotAt(Offset at) {
+    final tool = _strokeTool;
+    return DotPreview(
+      at: at,
+      width: _width,
+      rgb: _color,
+      square: tool == BrushTool.felt,
+      opacity: tool == BrushTool.felt ? markerAlpha / 255 : 1,
+      // The rainbow and the confetti have colours of their own.
+      hollow: tool == BrushTool.rainbow || tool == BrushTool.confetti,
+      mirrored: _tool == StudioTool.magic && _magic == Magic.mirror,
+    );
+  }
+
+  // The stroke where the first letter of a text begun at [anchor] would be
+  // written, at the size chosen last: the top of its first line, kept on
+  // the sheet as the text will be.
+  CaretPreview _caretAt(DocumentPoint anchor) {
+    final document = _document!;
+    final height =
+        textSizeFor(_textSize, width: document.width, height: document.height) *
+        textFonts[_textFont].lineHeight;
+    return CaretPreview(
+      top: DocumentPoint(
+        anchor.x,
+        anchor.y.clamp(0.0, math.max(0.0, document.height - height)).toDouble(),
+      ),
+      height: height,
+      rgb: _color,
+    );
+  }
+
+  // The stamp a click at [point] would pose: the chosen one, at the chosen
+  // size, turned and mirrored as chosen, where [_stampBox] puts it.
+  PosedStampPreview? _stampPreviewAt(DocumentPoint point) {
+    try {
+      final box = _stampBox(point, point);
+      return PosedStampPreview(
+        RenderedElement(
+          StrokeData(
+            [box.first, box.second],
+            _color,
+            1,
+            kind: VectorKind.stamp,
+            stamp: _stampId,
+            look: _stampLook,
+          ),
+        ),
+      );
+    } catch (_) {
+      // A stamp that cannot be shown is still posed by the click.
+      return null;
+    }
+  }
+
+  /// The preview of the paint pot for the pointer at [at], [point] of the
+  /// sheet. What is shown stays while the pointer travels on it; the pot
+  /// looks again once the pointer has rested, at once under a finger that
+  /// has just come down.
+  void _pourHintAt(Offset at, DocumentPoint point, double scale) {
+    final quiet = _pourHintQuiet;
+    if (quiet != null) {
+      if ((at - quiet).distance < 4) {
+        _dropPourHint();
+        _hint.preview = null;
+        return;
+      }
+      _pourHintQuiet = null;
+    }
+    final asked = _pourHintAsked;
+    final same =
+        asked != null &&
+        asked.revision == _documentRevision &&
+        asked.rgb == _color &&
+        asked.kind == _pourKind;
+    if (same && asked.x == point.x && asked.y == point.y) return;
+    final shown = _hint.preview;
+    if (!(same && shown is PourPreview && shown.covers(point))) {
+      _hint.preview = null;
+    }
+    final first = asked == null && _potHeld;
+    _pourHintAsked = (
+      x: point.x,
+      y: point.y,
+      revision: _documentRevision,
+      rgb: _color,
+      kind: _pourKind,
+    );
+    final serial = ++_pourHintSerial;
+    _pourHintTimer?.cancel();
+    _pourHintTimer = Timer(
+      first ? Duration.zero : _pourHintRest,
+      () => unawaited(_showPourHint(serial, point, scale)),
+    );
+  }
+
+  Future<void> _showPourHint(
+    int serial,
+    DocumentPoint point,
+    double scale,
+  ) async {
+    _pourHintTimer = null;
+    if (!mounted || serial != _pourHintSerial || _document == null) return;
+    PourPreview? preview;
+    try {
+      preview = await _pourPreviewAt(point, scale);
+    } catch (_) {
+      // Without its preview the pot still pours.
+    }
+    if (!mounted || serial != _pourHintSerial) return;
+    _hint.preview = preview;
+  }
+
+  /// More elements than this over what the pot would colour are left out
+  /// of its hatching as one picture rather than one by one.
+  static const _pourOverMost = 48;
+
+  /// What the pot would colour at [point], found as [_fillAt] finds it;
+  /// null where a press would change nothing that can be seen.
+  Future<PourPreview?> _pourPreviewAt(DocumentPoint point, double scale) async {
+    final document = _document!;
+    if (_pouring) return null;
+    final plain = _pourKind == PourKind.plain;
+    final revision = _documentRevision;
+    bool stale() =>
+        !mounted ||
+        !identical(document, _document) ||
+        revision != _documentRevision;
+    Future<PourPreview?> onElement(int index) async {
+      final object = document.strokes[index];
+      if (_keepsOwnColours(object)) return null;
+      final fills = object.kind.canFill;
+      if (plain &&
+          !object.look.hasGradient &&
+          (fills ? object.fillRgb : object.rgb) == _color) {
+        return null;
+      }
+      // What is painted after it and lies on it hides a part of it.
+      final seen = document.paintOrder;
+      final area = _strokes[index].shownBounds.inflate(object.width / 2 + 1);
+      final rank = seen.indexOf(index);
+      final above = [
+        for (final other in rank < 0 ? const <int>[] : seen.skip(rank + 1))
+          if (_strokes[other].shownBounds
+              .inflate(document.strokes[other].width / 2 + 1)
+              .overlaps(area))
+            other,
+      ];
+      ui.Image? ink;
+      if (above.length > _pourOverMost) {
+        ink = (await _inkMask(above)).image;
+        if (stale()) return null;
+      }
+      return PourPreview.element(
+        _strokes[index],
+        inside: fills,
+        rgb: _color,
+        ink: ink,
+        over: ink == null
+            ? [for (final other in above) _strokes[other]]
+            : const [],
+      );
+    }
+
+    final (:index, order: _, :poured) = _potTouch(point, scale);
+    if (index != null) return onElement(index);
+    if (_backgroundImage != null) return null;
+    final paper = await _potPaperAt(point, scale, poured);
+    if (paper == null || stale()) return null;
+    final points = paper.points;
+    if (points != null) {
+      final zone = Path()..fillType = PathFillType.evenOdd;
+      var at = 0;
+      for (final ring in paper.rings!) {
+        zone.moveTo(points[at].x, points[at].y);
+        for (var k = 1; k < ring; k++) {
+          zone.lineTo(points[at + k].x, points[at + k].y);
+        }
+        zone.close();
+        at += ring;
+      }
+      // It is poured under the lines that close it, which were just read.
+      final mask = await _inkMask([
+        for (final index in document.paintOrder)
+          if (!poured.contains(index)) index,
+      ]);
+      if (stale()) return null;
+      return PourPreview.zone(zone, rgb: _color, ink: mask.image);
+    }
+    final zone = paper.zone;
+    if (zone != null) return onElement(zone);
+    // The paper itself: all of it, but what is drawn on it.
+    if (plain && document.paperRgb == _color) return null;
+    final seen = document.paintOrder;
+    if (seen.isEmpty) return PourPreview.sheet(rgb: _color);
+    final mask = await _inkMask(seen);
+    if (stale()) return null;
+    return PourPreview.sheet(rgb: _color, ink: mask.image);
+  }
+
   void _pointerDown(PointerDownEvent event, DocumentViewport viewport) {
     if (_latch != null) {
       // The click that ends what a click began. It does nothing else, and
@@ -1880,7 +2640,21 @@ class _DrawingStudioState extends State<DrawingStudio>
       event.localPosition.dy,
     );
     if (_tool == StudioTool.fill) {
-      _fillAt(point, viewport.scale);
+      if (event.kind == PointerDeviceKind.mouse) {
+        // The mouse saw what would be coloured before it clicked.
+        _pourHintQuiet = event.localPosition;
+        _fillWithSplash(point, viewport.scale, event.position);
+        return;
+      }
+      // A finger or a pen shows it first: the part it would colour is
+      // hatched under it, follows it, and takes the paint when it is lifted
+      // (Color 1.2).
+      _pointer = event.pointer;
+      _potHeld = true;
+      _potAt = event.localPosition;
+      _pressPosition = event.localPosition;
+      _pressTravel = 0;
+      _pressByTouch = event.kind == PointerDeviceKind.touch;
       return;
     }
     if (_choosing) {
@@ -2250,6 +3024,10 @@ class _DrawingStudioState extends State<DrawingStudio>
       if (path.isNotEmpty) _rubAlong(path, viewport.scale);
       return;
     }
+    if (_pointer == event.pointer && _potHeld) {
+      _potAt = event.localPosition;
+      return;
+    }
     if (_pointer != event.pointer || _draft.isEmpty) return;
     final pressed = _pressPosition;
     if (pressed != null) {
@@ -2368,6 +3146,28 @@ class _DrawingStudioState extends State<DrawingStudio>
     _latch = null;
     _endViewGesture();
     _finishSelectionDrag();
+    if (_potHeld) {
+      // The finger that held the paint pot is lifted: the paint flows where
+      // it was, on the sheet; beside the sheet, and when a command ended
+      // the gesture, nothing is poured.
+      final at = _potAt;
+      final viewport = _keyViewport;
+      _potHeld = false;
+      _potAt = null;
+      _pointer = null;
+      _pressPosition = null;
+      if (released &&
+          at != null &&
+          viewport != null &&
+          viewport.contains(at.dx, at.dy)) {
+        _fillWithSplash(
+          viewport.point(at.dx, at.dy),
+          viewport.scale,
+          _liftedAt,
+        );
+      }
+      return;
+    }
     if (_erasing) {
       // A click on a trait takes it whole; a rub already did its work.
       final press = _eraserPress;
@@ -3048,6 +3848,8 @@ class _DrawingStudioState extends State<DrawingStudio>
     _eraserLast = null;
     _eraserShield.clear();
     _textAnchor = null;
+    _potHeld = false;
+    _potAt = null;
     _selectionStart = null;
     _selectionDragBounds = null;
     _selectionOffset.value = Offset.zero;
@@ -3202,8 +4004,12 @@ class _DrawingStudioState extends State<DrawingStudio>
     if (event is KeyUpEvent) return true;
     final at = _keyPointerAt ?? size.center(Offset.zero);
     final time = _keyClock.elapsed;
+    // What the tool would do is shown where this pointer is (Color 1.2).
+    _hintByKey = true;
+    _hintByFinger = false;
     if (press) {
       if (event is KeyRepeatEvent) return true;
+      _hintAt = at;
       _keyDown = !_keyDown;
       if (_keyDown) {
         _pointerDown(
@@ -3235,6 +4041,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       (at.dx + direction!.dx * distance).clamp(0, size.width),
       (at.dy + direction.dy * distance).clamp(0, size.height),
     );
+    _hintAt = next;
     if (_keyDown) {
       _pointerMove(
         PointerMoveEvent(
@@ -3659,6 +4466,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       _strokes = strokes;
       _saveState = tracking;
       _documentRevision++;
+      _forgetInk();
       _revision++;
       _status =
           status ??
@@ -4026,6 +4834,7 @@ class _DrawingStudioState extends State<DrawingStudio>
       });
       _sound(StudioSound.saved);
       _react();
+      if (mounted && softEffectsHere(context)) showConfetti(context);
       return true;
     } catch (error) {
       _error(
@@ -4653,6 +5462,8 @@ class _DrawingStudioState extends State<DrawingStudio>
           : _exportPng,
       onPrint: _busy || !_options.printing ? null : _printDrawing,
       onOptions: _busy ? null : _openOptions,
+      onUniverses: _busy ? null : _openUniverses,
+      hasUniverses: _choosesUniverse,
       onReplay: _canReplay ? _showReplay : null,
       onUndo: _canUndo ? () => _history(false) : null,
       onRedo: !_busy && _document!.canRedo ? () => _history(true) : null,
@@ -4678,6 +5489,10 @@ class _DrawingStudioState extends State<DrawingStudio>
       child: CallbackShortcuts(
         bindings: {
           const SingleActivator(LogicalKeyboardKey.f1): _showHelp,
+          // The names of the decor, one after the other (Color 1.2).
+          const SingleActivator(LogicalKeyboardKey.f2): () => _nextName(1),
+          const SingleActivator(LogicalKeyboardKey.f2, shift: true): () =>
+              _nextName(-1),
           const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): () =>
               _history(false),
           const SingleActivator(LogicalKeyboardKey.keyZ, control: true): () =>
@@ -4773,199 +5588,2199 @@ class _DrawingStudioState extends State<DrawingStudio>
           },
           autofocus: true,
           child: Scaffold(
-            body: _phoneLayout(context)
-                ? _phoneBody()
-                : Column(
-                    children: [
-                      if (!_bigSheet &&
-                          _options.captions &&
-                          MediaQuery.sizeOf(context).height >= 620)
-                        Container(
-                          width: double.infinity,
-                          color: studioBanner,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 5,
-                          ),
-                          child: Text(
-                            tr(
-                              'Color · Un petit atelier pour les grandes idées',
-                            ),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: studioHelpText,
-                            ),
-                          ),
-                        ),
-                      if (!_bigSheet)
-                        StudioHeader(
-                          onNew: _busy ? null : _newDrawing,
-                          onOpen: _busy ? null : _openProject,
-                          hasGallery: _gallery != null,
-                          onGallery: _busy ? null : _openGallery,
-                          onImportImage: _busy ? null : _importImage,
-                          onSave: _busy ? null : _saveProject,
-                          onExport: _busy ? null : _chooseExport,
-                          onPrint: _busy ? null : _printDrawing,
-                          onAbout: _busy ? null : _showAbout,
-                          onHelp: _busy ? null : _showHelp,
-                          onMenuVisibilityChanged: _colorDialogChanged,
-                          onOptions: _busy ? null : _openOptions,
-                          showOpen: _options.opensFiles,
-                          showImportImage: _options.opensFiles,
-                          showExport: _options.exports,
-                          showPrint: _options.printing,
-                          showHelp: _options.headerHelp,
-                          savedJustNow: _savedJustNow,
-                        ),
-                      Expanded(
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            final wide =
-                                !_bigSheet &&
-                                _options.inspector &&
-                                constraints.maxWidth >= 1120;
-                            final textScale =
-                                MediaQuery.textScalerOf(context).scale(12) / 12;
-                            final tools = _options.groups;
-                            final largeTools = _options.simpleControls;
-                            final narrow = StudioLayout.toolsAbove(
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              textScale: textScale,
-                              toolCount: tools.length,
-                              largeTools: largeTools,
-                            );
-                            // The sheet comes first: the controls under it are
-                            // spacious only when the sheet stays comfortable.
-                            final short = !StudioLayout.spaciousControls(
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              narrow: narrow,
-                              inspector: wide,
-                              textScale: textScale,
-                              toolCount: tools.length,
-                              largeTools: largeTools,
-                            );
-                            final gap = short ? 6.0 : 12.0;
-                            return Padding(
-                              padding: EdgeInsets.all(
-                                narrow || short ? 12 : 20,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (!narrow) ...[
-                                    StudioToolBar(
-                                      selected: _tool.group,
-                                      onSelected: _busy ? null : _selectGroup,
-                                      tools: tools,
-                                      large: largeTools,
-                                    ),
-                                    const SizedBox(width: 18),
-                                  ],
-                                  Expanded(
-                                    // Named, so that it stays the same column when
-                                    // a window made much wider or narrower at once
-                                    // gives it neighbours on both sides: what it
-                                    // holds, an open colour dialog for one, must
-                                    // not be forgotten.
-                                    key: const ValueKey('studioColumn'),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        if (narrow) ...[
-                                          StudioToolBar(
-                                            selected: _tool.group,
-                                            onSelected: _busy
-                                                ? null
-                                                : _selectGroup,
-                                            horizontal: true,
-                                            tools: tools,
-                                          ),
-                                          const SizedBox(height: 8),
-                                        ],
-                                        KeyedSubtree(
-                                          key: const Key('documentToolbar'),
-                                          child: _documentToolbar(),
-                                        ),
-                                        SizedBox(height: gap),
-                                        Expanded(
-                                          child: LayoutBuilder(
-                                            builder: (context, room) {
-                                              // Whatever the controls need, the
-                                              // sheet keeps its floor: they scroll
-                                              // in what is left, and drawing stays
-                                              // in its own region.
-                                              final controlsRoom = math.max(
-                                                0.0,
-                                                room.maxHeight -
-                                                    gap -
-                                                    StudioLayout.sheetFloor(
-                                                      room.maxHeight,
-                                                    ),
-                                              );
-                                              return Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.stretch,
-                                                children: [
-                                                  Expanded(child: _canvas()),
-                                                  SizedBox(height: gap),
-                                                  ConstrainedBox(
-                                                    constraints: BoxConstraints(
-                                                      maxHeight: controlsRoom,
-                                                    ),
-                                                    child: Scrollbar(
-                                                      thumbVisibility: true,
-                                                      child:
-                                                          SingleChildScrollView(
-                                                            key: const Key(
-                                                              'drawingControlsScroll',
-                                                            ),
-                                                            primary: true,
-                                                            child:
-                                                                _drawingControls(
-                                                                  narrow,
-                                                                  compact:
-                                                                      short,
-                                                                ),
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (wide) ...[
-                                    const SizedBox(width: 18),
-                                    StudioInspector(
-                                      tool: _tool,
-                                      help: _toolHelp,
-                                      rgb: _color,
-                                      width: _width,
-                                      fillRgb: _filled ? _fillColor : null,
-                                      stamp: _tool == StudioTool.stamp
-                                          ? _currentStamp
-                                          : null,
-                                      shape: _newShape,
-                                      companionCue: _companionCue,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            );
-                          },
-                        ),
+            // The studio is made of pebbles (Color 1.2), in every window;
+            // a notice stands over them.
+            body: Stack(
+              children: [
+                Positioned.fill(child: _galetsBody(context)),
+                if (_notice case final notice?) _noticeLayer(context, notice),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ——— « Les galets » (Color 1.2): the studio of every window ———
+  //
+  // The sheet first. In a wide window: two pebbles at the top, one line at
+  // the bottom, and what a button opens beside it (galets.dart). In a
+  // window taller than wide: two lines. On a telephone and in a window too
+  // small for a line: two rails beside the sheet, and a drawer. The decor
+  // of the universe has the whole window behind the sheet, less the band
+  // of the line.
+
+  void _openGaletPanel(_GaletPanel panel, {int family = 0, GlobalKey? beside}) {
+    if (_busy || _confirmationOpen) return;
+    _settleLatch();
+    _finishStroke();
+    _closeName();
+    setState(() {
+      final same =
+          _galetPanel == panel &&
+          (panel != _GaletPanel.shades || _galetFamily == family);
+      _galetPanel = same ? null : panel;
+      _galetFamily = family;
+      if (panel == _GaletPanel.shades) {
+        _shadesButton = beside ?? _swatchButtons[family];
+      }
+    });
+  }
+
+  void _closeGaletPanel() {
+    if (_galetPanel == null || !mounted) return;
+    setState(() => _galetPanel = null);
+    _focus.requestFocus();
+  }
+
+  // What a button of a panel does: the panel goes, then the action.
+  VoidCallback? _fromPanel(VoidCallback? action) => action == null
+      ? null
+      : () {
+          if (_galetPanel != null) setState(() => _galetPanel = null);
+          action();
+        };
+
+  /// Where [button] stands in the frame of the pebbles; null before it was
+  /// laid out.
+  Rect? _galetAnchor(GlobalKey button) {
+    final box = button.currentContext?.findRenderObject();
+    final frame = _galetsFrame.currentContext?.findRenderObject();
+    if (box is! RenderBox || frame is! RenderBox || !box.hasSize) return null;
+    return box.localToGlobal(Offset.zero, ancestor: frame) & box.size;
+  }
+
+  bool get _rails => _galetsForm == GaletsForm.rails;
+
+  GlobalKey get _galetPanelButton => switch (_galetPanel!) {
+    _GaletPanel.drawing => _drawingButton,
+    _GaletPanel.size => _sizeButton,
+    _GaletPanel.which => _whichButton,
+    _GaletPanel.shades => _shadesButton ?? _swatchButtons[_galetFamily],
+    _GaletPanel.drawer => _drawerButton,
+    _GaletPanel.colours => _coloursButton,
+    _GaletPanel.everyColour => _rails ? _coloursButton : _everyColourButton,
+  };
+
+  /// The colour the swatches show as chosen: the inside of shapes when
+  /// that is what a colour changes, the colour in hand otherwise.
+  int get _galetColour =>
+      _canFill && _colorTarget == PaintColorTarget.fill ? _fillColor : _color;
+
+  void _pickGaletColour(int rgb) {
+    if (_busy || _confirmationOpen) return;
+    _recentColors.remember(rgb);
+    setState(() {
+      _galetPanel = null;
+      // A colour chosen is the choice: the pipette that was waiting has
+      // nothing left to fetch.
+      _picking = false;
+      _chooseColor(rgb);
+    });
+    _sound(StudioSound.colour);
+    _focus.requestFocus();
+  }
+
+  /// « Mélanger » : the dialog where a colour is found or mixed, for the
+  /// older children (the setting of the adults).
+  Future<void> _mixGaletColour() async {
+    if (_busy || _confirmationOpen || !_dialogAllowed) return;
+    _settleLatch();
+    _colorDialogChanged(true);
+    int? chosen;
+    try {
+      chosen = await showPaintColorDialog(
+        context,
+        initialRgb: _galetColour,
+        recentColors: _recentColors.colors,
+      );
+    } finally {
+      _colorDialogChanged(false);
+    }
+    if (chosen != null && mounted) _pickGaletColour(chosen);
+  }
+
+  /// What the size button sizes: nothing (null), the width of a trait, or
+  /// one of the three sizes of a text or of a stamp.
+  ({bool placed, bool forStamp})? get _galetSized {
+    if (_tool == StudioTool.fill || _tool == StudioTool.eraser) return null;
+    final kind = _styledKind;
+    if (kind == VectorKind.text || kind == VectorKind.stamp) {
+      // A chosen text changes size with its words (Modifier); a chosen
+      // stamp keeps the size it was given.
+      if (_choosing) return null;
+      return (placed: true, forStamp: kind == VectorKind.stamp);
+    }
+    if (_choosing && (_selectedObject == null || kind!.isBoxObject)) {
+      return null;
+    }
+    return (placed: false, forStamp: false);
+  }
+
+  /// The width the size button shows: that of the chosen element, or the
+  /// one in hand.
+  double get _galetWidth =>
+      _selectedObject != null && _choosing ? _selectedObject!.width : _width;
+
+  void _pickGaletWidth(double width) {
+    if (_busy || _confirmationOpen) return;
+    setState(() {
+      _galetPanel = null;
+      // The chosen element takes it at once: one step for Annuler.
+      if (_selectedObject != null && !_styleSelection(width: width)) return;
+      _width = width;
+    });
+    _sound(StudioSound.tool);
+    _focus.requestFocus();
+  }
+
+  /// Whether « lequel » has something to offer: the choices of the tool,
+  /// or the inside of a shape.
+  bool get _galetWhichOffered =>
+      (!_choosing && _hasVariants) ||
+      (_canFill && (!_choosing || _selectedObject != null));
+
+  String get _galetWhichName => switch (_tool) {
+    StudioTool.brush => tr('Sorte de trait'),
+    StudioTool.magic => tr('Sorte de magie'),
+    StudioTool.fill => tr('Façon de remplir'),
+    StudioTool.stamp => trf('Tampon {0} · choisir un autre tampon', [
+      _currentStamp?.label ?? '',
+    ]),
+    StudioTool.select => tr('Remplir la forme'),
+    _ when _tool.group == ToolGroup.shapes => tr('Sorte de forme'),
+    _ => tr('Rien à choisir pour cet outil'),
+  };
+
+  String get _galetWhichTitle => switch (_tool) {
+    StudioTool.stamp => tr('Choisis un tampon'),
+    _ => _galetWhichName,
+  };
+
+  // The widths of what the pebbles hold, as their buttons are laid out
+  // below: the studio chooses what is written from what fits.
+  static const _galetGap = 2.0;
+  static double _galetWide(List<double> cells, {double padding = 12}) =>
+      padding +
+      cells.fold(0.0, (sum, cell) => sum + cell) +
+      _galetGap * math.max(0, cells.length - 1);
+
+  /// What a line holds in a room [across] wide. The tool in hand loses its
+  /// name first; then white goes to the family of black, then brown to that
+  /// of orange (the owner, 12 November 2026); what still does not hold is
+  /// drawn a little smaller. [tools] and [colours]: the two halves of the
+  /// line, which a window taller than wide lays one above the other.
+  _GaletLinePlan _galetLinePlan(
+    BuildContext context,
+    double across, {
+    bool tools = true,
+    bool colours = true,
+    bool shortest = false,
+  }) {
+    final groups = _options.groups;
+    final simple = _options.simpleControls;
+    final current = _galetColour;
+    double textOf(String text, double size) => galetTextWidth(
+      context,
+      text,
+      galetText(size, bold: true, color: studioGreen),
+    );
+    _GaletLinePlan plan({
+      required bool named,
+      required int places,
+      required double cell,
+    }) {
+      final large = cell > GaletsLayout.cell;
+      final size = large ? 18.0 : 16.0;
+      final name = textOf(_tool.group.label, size);
+      final longest = groups
+          .map((group) => textOf(group.label, size))
+          .fold(0.0, math.max);
+      final palette = GaletPalette(places);
+      final extra = !shortest && palette.swatchOf(current) == null;
+      final lead = large ? 86.0 : 70.0;
+      final widths = <double>[
+        if (tools) ...[
+          for (var index = 1; index < groups.length; index++) cell,
+          if (named) ...[lead + name, longest - name] else cell,
+          GaletRule.width,
+          if (simple) ...[cell, cell, cell] else 52,
+          66,
+        ],
+        if (tools && colours) GaletRule.width,
+        if (colours) ...[
+          for (var index = 0; index < palette.shown.length; index++) cell,
+          if (extra) cell,
+          if (_options.everyColour) cell,
+        ],
+      ];
+      return _GaletLinePlan(
+        named: named,
+        palette: palette,
+        cell: cell,
+        // Its ends not counted: they give a little of their room before
+        // anything else does.
+        inner: widths.fold(0.0, (sum, each) => sum + each) + widths.length - 1,
+        nameWidth: name,
+        longest: longest,
+        extra: extra,
+      );
+    }
+
+    if (shortest) {
+      // Eight colours; seven and the button of every colour where an
+      // adult asked for it: the same width, and the same windows.
+      return plan(
+        named: false,
+        places: _options.everyColour ? 7 : 8,
+        cell: GaletsLayout.cell,
+      );
+    }
+    final candidates = [
+      if (simple) ...[
+        plan(named: true, places: 10, cell: GaletsLayout.largeCell),
+        plan(named: false, places: 10, cell: GaletsLayout.largeCell),
+      ],
+      if (tools) plan(named: true, places: 10, cell: GaletsLayout.cell),
+      plan(named: false, places: 10, cell: GaletsLayout.cell),
+      if (colours)
+        for (var places = 9; places >= GaletPalette.fewest; places--)
+          plan(named: false, places: places, cell: GaletsLayout.cell),
+    ];
+    for (final candidate in candidates) {
+      // A name is written only where the line keeps its full ends.
+      if (candidate.inner + (candidate.named ? 20 : 8) <= across) {
+        return candidate;
+      }
+    }
+    return candidates.last;
+  }
+
+  Widget _galetsBody(BuildContext context) {
+    final window = MediaQuery.sizeOf(context);
+    final safe = MediaQuery.paddingOf(context);
+    final document = _document!;
+    final across = window.width - 2 * GaletsLayout.side;
+    final form = GaletsLayout.formFor(
+      window: window,
+      safe: safe,
+      phone: _phoneLayout(context),
+      lineMin:
+          _galetLinePlan(context, across, shortest: true).inner +
+          8 +
+          2 * GaletsLayout.side,
+      documentWidth: document.width.toDouble(),
+      documentHeight: document.height.toDouble(),
+    );
+    _galetsForm = form;
+    // A panel belongs to the form that opened it: a window that changes
+    // form puts it away.
+    final ofRails =
+        _galetPanel == _GaletPanel.drawer || _galetPanel == _GaletPanel.colours;
+    final ofLines =
+        _galetPanel == _GaletPanel.drawing ||
+        _galetPanel == _GaletPanel.size ||
+        _galetPanel == _GaletPanel.which;
+    if (form == GaletsForm.rails ? ofLines : ofRails) _galetPanel = null;
+    if (form == GaletsForm.rails) return _galetsRails(context, window, safe);
+
+    final two = form == GaletsForm.two;
+    final linePlan = _galetLinePlan(context, across, colours: !two);
+    final coloursPlan = two
+        ? _galetLinePlan(context, across, tools: false)
+        : linePlan;
+    _galetPalette = coloursPlan.palette;
+    final lineHigh = linePlan.cell + 16;
+    // A decor stands around the sheet of a wide window on a computer; none
+    // on a tablet (the owner, 12 November 2026), and none around two
+    // lines, which leave it no ground to stand on.
+    final worn = touchFirst || two ? null : _universe.decor;
+    GaletsLayout laid({required bool decor, bool? big}) => GaletsLayout(
+      form: form,
+      window: window,
+      safe: safe,
+      documentWidth: document.width.toDouble(),
+      documentHeight: document.height.toDouble(),
+      decor: decor,
+      bigSheet: big ?? _bigSheet,
+      padding: _options.captions ? 28 : 8,
+      lineHigh: lineHigh,
+    );
+    // « Dessiner en grand » is offered where it gives the sheet more room:
+    // a sheet that already has the width of the window gains nothing when
+    // the pebbles of the top are put away.
+    final bigGains =
+        laid(decor: worn != null, big: true).sheet.width >
+        laid(decor: worn != null, big: false).sheet.width + 8;
+    if (_bigSheet && !bigGains) _bigSheet = false;
+    var layout = laid(decor: worn != null);
+    DecorLayout? around;
+    if (worn != null) {
+      around = DecorLayout(
+        frame: layout.decorFrame,
+        sheetAtRest: layout.sheet,
+        decor: worn.size,
+        decorSheet: worn.sheet,
+        clearTop: layout.decorClearTop,
+        smallest: DecorLayout.smallestInWindow,
+      );
+      // Where its pieces would be too small to be looked at, no decor:
+      // the sheet takes the room.
+      if (!around.pieces) {
+        around = null;
+        layout = laid(decor: false);
+      }
+    }
+    final decor = around == null ? null : worn;
+    final painting = decor == null ? null : DecorPainting(decor, around!);
+    _decorPainting = painting;
+    _stageOrigin = layout.stage.topLeft;
+    final enabled = !_busy && !_confirmationOpen;
+
+    // ——— What is written at the top, from what the window leaves ———
+    final nameStyle = galetText(17, bold: true);
+    final drawingText = galetTextWidth(context, tr('Mon dessin'), nameStyle);
+    final universeText = galetTextWidth(context, tr('Univers'), galetText(16));
+    final saveText = galetTextWidth(
+      context,
+      tr('Enregistrer'),
+      GaletSaveButton.style,
+    );
+    // The loupes are for a mouse: two fingers do it on a tablet. A window
+    // too narrow for them keeps the wheel and the keys.
+    var loupes = _options.viewControls && !touchFirst;
+    int viewCells() => !_options.viewControls ? 0 : (loupes ? 5 : 3);
+    int rightCells() =>
+        1 + (_options.layers ? 1 : 0) + viewCells() - (bigGains ? 0 : 1) + 2;
+    double leftWide({required bool named, required bool universe}) =>
+        _galetWide([
+          named ? 91 + drawingText : 75,
+          if (_choosesUniverse) ...[
+            GaletRule.width,
+            universe ? 60 + universeText : GaletsLayout.cell,
+          ],
+        ]);
+    double rightWide({required bool named}) => _galetWide([
+      for (var index = 0; index < rightCells(); index++) GaletsLayout.cell,
+      GaletRule.width,
+      if (viewCells() > 0) GaletRule.width,
+      6,
+      named ? GaletSaveButton.namedWidth(saveText) : GaletsLayout.cell,
+    ], padding: 15);
+    // The simplest interface writes almost nothing: « Enregistrer » only.
+    var drawingNamed = !_options.simpleControls;
+    var universeNamed = !_options.simpleControls;
+    var saveNamed = true;
+    bool fits() =>
+        leftWide(named: drawingNamed, universe: universeNamed) +
+            rightWide(named: saveNamed) +
+            12 <=
+        across;
+    if (!fits()) universeNamed = false;
+    if (!fits()) saveNamed = false;
+    if (!fits()) drawingNamed = false;
+    if (!fits()) loupes = false;
+    final leftWidth = leftWide(named: drawingNamed, universe: universeNamed);
+    final rightWidth = rightWide(named: saveNamed);
+
+    // ——— The bubble of the companion, when it has the room ———
+    final tip = _galetTip;
+    final tipStrong = tip.strong;
+    final tipText = tip.text;
+    Widget? bubble;
+    Widget? bubbleBelow;
+    if (!_bigSheet && _options.toolHelp) {
+      final room = across - leftWidth - rightWidth - 18 - 18;
+      final wanted = GaletBubble.wanted(context, tipStrong, tipText);
+      final width = wanted <= room
+          ? wanted
+          : room >= GaletBubble.narrowest &&
+                wanted <= 2 * math.min(room, GaletBubble.widest) - 60
+          ? math.min(room, GaletBubble.widest)
+          : null;
+      if (width != null) {
+        bubble = GaletBubble(strong: tipStrong, text: tipText, width: width);
+      } else if (tip.urgent) {
+        // What matters now — the second click of a shape, a gesture in
+        // progress — is said whatever the window: under the pebble where
+        // there is no room beside it.
+        bubbleBelow = GaletBubble(
+          strong: tipStrong,
+          text: tipText,
+          width: math.min(math.max(leftWidth, 340), across),
+          below: true,
+        );
+      }
+    }
+
+    final panel = _galetPanel;
+    final anchor = panel == null ? null : _galetAnchor(_galetPanelButton);
+    _followGaletPanel(panel, anchor);
+
+    Widget line(double top, Widget child) => Positioned(
+      left: GaletsLayout.side,
+      right: GaletsLayout.side,
+      top: top,
+      height: lineHigh,
+      child: Center(
+        // A line never goes beyond the window: where one more colour than
+        // its own asks for a little more room than there is, it is drawn a
+        // little smaller.
+        child: FittedBox(fit: BoxFit.scaleDown, child: child),
+      ),
+    );
+
+    return Stack(
+      key: _galetsFrame,
+      children: [
+        if (decor == null)
+          Positioned.fill(child: ColoredBox(color: studioBackground))
+        else ...[
+          Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: layout.band,
+            child: ValueListenableBuilder<MouseCursor>(
+              valueListenable: _besideCursor,
+              builder: (context, cursor, child) => MouseRegion(
+                cursor: cursor,
+                onHover: (event) => _besideCursor.value =
+                    _options.decorNames &&
+                        _namesOffered &&
+                        painting!.nameAt(event.localPosition) != null
+                    ? SystemMouseCursors.help
+                    : SystemMouseCursors.basic,
+                child: child,
+              ),
+              // Beside the stage of the sheet: what is pressed there may
+              // be asking the name of something.
+              child: Listener(
+                key: const Key('decorBeside'),
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: (event) =>
+                    _decorPressed(event, event.localPosition, beside: true),
+                onPointerMove: (event) => _asking.move(event.localPosition),
+                onPointerUp: (_) => _asking.lift(),
+                onPointerCancel: (_) => _asking.lift(),
+                child: IgnorePointer(
+                  child: ExcludeSemantics(
+                    child: RepaintBoundary(
+                      child: DecorView(
+                        decor: decor,
+                        sheetAtRest: layout.sheet,
+                        motion: _options.decorMotion,
+                        now: widget.clock,
+                        resting: () => _gestureOnSheet,
+                        clearTop: layout.decorClearTop,
+                        smallest: DecorLayout.smallestInWindow,
+                        onClock: () => _decorClock.value++,
                       ),
-                    ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // The ground goes on, plain, under the line.
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: layout.band,
+            // In the same room as the decor, at the same hour: the shade
+            // of the evening and of the night falls on it too.
+            child: ValueListenableBuilder<int>(
+              valueListenable: _decorClock,
+              builder: (context, _, _) => GaletGround(
+                front: decor.front,
+                veil: decor.veils[DayMoment.at(decorTime(widget.clock))],
+                above: layout.decorFrame,
+              ),
+            ),
+          ),
+        ],
+        Positioned.fromRect(
+          rect: layout.stage,
+          child: _readAt(2, _canvas(layout)),
+        ),
+        // Where the sheet lies when the whole of it is shown: nothing to
+        // see or to touch, a mark for whoever measures the studio.
+        Positioned.fromRect(
+          rect: layout.sheet,
+          child: const IgnorePointer(
+            child: SizedBox.expand(key: Key('sheetAtRest')),
+          ),
+        ),
+        // The names of the decor: what a screen reader may ask about, and
+        // the card of the thing that was asked.
+        if (painting != null && _namesOffered)
+          Positioned(
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: layout.band,
+            // Read last: the room is around the studio, not before it.
+            child: _readAt(
+              5,
+              ValueListenableBuilder<DecorName?>(
+                valueListenable: _shownName,
+                builder: (context, shown, _) => DecorNameLayer(
+                  painting: painting,
+                  sheetAtRest: layout.sheet,
+                  shown: shown,
+                  onAsk: _showName,
+                  onClose: _closeName,
+                ),
+              ),
+            ),
+          ),
+        // A press beside an open panel puts it away, and does nothing else.
+        if (panel != null) _galetPanelBarrier(),
+        if (!_bigSheet)
+          Positioned(
+            left: GaletsLayout.side,
+            top: layout.top,
+            child: _readAt(
+              0,
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _galetOfDrawing(
+                    named: drawingNamed,
+                    universeNamed: universeNamed,
+                    nameWidth: drawingText,
+                    universeWidth: universeText,
+                  ),
+                  if (bubble != null) ...[const SizedBox(width: 18), bubble],
+                ],
+              ),
+            ),
+          ),
+        if (bubbleBelow != null)
+          Positioned(
+            left: GaletsLayout.side,
+            top: layout.top + GaletsLayout.topHeight + 10,
+            child: _readAt(.5, IgnorePointer(child: bubbleBelow)),
+          ),
+        Positioned(
+          right: GaletsLayout.side,
+          top: layout.top,
+          child: _readAt(
+            1,
+            _bigSheet
+                ? _galetOfBigSheet(enabled)
+                : _galetOfActions(
+                    saveNamed: saveNamed,
+                    bigSheet: bigGains,
+                    loupes: loupes,
                   ),
           ),
         ),
+        // What can be done with the chosen element, just above the line;
+        // at the top of the sheet when the element itself lies down there:
+        // its actions never cover it.
+        if (_choosing && _selectedObject != null)
+          if (_selectionUnder(
+            Rect.fromLTRB(0, layout.lineTop - 76, window.width, layout.lineTop),
+            instead: Rect.fromLTWH(
+              0,
+              _bigSheet ? layout.top : layout.top + GaletsLayout.topHeight + 10,
+              window.width,
+              66,
+            ),
+          ))
+            Positioned(
+              left: GaletsLayout.side,
+              right: GaletsLayout.side,
+              top: _bigSheet
+                  ? layout.top
+                  : layout.top + GaletsLayout.topHeight + 10,
+              child: _readAt(3, Center(child: _galetOfSelection(across))),
+            )
+          else
+            Positioned(
+              left: GaletsLayout.side,
+              right: GaletsLayout.side,
+              bottom: window.height - layout.lineTop + 10,
+              child: _readAt(3, Center(child: _galetOfSelection(across))),
+            ),
+        line(
+          layout.lineTop,
+          _readAt(4, _galetLine(context, linePlan, colours: !two)),
+        ),
+        if (two)
+          line(
+            layout.lineTop + lineHigh + GaletsLayout.linesGap,
+            _readAt(4.2, _galetLine(context, coloursPlan, tools: false)),
+          ),
+        // An open panel is read just after the pebble of its button.
+        if (panel != null && anchor != null)
+          Positioned.fill(
+            child: _readAt(
+              panel == _GaletPanel.drawing ? .25 : 4.5,
+              _galetPanelLayer(panel, anchor),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // A button may have moved since it was last laid out: its panel follows
+  // at the next image.
+  void _followGaletPanel(_GaletPanel? panel, Rect? anchor) {
+    if (panel == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _galetPanel != panel) return;
+      if (_galetAnchor(_galetPanelButton) != anchor) setState(() {});
+    });
+  }
+
+  Widget _galetPanelBarrier() => Positioned.fill(
+    child: Listener(
+      key: const Key('galetPanelBarrier'),
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (_) => _closeGaletPanel(),
+    ),
+  );
+
+  /// The studio between two rails: a telephone on its side, and a window
+  /// too small for a line. On the left, « Mon dessin », the tools that the
+  /// height holds and the drawer of all of them, with the size and
+  /// « lequel ». On the right, « Enregistrer », Annuler, Rétablir and the
+  /// colours. The sheet has all the rest.
+  Widget _galetsRails(BuildContext context, Size window, EdgeInsets safe) {
+    final document = _document!;
+    _bigSheet = false;
+    _galetPalette = GaletPalette.whole;
+    final layout = GaletsLayout(
+      form: GaletsForm.rails,
+      window: window,
+      safe: safe,
+      documentWidth: document.width.toDouble(),
+      documentHeight: document.height.toDouble(),
+      decor: false,
+    );
+    _decorPainting = null;
+    _stageOrigin = layout.stage.topLeft;
+    final rail = layout.railCell + 8;
+    final between = layout.railRight - layout.railLeft - 2 * (rail + 10);
+    final tip = _galetTip;
+    final panel = _galetPanel;
+    final anchor = panel == null ? null : _galetAnchor(_galetPanelButton);
+    _followGaletPanel(panel, anchor);
+    final selectionAtFoot = _selectionUnder(
+      Rect.fromLTRB(
+        0,
+        layout.sheet.bottom - 72,
+        window.width,
+        layout.sheet.bottom,
+      ),
+      instead: Rect.fromLTWH(0, layout.sheet.top, window.width, 72),
+    );
+    return Stack(
+      key: _galetsFrame,
+      children: [
+        Positioned.fill(child: ColoredBox(color: studioBackground)),
+        Positioned.fromRect(
+          rect: layout.stage,
+          child: _readAt(2, _canvas(layout)),
+        ),
+        Positioned.fromRect(
+          rect: layout.sheet,
+          child: const IgnorePointer(
+            child: SizedBox.expand(key: Key('sheetAtRest')),
+          ),
+        ),
+        if (panel != null) _galetPanelBarrier(),
+        Positioned(
+          left: layout.railLeft,
+          top: layout.top,
+          child: _readAt(0, _galetLeftRail(layout)),
+        ),
+        Positioned(
+          left: layout.railRight - rail,
+          top: layout.top,
+          child: _readAt(1, _galetRightRail(layout)),
+        ),
+        // What matters now — the pipette, the second click of a shape — is
+        // said over the top of the sheet; the rest waits in the help.
+        if (tip.urgent && _options.toolHelp && between >= 200)
+          Positioned(
+            left: layout.railLeft + rail + 10,
+            width: between,
+            top: layout.top + 4,
+            child: _readAt(
+              .5,
+              IgnorePointer(
+                child: Center(
+                  child: GaletBubble(
+                    strong: tip.strong,
+                    text: tip.text,
+                    width: math.min(between, GaletBubble.widest),
+                    below: true,
+                    tail: false,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        // What can be done with the chosen element, at the foot of the
+        // sheet; at its top when the element itself lies at its foot.
+        if (_choosing && _selectedObject != null)
+          Positioned(
+            left: layout.railLeft + rail + 10,
+            width: between,
+            top: selectionAtFoot ? layout.sheet.top + 6 : null,
+            bottom: selectionAtFoot
+                ? null
+                : window.height - layout.sheet.bottom + 6,
+            child: _readAt(
+              3,
+              // Its sentence too, where it stands beside the actions and
+              // takes nothing more of the sheet.
+              Center(
+                child: _galetOfSelection(
+                  between,
+                  hint: between >= 560 * galetTextScale(context),
+                ),
+              ),
+            ),
+          ),
+        if (panel != null && anchor != null)
+          Positioned.fill(
+            child: _readAt(
+              panel == _GaletPanel.drawer ? .25 : 1.5,
+              _galetPanelLayer(panel, anchor),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// The tools a rail of [places] cells shows: those of the simplest
+  /// interface first — the brush, the pot, the stamp, the eraser —, in the
+  /// order of the line when all of them hold; and always the tool in hand.
+  List<ToolGroup> _railTools(int places) {
+    final groups = _options.groups;
+    if (places >= groups.length) return groups;
+    const first = [
+      ToolGroup.brush,
+      ToolGroup.fill,
+      ToolGroup.stamp,
+      ToolGroup.eraser,
+    ];
+    final ordered = [
+      for (final group in first)
+        if (groups.contains(group)) group,
+      for (final group in groups)
+        if (!first.contains(group)) group,
+    ];
+    final shown = ordered.take(math.max(1, places)).toList();
+    final chosen = _tool.group;
+    if (!shown.contains(chosen)) shown[shown.length - 1] = chosen;
+    return shown;
+  }
+
+  Widget _galetLeftRail(GaletsLayout layout) {
+    final enabled = !_busy && !_confirmationOpen;
+    final cell = layout.railCell;
+    final chosen = _tool.group;
+    final drawerOpen = _galetPanel == _GaletPanel.drawer;
+    final tools = _railTools(layout.railCells - 2);
+    return Galet(
+      key: const Key('galetLeftRail'),
+      vertical: true,
+      height: cell + 8,
+      padding: const EdgeInsets.all(4),
+      gap: layout.railGap,
+      children: [
+        // « Mon dessin » : the menu of everything that is done with the
+        // whole drawing. Just saved, it shows the tick for a moment.
+        KeyedSubtree(
+          key: const Key('phoneMenu'),
+          child: GaletButton(
+            key: const Key('myDrawing'),
+            label: trf('Mon dessin : {0}', [_documentCaption]),
+            hint: tr('Nouveau, ouvrir, exporter, imprimer, aide, options'),
+            onPressed: enabled ? _fromPanel(_openPhoneMenu) : null,
+            width: cell,
+            height: cell,
+            child: GaletPortrait(size: cell - 10, cue: _companionCue),
+          ),
+        ),
+        for (final group in tools)
+          GaletButton(
+            key: Key(group.keyName),
+            label: group.label,
+            selected: group == chosen,
+            onPressed: enabled ? () => _galetTool(group) : null,
+            width: cell,
+            height: cell,
+            child: GaletPicture(art: group.art, size: 32),
+          ),
+        KeyedSubtree(
+          key: _drawerButton,
+          child: GaletButton(
+            key: const Key('toolDrawer'),
+            label: _options.simpleControls
+                ? tr('Les outils et la taille')
+                : tr('Tous les outils, la taille et la sorte de trait'),
+            onPressed: enabled
+                ? () => _openGaletPanel(_GaletPanel.drawer)
+                : null,
+            selected: drawerOpen,
+            marksSelection: false,
+            expanded: drawerOpen,
+            width: cell,
+            height: cell,
+            child: const GaletPicture(art: EduArt.allTools, size: 30),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _galetRightRail(GaletsLayout layout) {
+    final enabled = !_busy && !_confirmationOpen;
+    final cell = layout.railCell;
+    final current = _galetColour;
+    final coloursOpen =
+        _galetPanel == _GaletPanel.colours ||
+        (_galetPanel == _GaletPanel.everyColour) ||
+        (_galetPanel == _GaletPanel.shades && _shadesButton == _coloursButton);
+    // Beside the colour in hand: those chosen last, then those of the
+    // line, as many as the height holds.
+    final others = <int>[];
+    for (final rgb in [
+      ..._recentColors.colors.take(2),
+      for (final colour in galetColours) colour.rgb,
+    ]) {
+      if (others.length >= layout.railCells - 4) break;
+      if (rgb != current && !others.contains(rgb)) others.add(rgb);
+    }
+    return Galet(
+      key: const Key('galetRightRail'),
+      vertical: true,
+      height: cell + 8,
+      padding: const EdgeInsets.all(4),
+      gap: layout.railGap,
+      children: [
+        GaletSaveButton(
+          key: const Key('saveProject'),
+          onPressed: _busy ? null : _fromPanel(_saveProject),
+          named: false,
+          savedJustNow: _savedJustNow,
+          unsaved: _dirty,
+          size: cell,
+        ),
+        ..._galetHistory(size: cell),
+        KeyedSubtree(
+          key: _coloursButton,
+          child: GaletSwatch(
+            key: const Key('railColour'),
+            rgb: current,
+            name: trf('{0} : toutes les couleurs', [paintColorName(current)]),
+            chosen: true,
+            cell: cell,
+            diameter: cell - 14,
+            expanded: coloursOpen,
+            onPressed: enabled
+                ? () => _openGaletPanel(_GaletPanel.colours)
+                : null,
+          ),
+        ),
+        for (final (index, rgb) in others.indexed)
+          KeyedSubtree(
+            key: _railSwatchButtons[index],
+            child: GaletSwatch(
+              key: Key('rail-${rgb.toRadixString(16)}'),
+              rgb: rgb,
+              name: paintColorName(rgb),
+              cell: cell,
+              diameter: cell - 16,
+              onPressed: enabled ? () => _pickGaletColour(rgb) : null,
+              onShades: _railShades(rgb, _railSwatchButtons[index]),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // What a long press on a swatch of a rail, or of its panel, opens: the
+  // family of an elementary colour, beside [button]. None in the simplest
+  // interface, which has ten colours and no more.
+  VoidCallback? _railShades(int rgb, GlobalKey button) {
+    if (_options.simpleControls) return null;
+    final index = galetColours.indexWhere((colour) => colour.rgb == rgb);
+    if (index < 0 || galetFamilies[index].isEmpty) return null;
+    return () =>
+        _openGaletPanel(_GaletPanel.shades, family: index, beside: button);
+  }
+
+  /// The order in which a screen reader goes through the studio of the
+  /// pebbles: « Mon dessin » and the pebbles of the top, the sheet, the
+  /// actions of a chosen element, the line, then the things of the decor —
+  /// which lie behind everything and would otherwise be read first.
+  static Widget _readAt(double order, Widget child) =>
+      Semantics(container: true, sortKey: OrdinalSortKey(order), child: child);
+
+  /// What the companion says in its bubble: a few words in bold, then a
+  /// sentence. [urgent]: what matters now — the pipette, a gesture in
+  /// progress, the second click of a shape — is said whatever the window;
+  /// the few words of the tool in hand only where the window has room for
+  /// them. (What is done with a chosen element is said in its own pebble,
+  /// beside its actions.)
+  ({String strong, String text, bool urgent}) get _galetTip {
+    if (_helpIsUrgent || _shapeAnchor != null) {
+      return (strong: '', text: _toolHelp, urgent: true);
+    }
+    final (strong, text) = _tool.tip;
+    // « Dessiner sans tenir le bouton » changes how a trait is made.
+    final holdFree = _holdFreeHelp;
+    return (
+      strong: strong,
+      text: forTouch(holdFree != null && !_choosing ? holdFree : text),
+      urgent: false,
+    );
+  }
+
+  /// The pebble of the drawing: the companion and « Mon dessin », which
+  /// opens what is done with the whole drawing; then « Univers ».
+  Widget _galetOfDrawing({
+    required bool named,
+    required bool universeNamed,
+    required double nameWidth,
+    required double universeWidth,
+  }) {
+    final open = _galetPanel == _GaletPanel.drawing;
+    return Galet(
+      gap: _galetGap,
+      children: [
+        KeyedSubtree(
+          key: _drawingButton,
+          child: GaletButton(
+            key: const Key('myDrawing'),
+            // The line of state went with the panels: what the drawing
+            // holds, and whether it is saved, is said here and at the top
+            // of the panel.
+            label: trf('Mon dessin : {0}', [_documentCaption]),
+            hint: tr('Nouveau, ouvrir, exporter, imprimer, aide, options'),
+            tip: !named,
+            onPressed: _busy
+                ? null
+                : () => _openGaletPanel(_GaletPanel.drawing),
+            selected: open,
+            marksSelection: false,
+            expanded: open,
+            width: named ? 91 + nameWidth : 75,
+            padding: EdgeInsets.only(left: 4, right: named ? 12 : 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GaletPortrait(cue: _companionCue),
+                SizedBox(width: named ? 10 : 6),
+                if (named) ...[
+                  Text(
+                    tr('Mon dessin'),
+                    maxLines: 1,
+                    style: galetText(
+                      17,
+                      bold: true,
+                      color: open ? studioGreen : null,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                GaletChevron(
+                  up: open,
+                  size: 15,
+                  color: open ? studioGreen : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_choosesUniverse) ...[
+          const GaletRule(),
+          GaletButton(
+            key: const Key('openUniverses'),
+            label: tr('Univers'),
+            tip: !universeNamed,
+            onPressed: _busy ? null : _fromPanel(_openUniverses),
+            width: universeNamed ? 60 + universeWidth : GaletsLayout.cell,
+            padding: universeNamed
+                ? const EdgeInsets.only(left: 8, right: 14)
+                : EdgeInsets.zero,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const GaletPicture(art: EduArt.universes, size: 30),
+                if (universeNamed) ...[
+                  const SizedBox(width: 8),
+                  Text(tr('Univers'), maxLines: 1, style: galetText(16)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// The pebble of the right: the film and the layers; the view; Annuler
+  /// and Rétablir; « Enregistrer ».
+  Widget _galetOfActions({
+    required bool saveNamed,
+    required bool bigSheet,
+    required bool loupes,
+  }) {
+    final view = _viewEnabled;
+    return Galet(
+      gap: _galetGap,
+      padding: const EdgeInsets.fromLTRB(8, 6, 7, 6),
+      children: [
+        GaletPictureButton(
+          key: const Key('replayDrawing'),
+          art: EduArt.film,
+          label: tr('Revoir ton dessin se faire tout seul'),
+          onPressed: _canReplay ? _fromPanel(_showReplay) : null,
+        ),
+        if (_options.layers)
+          GaletPictureButton(
+            key: const Key('layersButton'),
+            art: EduArt.layers,
+            label: trf('Calques : tu dessines sur {0}', [
+              layerName(_document!.activeLayer, _document!.layers),
+            ]),
+            onPressed: _busy || _confirmationOpen
+                ? null
+                : _fromPanel(_openLayers),
+          ),
+        const GaletRule(),
+        if (_options.viewControls) ...[
+          if (loupes) ...[
+            GaletPictureButton(
+              key: const Key('zoomOut'),
+              art: EduArt.zoomOut,
+              label: tr('Éloigner la feuille'),
+              onPressed: view ? _fromPanel(() => _zoom(1 / 1.25)) : null,
+            ),
+            GaletPictureButton(
+              key: const Key('zoomIn'),
+              art: EduArt.zoomIn,
+              label: tr('Rapprocher la feuille'),
+              onPressed: view ? _fromPanel(() => _zoom(1.25)) : null,
+            ),
+          ],
+          // It answers only when the sheet is seen from closer, or moved:
+          // at rest it says that the whole sheet is shown. The view
+          // changes without building the studio again: it listens.
+          ValueListenableBuilder<int>(
+            valueListenable: _viewRebuild,
+            builder: (context, _, _) => GaletPictureButton(
+              key: const Key('fitPage'),
+              art: EduArt.wholeSheet,
+              label: tr('Voir toute la feuille'),
+              onPressed: view && !(_view?.isFit ?? true)
+                  ? _fromPanel(_fitView)
+                  : null,
+            ),
+          ),
+          GaletPictureButton(
+            key: const Key('panPage'),
+            art: EduArt.moveSheet,
+            label: tr('Déplacer la feuille'),
+            selected: _panning,
+            marksSelection: true,
+            onPressed: view ? _fromPanel(_togglePan) : null,
+          ),
+          if (bigSheet)
+            GaletPictureButton(
+              key: const Key('bigSheet'),
+              art: EduArt.bigSheet,
+              label: tr('Dessiner en grand'),
+              onPressed: view ? _fromPanel(_toggleBigSheet) : null,
+            ),
+          const GaletRule(),
+        ],
+        ..._galetHistory(),
+        const SizedBox(width: 6),
+        GaletSaveButton(
+          key: const Key('saveProject'),
+          onPressed: _busy ? null : _fromPanel(_saveProject),
+          named: saveNamed,
+          savedJustNow: _savedJustNow,
+          unsaved: _dirty,
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _galetHistory({double size = GaletsLayout.cell}) => [
+    GaletPictureButton(
+      key: const Key('undo'),
+      art: EduArt.undo,
+      label: tr('Annuler le dernier geste'),
+      cell: size,
+      onPressed: _canUndo ? _fromPanel(() => _history(false)) : null,
+    ),
+    GaletPictureButton(
+      key: const Key('redo'),
+      art: EduArt.redo,
+      label: tr('Rétablir le geste annulé'),
+      cell: size,
+      onPressed: !_busy && _document!.canRedo
+          ? _fromPanel(() => _history(true))
+          : null,
+    ),
+  ];
+
+  /// « Dessiner en grand » : the pebbles of the top are put away, but for
+  /// Annuler, Rétablir and the button that brings them back.
+  Widget _galetOfBigSheet(bool enabled) => Galet(
+    gap: _galetGap,
+    vertical: true,
+    children: [
+      ..._galetHistory(),
+      GaletPictureButton(
+        key: const Key('bigSheet'),
+        art: EduArt.bigSheet,
+        label: tr('Retrouver tous les panneaux'),
+        selected: true,
+        marksSelection: true,
+        onPressed: enabled ? _fromPanel(_toggleBigSheet) : null,
+      ),
+    ],
+  );
+
+  void _togglePan() {
+    _finishStroke();
+    setState(() => _panning = !_panning);
+    _focus.requestFocus();
+  }
+
+  /// The actions on the chosen element, in a pebble of their own, after
+  /// the sentence that says how it is moved and what a colour does to it.
+  Widget _galetOfSelection(double room, {bool hint = true}) => RepaintBoundary(
+    child: Container(
+      key: const Key('galetSelection'),
+      constraints: BoxConstraints(maxWidth: math.min(640.0, room)),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: studioSurface,
+        borderRadius: galetCorners(60),
+        boxShadow: galetFloatShadow(),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        child: _selectionToolbar(compact: true, showHint: hint),
+      ),
+    ),
+  );
+
+  /// Whether the chosen element, as the view shows it, lies in [band] of
+  /// the window — where the pebble of its actions would cover it — and
+  /// leaves [instead] free, where the pebble then goes. False while the
+  /// view is not known yet.
+  bool _selectionUnder(Rect band, {required Rect instead}) {
+    final bounds = _selectedPaintBounds;
+    final view = _view;
+    if (bounds == null || view == null || !_choosing) return false;
+    final shown = Rect.fromLTRB(
+      view.left + bounds.left * view.scale,
+      view.top + bounds.top * view.scale,
+      view.left + bounds.right * view.scale,
+      view.top + bounds.bottom * view.scale,
+    ).shift(_stageOrigin);
+    // An element as tall as the sheet is covered wherever the pebble
+    // stands: it stays where a child expects it.
+    return shown.overlaps(band) && !shown.overlaps(instead);
+  }
+
+  /// The name of a colour as the pebbles say it: one of the line or of its
+  /// families by the name a child gives it, any other by what it looks
+  /// like.
+  String _colourName(int rgb) => galetColourName(rgb) ?? paintColorName(rgb);
+
+  /// The sizes to press, side by side: five dots as large as the trait
+  /// they give; three for a text or a stamp, and three for the trait of
+  /// the simplest interface. Empty when the tool has nothing to size.
+  /// [cell]: how large each button is.
+  List<Widget> _galetSizeChoices({double cell = 60, double gap = 4}) {
+    final enabled = !_busy && !_confirmationOpen;
+    final sized = _galetSized;
+    final simple = _options.simpleControls;
+    final colour = Color(0xff000000 | _color);
+    final pale = galetPale(_color);
+    Widget dot(double diameter) => Container(
+      width: diameter,
+      height: diameter,
+      decoration: BoxDecoration(
+        color: colour,
+        shape: BoxShape.circle,
+        border: pale ? Border.all(color: studioSwatchRing, width: 1) : null,
+      ),
+    );
+    // A cell of the line holds a smaller dot than a button of a panel.
+    final most = cell - 20;
+    List<Widget> spaced(List<Widget> buttons) => [
+      for (final (index, button) in buttons.indexed) ...[
+        if (index > 0 && gap > 0) SizedBox(width: gap),
+        button,
+      ],
+    ];
+    if (sized == null || sized.placed) {
+      final forStamp = sized?.forStamp ?? false;
+      final value = sized == null ? null : (forStamp ? _stampSize : _textSize);
+      final what = forStamp ? tr('du tampon') : tr('du texte');
+      // Without anything to size, the simplest interface keeps its three
+      // dots where they are, asleep: nothing moves on its line.
+      if (sized == null && !simple) return const [];
+      return spaced([
+        for (final size in ObjectSize.values)
+          GaletButton(
+            key: Key(
+              sized == null ? 'brush-${size.name}' : 'size-${size.name}',
+            ),
+            label: sized == null
+                ? trf('Taille {0} : {1}', [tr('du trait'), size.label])
+                : trf('Taille {0} : {1}', [what, size.label]),
+            selected: size == value,
+            framed: true,
+            width: cell,
+            height: cell,
+            onPressed: !enabled || sized == null
+                ? null
+                : () {
+                    setState(() {
+                      _galetPanel = null;
+                      if (forStamp) {
+                        _stampSize = size;
+                      } else {
+                        _textSize = size;
+                      }
+                    });
+                    _sound(StudioSound.tool);
+                    _focus.requestFocus();
+                  },
+            child: dot(math.min(most, 12.0 + 8 * size.index)),
+          ),
+      ]);
+    }
+    if (simple) {
+      // Three sizes to press instead of five.
+      final value = _galetWidth <= 9
+          ? ObjectSize.small
+          : _galetWidth <= 21
+          ? ObjectSize.medium
+          : ObjectSize.large;
+      return spaced([
+        for (final size in ObjectSize.values)
+          GaletButton(
+            key: Key('brush-${size.name}'),
+            label: trf('Taille {0} : {1}', [tr('du trait'), size.label]),
+            selected: size == value,
+            framed: true,
+            width: cell,
+            height: cell,
+            onPressed: enabled
+                ? () => _pickGaletWidth(switch (size) {
+                    ObjectSize.small => 6,
+                    ObjectSize.medium => 14,
+                    ObjectSize.large => 30,
+                  })
+                : null,
+            child: dot(math.min(most, const [9.0, 20.0, 34.0][size.index])),
+          ),
+      ]);
+    }
+    final chosen = galetWidthIndex(_galetWidth);
+    const diameters = [5.0, 9.0, 14.0, 20.0, 28.0];
+    return spaced([
+      for (final (index, width) in galetWidths.indexed)
+        GaletButton(
+          key: Key('width-$index'),
+          label: trf('Taille {0} sur {1}', [index + 1, galetWidths.length]),
+          selected: index == chosen,
+          framed: true,
+          width: cell,
+          height: cell,
+          onPressed: enabled ? () => _pickGaletWidth(width) : null,
+          child: dot(math.min(most, diameters[index])),
+        ),
+    ]);
+  }
+
+  String get _galetSizeName {
+    final sized = _galetSized;
+    return sized == null
+        ? tr('Rien à régler pour cet outil')
+        : sized.placed
+        ? (sized.forStamp ? tr('Taille du tampon') : tr('Taille du texte'))
+        : tr('Taille du trait');
+  }
+
+  /// A line: the tools, the two settings — how big, and which one —, then
+  /// the colours. Only the tool in hand has its name written, and only
+  /// where the window leaves the room. In a window taller than wide the
+  /// line is two: its [tools] with their settings, and its [colours].
+  Widget _galetLine(
+    BuildContext context,
+    _GaletLinePlan plan, {
+    bool tools = true,
+    bool colours = true,
+  }) {
+    final enabled = !_busy && !_confirmationOpen;
+    final groups = _options.groups;
+    final simple = _options.simpleControls;
+    final chosen = _tool.group;
+    final current = _galetColour;
+    final palette = plan.palette;
+    final swatch = palette.swatchOf(current);
+    final cell = plan.cell;
+    final large = cell > GaletsLayout.cell;
+    final named = plan.named;
+    final toolStyle = galetText(
+      large ? 18 : 16,
+      bold: true,
+      color: studioGreen,
+    );
+    // The ends of the line give a little of their room before any button
+    // is drawn smaller.
+    final across = MediaQuery.sizeOf(context).width - 2 * GaletsLayout.side;
+    final ends = (10 - math.max(0.0, plan.inner + 20 - across) / 2).clamp(
+      4.0,
+      10.0,
+    );
+    final sized = _galetSized;
+    final pale = galetPale(_color);
+    final sizeOpen = _galetPanel == _GaletPanel.size;
+    final whichOpen = _galetPanel == _GaletPanel.which;
+    final everyOpen = _galetPanel == _GaletPanel.everyColour;
+    final whichOffered = _galetWhichOffered;
+    final stamp = _tool == StudioTool.stamp ? _currentStamp : null;
+    final witness = ToolVariants.witness(
+      tool: _tool,
+      brush: _brushTool,
+      magic: _magic,
+      shape: _newShape,
+      rgb: _color,
+      pour: _pourKind,
+      secondRgb: _previousColor,
+      outline: pale ? studioSwatchRing : null,
+    );
+    // The dot of the size button: as large as the trait is wide, between
+    // the smallest and the largest of the five.
+    final dot = sized == null
+        ? 9.0
+        : sized.placed
+        ? 10.0 + 4 * (sized.forStamp ? _stampSize : _textSize).index.toDouble()
+        : (5 +
+                  15 *
+                      math.log(
+                        _galetWidth.clamp(galetWidths.first, galetWidths.last) /
+                            galetWidths.first,
+                      ) /
+                      math.log(galetWidths.last / galetWidths.first))
+              .toDouble();
+    return Galet(
+      key: Key(tools ? 'galetLine' : 'galetColours'),
+      height: cell + 16,
+      padding: EdgeInsets.symmetric(horizontal: ends, vertical: 8),
+      gap: 1,
+      children: [
+        if (tools) ...[
+          for (final group in groups)
+            GaletButton(
+              key: Key(group.keyName),
+              label: group.label,
+              selected: group == chosen,
+              tip: !(named && group == chosen),
+              onPressed: enabled ? () => _galetTool(group) : null,
+              width: named && group == chosen
+                  ? (large ? 86 : 70) + plan.nameWidth
+                  : cell,
+              height: cell,
+              padding: named && group == chosen
+                  ? EdgeInsets.only(
+                      left: large ? 14 : 12,
+                      right: large ? 22 : 18,
+                    )
+                  : EdgeInsets.zero,
+              child: named && group == chosen
+                  ? Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GaletPicture(art: group.art, size: large ? 40 : 32),
+                        SizedBox(width: large ? 10 : 8),
+                        Text(group.label, maxLines: 1, style: toolStyle),
+                      ],
+                    )
+                  : GaletPicture(art: group.art, size: large ? 40 : 30),
+            ),
+          // What a shorter name leaves of the room of the longest.
+          if (named) SizedBox(width: plan.longest - plan.nameWidth),
+          const GaletRule(),
+          if (simple)
+            // Three sizes in view: nothing to open.
+            ..._galetSizeChoices(cell: cell, gap: 1)
+          else
+            KeyedSubtree(
+              key: _sizeButton,
+              child: GaletButton(
+                key: const Key('galetSize'),
+                label: _galetSizeName,
+                onPressed: enabled && sized != null
+                    ? () => _openGaletPanel(_GaletPanel.size)
+                    : null,
+                selected: sizeOpen,
+                marksSelection: false,
+                expanded: sized == null ? null : sizeOpen,
+                width: 52,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox.square(
+                      dimension: 20,
+                      child: Center(
+                        child: Container(
+                          width: dot,
+                          height: dot,
+                          decoration: BoxDecoration(
+                            color: Color(0xff000000 | _color),
+                            shape: BoxShape.circle,
+                            border: pale
+                                ? Border.all(color: studioSwatchRing, width: 1)
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 3),
+                    GaletChevron(color: sizeOpen ? studioGreen : null),
+                  ],
+                ),
+              ),
+            ),
+          KeyedSubtree(
+            key: _whichButton,
+            child: GaletButton(
+              key: const Key('galetWhich'),
+              label: whichOffered
+                  ? _galetWhichName
+                  : tr('Rien à choisir pour cet outil'),
+              onPressed: enabled && whichOffered
+                  ? () => _openGaletPanel(_GaletPanel.which)
+                  : null,
+              selected: whichOpen,
+              marksSelection: false,
+              expanded: whichOffered ? whichOpen : null,
+              width: 66,
+              height: cell,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 36,
+                    height: 32,
+                    child: Center(
+                      child: stamp != null
+                          // On its light round in pebbles of the night.
+                          ? galetOnDisc(
+                              StampPreview(stamp: stamp, rgb: _color, size: 32),
+                              spread: 3,
+                            )
+                          : witness != null
+                          ? CustomPaint(
+                              size: const Size(34, 22),
+                              painter: witness,
+                            )
+                          : Container(
+                              width: 18,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: studioQuietMark,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  GaletChevron(color: whichOpen ? studioGreen : null),
+                ],
+              ),
+            ),
+          ),
+        ],
+        if (tools && colours) const GaletRule(),
+        if (colours) ...[
+          for (final index in palette.shown)
+            KeyedSubtree(
+              key: _swatchButtons[index],
+              child: GaletSwatch(
+                key: Key('color-${galetColours[index].rgb.toRadixString(16)}'),
+                rgb: galetColours[index].rgb,
+                name: galetColours[index].name,
+                chosen: swatch == index,
+                ticked: galetColours[index].rgb == current,
+                cell: cell,
+                diameter: large ? 42 : 32,
+                onPressed: enabled
+                    ? () => _pickGaletColour(galetColours[index].rgb)
+                    : null,
+                // The simplest interface has ten colours and no more.
+                onShades: simple || palette.family(index).isEmpty
+                    ? null
+                    : () => _openGaletPanel(_GaletPanel.shades, family: index),
+              ),
+            ),
+          // A colour that the line does not offer — that of an element, of
+          // an older drawing, one found in the field of the older
+          // children — takes the last place while it is in hand.
+          if (swatch == null)
+            GaletSwatch(
+              key: Key('color-${current.toRadixString(16)}'),
+              rgb: current,
+              name: _colourName(current),
+              chosen: true,
+              cell: cell,
+              diameter: large ? 42 : 32,
+              onPressed: enabled ? () => _pickGaletColour(current) : null,
+            ),
+          // « Toutes les couleurs, pour les grands » : where an adult
+          // asked for it.
+          if (_options.everyColour)
+            KeyedSubtree(
+              key: _everyColourButton,
+              child: GaletButton(
+                key: const Key('everyColour'),
+                label: tr('Toutes les couleurs'),
+                onPressed: enabled
+                    ? () => _openGaletPanel(_GaletPanel.everyColour)
+                    : null,
+                selected: everyOpen,
+                marksSelection: false,
+                expanded: everyOpen,
+                width: cell,
+                height: cell,
+                child: const GaletRainbow(size: 30),
+              ),
+            ),
+        ],
+      ],
+    );
+  }
+
+  // A tool of the line, of a rail or of the drawer: chosen, and what was
+  // open is put away.
+  void _galetTool(ToolGroup group) {
+    if (_galetPanel != null) setState(() => _galetPanel = null);
+    _selectGroup(group);
+  }
+
+  Widget _galetPanelLayer(_GaletPanel panel, Rect anchor) => GaletPanel(
+    key: Key('galetPanel-${panel.name}'),
+    anchor: anchor,
+    side: _rails
+        ? (panel == _GaletPanel.drawer
+              ? GaletPanelSide.right
+              : GaletPanelSide.left)
+        : (panel == _GaletPanel.drawing
+              ? GaletPanelSide.below
+              : GaletPanelSide.above),
+    gap: panel == _GaletPanel.shades ? 16 : 14,
+    padding: EdgeInsets.all(
+      panel == _GaletPanel.shades || panel == _GaletPanel.drawer ? 10 : 14,
+    ),
+    label: switch (panel) {
+      _GaletPanel.drawing => tr('Mon dessin'),
+      _GaletPanel.size => tr('Taille'),
+      _GaletPanel.which => _galetWhichTitle,
+      _GaletPanel.shades => tr('Nuances'),
+      _GaletPanel.drawer => tr('Les outils'),
+      _GaletPanel.colours => tr('Les couleurs'),
+      _GaletPanel.everyColour => tr('Toutes les couleurs'),
+    },
+    child: switch (panel) {
+      _GaletPanel.drawing => _galetDrawingPanel(),
+      _GaletPanel.size => _galetSizePanel(),
+      _GaletPanel.which => _galetWhichPanel(),
+      _GaletPanel.shades => _galetShadesPanel(),
+      _GaletPanel.drawer => _galetDrawerPanel(),
+      _GaletPanel.colours => _galetColoursPanel(),
+      _GaletPanel.everyColour => _galetEveryColourPanel(),
+    },
+  );
+
+  static Widget _galetPanelRule() => Container(
+    height: 1.5,
+    margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+    color: studioLine,
+  );
+
+  /// « Mon dessin » : what the drawing holds, then what is done with the
+  /// whole of it, in large buttons; help, options and « À propos » under a
+  /// line. With enlarged letters the buttons grow and stand two by two.
+  Widget _galetDrawingPanel() {
+    final free = !_busy;
+    final scale = galetTextScale(context).clamp(1.0, 2.0);
+    final tileWide = 116.0 + 84 * (scale - 1);
+    final tileHigh = 84.0 + 22 * (scale - 1);
+    final columns = scale > 1.3 ? 2 : 3;
+    Widget tile(String key, String name, EduArt art, VoidCallback action) =>
+        GaletTile(
+          key: Key(key),
+          name: name,
+          width: tileWide,
+          height: tileHigh,
+          picture: GaletPicture(art: art, size: 36),
+          onPressed: free ? _fromPanel(action) : null,
+        );
+    final path = _currentPath;
+    return SizedBox(
+      width: columns * tileWide + (columns - 1) * 6,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.fromLTRB(6, 2, 6, _options.statusLine ? 3 : 10),
+            child: Text(
+              path == null
+                  ? _documentCaption
+                  : '$_documentTitle · $_documentCaption',
+              key: const Key('drawingCaption'),
+              style: galetText(14, color: studioCaption),
+            ),
+          ),
+          // What the line under the sheet said in the studio of before:
+          // the last thing that happened to the drawing.
+          if (_options.statusLine)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 0, 6, 10),
+              child: ValueListenableBuilder<String>(
+                valueListenable: _statusLine,
+                builder: (context, status, _) => Text(
+                  status,
+                  key: const Key('drawingStatus'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: galetText(12.5, color: studioStatusText),
+                ),
+              ),
+            ),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              tile('newProject', tr('Nouveau'), EduArt.newPage, _newDrawing),
+              if (_options.opensFiles)
+                tile('openProject', tr('Ouvrir'), EduArt.folder, _openProject),
+              if (_gallery != null)
+                tile(
+                  'openGallery',
+                  tr('Mes dessins'),
+                  EduArt.gallery,
+                  _openGallery,
+                ),
+              if (_options.opensFiles)
+                tile(
+                  'importImage',
+                  tr('Sur une image'),
+                  EduArt.onPicture,
+                  _importImage,
+                ),
+              if (_options.exports)
+                tile(
+                  'exportImage',
+                  tr('Exporter'),
+                  EduArt.exportImage,
+                  _chooseExport,
+                ),
+              if (_options.printing)
+                tile(
+                  'printDrawing',
+                  tr('Imprimer'),
+                  EduArt.printer,
+                  _printDrawing,
+                ),
+            ],
+          ),
+          _galetPanelRule(),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              if (_options.headerHelp)
+                tile('showHelp', tr('Aide'), EduArt.help, _showHelp),
+              tile('openOptions', tr('Options'), EduArt.options, _openOptions),
+              // Always there: the privacy policy is reached through it.
+              tile('aboutColor', tr('À propos'), EduArt.about, _showAbout),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The size, in a panel: its name, then the sizes to press.
+  Widget _galetSizePanel() {
+    if (_galetSized == null) return const SizedBox.shrink();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GaletHeading(_galetSizeName),
+        const SizedBox(height: 10),
+        Row(mainAxisSize: MainAxisSize.min, children: _galetSizeChoices()),
+      ],
+    );
+  }
+
+  /// « Lequel » : the sorts of trait, the magics, the shapes, how the pot
+  /// pours, the stamps — each with its name —, and for what has an inside,
+  /// whether it is filled and which colour a swatch then changes.
+  Widget _galetWhichPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final stamps = _tool == StudioTool.stamp;
+    final variants = !_choosing && _hasVariants && !stamps;
+    final scale = galetTextScale(context).clamp(1.0, 2.0);
+    final room = MediaQuery.sizeOf(context).width - 24 - 28;
+    final tile = 104.0 + 60 * (scale - 1);
+    final columns = math.max(2, math.min(5, ((room + 4) / (tile + 4)).floor()));
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GaletHeading(_galetWhichTitle),
+        const SizedBox(height: 10),
+        if (variants)
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: columns * tile + (columns - 1) * 4,
+            ),
+            child: _toolVariants(
+              style: ToolVariantStyle.tiles,
+              tileWidth: tile,
+            ),
+          ),
+        if (stamps) _galetStamps(enabled, room: room, scale: scale),
+        if (_canFill) ...[
+          if (variants) _galetPanelRule(),
+          _galetInside(enabled),
+        ],
+      ],
+    );
+  }
+
+  // The stamps of the catalogue, in the colour in hand, with their names;
+  // then the two buttons that turn the next one.
+  Widget _galetStamps(
+    bool enabled, {
+    required double room,
+    required double scale,
+  }) {
+    StampCatalog? catalog;
+    try {
+      catalog = StampCatalog.instance;
+    } catch (_) {
+      // The catalogue comes from the core; the studio stays usable
+      // without it.
+    }
+    final tile = 92.0 + 50 * (scale - 1);
+    final columns = math.max(2, math.min(6, ((room + 4) / (tile + 4)).floor()));
+    return SizedBox(
+      width: columns * tile + (columns - 1) * 4,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (catalog != null)
+            Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                for (final stamp in catalog.stamps)
+                  GaletTile(
+                    key: Key('stamp-${stamp.key}'),
+                    name: stamp.label,
+                    label: trf('Tampon {0}', [stamp.label]),
+                    selected: stamp.id == _stampId,
+                    width: tile,
+                    height: 92 + 20 * (scale - 1),
+                    fontSize: 13.5,
+                    picture: galetOnDisc(
+                      StampPreview(stamp: stamp, rgb: _color, size: 54),
+                      spread: 4,
+                    ),
+                    onPressed: enabled
+                        ? () {
+                            setState(() {
+                              _galetPanel = null;
+                              _stampId = stamp.id;
+                            });
+                            _sound(StudioSound.tool);
+                            _focus.requestFocus();
+                          }
+                        : null,
+                  ),
+              ],
+            ),
+          _galetPanelRule(),
+          _galetStampTurns(enabled),
+        ],
+      ),
+    );
+  }
+
+  // « Tourner » and « Retourner » : how the next stamp is posed.
+  Widget _galetStampTurns(bool enabled) {
+    final look = _stampLook;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        GaletWideButton(
+          key: const Key('turnStamp'),
+          name: tr('Tourner'),
+          selected: look.rotation != 0,
+          picture: const GaletPicture(art: EduArt.turn, size: 32),
+          onPressed: enabled
+              ? () {
+                  setState(() => _stampEighths = (_stampEighths + 1) % 8);
+                  _sound(StudioSound.tool);
+                }
+              : null,
+        ),
+        GaletWideButton(
+          key: const Key('mirrorStamp'),
+          name: tr('Retourner'),
+          selected: look.mirrorX,
+          picture: const GaletPicture(art: EduArt.mirror, size: 32),
+          onPressed: enabled
+              ? () {
+                  setState(() => _stampMirrored = !_stampMirrored);
+                  _sound(StudioSound.tool);
+                }
+              : null,
+        ),
+      ],
+    );
+  }
+
+  // The inside of a shape: filled or not, and which of its two colours a
+  // swatch changes.
+  Widget _galetInside(bool enabled) => Wrap(
+    spacing: 4,
+    runSpacing: 4,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(right: 14),
+        child: Semantics(
+          label: tr('Remplir la forme'),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox.square(
+                dimension: 48,
+                child: Checkbox(
+                  key: const Key('fillShapeCheckbox'),
+                  value: _filled,
+                  onChanged: enabled
+                      ? (value) => _setFilled(value ?? false)
+                      : null,
+                ),
+              ),
+              Text(tr('Remplir'), style: galetText(15)),
+            ],
+          ),
+        ),
+      ),
+      for (final target in PaintColorTarget.values)
+        GaletButton(
+          key: ValueKey('paint-target-${target.name}'),
+          label: target == PaintColorTarget.stroke
+              ? tr('La couleur du trait')
+              : tr('La couleur de l’intérieur'),
+          selected: _colorTarget == target,
+          framed: true,
+          tip: false,
+          height: 48,
+          corners: 18,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          onPressed: enabled
+              ? () => setState(() => _colorTarget = target)
+              : null,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: target == PaintColorTarget.fill
+                      ? Color(0xff000000 | _fillColor)
+                      : null,
+                  border: Border.all(
+                    color: target == PaintColorTarget.stroke
+                        ? Color(0xff000000 | _color)
+                        : studioSwatchRing,
+                    width: target == PaintColorTarget.stroke ? 4 : 1,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                target == PaintColorTarget.stroke
+                    ? tr('Trait')
+                    : tr('Intérieur'),
+                style: galetText(15),
+              ),
+            ],
+          ),
+        ),
+    ],
+  );
+
+  /// The shades of a colour, from the lightest to the darkest: in a small
+  /// column right above its swatch of the line; side by side beside a
+  /// rail, which has the height of a telephone.
+  Widget _galetShadesPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final current = _galetColour;
+    final shades = [
+      for (final shade in _galetPalette.family(_galetFamily))
+        Padding(
+          padding: const EdgeInsets.all(1),
+          child: GaletSwatch(
+            key: Key('nuance-${shade.rgb.toRadixString(16)}'),
+            rgb: shade.rgb,
+            name: shade.name,
+            chosen: shade.rgb == current,
+            cell: 52,
+            diameter: 38,
+            onPressed: enabled ? () => _pickGaletColour(shade.rgb) : null,
+          ),
+        ),
+    ];
+    return _rails
+        ? Row(mainAxisSize: MainAxisSize.min, children: shades)
+        : Column(mainAxisSize: MainAxisSize.min, children: shades);
+  }
+
+  /// The drawer of a rail: every tool with its name, then the size and
+  /// « lequel » of the tool in hand.
+  Widget _galetDrawerPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final groups = _options.groups;
+    final chosen = _tool.group;
+    final scale = galetTextScale(context).clamp(1.0, 1.6);
+    // Five sizes side by side; wider with enlarged letters, as far as the
+    // window goes.
+    final wide = math.min(
+      (5 * 48.0 + 4 * 4) * scale,
+      math.max(5 * 48.0 + 4 * 4, MediaQuery.sizeOf(context).width - 130),
+    );
+    final columns = scale > 1.3 || groups.length == 4 ? 2 : 3;
+    final tile = (wide - (columns - 1) * 4) / columns;
+    final sizes = _galetSizeChoices(cell: 48);
+    final stamps = _tool == StudioTool.stamp;
+    final variants = !_choosing && _hasVariants && !stamps;
+    return SizedBox(
+      width: wide,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 4,
+            runSpacing: 4,
+            children: [
+              for (final group in groups)
+                GaletTile(
+                  key: Key('drawer-${group.keyName}'),
+                  name: group.label,
+                  selected: group == chosen,
+                  width: tile,
+                  height: 64 + 14 * (scale - 1),
+                  fontSize: 13,
+                  picture: GaletPicture(art: group.art, size: 32),
+                  onPressed: enabled ? () => _galetTool(group) : null,
+                ),
+            ],
+          ),
+          if (sizes.isNotEmpty && _galetSized != null) ...[
+            _galetPanelRule(),
+            Semantics(
+              container: true,
+              label: _galetSizeName,
+              child: Row(mainAxisSize: MainAxisSize.min, children: sizes),
+            ),
+          ],
+          if (variants) ...[
+            _galetPanelRule(),
+            Semantics(
+              container: true,
+              label: _galetWhichTitle,
+              child: _toolVariants(style: ToolVariantStyle.cells),
+            ),
+          ],
+          if (stamps) ...[
+            _galetPanelRule(),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                GaletWideButton(
+                  key: const Key('chooseStamp'),
+                  name: tr('Choisir un tampon'),
+                  picture: _currentStamp == null
+                      ? GaletPicture(art: ToolGroup.stamp.art, size: 32)
+                      : galetOnDisc(
+                          StampPreview(
+                            stamp: _currentStamp!,
+                            rgb: _color,
+                            size: 34,
+                          ),
+                          spread: 3,
+                        ),
+                  onPressed: enabled ? _fromPanel(_chooseStamp) : null,
+                ),
+                _galetStampTurns(enabled),
+              ],
+            ),
+          ],
+          if (_canFill && (!_choosing || _selectedObject != null)) ...[
+            _galetPanelRule(),
+            _galetInside(enabled),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// The colours of a rail: the ten elementary colours, side by side; a
+  /// long press on one opens its shades. Where an adult asked for it, the
+  /// button of every colour.
+  Widget _galetColoursPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final current = _galetColour;
+    final family = GaletPalette.whole.swatchOf(current);
+    return SizedBox(
+      width: 5 * 52.0 + 4 * 2,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Wrap(
+            spacing: 2,
+            runSpacing: 2,
+            children: [
+              for (final (index, colour) in galetColours.indexed)
+                GaletSwatch(
+                  key: Key('color-${colour.rgb.toRadixString(16)}'),
+                  rgb: colour.rgb,
+                  name: colour.name,
+                  chosen: family == index,
+                  ticked: colour.rgb == current,
+                  cell: 52,
+                  diameter: 38,
+                  onPressed: enabled
+                      ? () => _pickGaletColour(colour.rgb)
+                      : null,
+                  onShades: _railShades(colour.rgb, _coloursButton),
+                ),
+            ],
+          ),
+          if (_options.everyColour) ...[
+            _galetPanelRule(),
+            GaletWideButton(
+              key: const Key('everyColour'),
+              name: tr('Toutes les couleurs'),
+              picture: const GaletRainbow(size: 30),
+              onPressed: enabled
+                  ? () => _openGaletPanel(_GaletPanel.everyColour)
+                  : null,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// « Toutes les couleurs », for the older children: the field of every
+  /// colour and the band of greys, where a press takes the colour under
+  /// the finger; the colours chosen last; the pipette, which takes a
+  /// colour of the drawing; and « Mélanger », which opens the dialog where
+  /// a colour is found or mixed.
+  Widget _galetEveryColourPanel() {
+    final enabled = !_busy && !_confirmationOpen;
+    final current = _galetColour;
+    // A telephone has little height: a lower field, and no title.
+    final low = MediaQuery.sizeOf(context).height < 460;
+    final recent = _recentColors.colors.take(low ? 6 : 7).toList();
+    return SizedBox(
+      width: 336,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!low) ...[
+            GaletHeading(tr('Toutes les couleurs')),
+            const SizedBox(height: 10),
+          ],
+          Semantics(
+            container: true,
+            label: tr(
+              'Champ de couleurs : touche une couleur pour la prendre. « Mélanger » la règle avec le clavier.',
+            ),
+            child: GaletColourField(
+              onColour: enabled ? _pickGaletColour : null,
+              height: low ? 96 : 168,
+              greys: low ? 26 : 34,
+            ),
+          ),
+          if (recent.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final rgb in recent)
+                  GaletSwatch(
+                    key: Key('recent-${rgb.toRadixString(16)}'),
+                    rgb: rgb,
+                    name: trf('Couleur récente : {0}', [_colourName(rgb)]),
+                    chosen: rgb == current,
+                    onPressed: enabled ? () => _pickGaletColour(rgb) : null,
+                  ),
+              ],
+            ),
+          ],
+          _galetPanelRule(),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              GaletWideButton(
+                key: const Key('pickPaintColor'),
+                name: tr('Pipette'),
+                label: tr('Pipette : reprendre une couleur du dessin'),
+                selected: _picking,
+                picture: const GaletPicture(art: EduArt.pipette, size: 30),
+                onPressed: enabled ? _fromPanel(_togglePicking) : null,
+              ),
+              GaletWideButton(
+                key: const Key('morePaintColors'),
+                name: tr('Mélanger'),
+                picture: const GaletPicture(art: EduArt.palette, size: 30),
+                onPressed: enabled ? _fromPanel(_mixGaletColour) : null,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -4975,8 +7790,8 @@ class _DrawingStudioState extends State<DrawingStudio>
   bool _phoneLayout(BuildContext context) =>
       touchFirst && phoneRoom(View.of(context), MediaQuery.sizeOf(context));
 
-  /// What the line above the sheet says of the drawing, and the menu of a
-  /// telephone: how many elements, and whether they are saved. What the
+  /// What « Mon dessin » says of the drawing, on its button and at the top
+  /// of what it opens: how many elements, and whether they are saved. What the
   /// child made: the untouched zones and the lines of a colouring page are
   /// not counted, a zone that the paint pot coloured is.
   String get _documentCaption =>
@@ -4990,89 +7805,6 @@ class _DrawingStudioState extends State<DrawingStudio>
       ? tr('Mon dessin')
       : StudioFiles.fileName(_currentPath!);
 
-  // The studio of a telephone on its side. The sheet takes the whole
-  // height, in the middle. On the left, the tools under the button of the
-  // menu, all in view. On the right, a column that scrolls: Annuler and
-  // Rétablir, the colours, the size and what the tool chooses. Everything
-  // else — the actions on the drawing, its film, the layers, help and
-  // options — is in the menu.
-  Widget _phoneBody() {
-    final simple = _options.simpleControls;
-    const railSide = BorderSide(color: studioLine);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            color: studioSurface,
-            border: Border(right: railSide),
-          ),
-          child: StudioToolBar(
-            rail: true,
-            leading: _phoneMenuButton(),
-            selected: _tool.group,
-            onSelected: _busy ? null : _selectGroup,
-            tools: _options.groups,
-            large: simple,
-          ),
-        ),
-        Expanded(
-          child: Padding(padding: const EdgeInsets.all(6), child: _canvas()),
-        ),
-        DecoratedBox(
-          decoration: const BoxDecoration(
-            color: studioSurface,
-            border: Border(left: railSide),
-          ),
-          child: SizedBox(
-            width:
-                ColorPalette.railWidth(simple: simple) +
-                _phoneRailPadding.horizontal,
-            child: _phoneSideRail(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Room on the right of the column for its scrollbar.
-  static const _phoneRailPadding = EdgeInsets.fromLTRB(8, 8, 14, 8);
-
-  Widget _phoneMenuButton() => SizedBox(
-    height: 48,
-    child: OutlinedButton(
-      key: const Key('phoneMenu'),
-      onPressed: _busy || _confirmationOpen ? null : _openPhoneMenu,
-      style: OutlinedButton.styleFrom(
-        padding: EdgeInsets.zero,
-        backgroundColor: studioSurface,
-        foregroundColor: studioInk,
-      ),
-      // The drawing has just been saved: the button of the menu, where
-      // « Enregistrer » is, shows the tick for a moment.
-      child: _savedJustNow
-          ? Semantics(
-              liveRegion: true,
-              label: tr('Dessin enregistré'),
-              child: const Icon(
-                Icons.check_circle,
-                key: Key('savedTick'),
-                size: 30,
-                color: studioGreen,
-              ),
-            )
-          : Tooltip(
-              message: tr('Menu'),
-              excludeFromSemantics: true,
-              child: Icon(
-                Icons.menu_rounded,
-                size: 30,
-                semanticLabel: tr('Menu'),
-              ),
-            ),
-    ),
-  );
-
   Future<void> _openPhoneMenu() async {
     if (_busy || _confirmationOpen) return;
     _settleLatch();
@@ -5080,91 +7812,111 @@ class _DrawingStudioState extends State<DrawingStudio>
       PhoneMenuEntry(
         id: 'newProject',
         name: tr('Nouveau'),
-        picture: (size) => EduIllustration(art: EduArt.newPage, size: size),
+        picture: (size) => GaletPicture(art: EduArt.newPage, size: size),
         enabled: true,
       ),
       if (_options.opensFiles)
         PhoneMenuEntry(
           id: 'openProject',
           name: tr('Ouvrir'),
-          picture: (size) => EduIllustration(art: EduArt.folder, size: size),
+          picture: (size) => GaletPicture(art: EduArt.folder, size: size),
           enabled: true,
         ),
       if (_gallery != null)
         PhoneMenuEntry(
           id: 'openGallery',
           name: tr('Mes dessins'),
-          picture: (size) => EduIllustration(art: EduArt.gallery, size: size),
+          picture: (size) => GaletPicture(art: EduArt.gallery, size: size),
           enabled: true,
         ),
       if (_options.opensFiles)
         PhoneMenuEntry(
           id: 'importImage',
           name: tr('Sur une image'),
-          picture: (size) =>
-              Icon(Icons.add_photo_alternate_outlined, size: size),
+          picture: (size) => GaletPicture(art: EduArt.onPicture, size: size),
           enabled: true,
         ),
-      PhoneMenuEntry(
-        id: 'saveProject',
-        name: tr('Enregistrer'),
-        picture: (size) => EduIllustration(art: EduArt.save, size: size),
-        enabled: true,
-        filled: true,
-      ),
       if (_options.exports)
         PhoneMenuEntry(
           id: 'exportImage',
           name: tr('Exporter'),
-          picture: (size) =>
-              EduIllustration(art: EduArt.exportImage, size: size),
+          picture: (size) => GaletPicture(art: EduArt.exportImage, size: size),
           enabled: true,
         ),
       if (_options.printing)
         PhoneMenuEntry(
           id: 'printDrawing',
           name: tr('Imprimer'),
-          picture: (size) => EduIllustration(art: EduArt.printer, size: size),
+          picture: (size) => GaletPicture(art: EduArt.printer, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
         id: 'replayDrawing',
         name: tr('Revoir'),
-        picture: (size) => EduIllustration(art: EduArt.film, size: size),
+        picture: (size) => GaletPicture(art: EduArt.film, size: size),
         enabled: _canReplay,
       ),
       if (_options.layers)
         PhoneMenuEntry(
           id: 'layersButton',
           name: tr('Calques'),
-          picture: (size) => EduIllustration(art: EduArt.layers, size: size),
+          picture: (size) => GaletPicture(art: EduArt.layers, size: size),
           enabled: true,
         ),
+      // The loupes and the hand are for a mouse: two fingers do it on a
+      // telephone. In a small window of a computer they wait here.
+      if (_options.viewControls && !touchFirst) ...[
+        PhoneMenuEntry(
+          id: 'zoomOut',
+          name: tr('Éloigner'),
+          picture: (size) => GaletPicture(art: EduArt.zoomOut, size: size),
+          enabled: _viewEnabled,
+        ),
+        PhoneMenuEntry(
+          id: 'zoomIn',
+          name: tr('Rapprocher'),
+          picture: (size) => GaletPicture(art: EduArt.zoomIn, size: size),
+          enabled: _viewEnabled,
+        ),
+        PhoneMenuEntry(
+          id: 'panPage',
+          name: tr('Déplacer'),
+          picture: (size) => GaletPicture(art: EduArt.moveSheet, size: size),
+          enabled: _viewEnabled,
+        ),
+      ],
       if (_options.viewControls)
         PhoneMenuEntry(
           id: 'fitPage',
           name: tr('Toute la feuille'),
-          picture: (size) => Icon(Icons.fit_screen_outlined, size: size),
+          picture: (size) => GaletPicture(art: EduArt.wholeSheet, size: size),
           enabled: _viewEnabled && _view != null && !_view!.isFit,
         ),
       if (_options.headerHelp)
         PhoneMenuEntry(
           id: 'showHelp',
           name: tr('Aide'),
-          picture: (size) => Icon(Icons.help_outline, size: size),
+          picture: (size) => GaletPicture(art: EduArt.help, size: size),
+          enabled: true,
+        ),
+      if (_choosesUniverse)
+        PhoneMenuEntry(
+          id: 'openUniverses',
+          name: tr('Univers'),
+          picture: (size) => GaletPicture(art: EduArt.universes, size: size),
           enabled: true,
         ),
       PhoneMenuEntry(
         id: 'openOptions',
         name: tr('Options'),
-        picture: (size) => EduIllustration(art: EduArt.options, size: size),
+        picture: (size) => GaletPicture(art: EduArt.options, size: size),
         enabled: true,
       ),
       // Always there: the privacy policy is reached through it.
       PhoneMenuEntry(
         id: 'aboutColor',
         name: tr('À propos'),
-        picture: (size) => Icon(Icons.info_outline, size: size),
+        picture: (size) => GaletPicture(art: EduArt.about, size: size),
         enabled: true,
       ),
     ];
@@ -5190,8 +7942,6 @@ class _DrawingStudioState extends State<DrawingStudio>
         _openGallery();
       case 'importImage':
         _importImage();
-      case 'saveProject':
-        _saveProject();
       case 'exportImage':
         _chooseExport();
       case 'printDrawing':
@@ -5200,139 +7950,24 @@ class _DrawingStudioState extends State<DrawingStudio>
         _showReplay();
       case 'layersButton':
         _openLayers();
+      case 'zoomOut':
+        _zoom(1 / 1.25);
+      case 'zoomIn':
+        _zoom(1.25);
+      case 'panPage':
+        _togglePan();
       case 'fitPage':
         _fitView();
       case 'showHelp':
         _showHelp();
+      case 'openUniverses':
+        _openUniverses();
       case 'openOptions':
         _openOptions();
       case 'aboutColor':
         _showAbout();
     }
   }
-
-  Widget _phoneSideRail() {
-    final enabled = !_busy && !_confirmationOpen;
-    Widget history(bool redo) => SizedBox.square(
-      dimension: 48,
-      child: IconButton.outlined(
-        key: Key(redo ? 'redo' : 'undo'),
-        style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
-        onPressed: redo
-            ? (!_busy && _document!.canRedo ? () => _history(true) : null)
-            : (_canUndo ? () => _history(false) : null),
-        icon: Semantics(
-          label: redo
-              ? tr('Rétablir le geste annulé')
-              : tr('Annuler le dernier geste'),
-          child: EduIllustration(
-            art: redo ? EduArt.redo : EduArt.undo,
-            size: 26,
-          ),
-        ),
-      ),
-    );
-    return Scrollbar(
-      controller: _phoneRail,
-      thumbVisibility: true,
-      child: SingleChildScrollView(
-        key: const Key('phoneSideRail'),
-        controller: _phoneRail,
-        padding: _phoneRailPadding,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [history(false), history(true)],
-            ),
-            // What can be done with the chosen element comes first: Copier
-            // and Effacer must not wait under every colour.
-            if (_choosing) ...[
-              const SizedBox(height: 10),
-              _selectionToolbar(compact: true, showHint: false),
-            ],
-            if (_canFill) ...[
-              const SizedBox(height: 8),
-              Semantics(
-                label: tr('Remplir la forme'),
-                child: Row(
-                  children: [
-                    Checkbox(
-                      key: const Key('fillShapeCheckbox'),
-                      value: _filled,
-                      onChanged: enabled
-                          ? (value) => _setFilled(value ?? false)
-                          : null,
-                    ),
-                    Expanded(
-                      child: Text(
-                        tr('Remplir'),
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            const SizedBox(height: 10),
-            _palettePanel(true, rail: true),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _drawingControls(bool narrow, {required bool compact}) => Column(
-    key: const Key('drawingControls'),
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      // « Dessiner en grand » keeps the colours, in their tightest form.
-      _palettePanel(narrow, compact: compact || _bigSheet),
-      // The choices of a tool stay in « Dessiner en grand », as the actions
-      // of a chosen element do; the sentences of help do not.
-      if (_hasVariants || _choosing || (!_bigSheet && _options.toolHelp)) ...[
-        SizedBox(height: compact ? 6 : 10),
-        Row(
-          children: [
-            if (!_choosing && !_bigSheet) ...[
-              Companion(size: compact ? 32 : 56, cue: _companionCue),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: _choosing
-                  ? _selectionToolbar(compact: compact || _bigSheet)
-                  : _hasVariants && (_bigSheet || !_options.toolHelp)
-                  ? _toolVariants()
-                  : _hasVariants
-                  // Both are laid out, one is shown: the line keeps the
-                  // height of the taller, and the sheet its size.
-                  ? IndexedStack(
-                      index: _helpIsUrgent ? 1 : 0,
-                      children: [_toolVariants(), _helpText(compact)],
-                    )
-                  : _helpText(compact),
-            ),
-          ],
-        ),
-      ],
-      if (!_bigSheet && _options.statusLine) ...[
-        const SizedBox(height: 8),
-        // One line, whatever it says: a sentence that came and went on two
-        // lines would change the height left to the sheet at every edit.
-        ValueListenableBuilder<String>(
-          valueListenable: _statusLine,
-          builder: (context, status, _) => Text(
-            status,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 11, color: studioStatusText),
-          ),
-        ),
-      ],
-    ],
-  );
 
   Widget _selectionToolbar({required bool compact, bool showHint = true}) =>
       SelectionToolbar(
@@ -5374,15 +8009,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// Whether what the help says now matters more than the choices of the
   /// tool: the pipette, a latch, the sheet held.
   bool get _helpIsUrgent => _picking || _latch != null || _panning;
-
-  Widget _helpText(bool compact) => Text(
-    _toolHelp,
-    style: TextStyle(
-      fontSize: compact ? 11 : 13,
-      color: studioHelpText,
-      fontWeight: FontWeight.w500,
-    ),
-  );
 
   String get _toolHelp => forTouch(_mouseToolHelp);
 
@@ -5477,16 +8103,11 @@ class _DrawingStudioState extends State<DrawingStudio>
       _picking = false;
       _colorTarget = PaintColorTarget.stroke;
     });
+    // The pot put down keeps no image of the drawing.
+    _pourHintQuiet = null;
+    if (tool != StudioTool.fill) _forgetInk();
     _sound(StudioSound.tool);
     _focus.requestFocus();
-    // The colours were scrolled to: the choices of the new tool are above.
-    if (_phoneRail.hasClients && _phoneRail.offset > 0) {
-      _phoneRail.animateTo(
-        0,
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOutCubic,
-      );
-    }
   }
 
   // Native menu commands can edit the document while the order popup is
@@ -5513,6 +8134,18 @@ class _DrawingStudioState extends State<DrawingStudio>
     _forgetAnchorEnd();
     _viewRebuild.value++;
   }
+
+  /// A gesture goes on on the sheet — a trait, an element or the view
+  /// taken, by a pointer, fingers or a trackpad, with or without a held
+  /// button. The decor of a universe then stops where it is, until the
+  /// gesture ends: nothing must slow a trait down (Color 1.2).
+  bool get _gestureOnSheet =>
+      _pointer != null ||
+      _panPointer != null ||
+      _trackpadPointer != null ||
+      _latch != null ||
+      _pinching ||
+      _fingers.isNotEmpty;
 
   /// The hand, two fingers or a trackpad are moving the view.
   bool get _viewMoving =>
@@ -5691,39 +8324,6 @@ class _DrawingStudioState extends State<DrawingStudio>
     _changeView(view.panBy(event.panDelta.dx, event.panDelta.dy));
   }
 
-  Widget _documentToolbar() => DocumentToolbar(
-    title: _documentTitle,
-    caption: _documentCaption,
-    viewControls: !_options.viewControls
-        ? null
-        : ViewControls(
-            panning: _panning,
-            onZoomOut: _viewEnabled ? () => _zoom(1 / 1.25) : null,
-            onZoomIn: _viewEnabled ? () => _zoom(1.25) : null,
-            onFit: _viewEnabled ? _fitView : null,
-            onTogglePan: _viewEnabled
-                ? () {
-                    _finishStroke();
-                    setState(() => _panning = !_panning);
-                    _focus.requestFocus();
-                  }
-                : null,
-            bigSheet: _bigSheet,
-            onToggleBigSheet: _viewEnabled ? _toggleBigSheet : null,
-          ),
-    showFill: _canFill,
-    filled: _filled,
-    onFilledChanged: _busy ? null : _setFilled,
-    activeLayerName: layerName(_document!.activeLayer, _document!.layers),
-    onLayers: _busy || _confirmationOpen ? null : _openLayers,
-    onUndo: _canUndo ? () => _history(false) : null,
-    onRedo: !_busy && _document!.canRedo ? () => _history(true) : null,
-    showReplay: true,
-    onReplay: _canReplay ? _showReplay : null,
-    showTitle: _options.captions,
-    showLayers: _options.layers,
-  );
-
   void _setFilled(bool value) => setState(() {
     // The chosen shape gains or loses its inside at once.
     if (_selectedObject != null &&
@@ -5736,13 +8336,14 @@ class _DrawingStudioState extends State<DrawingStudio>
     _filled = value;
   });
 
-  Widget _canvas() => LayoutBuilder(
+  /// The stage of the sheet: where it is drawn and touched, in the studio
+  /// of the pebbles [galets]. The decor and its names are laid behind and
+  /// over it by the studio, on the whole window, and nothing is written
+  /// around the sheet.
+  Widget _canvas(GaletsLayout galets) => LayoutBuilder(
     builder: (context, constraints) {
-      // A telephone gives the sheet all its room: no name around it.
-      final showCaptions =
-          _options.captions &&
-          constraints.maxHeight >= 160 &&
-          !_phoneLayout(context);
+      // The room that the pebbles keep around the sheet.
+      final sheetPadding = galets.padding;
       // While a pointer is down the view keeps the size it had at the press.
       // A control that appears under the sheet, a sentence that wraps or a
       // window that is resized would otherwise slide the sheet under the
@@ -5759,7 +8360,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         _view = ViewTransform.fit(
           viewWidth: constraints.maxWidth,
           viewHeight: constraints.maxHeight,
-          padding: showCaptions ? 28 : 8,
+          padding: sheetPadding,
           documentWidth: _document!.width.toDouble(),
           documentHeight: _document!.height.toDouble(),
         );
@@ -5767,7 +8368,7 @@ class _DrawingStudioState extends State<DrawingStudio>
         _view = _view!.resize(
           viewWidth: constraints.maxWidth,
           viewHeight: constraints.maxHeight,
-          padding: showCaptions ? 28 : 8,
+          padding: sheetPadding,
         );
         _viewWaits = false;
       } else if (_view!.viewWidth != constraints.maxWidth ||
@@ -5782,211 +8383,236 @@ class _DrawingStudioState extends State<DrawingStudio>
           // What the pointer of the keyboard moves on (Color 1.1).
           _keyViewport = viewport;
           _keySheetSize = constraints.biggest;
-          return DecoratedBox(
-            decoration: BoxDecoration(
-              color: studioSheetBackdrop,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: studioLine),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Semantics(
-                    label: forTouch(
-                      trf(
-                        'Feuille de dessin {0} par {1} unités. Souris ou stylet.',
-                        [_document!.width, _document!.height],
+          // The tool, the colour, a size or the view may have changed: the
+          // pointer and the preview over the sheet follow (Color 1.2).
+          _refreshHint();
+          // The pebbles have the whole window behind the stage, and the
+          // studio lays the decor there itself: nothing is painted under
+          // the sheet here but its shadow.
+          return Stack(
+            children: [
+              // Among the pebbles the sheet floats: its shadow, wherever
+              // the view shows it.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: GaletSheetShadow(
+                      Rect.fromLTWH(
+                        viewport.left,
+                        viewport.top,
+                        viewport.width,
+                        viewport.height,
                       ),
+                      look: studioLook.value,
                     ),
-                    child: MouseRegion(
-                      cursor: _panning || _spaceHeld || _choosing
-                          ? SystemMouseCursors.grab
-                          : SystemMouseCursors.precise,
-                      onExit: (_) {
-                        _forgetAnchorEnd();
-                        // A gesture without a held button ends where the
-                        // pointer leaves the frame of the sheet.
-                        _endLatch();
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: Semantics(
+                  label: forTouch(
+                    trf(
+                      'Feuille de dessin {0} par {1} unités. Souris ou stylet.',
+                      [_document!.width, _document!.height],
+                    ),
+                  ),
+                  child: _StageMouseRegion(
+                    // The interface draws the pointer of the tool itself,
+                    // « la pointe » (Color 1.2): the pointer of the
+                    // system shows only where it says more — the hand
+                    // that moves the sheet, the pipette, and beside the
+                    // sheet over a decor.
+                    held: _panning || _spaceHeld
+                        ? SystemMouseCursors.grab
+                        : _picking
+                        ? SystemMouseCursors.precise
+                        : null,
+                    beside: _stageCursor,
+                    onEnter: (event) {
+                      _hintFollows(event);
+                      _refreshHint();
+                    },
+                    onExit: (_) {
+                      _forgetAnchorEnd();
+                      // A gesture without a held button ends where the
+                      // pointer leaves the frame of the sheet.
+                      _endLatch();
+                      _hintLeft();
+                      _asking.lift();
+                    },
+                    child: Listener(
+                      key: const Key('drawingSurface'),
+                      behavior: HitTestBehavior.opaque,
+                      onPointerDown: (raw) {
+                        final event = _touchShifted(raw);
+                        _decorDown(event);
+                        if (!_fingerDown(event)) {
+                          _hintFollows(event);
+                          _pointerDown(event, viewport);
+                        }
+                        _refreshHint();
                       },
-                      child: Listener(
-                        key: const Key('drawingSurface'),
-                        behavior: HitTestBehavior.opaque,
-                        onPointerDown: (raw) {
-                          final event = _touchShifted(raw);
-                          if (!_fingerDown(event)) {
-                            _pointerDown(event, viewport);
-                          }
-                        },
-                        onPointerMove: (raw) {
-                          final event = _touchShifted(raw);
-                          if (!_fingerMove(event)) {
-                            _pointerMove(event, viewport);
-                          }
-                        },
-                        onPointerHover: (event) =>
-                            _pointerHover(event, viewport),
-                        onPointerSignal: _pointerSignal,
-                        onPointerPanZoomStart: _trackpadStart,
-                        onPointerPanZoomUpdate: _trackpadUpdate,
-                        onPointerPanZoomEnd: (event) {
-                          if (_trackpadPointer == event.pointer) {
+                      onPointerMove: (raw) {
+                        final event = _touchShifted(raw);
+                        _asking.move(event.localPosition + _stageOrigin);
+                        if (!_fingerMove(event)) {
+                          _hintFollows(event);
+                          _pointerMove(event, viewport);
+                        }
+                        _refreshHint();
+                      },
+                      onPointerHover: (event) {
+                        _hintFollows(event);
+                        _pointerHover(event, viewport);
+                        _refreshHint();
+                      },
+                      onPointerSignal: _pointerSignal,
+                      onPointerPanZoomStart: _trackpadStart,
+                      onPointerPanZoomUpdate: _trackpadUpdate,
+                      onPointerPanZoomEnd: (event) {
+                        if (_trackpadPointer == event.pointer) {
+                          _endViewGesture();
+                        }
+                      },
+                      onPointerUp: (raw) {
+                        final event = _touchShifted(raw);
+                        _asking.lift();
+                        _liftedAt = raw.position;
+                        final magicBefore = _tool == StudioTool.magic
+                            ? _document?.undoCount
+                            : null;
+                        _pointerUp(event, viewport);
+                        if (magicBefore != null &&
+                            _document?.undoCount != magicBefore &&
+                            softEffectsHere(context)) {
+                          showSparkles(context, raw.position);
+                        }
+                        _hintLifted(event);
+                        _refreshHint();
+                      },
+                      onPointerCancel: (event) {
+                        _asking.lift();
+                        _hintLifted(event);
+                        if (!_fingerUp(event)) {
+                          if (_panPointer == event.pointer) {
                             _endViewGesture();
                           }
-                        },
-                        onPointerUp: (raw) =>
-                            _pointerUp(_touchShifted(raw), viewport),
-                        onPointerCancel: (event) {
-                          if (_fingerUp(event)) return;
-                          if (_panPointer == event.pointer) _endViewGesture();
                           if (_pointer == event.pointer) _cancelDraft();
-                        },
-                        // The picture of the sheet, as the reference
-                        // images of test/reference_images_test.dart take it.
-                        child: RepaintBoundary(
-                          key: const Key('sheetPicture'),
-                          child: CustomPaint(
-                            painter: DocumentPainter(
-                              viewport: viewport,
-                              paperRgb: _document!.paperRgb,
-                              background: _backgroundImage,
+                        }
+                        _refreshHint();
+                      },
+                      // The picture of the sheet, as the reference
+                      // images of test/reference_images_test.dart take it.
+                      child: RepaintBoundary(
+                        key: const Key('sheetPicture'),
+                        child: CustomPaint(
+                          painter: DocumentPainter(
+                            viewport: viewport,
+                            paperRgb: _document!.paperRgb,
+                            background: _backgroundImage,
+                            strokes: _strokes,
+                            paintOrder: _document!.paintOrder,
+                            draft: _drafting,
+                            repaint: _canvasRepaint,
+                            revision: _revision,
+                            selectedIndex: _selectedIndex,
+                            selectionBounds: _selectedPaintBounds,
+                            selectionOffset: _selectionOffset,
+                            // What is being drawn lies on the active layer,
+                            // under the layers above it: on a colouring
+                            // page, under the lines of the page, as it will
+                            // once the pointer is released.
+                            draftDepth: draftDepthOf(
                               strokes: _strokes,
                               paintOrder: _document!.paintOrder,
-                              draft: _drafting,
-                              repaint: _canvasRepaint,
-                              revision: _revision,
-                              selectedIndex: _selectedIndex,
-                              selectionBounds: _selectedPaintBounds,
-                              selectionOffset: _selectionOffset,
-                              // What is being drawn lies on the active layer,
-                              // under the layers above it: on a colouring
-                              // page, under the lines of the page, as it will
-                              // once the pointer is released.
-                              draftDepth: draftDepthOf(
-                                strokes: _strokes,
-                                paintOrder: _document!.paintOrder,
-                                layers: _document!.layers,
-                                activeLayer: _document!.activeLayer,
-                              ),
-                              anchor: _shapeAnchor,
-                              anchorDrawn: _draftFromAnchor,
-                              anchorRgb: _color,
-                              anchorWidth: _width,
-                              anchorFillRgb: _filled && _tool.drawsFillableShape
-                                  ? _fillColor
-                                  : null,
-                              anchorShape: _newShape,
-                              images: _sheetImages,
-                              pixelRatio: MediaQuery.devicePixelRatioOf(
-                                context,
-                              ),
-                              viewMoving: _paintedMoving = _viewMoving,
+                              layers: _document!.layers,
+                              activeLayer: _document!.activeLayer,
                             ),
-                            size: Size.infinite,
+                            anchor: _shapeAnchor,
+                            anchorDrawn: _draftFromAnchor,
+                            anchorRgb: _color,
+                            anchorWidth: _width,
+                            anchorFillRgb: _filled && _tool.drawsFillableShape
+                                ? _fillColor
+                                : null,
+                            anchorShape: _newShape,
+                            images: _sheetImages,
+                            pixelRatio: MediaQuery.devicePixelRatioOf(context),
+                            viewMoving: _paintedMoving = _viewMoving,
+                          ),
+                          size: Size.infinite,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // « La pointe » of the tool, and what a press would do
+              // where it is (Color 1.2): painted apart from the sheet,
+              // which a pointer that moves never paints again.
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      key: const Key('sheetHint'),
+                      painter: SheetHintPainter(
+                        viewport: viewport,
+                        hint: _hint,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // The pointer of the keyboard or the gamepad (Color 1.1).
+              if (_options.keyboardPointer && _keyPointerAt != null)
+                Positioned(
+                  left: _keyPointerAt!.dx - 14,
+                  top: _keyPointerAt!.dy - 14,
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      key: const Key('keyPointer'),
+                      size: const Size.square(28),
+                      painter: KeyPointerPainter(pressed: _keyDown),
+                    ),
+                  ),
+                ),
+              // While the pot reads the drawing: nothing to see, it is quick;
+              // the tests wait for it to go.
+              if (_pouring)
+                const Positioned(
+                  left: 0,
+                  top: 0,
+                  child: SizedBox.shrink(key: Key('pouring')),
+                ),
+              if (_busyLabel != null)
+                Positioned.fill(
+                  child: Semantics(
+                    liveRegion: true,
+                    child: ColoredBox(
+                      color: const Color(0xeafffefa),
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Flexible(child: Text(_busyLabel!)),
+                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                if (showCaptions)
-                  Positioned(
-                    top: 10,
-                    left: 16,
-                    child: IgnorePointer(
-                      child: Text(
-                        tr('MA FEUILLE'),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          letterSpacing: 1.2,
-                          color: studioSheetTitle,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (showCaptions)
-                  Positioned(
-                    bottom: 9,
-                    left: 16,
-                    child: IgnorePointer(
-                      child: Text(
-                        trf('{0} × {1} unités', [
-                          _document!.width,
-                          _document!.height,
-                        ]),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: studioSheetCaption,
-                        ),
-                      ),
-                    ),
-                  ),
-                if (showCaptions)
-                  Positioned(
-                    bottom: 9,
-                    right: 16,
-                    child: IgnorePointer(
-                      child: Text(
-                        _view!.isFit
-                            ? tr('Toute la feuille')
-                            : '${(viewport.scale * 100).round()} %',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: studioSheetCaption,
-                        ),
-                      ),
-                    ),
-                  ),
-                // The pointer of the keyboard or the gamepad (Color 1.1).
-                if (_options.keyboardPointer && _keyPointerAt != null)
-                  Positioned(
-                    left: _keyPointerAt!.dx - 14,
-                    top: _keyPointerAt!.dy - 14,
-                    child: IgnorePointer(
-                      child: CustomPaint(
-                        key: const Key('keyPointer'),
-                        size: const Size.square(28),
-                        painter: KeyPointerPainter(pressed: _keyDown),
-                      ),
-                    ),
-                  ),
-                // While the pot reads the drawing: nothing to see, it is quick;
-                // the tests wait for it to go.
-                if (_pouring)
-                  const Positioned(
-                    left: 0,
-                    top: 0,
-                    child: SizedBox.shrink(key: Key('pouring')),
-                  ),
-                if (_busyLabel != null)
-                  Positioned.fill(
-                    child: Semantics(
-                      liveRegion: true,
-                      child: ColoredBox(
-                        color: const Color(0xeafffefa),
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Flexible(child: Text(_busyLabel!)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            ],
           );
         },
       );
@@ -5996,66 +8622,6 @@ class _DrawingStudioState extends State<DrawingStudio>
   void _colorDialogChanged(bool open) {
     if (open) _finishStroke();
     if (mounted) setState(() => _confirmationOpen = open);
-  }
-
-  /// The colours and the size of what is drawn. [rail]: in the column of a
-  /// telephone, which already gives them their surface.
-  Widget _palettePanel(bool narrow, {bool compact = false, bool rail = false}) {
-    final palette = _palette(narrow, compact: compact, rail: rail);
-    if (rail) return palette;
-    return Container(
-      padding: EdgeInsets.all(compact ? 10 : 16),
-      decoration: BoxDecoration(
-        color: studioSurface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: studioLine),
-      ),
-      child: palette,
-    );
-  }
-
-  Widget _palette(bool narrow, {required bool compact, required bool rail}) =>
-      ColorPalette(
-        rail: rail,
-        selectedRgb: _canFill && _colorTarget == PaintColorTarget.fill
-            ? _fillColor
-            : _color,
-        canFill: _canFill,
-        target: _colorTarget,
-        compact: compact,
-        history: _recentColors,
-        onDialogVisibilityChanged: _colorDialogChanged,
-        onTargetChanged: (target) => setState(() => _colorTarget = target),
-        onColorSelected: _busy || _confirmationOpen
-            ? null
-            : (rgb) {
-                setState(() {
-                  // A colour chosen in the palette is the choice: the pipette
-                  // that was waiting has nothing left to fetch.
-                  _picking = false;
-                  _chooseColor(rgb);
-                });
-                _sound(StudioSound.colour);
-              },
-        onPickFromDrawing: _options.simpleControls ? null : _togglePicking,
-        picking: _picking,
-        simple: _options.simpleControls,
-        trailingControl: rail ? _railControls(narrow) : _sizeOnly(narrow),
-      );
-
-  /// The rail of a telephone has no line of help: the choices of the tool
-  /// stand there above the size, in a rail that scrolls.
-  Widget? _railControls(bool narrow) {
-    final size = _sizeOnly(narrow, rail: true);
-    if (_choosing || !_hasVariants) return size;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _toolVariants(),
-        if (size != null) ...[const SizedBox(height: 8), size],
-      ],
-    );
   }
 
   StampArt? get _currentStamp {
@@ -6070,30 +8636,45 @@ class _DrawingStudioState extends State<DrawingStudio>
   /// The choices of a tool of 1.1, where the sentence of help stands: the
   /// tip of the brush, the magic, the shape. They take its place as the
   /// actions of a chosen element take it, so that the sheet keeps its size.
-  Widget _toolVariants() {
+  Widget _toolVariants({
+    required ToolVariantStyle style,
+    double tileWidth = 104,
+  }) {
     final enabled = !_busy && !_confirmationOpen;
     return ToolVariants(
       key: const Key('toolVariants'),
+      style: style,
+      tileWidth: tileWidth,
       tool: _tool,
       brush: _brushTool,
       magic: _magic,
       shape: _newShape,
       rgb: _color,
+      // In a panel of the pebbles, a choice made puts the panel away.
       onBrush: enabled
           ? (tip) {
-              setState(() => _brushTool = tip);
+              setState(() {
+                _brushTool = tip;
+                _galetPanel = null;
+              });
               _sound(StudioSound.tool);
             }
           : null,
       onMagic: enabled
           ? (magic) {
-              setState(() => _magic = magic);
+              setState(() {
+                _magic = magic;
+                _galetPanel = null;
+              });
               _sound(StudioSound.tool);
             }
           : null,
       onShape: enabled
           ? (shape) {
-              setState(() => _newShape = shape);
+              setState(() {
+                _newShape = shape;
+                _galetPanel = null;
+              });
               if (_tool == StudioTool.shapes) {
                 _sound(StudioSound.tool);
               } else {
@@ -6101,116 +8682,23 @@ class _DrawingStudioState extends State<DrawingStudio>
               }
             }
           : null,
-      onTool: enabled ? _selectTool : null,
+      onTool: !enabled
+          ? null
+          : (tool) {
+              setState(() => _galetPanel = null);
+              _selectTool(tool);
+            },
       pour: _pourKind,
       secondRgb: _previousColor,
-      stamp: _tool == StudioTool.stamp ? _currentStamp : null,
-      stampLook: _stampLook,
-      onTurnStamp: enabled
-          ? () {
-              setState(() => _stampEighths = (_stampEighths + 1) % 8);
-              _sound(StudioSound.tool);
-            }
-          : null,
-      onMirrorStamp: enabled
-          ? () {
-              setState(() => _stampMirrored = !_stampMirrored);
-              _sound(StudioSound.tool);
-            }
-          : null,
       onPour: enabled
           ? (kind) {
-              setState(() => _pourKind = kind);
+              setState(() {
+                _pourKind = kind;
+                _galetPanel = null;
+              });
               _sound(StudioSound.tool);
             }
           : null,
-    );
-  }
-
-  /// One place answers « how big? »: the outline of a trait or shape, the
-  /// letters of a text, or a stamp placed with a click.
-  Widget? _sizeOnly(bool narrow, {bool rail = false}) {
-    // The paint pot and the eraser have nothing to size.
-    if (_tool == StudioTool.fill || _tool == StudioTool.eraser) return null;
-    final enabled = !_busy && !_confirmationOpen;
-    final kind = _styledKind;
-    if (kind == VectorKind.text || kind == VectorKind.stamp) {
-      // A chosen text changes size with its words (Modifier); a chosen stamp
-      // keeps the size it was given.
-      if (_choosing) return null;
-      final forStamp = kind == VectorKind.stamp;
-      return PlacedSizeControl(
-        size: forStamp ? _stampSize : _textSize,
-        what: forStamp ? tr('du tampon') : tr('du texte'),
-        onSizeChanged: enabled
-            ? (size) => setState(() {
-                if (forStamp) {
-                  _stampSize = size;
-                } else {
-                  _textSize = size;
-                }
-              })
-            : null,
-        forStamp: forStamp,
-        stamp: forStamp ? _currentStamp : null,
-        stampRgb: _color,
-        onChooseStamp: enabled ? _chooseStamp : null,
-        rail: rail,
-      );
-    }
-    if (_options.simpleControls) {
-      // Three sizes to click instead of a slider to move.
-      return SizeChoiceControl(
-        keyPrefix: 'brush',
-        wrap: rail,
-        value: _width <= 9
-            ? ObjectSize.small
-            : _width <= 21
-            ? ObjectSize.medium
-            : ObjectSize.large,
-        what: tr('du trait'),
-        onChanged: enabled
-            ? (size) => setState(
-                () => _width = switch (size) {
-                  ObjectSize.small => 6,
-                  ObjectSize.medium => 14,
-                  ObjectSize.large => 30,
-                },
-              )
-            : null,
-      );
-    }
-    return OutlineWidthControl(
-      rail: rail,
-      value: _width,
-      shown: _selectedObject != null && !_selectionWidthMoving
-          ? _selectedObject!.width
-          : _width,
-      narrow: narrow,
-      onChanged: !enabled
-          ? null
-          : (value) => setState(() {
-              _width = value;
-              if (_selectedIndex != null) _selectionWidthMoving = true;
-            }),
-      // A slide of the slider is one change of the chosen element, made
-      // when the hand leaves it: one step for Annuler, not one per notch.
-      onChangeEnd: !enabled
-          ? null
-          : () {
-              if (!_selectionWidthMoving) return;
-              setState(() {
-                _selectionWidthMoving = false;
-                final chosen = _selectedObject;
-                if (chosen != null &&
-                    !chosen.kind.isBoxObject &&
-                    !_styleSelection(width: _width)) {
-                  // The element could not take it — a dialog opened during
-                  // the slide: the slider goes back to what the element has.
-                  _width = chosen.width.clamp(2.0, 48.0).toDouble();
-                }
-              });
-            },
     );
   }
 }
@@ -6238,4 +8726,36 @@ class _GalleryCard {
     background?.dispose();
     background = null;
   }
+}
+
+/// The frame of the sheet for a mouse: its pointer is [held] while the
+/// studio holds one — the hand, the pipette — and otherwise the one of
+/// [beside], which changes when the pointer goes from the sheet to the
+/// decor beside it. Only this region is built again then, not what it
+/// holds.
+class _StageMouseRegion extends StatelessWidget {
+  const _StageMouseRegion({
+    required this.held,
+    required this.beside,
+    required this.onEnter,
+    required this.onExit,
+    required this.child,
+  });
+  final MouseCursor? held;
+  final ValueListenable<MouseCursor> beside;
+  final PointerEnterEventListener onEnter;
+  final PointerExitEventListener onExit;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder<MouseCursor>(
+    valueListenable: beside,
+    child: child,
+    builder: (context, cursor, child) => MouseRegion(
+      cursor: held ?? cursor,
+      onEnter: onEnter,
+      onExit: onExit,
+      child: child,
+    ),
+  );
 }

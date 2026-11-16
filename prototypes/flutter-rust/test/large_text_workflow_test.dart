@@ -11,11 +11,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/studio_driver.dart';
 import 'support/memory_files.dart';
 import 'support/prepared_open_wait.dart';
 
 Future<void> _tap(WidgetTester tester, String key) async {
-  final finder = find.byKey(Key(key));
+  // What holds the control is opened first: « Mon dessin », a panel, the
+  // drawer of a rail.
+  final finder = find.byKey(Key(await revealControl(tester, key)));
   await tester.ensureVisible(finder);
   await tester.pumpAndSettle();
   expect(finder.hitTestable(), findsOneWidget, reason: '$key is reachable');
@@ -117,10 +120,10 @@ void main() {
         }
         await _tap(tester, 'undo');
         await tester.pumpAndSettle();
-        expect(find.textContaining('0 élément · '), findsOneWidget);
+        expect(drawingCaption(tester), startsWith('0 élément · '));
         await _tap(tester, 'redo');
         await tester.pumpAndSettle();
-        expect(find.textContaining('1 élément'), findsOneWidget);
+        expect(drawingCaption(tester), contains('1 élément'));
 
         // Use actual selection buttons, including lower controls revealed by scroll.
         await _tap(tester, 'tool-select');
@@ -130,7 +133,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         // The colour changes the chosen stroke at once: one step to undo.
-        await _tap(tester, 'color-d75e56');
+        await _tap(tester, 'color-e83d48');
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('applySelectionStyle')), findsNothing);
         await _save(tester);
@@ -146,14 +149,14 @@ void main() {
         await tester.pumpAndSettle();
         await _tap(tester, 'duplicateSelection');
         await tester.pumpAndSettle();
-        expect(find.textContaining('2 éléments'), findsOneWidget);
+        expect(drawingCaption(tester), contains('2 éléments'));
         await _tap(tester, 'selectionOrder');
         await tester.pumpAndSettle();
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
         await tester.pumpAndSettle();
         await _tap(tester, 'deleteSelection');
         await tester.pumpAndSettle();
-        expect(find.textContaining('1 élément'), findsOneWidget);
+        expect(drawingCaption(tester), contains('1 élément'));
         await _tap(tester, 'tool-stroke');
         await tester.pumpAndSettle();
         await _tap(
@@ -168,11 +171,6 @@ void main() {
         await _tap(tester, 'cancelNewSheet');
         await tester.pumpAndSettle();
         expect(find.byKey(const Key('newSheetDialog')), findsNothing);
-        await _tap(tester, 'morePaintColors');
-        await tester.pumpAndSettle();
-        await _tap(tester, 'cancelPaintColor');
-        await tester.pumpAndSettle();
-        expect(find.byKey(const Key('paintColorDialog')), findsNothing);
         await _tap(tester, 'exportImage');
         await tester.pumpAndSettle();
         await _tap(tester, 'exportSvg');

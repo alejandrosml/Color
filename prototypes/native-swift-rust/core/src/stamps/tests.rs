@@ -166,15 +166,28 @@ fn stamp_is_a_typed_reference_scaled_into_its_box_and_roundtrips_in_v4() {
     assert_eq!((info.rgb, info.width, info.point_count), (0x477fb2, 1.0, 2));
     let svg = doc.svg();
     assert!(svg.contains("<g transform=\"translate(100 60) scale(2 2)\">"));
+    // The heart of Color 1.2: its shade under the colour itself, the ink
+    // of its outline, then two lights in its tint.
     let heart = &STAMPS[1];
-    assert!(svg.contains(&format!(
-        "<path d=\"{}\" fill=\"#477fb2\" stroke=\"#293d4b\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>",
-        heart.layers[0].path
-    )));
-    assert!(svg.contains(&format!(
-        "<path d=\"{}\" fill=\"#b5cbe0\" stroke=\"none\"/>",
-        heart.layers[1].path
-    )));
+    assert_eq!(heart.layers.len(), 5);
+    for (layer, paint) in [
+        (0, "fill=\"#31587c\" stroke=\"none\""),
+        (1, "fill=\"#477fb2\" stroke=\"none\""),
+        (
+            2,
+            "fill=\"none\" stroke=\"#293d4b\" stroke-width=\"4\" stroke-linecap=\"round\" stroke-linejoin=\"round\"",
+        ),
+        (3, "fill=\"#b5cbe0\" stroke=\"none\""),
+        (4, "fill=\"#b5cbe0\" stroke=\"none\""),
+    ] {
+        assert!(
+            svg.contains(&format!(
+                "<path d=\"{}\" {paint}/>",
+                heart.layers[layer].path
+            )),
+            "layer {layer}"
+        );
+    }
     assert_eq!(svg.matches("<path").count(), heart.layers.len());
     doc.assert_accounting();
 
@@ -243,50 +256,71 @@ fn every_stamp_exports_within_its_reserved_markup_and_invalid_requests_change_no
 }
 
 #[test]
-fn the_rainbow_is_four_bows_and_has_no_cloud_at_its_feet() {
+fn the_rainbow_is_six_bows_in_an_outline_and_has_no_cloud_at_its_feet() {
     let rainbow = &STAMPS[23];
     assert_eq!(rainbow.key, "arcenciel");
-    assert_eq!(rainbow.layers.len(), 4, "four bows, nothing else");
+    assert_eq!(rainbow.layers.len(), 7, "six bows and their outline");
+    // The ys of a path: every second number.
+    let ys = |layer: &StampLayer| -> Vec<f32> {
+        layer
+            .path
+            .split(' ')
+            .filter_map(|token| token.parse().ok())
+            .skip(1)
+            .step_by(2)
+            .collect()
+    };
+    let (bows, outline) = rainbow.layers.split_at(6);
+    let outline = &outline[0];
+    // The outline is drawn last, in ink, around the six bows: closed, and
+    // empty, so that the bows show through it.
+    assert_eq!(outline.fill, Paint::None);
+    assert_eq!(outline.stroke, Paint::Fixed(0x293d4b));
+    assert!(outline.path.ends_with(" Z"));
     let (mut top, mut bottom) = (f32::MAX, f32::MIN);
+    for y in ys(outline) {
+        top = top.min(y - outline.width / 2.0);
+        bottom = bottom.max(y + outline.width / 2.0);
+    }
+    // Alone in its box, the rainbow sits in the middle of it.
+    assert!((top + bottom - 100.0).abs() <= 1.0, "{top} {bottom}");
     // (outer edge, inner edge) of each bow, from the outermost inwards.
     let mut edges = Vec::new();
-    for layer in rainbow.layers {
+    for layer in bows {
         // An open bow in its own colour. The clouds that used to sit on its
         // feet were closed, filled shapes that took the chosen colour.
         assert_eq!(layer.fill, Paint::None);
         assert!(matches!(layer.stroke, Paint::Fixed(_)));
         assert!(!layer.path.contains('Z'));
         assert_eq!(layer.path.matches('M').count(), 1);
-        // The highest and lowest points of a bow are points of its path.
-        let numbers: Vec<f32> = layer
-            .path
-            .split(' ')
-            .filter_map(|token| token.parse().ok())
-            .collect();
-        for y in numbers.iter().skip(1).step_by(2) {
-            top = top.min(y - layer.width / 2.0);
-            bottom = bottom.max(y + layer.width / 2.0);
-        }
-        // A bow starts at its left foot, on the line of the feet: its
-        // radius is the distance from there to the middle of the box.
-        let radius = 50.0 - numbers[0];
+        // A bow starts at its left foot and ends at its right one, at the
+        // same height. Its round ends stay under the line of the outline:
+        // no coloured bump below the feet.
+        let heights = ys(layer);
+        let foot = heights[0];
+        assert_eq!(foot, *heights.last().unwrap());
+        assert!(heights.iter().all(|y| *y <= foot));
+        assert!(foot + layer.width / 2.0 <= bottom, "{foot} {bottom}");
+        // Its radius is the distance from its foot to the middle of the box.
+        let start: f32 = layer.path.split(' ').nth(1).unwrap().parse().unwrap();
+        let radius = 50.0 - start;
         edges.push((radius + layer.width / 2.0, radius - layer.width / 2.0));
     }
-    // Alone in its box, the rainbow sits in the middle of it.
-    assert!((top + bottom - 100.0).abs() <= 1.0, "{top} {bottom}");
     for pair in edges.windows(2) {
         let ((outer, inner), (next_outer, _)) = (pair[0], pair[1]);
         // Painted after it, the next bow covers the inner edge of this one:
         // no hairline of the sheet between two bows.
         assert!(next_outer > inner, "{inner} {next_outer}");
         assert!(next_outer - inner <= 1.0, "{inner} {next_outer}");
-        // And every bow shows the same 8 units of itself.
-        assert_eq!(outer - next_outer, 8.0);
+        // And every bow shows the same 6.2 units of itself.
+        assert!(
+            (outer - next_outer - 6.2).abs() < 1e-4,
+            "{outer} {next_outer}"
+        );
     }
-    let (outer, inner) = edges[3];
-    assert_eq!(outer - inner, 8.0);
-    // Four colours, no two alike wherever they are in the list.
-    let colours: Vec<_> = rainbow.layers.iter().map(|layer| layer.stroke).collect();
+    // Six colours, no two alike wherever they are in the list; none is the
+    // colour the child chooses: the rainbow keeps its own.
+    let colours: Vec<_> = bows.iter().map(|layer| layer.stroke).collect();
     for (index, colour) in colours.iter().enumerate() {
         assert!(!colours[..index].contains(colour), "{colour:?} twice");
     }

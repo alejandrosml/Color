@@ -5,8 +5,8 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:edupaint_flutter_study/brush_width_control.dart';
 import 'package:edupaint_flutter_study/drawing_gesture.dart';
+import 'package:edupaint_flutter_study/galets.dart';
 import 'package:edupaint_flutter_study/rust_document.dart';
 import 'package:edupaint_flutter_study/studio_painters.dart';
 import 'package:flutter/gestures.dart';
@@ -139,7 +139,7 @@ void main() {
         expect(shape.points.first.y, closeTo(250, .01));
         expect(shape.points.last.x, closeTo(700, .01));
         expect(shape.points.last.y, closeTo(500, .01));
-        expect(shape.rgb, 0x477fb2);
+        expect(shape.rgb, 0x3370d1);
         // The circle is gone with the click that used it.
         expect(await painted(studio, 300, 250), isNot(startMark[tool]));
 
@@ -286,9 +286,7 @@ void main() {
     (tester) async {
       final studio = StudioDriver(tester);
       await studio.start(size: const Size(1280, 820));
-      bool canUndo() =>
-          tester.widget<IconButton>(find.byKey(const Key('undo'))).onPressed !=
-          null;
+      bool canUndo() => onPressedOf(tester, 'undo') != null;
       expect(canUndo(), isFalse);
       expect(studio.menu.onUndo, isNull);
       await studio.tap('tool-ellipse');
@@ -329,7 +327,7 @@ void main() {
       expect(posed.end!.x, closeTo(700, .01));
       expect(posed.end!.y, closeTo(400, .01));
       // The outline of the shape to come is painted, in the current colour.
-      expect(await painted(studio, 500, 200), [0x47, 0x7f, 0xb2]);
+      expect(await painted(studio, 500, 200), [0x33, 0x70, 0xd1]);
       // And a second little circle follows the pointer, in the other colour
       // of the pictures of the tools.
       expect(await painted(studio, 700, 400), [0xed, 0x8c, 0x88]);
@@ -421,24 +419,22 @@ void main() {
       await studio.tap('tool-rectangle');
       await studio.click(studio.at(300, 200));
       expect(anchor(tester), isNotNull);
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.tap('paint-target-fill');
-      await studio.tap('color-78a66f');
-      // A click in the middle of the slider gives another width.
-      final slider = find.byType(BrushWidthControl);
-      await tester.tapAt(tester.getCenter(slider));
-      await tester.pumpAndSettle();
-      final width = tester.widget<BrushWidthControl>(slider).value;
+      await studio.tap('color-4db266');
+      // The fourth of the five dots gives another width.
+      await studio.tap('width-3');
+      final width = galetWidths[3];
       expect(width, isNot(12));
       // The first click still waits after these choices.
       expect(anchor(tester), isNotNull);
-      expect(painter(tester).anchorRgb, 0xd75e56);
-      expect(painter(tester).anchorFillRgb, 0x78a66f);
+      expect(painter(tester).anchorRgb, 0xe83d48);
+      expect(painter(tester).anchorFillRgb, 0x4db266);
       expect(painter(tester).anchorWidth, width);
       await studio.click(studio.at(600, 500));
       final shape = await single(studio);
-      expect(shape.rgb, 0xd75e56);
-      expect(shape.fillRgb, 0x78a66f);
+      expect(shape.rgb, 0xe83d48);
+      expect(shape.fillRgb, 0x4db266);
       expect(shape.width, width);
       expect(shape.points.first.x, closeTo(300, .01));
       expect(shape.points.last.x, closeTo(600, .01));
@@ -597,13 +593,15 @@ void main() {
   testWidgets(
     'the pipette, between the two clicks, gives its colour to the shape to come',
     (tester) async {
-      final studio = StudioDriver(tester);
-      await studio.start(size: const Size(1280, 820));
+      final studio = StudioDriver(tester, options: grownUpOptions());
+      // The widest window of the studio of before: the pebbles of a wider
+      // one have no pipette until the setting of the older children.
+      await studio.start(size: const Size(1128, 820));
       // A red line to take a colour from.
       await studio.tap('tool-line');
-      await studio.tap('color-d75e56');
+      await studio.tap('color-e83d48');
       await studio.drag(studio.at(900, 200), studio.at(1100, 200));
-      await studio.tap('color-477fb2');
+      await studio.tap('color-3370d1');
       await studio.click(studio.at(300, 300));
       final posed = anchor(tester);
       expect(posed, isNotNull);
@@ -613,12 +611,12 @@ void main() {
       await studio.click(studio.at(1000, 200));
       expect(anchor(tester), same(posed));
       studio.expectCount(1);
-      expect(painter(tester).anchorRgb, 0xd75e56);
+      expect(painter(tester).anchorRgb, 0xe83d48);
       await studio.click(studio.at(600, 500));
       studio.expectCount(2);
       final document = await studio.saved();
       try {
-        expect(document.strokes.last.rgb, 0xd75e56);
+        expect(document.strokes.last.rgb, 0xe83d48);
         expect(document.strokes.last.points.first.x, closeTo(300, .01));
       } finally {
         document.dispose();
