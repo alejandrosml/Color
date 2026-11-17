@@ -1,0 +1,6 @@
+{
+  "about": "Where the trial of the published Windows version (scripts/windows-desktop/essai-publie.py) presses to print, in its window: « Mon dessin », then its tile « Imprimer ». test/windows_trial_positions_test.dart presses them in a window of the same size, in English, with the letters of the application, and fails when they stop falling on them.",
+  "window": [1264, 681],
+  "my_drawing": [113, 44],
+  "print_tile": [328, 275]
+}

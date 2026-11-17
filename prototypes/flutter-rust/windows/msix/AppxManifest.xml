@@ -2,20 +2,23 @@
 <!-- SPDX-License-Identifier: MIT
      The package of Color for the Microsoft Store. scripts/windows-desktop/recette.py
      writes the version and the processor in the two @…@ places.
-     Identity/Name and Identity/Publisher are provisional: the Store gives the
-     real ones when the name « Color » is reserved in the Partner Center, and
-     signs the package itself. A package with this manifest is not signed: it
-     is what the Store receives, not something to install by a double click. -->
+     Identity/Name, Identity/Publisher and PublisherDisplayName are the ones
+     the Partner Center gave on 17 November 2026, when the name was reserved
+     (Store ID 9NR2ST3K3N59). « Color » was taken in the Store: the reserved
+     names are « Color Atelier de Dessin », the name of the package, and
+     « Color: Drawing Studio », for the English listing. The Store signs the
+     package itself: a package with this manifest is not signed, it is what
+     the Store receives, not something to install by a double click. -->
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
          IgnorableNamespaces="uap rescap">
-  <Identity Name="AlejandroSanMartinLamas.Color"
-            Publisher="CN=Alejandro San Martin Lamas"
+  <Identity Name="AlejandroSanMartinLamas.ColorAtelierdeDessin"
+            Publisher="CN=653EBC13-0BC3-4CE1-AB5D-3C6ED367C2A8"
             Version="@VERSION@"
             ProcessorArchitecture="@ARCHITECTURE@" />
   <Properties>
-    <DisplayName>Color</DisplayName>
+    <DisplayName>Color Atelier de Dessin</DisplayName>
     <PublisherDisplayName>Alejandro San Martin Lamas</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -28,7 +31,7 @@
   </Resources>
   <Applications>
     <Application Id="Color" Executable="color.exe" EntryPoint="Windows.FullTrustApplication">
-      <uap:VisualElements DisplayName="Color"
+      <uap:VisualElements DisplayName="Color Atelier de Dessin"
                           Description="Color : un atelier de dessin pour les enfants."
                           BackgroundColor="transparent"
                           Square150x150Logo="Assets\Square150x150Logo.png"

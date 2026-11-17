@@ -14,9 +14,10 @@ What it does, each step pictured in REPORT:
      the Internet, as a browser and the Explorer would; starts it through the
      shell, to see what Windows says of a program it does not know;
   3. starts it for good; draws a trait on the sheet with the pointer;
-  4. clicks « Imprimer »: the print dialog of Windows opens over the window;
-     closed by its button « Annuler », then opened again and confirmed, on a
-     printer made for the trial that writes a PDF file;
+  4. opens « Mon dessin » and clicks its « Imprimer »: the print dialog of
+     Windows opens over the window; closed by its button « Annuler », then
+     opened again and confirmed, on a printer made for the trial that writes a
+     PDF file. Another dialog is not confirmed: it is said, and cancelled;
   5. asks the window to close, ends the program and starts it again: it must
      offer the drawing left.
 
@@ -54,6 +55,17 @@ record = {'scope': 'The published Color, downloaded from its release and used wi
           'release': f'https://github.com/{arguments.depot}/releases/tag/{arguments.etiquette}',
           'architecture': arguments.architecture, 'pictures': [], 'problems': []}
 IDOK = 1
+# Since Color 1.2, « Imprimer » waits in « Mon dessin », the first pebble at
+# the top left: the last tile of its second row. Where both stand in the
+# window of this trial is written beside the tests of the application, whose
+# test/windows_trial_positions_test.dart presses them in the same window and
+# fails when they move.
+POINTS = json.loads((here.parents[1] / 'prototypes' / 'flutter-rust' / 'test' / 'windows_trial_points.json')
+                    .read_text(encoding='utf-8'))
+MY_DRAWING = tuple(POINTS['my_drawing'])
+PRINT_TILE = tuple(POINTS['print_tile'])
+# The title of the print dialog of Windows, in English and in French.
+PRINT_DIALOG_TITLES = {'Print', 'Imprimer'}
 
 
 def shot(name):
@@ -89,6 +101,25 @@ def click(window, x, y):
     pointer('down', *at)
     time.sleep(.08)
     pointer('up', *at)
+
+
+def ask_to_print(window, picture_name=None):
+    """« Mon dessin » opened with the pointer, then its tile « Imprimer »."""
+    user32.SetForegroundWindow(window['handle'])
+    click(window, *MY_DRAWING)
+    time.sleep(1.5)
+    if picture_name:
+        shot(picture_name)
+    click(window, *PRINT_TILE)
+
+
+def not_the_print_dialog(dialog, picture_name):
+    """Said and cancelled: a dialog that is not the print dialog is never
+    confirmed."""
+    shot(picture_name)
+    record['problems'].append(f"the click on « Imprimer » opened « {dialog['title']} », not the print dialog")
+    user32.PostMessageW(dialog['handle'], WM_COMMAND, IDCANCEL, 0)
+    time.sleep(3)
 
 
 def await_dialog(pid, seconds=25):
@@ -202,15 +233,18 @@ try:
                               str(here / 'imprimante-d-essai.ps1'), str(port)], capture_output=True, text=True,
                              errors='replace')
     (report / 'imprimante.log').write_text(printer.stdout + printer.stderr, encoding='utf-8')
-    record['printing'] = {'trial_printer_made': printer.returncode == 0}
+    # The points to press were measured in a window of this size.
+    record['printing'] = {'trial_printer_made': printer.returncode == 0,
+                          'window_as_measured': [wide, high] == POINTS['window']}
     if printer.returncode == 0:
-        user32.SetForegroundWindow(window['handle'])
-        # The last button of the header, at the top right: « Imprimer ».
-        click(window, wide - 50, 58)
+        ask_to_print(window, '04-mon-dessin')
         dialog = await_dialog(process.pid)
         if dialog is None:
             shot('04-pas-de-fenetre-d-impression')
             record['problems'].append('the click on « Imprimer » opened no print dialog')
+        elif dialog['title'] not in PRINT_DIALOG_TITLES:
+            record['printing']['dialog'] = {'title': dialog['title']}
+            not_the_print_dialog(dialog, '04-une-autre-fenetre')
         else:
             time.sleep(3)
             shot('04-fenetre-d-impression')
@@ -221,11 +255,12 @@ try:
             time.sleep(3)
             record['printing']['cancelled_leaves_no_page'] = not user32.IsWindow(dialog['handle']) and not port.exists()
             shot('05-apres-annuler')
-            user32.SetForegroundWindow(window['handle'])
-            click(window, wide - 50, 58)
+            ask_to_print(window)
             dialog = await_dialog(process.pid)
             if dialog is None:
                 record['problems'].append('the second click on « Imprimer » opened no print dialog')
+            elif dialog['title'] not in PRINT_DIALOG_TITLES:
+                not_the_print_dialog(dialog, '06-une-autre-fenetre')
             else:
                 time.sleep(3)
                 user32.PostMessageW(dialog['handle'], WM_COMMAND, IDOK, 0)

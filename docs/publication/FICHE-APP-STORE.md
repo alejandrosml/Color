@@ -2,9 +2,9 @@
 
 Une seule fiche dans App Store Connect pour le Mac, l'iPhone et l'iPad : les trois portent l'identifiant `fr.aisml.color`. Les textes sont en français ; jusqu'à la 1.0.1, Color n'existe qu'en français. La 1.1 parle aussi anglais : sa fiche reçoit une localisation anglaise, prête plus bas.
 
-## Où en est la fiche (16 novembre 2026)
+## Où en est la fiche (16 novembre 2026, 22 h 47)
 
-**La 1.1.1 (42) est publiée partout** : sur le Mac le 11 novembre, sur l'iPhone et l'iPad le 13 novembre, dans la catégorie Enfants, tranche « 5 ans et moins ». **La 1.2.0 (43) se prépare** : ses textes, en français et en anglais, sont plus bas, dans « La version 1.2 » — la description refaite (la pipette et le mélange sont devenus un réglage des adultes, les dix univers), les nouveautés, le texte promotionnel et les notes pour la vérification. `scripts/macos/app_store_connect.py preparer --fiche` les lit ici même et les écrit chez Apple, pour le Mac et pour l'iPhone et l'iPad ; les captures de la 1.2 se chargent par `captures`. Rien ne part à la vérification sans ton accord (`envoyer --accord-du-proprietaire`).
+**La 1.2.0 (43) est envoyée à la vérification d'Apple, pour le Mac et pour l'iPhone et l'iPad** : « en attente de vérification », publication automatique dès l'accord. Le 16 novembre : les builds 43 envoyés par « Envoyer Color vers l'App Store » (Mac à 22 h 32, iPhone et iPad à 22 h 35, « VALID » aussitôt) ; les deux versions 1.2.0 créées et remplies par la clé d'API (`app_store_connect.py preparer --fiche`) — description, nouveautés, texte promotionnel, mots-clés et adresses en `fr-FR`, `en-US` et `en-GB`, notes pour la vérification, copyright —, les 45 captures chargées par `captures` (Mac : 5 par langue ; iPhone et iPad 13 pouces : 5 et 5 par langue) ; envoyées à la vérification par `envoyer --accord-du-proprietaire` à 22 h 46 et 22 h 47. **La 1.1.1 (42) reste publiée partout** jusqu'à l'accord.
 
 Ce qui suit raconte les versions précédentes.
 
@@ -315,23 +315,26 @@ En anglais, pour le relecteur d'Apple ; sur la page du Mac, « the device » dev
 
 ## Les captures d'écran
 
-Faites le 28 octobre 2026 par Color elle-même, avec son cœur et ses polices, aux tailles qu'App Store Connect exige (`prototypes/flutter-rust/test/store_pictures_test.dart`), sans canal alpha. Elles sont dans `docs/publication/captures/` des sources et, en ligne, sous [alejandrosml.github.io/Color/captures/](https://alejandrosml.github.io/Color/captures/iphone-1-dessin.png).
+**Celles de la 1.2** (16 novembre 2026), faites par Color elle-même, avec son cœur et ses polices, aux tailles qu'App Store Connect exige (`prototypes/flutter-rust/test/store_pictures_test.dart`), puis converties **sans canal alpha**. En français dans `docs/publication/captures/`, en anglais dans `docs/publication/captures/en/` ; en ligne sous [alejandrosml.github.io/Color/captures/](https://alejandrosml.github.io/Color/captures/iphone-01-dessin.png).
 
 | Appareil | Taille | Captures |
 |---|---|---|
-| iPhone (Dynamic Island, taille moyenne) | 2556 × 1179 | `iphone-1-dessin`, `iphone-2-film`, `iphone-3-coloriage`, `iphone-4-tout-petits` |
-| iPad 13 pouces | 2752 × 2064 | `ipad-1-dessin` … `ipad-4-tout-petits` |
-| Mac | 2880 × 1800 (16:10) | `mac-1-dessin` … `mac-4-tout-petits` |
+| iPhone (Dynamic Island, taille moyenne) | 2556 × 1179 | `iphone-01-dessin` … `iphone-05-tout-petits` |
+| iPad 13 pouces | 2752 × 2064 | `ipad-01-dessin` … `ipad-05-tout-petits` |
+| Mac | 2880 × 1800 (16:10) | `mac-01-dessin` … `mac-05-tout-petits` |
 
-Dans l'ordre : un dessin avec des tampons et un titre ; son film, « Revoir ton dessin », en train de se refaire ; une page à colorier, le dinosaure, coloriée au pot ; l'interface très simplifiée des tout-petits, avec un arc-en-ciel au pinceau. Sur l'iPhone, le studio du téléphone à l'horizontale ; sur l'iPad, le studio au doigt ; sur le Mac, la fenêtre. Les lettres du système y sont celles de Roboto, pas celles d'Apple.
+Dans l'ordre : « Mon jardin », un dessin avec des tampons et un titre, dans l'atelier des galets (sur le Mac, le décor du bureau autour de la feuille) ; **la savane regardée en plein écran, la fiche de la girafe ouverte** (« Regarder ») ; le film du dessin, « Revoir ton dessin » ; une page à colorier, le dinosaure, coloriée au pot ; l'interface très simplifiée des tout-petits, avec un arc-en-ciel au pinceau. Sur l'iPhone, les rails ; sur l'iPad, la ligne des galets ; sur le Mac, la fenêtre.
 
-Dans App Store Connect, les images vont d'abord dans la « Bibliothèque de ressources », qui les range par appareil. Sur la page de la version iOS, la section des captures est cachée derrière le menu « En‑tête et résultats de recherche » : choisir « **Aperçus d'app et captures d'écran** », puis, pour chaque appareil, « **Parcourir les ressources** » et cocher les quatre images dans l'ordre. Sur la page de la version macOS, la section est visible tout de suite. L'en‑tête et la ressource des résultats de recherche sont facultatifs : sans eux, l'App Store montre les captures.
+**Pour les charger** : `scripts/macos/app_store_connect.py captures --plateforme IOS --version 1.2.0 --dossier docs/publication/captures --langue fr-FR` (puis `--dossier …/captures/en` pour `en-US` et `en-GB`, et `--plateforme MAC_OS` pour le Mac) ; `--essai` dit ce qui serait fait. Si Apple refusait le chargement par la clé, la Bibliothèque de ressources d'App Store Connect reste le chemin de la 1.0 : sur la page de la version iOS, la section des captures est derrière le menu « En‑tête et résultats de recherche » → « **Aperçus d'app et captures d'écran** » → « **Parcourir les ressources** » ; les images y arrivent par `docs/captures/relais.html` (GitHub Pages).
 
 Pour les refaire, dans `prototypes/flutter-rust` :
 
 ```
 COLOR_STORE_DIR=/un/dossier flutter test test/store_pictures_test.dart
+COLOR_STORE_DIR=/un/dossier/en COLOR_STORE_LANGUAGE=en flutter test test/store_pictures_test.dart
 ```
+
+puis les convertir sans alpha (Pillow : les poser sur un fond blanc, en RGB).
 
 ## Sources
 
