@@ -100,10 +100,14 @@ a.asml-portfolio {display:inline-flex;align-items:center;gap:.55em;min-height:36
 a.asml-portfolio .asml-mark {font:600 .73rem/1.2 ui-monospace,monospace;letter-spacing:.06em;padding-right:.52em;border-right:1px solid currentColor;}
 a.asml-portfolio:hover,a.asml-portfolio:focus-visible {border-color:currentColor;text-decoration:none;background:color-mix(in srgb,currentColor 7%,transparent);}
 a.asml-portfolio:focus-visible {outline:2px solid currentColor;outline-offset:3px;}
+
+.asml-rail {box-sizing:border-box;display:flex;align-items:center;justify-content:flex-start;padding:8px max(16px,env(safe-area-inset-left));margin:0;text-align:left;}
+.asml-rail a.asml-portfolio {margin:0;min-height:32px;}
 </style>
 </head>
 <body>
 <a class="evitement" href="#contenu">Aller au contenu</a>
+<div class="asml-rail"><a class="asml-portfolio" href="https://alejandrosml.github.io/?lang=fr#projects"><span class="asml-mark"><span aria-hidden="true">↖ </span>ASML</span><span>Tous les projets</span></a></div>
 <header class="entete">
   <div class="cadre barre">
     <a class="marque" href="#contenu" aria-label="Color, accueil"><img src="icone-app-store-1024.png" alt="" width="40" height="40">Color</a>
@@ -159,7 +163,7 @@ a.asml-portfolio:focus-visible {outline:2px solid currentColor;outline-offset:3p
   </div>
 </main>
 <footer class="pied">
-  <div class="cadre"><span>Color · Alejandro San Martin Lamas</span><a class="asml-portfolio" href="https://alejandrosml.github.io/?lang=fr#projects"><span class="asml-mark"><span aria-hidden="true">↖ </span>ASML</span><span>Tous les projets</span></a><div class="liens"><a href="https://github.com/alejandrosml/Color/issues">Signaler un problème</a><a href="https://github.com/alejandrosml/Color">Code source · Licence MIT</a></div></div>
+  <div class="cadre"><span>Color · Alejandro San Martin Lamas</span><div class="liens"><a href="https://github.com/alejandrosml/Color/issues">Signaler un problème</a><a href="https://github.com/alejandrosml/Color">Code source · Licence MIT</a></div></div>
 </footer>
 </body>
 </html>
