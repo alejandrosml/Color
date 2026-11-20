@@ -3,36 +3,158 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Color — Aide</title>
+<title>Color — L’atelier de dessin des enfants</title>
+<meta name="description" content="Dessiner, colorier et revoir ses créations avec Color. Un atelier gratuit, sans publicité, pour Mac, iPhone, iPad et Windows.">
 <style>
-  :root { --ink:#293d4b; --paper:#fffcf0; --line:#e9c46f; }
-  body { margin:0; background:var(--paper); color:var(--ink); font:17px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width:720px; margin:0 auto; padding:32px 16px 64px; }
-  h1 { font-size:30px; margin:0 0 8px; } h2 { font-size:20px; margin:28px 0 8px; }
-  .logo { width:128px; height:128px; border-radius:28px; }
-  .store { display:inline-block; max-width:100%; vertical-align:top; }
-  .store img { display:block; max-width:100%; height:auto; }
-  a { color:#1f6d8c; }
+  @font-face { font-family:Fredoka; src:url("visuels/Fredoka.ttf") format("truetype"); font-weight:600; font-display:swap; }
+  :root { color-scheme:light; --papier:#fffcf5; --encre:#25213c; --texte:#4d485a; --violet:#554498; --trait:#ded8cf; --soleil:#ffdc71; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--papier); color:var(--encre); font:17px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+  h1,h2,h3,p,figure { margin:0; }
+  h1,h2,.marque { font-family:Fredoka,ui-rounded,"Trebuchet MS",sans-serif; font-weight:600; }
+  a { color:var(--violet); text-underline-offset:.2em; }
+  :focus-visible { outline:3px solid #7352c3; outline-offset:4px; }
+  :target { scroll-margin-block:20px; }
+  .evitement { position:absolute; top:-80px; left:12px; z-index:2; padding:8px 14px; background:white; }
+  .evitement:focus { top:8px; }
+  .cadre { width:min(calc(100% - 64px),1180px); margin-inline:auto; }
+  .entete { border-bottom:1px solid var(--trait); }
+  .barre { min-height:80px; display:flex; justify-content:space-between; align-items:center; gap:18px; }
+  .marque { display:inline-flex; gap:10px; align-items:center; font-size:31px; line-height:1; text-decoration:none; color:var(--encre); }
+  .marque img { border-radius:12px; width:40px; height:40px; }
+  nav { display:flex; align-items:center; gap:28px; font-size:15px; font-weight:650; }
+  nav a { padding:12px 0; color:var(--encre); text-decoration:none; }
+  nav a:hover,.pied a:hover { text-decoration:underline; }
+  nav .telecharger { border:1px solid #ae9e79; border-radius:999px; padding:10px 19px; background:#fff2c7; }
+  .accueil { display:grid; grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr); align-items:center; gap:clamp(28px,5vw,70px); padding-block:clamp(40px,5vw,72px); }
+  h1 { font-size:clamp(48px,5.35vw,76px); line-height:.99; letter-spacing:-.035em; }
+  h1 span { display:block; color:var(--violet); }
+  .intro { color:var(--texte); max-width:42ch; font-size:19px; line-height:1.55; margin-top:21px; }
+  .boutiques { display:flex; flex-wrap:wrap; align-items:start; gap:15px 22px; margin-top:27px; }
+  .boutique { display:grid; justify-items:start; gap:7px; }
+  .boutique a { display:block; border-radius:6px; }
+  .boutique img { display:block; height:44px; width:auto; }
+  .appareils { font-size:13px; color:var(--texte); }
+  .illustration { min-width:0; }
+  .fond-image { background-color:#e8e2fa; background-image:radial-gradient(#c5b8e1 1.1px,transparent 1.1px); background-size:13px 13px; padding:clamp(24px,3.2vw,45px) clamp(18px,2.5vw,37px); border-radius:26px; }
+  .photo { position:relative; background:white; transform:rotate(-2deg); padding:8px; border-radius:10px; box-shadow:0 5px 13px #33274824; }
+  .photo::before { content:""; position:absolute; z-index:1; left:calc(50% - 35px); top:-10px; width:70px; height:21px; transform:rotate(7deg); background:#ffdb73ed; clip-path:polygon(2% 0,100% 2%,97% 98%,0 100%); }
+  .photo img { display:block; width:100%; height:auto; border-radius:5px; }
+  figcaption { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:10px; color:var(--texte); font-size:13px; }
+  .couleurs { display:flex; gap:4px; }
+  .couleurs i { width:11px; height:11px; border-radius:50%; background:#7764b0; }
+  .couleurs i:nth-child(2) { background:#efa38c; } .couleurs i:nth-child(3) { background:#e8b83a; } .couleurs i:nth-child(4) { background:#7da68e; }
+  .ressources { padding:40px 0 48px; display:grid; grid-template-columns:minmax(0,1.16fr) minmax(0,.84fr); gap:clamp(32px,6vw,96px); align-items:start; border-top:1px solid var(--trait); }
+  h2 { font-size:clamp(28px,3vw,39px); line-height:1.12; letter-spacing:-.025em; }
+  .questions { margin-top:19px; border-top:1px solid var(--trait); }
+  details { border-bottom:1px solid var(--trait); }
+  summary { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:15px 1px; cursor:pointer; font-weight:650; line-height:1.38; list-style:none; }
+  summary::-webkit-details-marker { display:none; }
+  summary::after { content:""; flex:none; width:8px; height:8px; margin-right:5px; border-right:2px solid var(--violet); border-bottom:2px solid var(--violet); transform:rotate(45deg); }
+  details[open] > summary::after { transform:rotate(225deg); }
+  summary:hover { color:var(--violet); }
+  details p { color:var(--texte); margin:0 24px 14px 1px; font-size:16px; }
+  .parents { background:#fff1c6; border-radius:20px; padding:clamp(23px,3vw,35px); }
+  .parents h2 { font-size:30px; }
+  .parents p { margin:12px 0; color:#514334; }
+  .parents a { font-size:15px; font-weight:650; color:#594476; }
+  .pied { border-top:1px solid var(--trait); }
+  .pied .cadre { display:flex; align-items:baseline; flex-wrap:wrap; justify-content:space-between; gap:9px 30px; padding-block:22px; color:var(--texte); font-size:14px; }
+  .liens { display:flex; flex-wrap:wrap; gap:8px 22px; }
+  .pied a { color:var(--encre); }
+  @media(max-width:850px) {
+    .cadre { width:calc(100% - 40px); }
+    .barre { min-height:66px; }
+    .accueil { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:23px; }
+    .intro { font-size:17px; }
+    .boutiques { gap:12px; }
+    .boutique img { height:40px; }
+    .ressources { gap:27px; }
+  }
+  @media(max-width:700px) {
+    .cadre { width:min(calc(100% - 36px),520px); }
+    .marque { font-size:26px; gap:7px; }
+    .marque img { width:34px; height:34px; border-radius:10px; }
+    nav { gap:14px; font-size:14px; }
+    nav .telecharger { padding:9px 12px; }
+    .accueil { grid-template-columns:1fr; gap:26px; padding:32px 0 25px; }
+    h1 { font-size:clamp(43px,9.9vw,60px); }
+    .intro { margin-top:15px; }
+    .boutiques { margin-top:19px; gap:12px 14px; }
+    .appareils { font-size:12px; }
+    .fond-image { border-radius:19px; padding:24px 19px; }
+    .photo { padding:5px; border-radius:7px; }
+    figcaption { margin-top:7px; }
+    .ressources { grid-template-columns:1fr; gap:23px; padding:26px 0; }
+    .questions { margin-top:15px; }
+    .pied .cadre { align-items:flex-start; flex-direction:column; }
+  }
+  @media(max-width:350px) {
+    .cadre { width:calc(100% - 28px); }
+    .boutiques { column-gap:10px; }
+    .liens { column-gap:15px; }
+  }
+  @media(forced-colors:active) { nav .telecharger,.parents { border:1px solid CanvasText; } }
 </style>
 </head>
 <body>
-<main>
-<img class="logo" src="icone-app-store-1024.png" alt="Le logo de Color : un enfant dans son fauteuil roulant électrique lève son crayon.">
-<h1>Color</h1>
-<p>Un petit atelier de dessin pour les enfants, sur Mac, iPhone, iPad et Windows : le pinceau, les formes, les tampons, le texte, la gomme, le pot de peinture, des pages à colorier, dix univers à choisir, et le film de ton dessin qui se refait tout seul. Gratuit, sans publicité, sans compte, sans Internet.</p>
-<p><a class="store" href="https://apps.apple.com/fr/app/color/id6827959212"><img src="badge-app-store-fr.svg" alt="Télécharger Color dans l’App Store" width="174" height="55"></a></p>
-<h2>Aide</h2>
-<p>Dans Color, « Mon dessin », en haut à gauche, ouvre l’aide, qui explique chaque outil, et les options de l’adulte — l’interface plus ou moins simple, l’univers et le mouvement de son décor, les sons, l’impression, l’accessibilité ; un calcul peut en garder l’entrée. Le bouton « Univers » change l’habit de l’atelier ; un double-clic sur une chose du décor dit son nom.</p>
-<h2>Color pour Windows</h2>
-<p>Pour Windows 10 et 11, Color est dans le Microsoft Store, sous le nom « Color Atelier de Dessin ». Microsoft l’a vérifiée et la signe, et elle se met à jour toute seule.</p>
-<p><a class="store" href="https://get.microsoft.com/installer/download/9NR2ST3K3N59?referrer=appbadge"><img src="badge-microsoft-store.svg" alt="Télécharger à partir de Microsoft Store" width="200" height="55"></a></p>
-<p>Le bouton télécharge un petit installateur de Microsoft, qui installe Color. Une version à dézipper, sans installation, reste sur <a href="https://github.com/alejandrosml/Color/releases">la page des versions de Color</a> ; celle-là n’est pas signée : au premier lancement, Windows peut afficher « Windows a protégé votre ordinateur », comme pour tout programme qu’il ne connaît pas encore. « Informations complémentaires », puis « Exécuter quand même », la lance.</p>
-<h2>Une question, un problème ?</h2>
-<p>Écris à l’auteur en ouvrant une demande sur la page du code de Color : <a href="https://github.com/alejandrosml/Color/issues">github.com/alejandrosml/Color/issues</a>.</p>
-<h2>Confidentialité</h2>
-<p>Color ne collecte aucune donnée : <a href="confidentialite.html">la politique de confidentialité</a>.</p>
-<h2>Le code</h2>
-<p>Color est un logiciel libre sous licence MIT, créé par Alejandro San Martin Lamas. Son code est publié sur <a href="https://github.com/alejandrosml/Color">github.com/alejandrosml/Color</a>.</p>
+<a class="evitement" href="#contenu">Aller au contenu</a>
+<header class="entete">
+  <div class="cadre barre">
+    <a class="marque" href="#contenu" aria-label="Color, accueil"><img src="icone-app-store-1024.png" alt="" width="40" height="40">Color</a>
+    <nav aria-label="Navigation principale"><a href="#aide">Aide</a><a class="telecharger" href="#telecharger">Télécharger</a></nav>
+  </div>
+</header>
+<main id="contenu" class="cadre">
+  <section class="accueil" aria-labelledby="titre">
+    <div>
+      <h1 id="titre">L’atelier de dessin <span>des enfants.</span></h1>
+      <p class="intro">Dessine, colorie et joue avec les tampons dans dix univers. Puis regarde le film de ton dessin, trait après trait.</p>
+      <div class="boutiques" id="telecharger" role="group" aria-label="Télécharger Color gratuitement">
+        <div class="boutique">
+          <a href="https://apps.apple.com/fr/app/color/id6827959212"><img src="badge-app-store-fr.svg" alt="Télécharger Color dans l’App Store" width="139" height="44"></a>
+          <span class="appareils">Mac, iPhone et iPad</span>
+        </div>
+        <div class="boutique">
+          <a href="https://get.microsoft.com/installer/download/9NR2ST3K3N59?referrer=appbadge"><img src="badge-microsoft-store.svg" alt="Télécharger l’installateur de Color depuis le Microsoft Store" width="161" height="44"></a>
+          <span class="appareils">Windows 10 et 11</span>
+        </div>
+      </div>
+    </div>
+    <figure class="illustration">
+      <div class="fond-image"><div class="photo"><img src="visuels/atelier.webp" alt="Dans Color, un dessin de jardin avec un chat et un arc-en-ciel, entouré des pinceaux, des couleurs et des tampons." width="1328" height="830" fetchpriority="high"></div></div>
+      <figcaption>L’atelier de Color sur Mac<span class="couleurs" aria-hidden="true"><i></i><i></i><i></i><i></i></span></figcaption>
+    </figure>
+  </section>
+  <div class="ressources">
+    <section id="aide" aria-labelledby="titre-aide">
+      <h2 id="titre-aide">Un coup de main&nbsp;?</h2>
+      <div class="questions">
+        <details open>
+          <summary>Où trouver l’aide dans Color&nbsp;?</summary>
+          <p>Ouvre <strong>Mon dessin</strong>, en haut à gauche, puis <strong>Aide</strong>. Tu y trouveras comment utiliser le pinceau, les formes, les tampons, le texte, la gomme, le pot de peinture et les pages à colorier.</p>
+        </details>
+        <details>
+          <summary>Comment changer d’univers&nbsp;?</summary>
+          <p>Le bouton <strong>Univers</strong> change le décor de l’atelier. Double-clique sur un élément du décor pour entendre son nom.</p>
+        </details>
+        <details>
+          <summary>Comment installer Color sur Windows&nbsp;?</summary>
+          <p>Le badge Microsoft Store télécharge le petit installateur de <strong>Color Atelier de Dessin</strong> pour Windows 10 et 11. Cette version est signée par Microsoft et se met à jour automatiquement.</p>
+          <p>Tu peux aussi télécharger la <a href="https://github.com/alejandrosml/Color/releases">version à dézipper</a>. Cette version portable n’est pas signée. Si Windows affiche «&nbsp;Windows a protégé votre ordinateur&nbsp;» au premier lancement, «&nbsp;Informations complémentaires&nbsp;» puis «&nbsp;Exécuter quand même&nbsp;» permettent de l’ouvrir.</p>
+        </details>
+      </div>
+    </section>
+    <aside class="parents" aria-labelledby="titre-parents">
+      <h2 id="titre-parents">Pour les parents</h2>
+      <p>Color est gratuit, sans compte et sans publicité. L’atelier fonctionne hors ligne et ne collecte aucune donnée.</p>
+      <p>Dans <strong>Mon dessin</strong>, les options de l’adulte permettent de simplifier l’interface, de régler les sons, les animations, l’impression et l’accessibilité. Un calcul peut protéger l’accès à ces réglages.</p>
+      <a href="confidentialite.html">Lire la politique de confidentialité</a>
+    </aside>
+  </div>
 </main>
+<footer class="pied">
+  <div class="cadre"><span>Color · Alejandro San Martin Lamas</span><div class="liens"><a href="https://github.com/alejandrosml/Color/issues">Signaler un problème</a><a href="https://github.com/alejandrosml/Color">Code source · Licence MIT</a></div></div>
+</footer>
 </body>
 </html>
